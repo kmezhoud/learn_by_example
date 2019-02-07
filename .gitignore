@@ -26,3 +26,6 @@ vignettes/*.pdf
 rsconnect/
 ._Hadoop
 ._RestaurantEDA.Rmd
+.Rproj.user
+._sc_multiple_nodes.Rmd
+._survival_plot_sparklyr.Rmd

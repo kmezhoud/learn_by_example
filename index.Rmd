@@ -3,3 +3,4 @@ title: "Exploratory Data Analysis"
 ---
 
 - [Restaurant EDA](RestaurantEDA.html)
+- [Connect multiple local spark nodes](sc_multiple_nodes.html)
