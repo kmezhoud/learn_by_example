@@ -1,20 +1,25 @@
 ---
-title: "survival plot session VS spark node"
-date: '`r Sys.Date()`'
-output: 
-    html_document:
+title: "survival plot: R Session  vs Spark Node"
+output:
+  html_document:
     number_sections: true
     fig_caption: true
     toc: true
     fig_width: 7
-    fig_height: 6.5
+    fig_height: 4.5
     theme: cosmo
     highlight: tango
-    code_folding: hide
+    #code_folding: hide
+    html_notebook: null
+    df_print: paged ## Use rmarkdown::paged_table to create a pageable table
 ---
 
-## load libraries
-```{r}
+```{r setup, include=FALSE, echo=FALSE}
+#knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+# load libraries {.tabset .tabset-fade .tabset-pills}
+```{r import, message=FALSE, warning=FALSE}
 library(survival)
 library(survminer)
 library(cgdsr)
@@ -22,7 +27,7 @@ library(sparklyr)
 library(dplyr)
 ```
 
-#  R Session Processing
+#  Working with R Session {.tabset .tabset-fade .tabset-pills}
 
 ## Load clinical Data
 ```{r}
@@ -32,7 +37,7 @@ clinicalData <- cgdsr::getClinicalData(cgds, "gbm_tcga_pub_all")
 
 #clinicalData <- read.csv("Clinical_tab.csv") #, na.strings=c("","NA")
 
-
+clinicalData[c('DFS_MONTHS','DFS_STATUS', 'OS_MONTHS', 'OS_STATUS', 'TREATMENT_STATUS' )]
 
 ```
 
@@ -67,11 +72,12 @@ fit <- survival::survfit(Surv(OS_MONTHS, OS_STATUS) ~ DFS_STATUS, data = clinica
    )
 ```
 
+# R session VS Spark {.tabset .tabset-fade .tabset-pills}
 
-## R Session: Plot DiseaseFree vs Reccured during OS_MONTHS
+## Plot DiseaseFree vs Reccured during OS_MONTHS
 ```{r}
   clinicalData <- cgdsr::getClinicalData(cgds, "gbm_tcga_pub_all")
-start_time <- Sys.time()
+  start_time <- Sys.time()
   clinicalData %>% 
   mutate(OS_STATUS = gsub("LIVING", "0", OS_STATUS)) %>%
   mutate(OS_STATUS = gsub( "DECEASED", "1", OS_STATUS)) %>%
@@ -114,5 +120,194 @@ start_time <- Sys.time()
   geom_point(aes(y = n_DiseaseFree, col = "n_DiseaseFree")) +
   geom_point(aes(y = n_Recurred, col = "n_Recurred"))  +
    labs(title = paste("Using Spark Node, Running time = ", Sys.time() - start_time))
+```
+
+
+# Survival regression using  `ml_aft_survival_regression` {.tabset .tabset-fade .tabset-pills}
+
+## Ovarian Data from `survival` package
+
+```{r}
+library(survival)
+ovarian
+```
+
+### Predict Survival regression using spark
+```{r}
+# MAGIC - **futime**: survival or censoring time
+# MAGIC - **fustat**: censoring status
+# MAGIC - **age**:	in years
+# MAGIC - **resid_ds**:	residual disease present (1=no, 2=yes)
+# MAGIC - **rx**:	treatment group
+# MAGIC - **ecog.ps**:	ECOG performance status (1 is better, see reference)
+
+sc <- spark_connect(master = "local",
+                     version = "2.4.0")
+ovarian_tbl <- sdf_copy_to(sc, ovarian, name = "ovarian_tbl", overwrite = TRUE)
+
+#spark.survreg(ovarian_tbl, Surv(futime, fustat) ~ ecog_ps + rx)
+
+partitions <- ovarian_tbl %>%
+  sdf_partition(training = 0.7, test = 0.3, seed = 1111)
+
+ovarian_training <- partitions$training
+ovarian_test <- partitions$test
+
+sur_reg <- ovarian_training %>%
+  ml_aft_survival_regression(futime ~ ecog_ps + rx + age + resid_ds, censor_col = "fustat")
+
+pred <- ml_predict(sur_reg, ovarian_test)
+pred
+```
+
+### Extract parameters
+```{r}
+intercept <- sur_reg$coefficients[1]
+coefficients <- sur_reg$coefficients[c(2,3)]
+sur_reg$coefficients
+```
+
+```{r}
+plotParams <- round(ovarian[c('resid.ds', 'rx', 'ecog.ps', 'age')])
+scale <- exp(intercept + as.matrix(plotParams) * coefficients)
+cbind(plotParams, scale)
+```
+
+```{r}
+tSeq <- ovarian$futime # seq(0, 5E3, 50)
+probs <- data.frame(t = tSeq)
+for (i in 1:2^4) { 
+  probs[, paste("(resid.ds, rx, ecog.ps, age) = (", toString(plotParams[i, ]), ")", sep = "")] <- 
+    pweibull(tSeq, shape = 1, scale = scale[i], lower.tail = F)
+}
+probs
+```
+
+### Melt the DataFrame
+```{r}
+library(reshape2)
+# MAGIC - **futime**: survival or censoring time
+# MAGIC - **fustat**: censoring status
+# MAGIC - **age**:	in years
+# MAGIC - **resid_ds**:	residual disease present (1=no, 2=yes)
+# MAGIC - **rx**:	treatment group
+# MAGIC - **ecog.ps**:	ECOG performance status (1 is better, see reference)
+
+melted <- melt(probs, id.vars="t", variable.name="group", value.name="prob")
+melted
+```
+
+### Plot survival regression
+```{r}
+library(ggplot2)
+
+ggplot(data=melted, aes(x=t, y=prob, group=group, color=group)) + 
+  geom_point() +
+  #geom_smooth() +
+  #geom_jitter() +
+  labs(x = "time", y = "Survival probability")
+```
+
+## Clinical Data from `gbm_tcga_pub_all` Study from cBioPortal
+
+```{r}
+# > ovarian_training
+# # Source: spark<?> [?? x 6]
+# futime fustat   age resid_ds    rx ecog_ps
+# *  <dbl>  <dbl> <dbl>    <dbl> <dbl>   <dbl>
+# 1    156      1  66.5        2     1       2
+# 2    329      1  43.1        2     1       1
+# 3    353      1  63.2        1     2       2
+# 4    365      1  64.4        2     2       1
+# 5    377      0  58.3        1     2       1
+# 6    421      0  53.4        2     2       1
+# 7    448      0  56.4        1     1       2
+# 8    464      1  56.9        2     2       2
+# 9    475      1  59.9        2     2       2
+# 10   563      1  55.2        1     2       2
+# # ... with more rows
+
+clinicalData <- cgdsr::getClinicalData(cgds, "gbm_tcga_pub_all")
+
+#clinicalData <- read.csv("Clinical_tab.csv") #, na.strings=c("","NA")
+
+clinicalData <- clinicalData[c('OS_MONTHS',  'OS_STATUS', 'DFS_STATUS',  'TREATMENT_STATUS' )]
+sc <- spark_connect(master = "local",
+                     version = "2.4.0")
+
+ clinicalData_tbl <- dplyr::copy_to(sc, clinicalData, overwrite = TRUE)
+  start_time <- Sys.time()
+  clinicalData_trans_tbl <- 
+  clinicalData_tbl %>%
+  mutate(OS_STATUS = regexp_replace(OS_STATUS, "LIVING", 1)) %>%
+  mutate(OS_STATUS = regexp_replace(OS_STATUS, "DECEASED", 0)) %>%
+  mutate(DFS_STATUS = regexp_replace(DFS_STATUS, "^$|^ $", "DiseaseFree")) %>%
+  mutate(DFS_STATUS = regexp_replace(DFS_STATUS, "DiseaseFree", 1)) %>%
+  mutate(DFS_STATUS = regexp_replace(DFS_STATUS, "Recurred", 2)) %>%
+  mutate(xr = ifelse(TREATMENT_STATUS == "Untreated", 1 , 2)) %>%
+  mutate(xr = ifelse(TREATMENT_STATUS == "Treated", 2, 1)) %>%
+  mutate(OS_STATUS = as.numeric(OS_STATUS)) %>%
+  mutate(DFS_STATUS = as.numeric(DFS_STATUS)) %>%
+  #arrange(is.na(OS_MONTHS), OS_MONTHS) %>% ## OUFFF put Nan at the end of the column
+  na.replace(1)
+  clinicalData_trans <- as.data.frame(clinicalData_trans_tbl)
+  clinicalData_trans_tbl
+```
+
+
+```{r}
+partitions_clinicalData <- clinicalData_trans_tbl %>%
+  sdf_partition(training = 0.7, test = 0.3, seed = 1111)
+
+clinicalData_training <- partitions_clinicalData$training
+clinicalData_test <- partitions_clinicalData$test
+
+sur_reg_clinicalData <- clinicalData_training %>%
+  ml_aft_survival_regression(OS_MONTHS ~ DFS_STATUS + xr, censor_col = "OS_STATUS")
+
+pred_clinicalData <- ml_predict(sur_reg_clinicalData, clinicalData_test)
+pred_clinicalData
+```
+
+### Extract parameters for Clinical Data
+```{r}
+intercept_clinicalData <- sur_reg_clinicalData$coefficients[1]
+coefficients_clinicalData <- sur_reg$coefficients[c(2,3)]
+sur_reg_clinicalData$coefficients
+```
+
+```{r}
+plotParams_clinicalData <- clinicalData_trans[c('DFS_STATUS', 'xr')]
+scale_clinicalData <- exp(intercept_clinicalData + as.matrix(plotParams_clinicalData) * coefficients_clinicalData)
+cbind(plotParams_clinicalData, scale_clinicalData)
+```
+
+
+
+```{r}
+tSeq_clinicalData <- clinicalData_trans$OS_MONTHS # seq(0, 5E3, 50)
+probs_clinicalData <- data.frame(t = tSeq_clinicalData)
+for (i in 1:5) { 
+  probs_clinicalData[, paste("(DFS_STATUS, xr) = (", toString(plotParams_clinicalData[i, ]), ")", sep = "")] <- 
+    pweibull(tSeq_clinicalData, shape = 1, scale = scale_clinicalData[i], lower.tail = F)
+}
+probs_clinicalData
+```
+
+
+```{r}
+library(reshape2)
+melted_clinicalData <- melt(probs_clinicalData, id.vars="t", variable.name="group", value.name="prob")
+melted_clinicalData
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(data=melted_clinicalData, aes(x=t, y=prob, group=group, color=group)) + 
+  geom_point() +
+  #geom_smooth() +
+  #geom_jitter() +
+  labs(x = "time", y = "Survival probability")
 ```
 
