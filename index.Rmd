@@ -4,4 +4,6 @@ title: "Exploratory Data Analysis"
 
 - [Restaurant EDA](RestaurantEDA.html)
 - [Survival plot model and sparklyr](survival_plot_sparklyr.html)
+- [Shiny - ggplot - spark - ml_linear_regression - iris ](shiny_ggplot_spark_transformation)
 - [Connect multiple local spark nodes](sc_multiple_nodes.html)
+- [How to convert dplyr to sql](shiny_ggplot_spark_transformation.htlm)
