@@ -29,3 +29,7 @@ rsconnect/
 .Rproj.user
 ._sc_multiple_nodes.Rmd
 ._survival_plot_sparklyr.Rmd
+._dplyr_to_sql.Rmd
+._shiny_ggplot_spark_transformation.R
+._linear_regression.Rmd
+._shiny_ggplot_spark_transformation.Rmd
