@@ -12,8 +12,6 @@ output:
     #code_folding: hide
     html_notebook: null
     df_print: paged 
-params: 
-  output_dir: "outputs"
 ---
 
 # load package and get datasets
