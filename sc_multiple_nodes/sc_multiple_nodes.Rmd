@@ -1,8 +1,17 @@
 ---
 title: 'Setting multiple Spark Nodes '
 output:
-  html_document:
-    df_print: paged
+    html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    #code_folding: hide
+    html_notebook: null
+    df_print: paged 
 ---
 
 ## which versions installed?
