@@ -42,14 +42,14 @@ library(ggridges)
 ## Load data
 
 ```{r}
-air_visit <- as_tibble(fread(str_c("RestaurantEDA/air_visit_data.csv")))
-#air_reserve <- as_tibble(fread(str_c('RestaurantEDA/air_reserve.csv'))) 
-air_store_info <- as_tibble(fread(str_c('RestaurantEDA/air_store_info.csv')))
-date_info <- as_tibble(fread(str_c('RestaurantEDA/date_info.csv')))
-#hpg_reserve <- as_tibble(fread(str_c('RestaurantEDA/hpg_reserve.csv')))
-hpg_store_info <- as_tibble((fread(str_c('RestaurantEDA/hpg_store_info.csv'))))
-sample_submission <- as_tibble(fread(str_c('RestaurantEDA/sample_submission.csv')))
-store_id_relation <- as_tibble(fread(str_c('RestaurantEDA/store_id_relation.csv')))
+air_visit <- as_tibble(fread(str_c("air_visit_data.csv")))
+air_reserve <- as_tibble(fread(str_c('air_reserve.csv'))) 
+air_store_info <- as_tibble(fread(str_c('air_store_info.csv')))
+date_info <- as_tibble(fread(str_c('date_info.csv')))
+hpg_reserve <- as_tibble(fread(str_c('hpg_reserve.csv')))
+hpg_store_info <- as_tibble((fread(str_c('hpg_store_info.csv'))))
+sample_submission <- as_tibble(fread(str_c('sample_submission.csv')))
+store_id_relation <- as_tibble(fread(str_c('store_id_relation.csv')))
 ```
 
 ## multiplot function
