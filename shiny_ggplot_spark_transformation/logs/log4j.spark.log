@@ -2352,3 +2352,14 @@
 19/02/21 15:38:02 INFO TaskSchedulerImpl: Removed TaskSet 20.0, whose tasks have all completed, from pool 
 19/02/21 15:38:02 INFO DAGScheduler: ResultStage 20 (collect at utils.scala:200) finished in 0.081 s
 19/02/21 15:38:02 INFO DAGScheduler: Job 11 finished: collect at utils.scala:200, took 0.119047 s
+19/02/21 15:40:09 INFO SparkContext: Invoking stop() from shutdown hook
+19/02/21 15:40:09 INFO SparkUI: Stopped Spark web UI at http://localhost:4041
+19/02/21 15:40:09 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+19/02/21 15:40:09 INFO MemoryStore: MemoryStore cleared
+19/02/21 15:40:09 INFO BlockManager: BlockManager stopped
+19/02/21 15:40:09 INFO BlockManagerMaster: BlockManagerMaster stopped
+19/02/21 15:40:09 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+19/02/21 15:40:09 INFO SparkContext: Successfully stopped SparkContext
+19/02/21 15:40:09 INFO ShutdownHookManager: Shutdown hook called
+19/02/21 15:40:09 INFO ShutdownHookManager: Deleting directory /private/var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/spark-1cb75b83-d399-4767-bc96-31deced25467
+19/02/21 15:40:09 INFO ShutdownHookManager: Deleting directory /private/var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/spark-399cb1e7-9743-46cc-8ee3-ab2003a852a0

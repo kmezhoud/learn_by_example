@@ -52,7 +52,4 @@ Only the first connection is done!
 
 ## Copy data set in different nodes
 
-```{r}
-sc152
-```
 
