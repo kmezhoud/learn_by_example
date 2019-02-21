@@ -10,7 +10,7 @@ navbar:
     - text: "Tutorials"
   right:
     - icon: fa-github fa-lg
-      href: https://kmezhoud.github.io/learn_by_example/
+      href: https://github.com/kmezhoud/learn_by_example
 output:
   html_document:
     theme: paper
