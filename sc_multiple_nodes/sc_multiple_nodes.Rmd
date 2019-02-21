@@ -1,0 +1,58 @@
+---
+title: 'Setting multiple Spark Nodes '
+output:
+  html_document:
+    df_print: paged
+---
+
+## which versions installed?
+```{r}
+library(sparklyr)
+spark_installed_versions()
+```
+
+## Last Spark version Availability
+```{r}
+spark_available_versions(show_hadoop = TRUE) %>% tail()
+```
+
+## Install Specific spark version
+```{r}
+library(sparklyr)
+#spark_install(version = "2.4.0")
+```
+
+
+## Connect to two spark versions
+
+```{r}
+conf232 <- spark_config()   # Load variable with spark_config()
+conf232$`sparklyr.cores.local` <- 2
+conf232$`sparklyr.shell.driver-memory` <- "4G"
+conf232$spark.memory.fraction <- 0.5
+
+conf240 <- spark_config()   # Load variable with spark_config()
+conf240$`sparklyr.cores.local` <- 2
+conf240$`sparklyr.shell.driver-memory` <- "4G"
+conf240$spark.memory.fraction <- 0.5
+
+sc240 <- spark_connect(master = "local",
+                      version = "2.4.0",
+                      config = conf240
+                    )
+sc232 <- spark_connect(master = "local",
+                    version = "2.3.2",
+                    config = conf232
+                    )
+
+
+```
+
+Only the first connection is done!
+
+## Copy data set in different nodes
+
+```{r}
+sc152
+```
+
