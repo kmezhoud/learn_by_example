@@ -10,7 +10,7 @@ Learn by example
 </p>
 
 
-img[src*="images/survival_sparklyr.png"] {
-   width:150px;
-   height:100px;
-}
+
+<div style="width:150px; height:100px">
+![Kitten](images/survival_sparklyr.png)
+</div>
