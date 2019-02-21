@@ -2,5 +2,5 @@
 Learn by example
 
 <p align="right">
-  <img src="images/survival_sparklyr.png" width="150" title="hover text">
+  <img src="images/survival_sparklyr.png" width="150" title="Survival plot Spark", href="https://kmezhoud.github.io/learn_by_example/survival_plot_sparklyr/survival_plot_sparklyr.html">
 </p>
