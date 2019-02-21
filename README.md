@@ -1,7 +1,7 @@
 # learn_by_example
 Learn by example
 
-![Kitten]("images/survival_sparklyr.png")
+![Kitten](images/survival_sparklyr.png)
 
 
 <p align="right">
