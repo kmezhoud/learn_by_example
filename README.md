@@ -1,7 +1,7 @@
 # learn_by_example
 Learn by example
 
-![Kitten](images/survival_sparklyr.png =150x100)
+![](images/survival_sparklyr.png)
 
 
 <p align="right">
@@ -14,3 +14,7 @@ Learn by example
 <div style="width:150px; height:100px">
 ![Kitten](images/survival_sparklyr.png)
 </div>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/survival_plot_sparklyr/survival_plot_sparklyr.html"><img src="images/survival_sparklyr.png" align="left" height="150" width="150" ></a>
+
