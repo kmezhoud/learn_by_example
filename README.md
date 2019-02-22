@@ -7,5 +7,5 @@ Learn by example
 </a>
 
 
-<div style="width:image width px; font-size:80%; text-align:center;"><img src="images/survival_sparklyr.png" alt="alternate text" width="width" height="height" style="padding-bottom:0.5em;" />This is my caption</div>
+<div style="width:image width px; font-size:80%; text-align:center;"><img src="images/survival_sparklyr.png" alt="alternate text" width="250" height="250" style="padding-bottom-center:0.5em;" />This is my caption</div>
 
