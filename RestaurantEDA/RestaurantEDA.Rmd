@@ -1,5 +1,5 @@
 ---
-title: "Restaurant EDA"
+title: "Exploratory Data Analysis of Restaurants reservation and costumers behaviors"
 date: '`r Sys.Date()`'
 output:
   html_document:
@@ -10,20 +10,83 @@ output:
     fig_height: 4.5
     theme: cosmo
     highlight: tango
-    code_folding: hide
+    code_folding: show #hide
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 ```
 
-# Introduction {.tabset .tabset-fade .tabset-pills}
-This tutorial is a replicate of kaggle kernel writen by [Heads or Tails](https://www.kaggle.com/headsortails).
-The goal of this EDA is to predict the statistics of visotors in two touristics areas in Japon. The challenge was published by kaggle.
+# Introduction to the case study {.tabset .tabset-fade .tabset-pills}
+This Case of study explores and analyses data sets of restaurants reservations and activities for two distant touristic area in Japan. The data set covers information of two years. 
+The goal of this study is to predict restaurant activities depending of dataset history. The challenge is to decipher knowledge about the behaviors of the visitors in two distant areas depending in multiple parameter like weekend, holidays, whether, gender, kind of dishes and times.
+The data set comes from kaggle competition named [Recruit restaurant visitor forecasting](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting). This tutorial is inspired from the winner of this competition which is [Heads or Tails](https://www.kaggle.com/headsortails). All respect and thanks for his work and data exploratory and analysis. It could be considered as a lesson for bigger on data analysis using R programming language. 
+
+## Glimpse of the data sets 
+The data comes in the shape of 8 relational files which are derived from two separate Japanese websites that collect user information: “Hot Pepper Gourmet (hpg): similar to Yelp” (search and reserve) and “AirREGI / Restaurant Board (air): similar to Square” (reservation control and cash register). The training data is based on the time range of Jan 2016 - most of Apr 2017, while the test set includes the last week of Apr plus May 2017." The test data intentionally spans a holiday week in Japan called the ‘Golden Week.’ The data description further notes that:”There are days in the test set where the restaurant were closed and had no visitors. These are ignored in scoring. The training set omits days where the restaurants were closed."
+
+
+<div class = "row">
+<div class = "col-md-6">
+**air_visit_data.csv: N° visitors per store and per Date**
+![Air visit](images/air_visit.png)
+</div>
+
+<div class = "col-md-6">
+**date_info.csv: Essentially flags the Japanese holidays.**
+![ data info](images/data_info.png)
+
+</div>
+</div>
+
+
+<div class = "row">
+<div class = "col-md-6">
+**air_reserve.csv: Reservations and Visitors made through the air.**
+![Air reserve](images/air_reserve.png)
+</div>
+
+<div class = "col-md-6">
+**hpg_reserve.csv: Reservations and Visitors for hpg location.**
+![hpg reserve](images/hpg_reserve.png)
+</div>
+</div>
+
+
+<div class = "row">
+<div class = "col-md-6">
+**air_store_info.csv: details about the air sotres including genre and location.**
+![Air store info](images/air_store_info.png)
+</div>
+
+<div class = "col-md-6">
+
+**hpg_store_info.csv: details about the hpg stores including genre and location.**
+![hpg store info](images/hpg_store_info.png)
+</div>
+</div>
+
+
+<div class = "row">
+<div class = "col-md-6">
+**store_id_relation.csv: connects the air and hpg ids**
+![Stor ids relation](images/store_id_relation.png)
+
+</div>
+
+<div class = "col-md-6">
+
+**sample_submission.csv: serves as the test set. The id is formed by combining the air id with the visit date.**
+
+![Sample submission](images/sample_submission.png)
+</div>
+
+</div>
+
 
 ## Load librairies
 
-```{r}
+```{r include=FALSE, echo=TRUE}
 #library(readr)
 library(tibble)
 library('stringr') # string manipulation
@@ -104,8 +167,16 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # Overview: File structure and content {.tabset .tabset-fade .tabset-pills}
 
 ## Air visits
+There are two mains functions to summarize a dataframe or tibble: 
+
+* `summary`  is useful if with have data frame with numeric value. It computes and display the Min, Max, Media, mean, and quaters of each column. 
+
+* `glimpse` commes from `tibble` package. It displays the summary of the dataset in other way.
+
 ```{r}
 summary(air_visit)
+# verify if is there a missing value
+all(is.na(air_visit))
 ```
 
 
@@ -113,105 +184,113 @@ summary(air_visit)
 tibble::glimpse(air_visit)
 ```
 
-The tibble shows the number of visitors by store for each date.
+
 ```{r}
+# Print the distinct number of stores in air place 
 air_visit %>% dplyr::distinct(air_store_id) %>% nrow()
+# Print  the N° of distinct datetime for air place
 air_visit %>% dplyr::distinct(visit_date) %>% nrow()
 ```
-
-There is 829 different store and 478 dates
 
 ## Air Reserve
 
 ```{r}
 summary(air_reserve)
+# verify if is there a missing value
+all(is.na(air_reserve))
 ```
 
 ```{r}
 glimpse(air_reserve)
 ```
-The number of reservation is 92378, distributed for 314 air store.
+
 
 ```{r}
+# print the distinct store in air place that had reservation
 air_reserve %>% dplyr::distinct(air_store_id) %>% nrow()
 ```
+There are  314 of 829 stores that use reservation process in air space.
+There are 252,108 reservation for 314 stores
 
 ## HPG Reserve
 
+We apply the same code for hpg stores.
 ```{r}
 summary(hpg_reserve)
+# verify if is there a missing value
+all(is.na(hpg_reserve))
 ```
 
 ```{r}
 tibble::glimpse(hpg_reserve)
 ```
 
-There are 2000320 revervation for 13325 stores
-
 ```{r}
+# print the distinct store in hpg space
 hpg_reserve %>% dplyr::distinct(hpg_store_id) %>% nrow()
 ```
+There are 2,000,320 reservation for 13325 stores. In hpg space, it seems that all restaurants use reservation process. 
 
-## Air Store
+## Air Store informations:  genre and location
 
 ```{r}
 summary(air_store_info)
+# verify if is there a missing value
+all(is.na(air_store_info))
 ```
 
 ```{r}
 tibble::glimpse(air_store_info)
 ```
 
-The number of air area
+
 ```{r}
+# print the number of air area in air space
 air_store_info %>% dplyr::distinct(air_area_name) %>% nrow()
-```
 
-The number of stores
-
-```{r}
+# print the number of stores in air space
 air_store_info %>% dplyr::distinct(air_store_id) %>% nrow()
 ```
 
-The number of latitude
-
 ```{r}
+# print the number of latitude for stores in air space
 air_store_info %>% dplyr::distinct(latitude) %>% nrow()
-```
-The number of longitude
-```{r}
+# print the number of longitude for stores in air space
 air_store_info %>% dplyr::distinct(longitude) %>% nrow()
 ```
 
-the number of cuisine genre in air
+
+
 
 ```{r}
+# print the number of cuisine genre in air space
 air_store_info %>% dplyr::distinct(air_genre_name) %>% nrow()
 ```
 
-## HPG Stores
+## HPG Stores informations: genre and locations
 
 ```{r}
 summary(hpg_store_info)
+# verify if is there a missing value
+all(is.na(hpg_store_info))
 ```
 
 ```{r}
 tibble::glimpse(hpg_store_info)
 ```
-There are 4690 stores
 
 ```{r}
+# print le number of latitudes for hpg stores
 hpg_store_info %>% dplyr::distinct(latitude) %>% nrow()
+# print the number of longitudes for hpg stores
+hpg_store_info %>% dplyr::distinct(longitude) %>% nrow()
 ```
 
-There are 119 area name
+
 ```{r}
+# print the number of area names in hpg space
 hpg_store_info %>% dplyr::distinct(hpg_area_name) %>% nrow()
-```
-
-There are  34 genres of cuisine in HPG
-
-```{r}
+# print the number of genre of cuisine un HPG space
 hpg_store_info %>% dplyr::distinct(hpg_genre_name) %>% nrow()
 ```
 
@@ -219,6 +298,12 @@ hpg_store_info %>% dplyr::distinct(hpg_genre_name) %>% nrow()
 
 ```{r}
 glimpse(date_info)
+# verify if is there a missing value
+all(is.na(date_info))
+# print the number of days for all periode of this case study
+date_info %>% dplyr::distinct(calendar_date) %>% nrow() %>% days()
+# print the number of days with holidays
+date_info %>% dplyr::distinct(calendar_date, holiday_flg) %>% filter(holiday_flg == "1") %>% nrow() 
 ```
 
 ## Store IDs
@@ -226,7 +311,7 @@ glimpse(date_info)
 ```{r}
 glimpse(store_id_relation)
 ```
-There are 150 relation between Air (829 stores) and HPG (4690 stores) stores.
+There are 150 relations between Air (829 stores) and HPG (4690 stores) stores.
 
 ## Sample Submission
 
@@ -234,51 +319,64 @@ There are 150 relation between Air (829 stores) and HPG (4690 stores) stores.
 tibble::glimpse(sample_submission)
 ```
 
-the submision file should be two columns. The first one is the cancatenation of store_id and date. the 2sd is the number of visitors.
+the submission file should be two columns. The first one is the concatenation of store_id and date. the 2sd is the number of visitors.
 
 ## Missing Values
-
 
 ```{r}
 purrr::map(ls(), is.na)
 ```
 
-## Reformating dates
+## Reformating dataset
 ```{r}
+# convert date from chracter to date type
 air_visit <- air_visit %>% mutate(visit_date = ymd(visit_date))
+
+# convert date_time from character to date_time type
 air_reserve <- air_reserve %>% mutate(visit_datetime = ymd_hms(visit_datetime),
                                       reserve_datetime = ymd_hms(reserve_datetime))
+
+# convert date_time from character to date_time type
 hpg_reserve <- hpg_reserve %>% mutate(visit_datetime = ymd_hms(visit_datetime),
                                       reserve_datetime = ymd_hms(reserve_datetime))
 
+# convert genre and area name as factor
 air_store_info <- air_store_info %>% mutate(air_genre_name = as.factor(air_genre_name),
                                             air_area_name = as.factor(air_area_name))
+
+# convert genre and area name as factor
 hpg_store_info <- hpg_store_info %>% mutate(hpg_genre_name = as.factor(hpg_genre_name),
                                             hpg_area_name = as.factor(hpg_area_name))
 
+# convert holiday flag as logical type
 date_info <- date_info %>% mutate(holiday_flg = as.logical(holiday_flg),
                                   date = ymd(calendar_date))
 ```
 
 # Individual feature visualisations {.tabset .tabset-fade .tabset-pills}
+
 Here we have a first look at the distribution of the feature in our individual data files before combining them for a more detailed analysis.
 
-## Air Visits
+## Air Visits space
 ```{r}
- p1 <- air_visit %>% 
-  group_by(visit_date) %>% 
+# distribution of the number of visits per date for air space
+ p1 <- air_visit %>%
+  group_by(visit_date) %>%
   summarise(all_visitors = sum(visitors)) %>%
   ggplot(aes(visit_date, all_visitors)) +
   geom_line(col = "blue") +
   labs(y = "All visitors", x = "Date")
 
+# plot the density of the nulber of visitors per day (with log)
+# 20 seems tobe the must frequent sum of visitors per day
  p2 <- air_visit %>%
    ggplot(aes(visitors)) +
    geom_vline(xintercept = 20, color ="red") +
    geom_histogram(fill = "blue", bins = 30) +
    #xlim(0,150)
    scale_x_log10()
- 
+
+ # plot the median of visitors per week day
  p3 <- air_visit %>%
    mutate(wday = wday(visit_date, label = TRUE)) %>%
    group_by(wday) %>%
@@ -287,7 +385,8 @@ Here we have a first look at the distribution of the feature in our individual d
    geom_col() +
    theme(legend.position = "none") +
    labs(x = "Day of the week", y = "Median Visitors")
- 
+
+ # plot the median of visitors per months
  p4  <- air_visit %>%
    mutate(Month = month(visit_date, label = TRUE)) %>%
    group_by(Month) %>%
@@ -296,7 +395,8 @@ Here we have a first look at the distribution of the feature in our individual d
    geom_col() +
    theme(legend.position = 'none') +
    labs(x = "MOnth", y = "Median Visitors")
- 
+
+ # plot P1, P2, P3, p4 in the same plot
  layout <- matrix(c(1,1,1,1,2,3,4,4), 2, 4, byrow = TRUE)
  multiplot(p1, p2, p3, p4, layout=layout)
 ```
@@ -305,6 +405,13 @@ Here we have a first look at the distribution of the feature in our individual d
 We will be forecasting for the last week of April plus May 2017, so let’s look at this time range in our 2016 training data:
 
 ```{r}
+
+# chech if is there holidays in period that will be predicted 
+holydays <- date_info %>%
+  filter(calendar_date > ymd("2016-04-15") & calendar_date < ymd("2016-06-15"), holiday_flg)
+
+# plot the number of visitors per day for the periode from 2016-04-15 to 2016-06-15 wich corresponds to the same periode that we will predict
+
 air_visit %>%
   filter(visit_date > ymd("2016-04-15") & visit_date < ymd("2016-06-15")) %>%
   group_by(visit_date) %>%
@@ -312,12 +419,17 @@ air_visit %>%
   ggplot(aes(visit_date, all_visitors)) +
   geom_line() +
   geom_smooth(method = "loess", color = "blue", span = 1/10) +
-  labs(y = "All visitors", x = "Date")
+  labs(y = "All visitors", x = "Date") +
+  geom_vline(xintercept = holydays$date, color ="red") 
+
 ```
+
+There are 3  holidays that match with a global increase of visits in all air space.
 
 ## Air Reservations
 
 ```{r}
+# split date_time to date, hour and weekday for visits and reservations
 foo <- air_reserve %>%
   mutate(reserve_date = date(reserve_datetime),
          reserve_hour = hour(reserve_datetime),
@@ -326,38 +438,43 @@ foo <- air_reserve %>%
          visit_hour = hour(visit_datetime),
          visit_wday = wday(visit_datetime, label = TRUE),
          diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
-         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")) 
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
 
+# plot visits per date
   p1 <- foo %>%
   group_by(visit_date) %>%
   summarise(all_vitisors = sum(reserve_visitors)) %>%
   ggplot(aes(visit_date, all_vitisors)) +
   geom_line() +
   labs(x = "Air visit date")
-  
+
+  # plot visits per time (hour)
   p2 <- foo %>%
     group_by(visit_hour) %>%
     summarise(all_visitors = sum(reserve_visitors)) %>%
     ggplot(aes(visit_hour, all_visitors)) +
     geom_col(fill = "blue") +
     labs(x = "Time from reservation to visit [hours]")
-  
+
+  # plot density of reservation delay
   p3 <- foo %>%
+    # limite reservation delay to 7 days
     filter(diff_hour < 24 *7) %>%
     group_by(diff_hour) %>%
     summarise(all_visitors = sum(reserve_visitors)) %>%
     ggplot(aes(diff_hour, all_visitors)) +
     geom_col(fill= "blue") +
     labs(x = "Time from reservation (hours)", y = "all_visitors")
-  
+
+  # plot muliple plot
   layout <- matrix(c(1, 1, 2, 3), 2, 2, byrow = TRUE)
-  
   multiplot(p1, p2, p3, layout = layout)
 ```
 
-## HPG Reservation
+## HPG Reservation exploration
 
 ```{r}
+# split date_time to date, hour, week day
 too <- hpg_reserve %>%
   mutate(visit_date = date(visit_datetime),
          visit_hour = hour(visit_datetime),
@@ -369,18 +486,21 @@ too <- hpg_reserve %>%
          diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")
          )
 
+# plot visits per date
 p1 <- too %>%
   group_by(visit_date) %>%
   summarise(all_visitors = sum(reserve_visitors)) %>%
   ggplot(aes(visit_date, all_visitors)) +
   geom_line()
 
+# plot visits per time (hour)
 p2 <- too %>%
   group_by(visit_hour) %>%
   summarise(all_visitors = sum(reserve_visitors)) %>%
   ggplot(aes(visit_hour, all_visitors)) +
   geom_col(fill="red")
 
+# plot the density of the delay of reservation
 p3 <- too %>%
   group_by(diff_hour) %>%
   summarise(all_visitors = sum(reserve_visitors)) %>%
@@ -392,7 +512,7 @@ p3 <- too %>%
  multiplot(p1, p2, p3, layout = layout)
 ```
 
-## Air Store
+## Air Store info exploration
 
 ```{r}
 leaflet(air_store_info) %>%
@@ -406,6 +526,7 @@ leaflet(air_store_info) %>%
 
 
 ```{r}
+## plot the number of restaurant per area name (top 15)
 p1 <- air_store_info %>%
   group_by(air_area_name) %>%
   count() %>%
@@ -415,9 +536,9 @@ p1 <- air_store_info %>%
   geom_col()+
   coord_flip()+
   theme(legend.position = "none") +
-  labs(x= "Top 15 area (air_aera_name)", y ="Number of air restaurants")
+  labs(x= "Top 15 area (air_aera_name)", y ="Number restaurants")
 
-
+# plot the number of the most frequente genre of restaurant
 p2 <- air_store_info %>%
   group_by(air_genre_name) %>%
   count() %>%
@@ -433,9 +554,10 @@ multiplot(p1,p2, layout = layout)
 
 ```
 
-## HPG Store
+## HPG Store ifo exploration
 
 ```{r}
+# plot stores localisation
 leaflet(hpg_store_info) %>%
   addTiles() %>%
   addProviderTiles("cartoDB.positron") %>%
@@ -446,8 +568,9 @@ leaflet(hpg_store_info) %>%
 ```
 
 ```{r}
+# plot the number of store by genre
 p1 <- hpg_store_info %>%
-  group_by(hpg_genre_name) %>% 
+  group_by(hpg_genre_name) %>%
   count() %>%
   ggplot(aes(reorder(hpg_genre_name, n, FUN = min), n, fill = hpg_genre_name)) +
   geom_col() +
@@ -455,6 +578,7 @@ p1 <- hpg_store_info %>%
   theme(legend.position = "none") +
   labs(x = "Type of cuisine (hpg_genre_name)", y = "Number of hpg restaurants")
 
+# plot stores per area name
 p2 <- hpg_store_info %>%
   group_by(hpg_area_name) %>%
   count() %>%
@@ -475,6 +599,7 @@ multiplot(p1, p2, layout = layout)
 ## Holidays
 
 ```{r}
+# plot the number of holidays
 date_info %>%
   group_by(holiday_flg) %>%
   count() %>%
@@ -482,6 +607,7 @@ date_info %>%
   geom_col() +
   theme(legend.position = "none")
 
+# plot days and holidays
 date_info %>%
   filter(date  > ymd("2017-04-15") & date < ymd("2017-06-01")) %>%
 ggplot(aes(x = date, y= holiday_flg, color = holiday_flg)) +
@@ -489,7 +615,7 @@ geom_point() +
   theme(legend.position = "none")
 ```
 
-## Test Data set
+## Map date for training and testing
 
 ```{r}
 air_visit_train <- air_visit %>%
@@ -497,26 +623,31 @@ air_visit_train <- air_visit %>%
   distinct(date) %>%
   mutate(dset= "train")
 
-bar <- sample_submission %>%
+air_visit_test <- sample_submission %>%
   tidyr::separate(id, c("foo","bar", "date"), sep = "_") %>%
   mutate(date = ymd(date)) %>%
   distinct(date) %>%
   mutate(dset = "test")
 
 air_visit_train <- air_visit_train %>%
-  bind_rows(bar)
+                   dplyr::bind_rows(air_visit_test)
 
 year(air_visit_train$date) <- 2017
 
 air_visit_train %>%
-  filter(!is.na(date)) 
-  #mutate(year = forcats::fct_relevel(as.factor(year), c("2017", "2016")))
-
+  filter(!is.na(date)) %>%
+  mutate(year = forcats::fct_relevel(as.factor(year), c("2017","2016"))) %>%
+  ggplot(aes(date, year, color = dset)) +
+  geom_point(shape = "|", size = 10) +
+  scale_x_date(date_labels = "%B", date_breaks = "1 month") +
+  #scale_y_reverse() +
+  theme(legend.position = "bottom", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(color = "Data set") +
+  guides(color = guide_legend(override.aes = list(size = 4, pch = 15)))
 
 ```
 
 # Feature relations
-
 
 ## Visitors per genre
 
@@ -536,7 +667,8 @@ left_join(air_store_info, by = "air_store_id") %>%
 
 
 ```{r}
-air_visit %>%
+# plot mean visitors par week day by genre cuisine
+p1 <- air_visit %>%
 left_join(air_store_info, by = "air_store_id") %>%
   mutate(wday = wday(visit_date, label = TRUE)) %>%
   group_by(wday, air_genre_name) %>%
@@ -548,48 +680,61 @@ left_join(air_store_info, by = "air_store_id") %>%
   coord_flip() +
   scale_color_hue()
 
-```
-
-```{r}
-air_visit %>%
-left_join(air_store_info, by = "air_store_id") %>%
-  group_by(air_genre_name) %>%
-  ggplot(aes(x = visitors, y = air_genre_name)) +
-  ggridges::geom_density_ridges(bandwidth = 0.1) +
+# plot density of visitors par genre
+p2 <- air_visit %>%
+  left_join(air_store_info, by = "air_store_id") %>%
+  ggplot(aes(visitors, air_genre_name, fill = air_genre_name)) +
+  geom_density_ridges(bandwidth = 0.1) +
   scale_x_log10() +
-  ggridges::scale_fill_cyclical(values = c("blue", "red"))
+  theme(legend.position = "none") +
+  labs(y = "") +
+  scale_fill_cyclical(values = c("blue", "red"))
 
+# plot multiplot
+layout <- matrix(c(1,1,2,2,2),1,5,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
 ```
+
 
 
 ## The impact of holidays
 
 ```{r}
-
+# joint visit date and holidays
 foo <- air_visit %>%
-  #group_by(visit_date) %>%
   mutate(calendar_date = as.character(visit_date)) %>%
-  left_join(date_info, by="calendar_date")
+  left_join(date_info, by = "calendar_date")
 
-foo %>%
+
+# plot boxplot of visitors in day vs holidays
+p1 <- foo %>%
   ggplot(aes(holiday_flg, visitors, color = holiday_flg)) +
   geom_boxplot() +
   scale_y_log10() +
   theme(legend.position = "none")
 
-foo %>%
+
+# plot mean visitor per week day in days and holydays
+p2 <- foo %>%
   mutate(wday = wday(date, label = TRUE)) %>%
   group_by(wday, holiday_flg) %>%
-  summarise(visitors_mean = mean(visitors)) %>%
-  ggplot(aes(x= wday, visitors_mean, color = holiday_flg)) +
-  geom_point()
+  summarise(mean_visitors = mean(visitors)) %>%
+  ggplot(aes(wday, mean_visitors, color = holiday_flg)) +
+  geom_point(size = 4) +
+  theme(legend.position = "none") +
+  labs(y = "Average number of visitors")
+
+
+layout <- matrix(c(1,2),1,2,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
 
 ```
+The boxplot shows no significant impact of holydays on visits. During weekend there is not a big difference of visitors. The impact of the holidays appears during week days.
 
-
-## Restaurants per aera and the effect on visitor numbers
+## Restaurants per area and the effect on visitor numbers
 
 ```{r}
+# plot the genre of stores per area
 air_store_info %>%
   #mutate(air_area_name = str_sub(air_area_name, 1, 12))
   group_by(air_area_name) %>%
@@ -599,10 +744,10 @@ air_store_info %>%
   geom_point(aes(size = n)) +
   theme(axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9))
 ```
-
+Some area have a few genre of stores and others have much more genres of stores and restaurants.
 
 ```{r}
-
+# plot the genre of stores per area for HPG
 hpg_store_info %>%
     mutate(area = str_sub(hpg_area_name, 1, 10)) %>%
   group_by(area) %>%
@@ -614,6 +759,7 @@ hpg_store_info %>%
 ```
 
 ```{r}
+# rank stores per genre for air
 air_store_info %>%
   group_by(air_genre_name) %>%
   count(air_area_name) %>%
@@ -621,7 +767,8 @@ air_store_info %>%
   scale_y_log10() +
   geom_boxplot() +
   geom_jitter(color ="blue") +
-  coord_flip()
+  coord_flip() +
+  labs(x = "Air genre", y = "Occurences per air area")
 
 ```
 
@@ -661,40 +808,48 @@ P3 <- foo %>%
   geom_point(color = "blue", size = 4) +
   geom_errorbar(aes(ymin = mean_mlv - sd_mlv, ymax = mean_mlv + sd_mlv), width = 0.5, size = 0.7, color = "blue") +
   labs(x="Case of identifcation Air genres per area", y = "Mean +/- SD of \n mean Logp1 visitors")
+
+
+layout <- matrix(c(1,2,3,3),2,2,byrow=TRUE)
+
+multiplot(p1, p2, p3, layout=layout)
 ```
 
 
 ## Reservations vs Visits
 
 ```{r}
+# gourp by air store id and count the n° of visitors
 foo <- air_reserve %>%
   mutate(visit_date = date(visit_datetime)) %>%
   group_by(air_store_id, visit_date) %>%
   summarise(reserve_visitors_air = sum(reserve_visitors))
 
 
-  
+# group by gpg store id and count the n° of visitors.
   bar <- hpg_reserve %>%
     mutate(visit_date = date(visit_datetime)) %>%
     group_by(hpg_store_id, visit_date) %>%
     summarise(reserve_visitors_hpg = sum(reserve_visitors)) %>%
     inner_join(store_id_relation, by = "hpg_store_id")
-  
+
+  # join all
   all_reserve <- air_visit %>%
     inner_join(foo, by = c("air_store_id", "visit_date")) %>%
     inner_join(bar, by = c("air_store_id", "visit_date")) %>%
     mutate(reserve_visitors = reserve_visitors_air + reserve_visitors_hpg)
-  
-  p <- all_reserve %>%
+
+ # plot reservation vs visits
+    all_reserve %>%
     filter(reserve_visitors < 120 ) %>%
     ggplot(aes(reserve_visitors, visitors )) +
     geom_point(color = "black", alpha = 0.5) +
     geom_abline(slope = 1, intercept = 0, color = "grey60") +
     geom_smooth(method = "lm", color = "blue") 
   
-  ggMarginal(p,  type = "histogram", fill = "blue", bins=50)
-    
-  
+  #ggExtra::ggMarginal(p,  type = "histogram", fill = "blue", bins=50)
+
+
 ```
 
 
@@ -734,188 +889,188 @@ multiplot(p1, p2, p3, p4, layout = layout)
 ```
 
 
-```{r}
-all_reserve %>%
-  mutate(date = visit_date) %>%
-  left_join(date_info, by = "date") %>%
-  ggplot(aes(visitors - reserve_visitors, fill = holiday_flg)) +
-  geom_density(alpha = 0.5)
-  
-
-```
+<!-- ```{r} -->
+<!-- all_reserve %>% -->
+<!--   mutate(date = visit_date) %>% -->
+<!--   left_join(date_info, by = "date") %>% -->
+<!--   ggplot(aes(visitors - reserve_visitors, fill = holiday_flg)) + -->
+<!--   geom_density(alpha = 0.5) -->
 
 
-# Feature engineering
+<!-- ``` -->
 
 
-```{r}
-
-air_visit <- air_visit %>%
-  mutate(wday = wday(visit_date, label = TRUE),
-         wday = forcats::fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), month = month(visit_date, label = TRUE))
-
-air_reserve <- air_reserve %>%
-  mutate(reserve_date = date(reserve_datetime),
-         reserve_hour = hour(reserve_datetime),
-         reserve_wday = wday(reserve_datetime, label = TRUE),
-         reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
-         visit_date = date(visit_datetime),
-         visit_hour = hour(visit_datetime),
-         visit_wday = wday(visit_datetime, label = TRUE),
-         viist_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
-         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
-         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
+<!-- # Feature engineering -->
 
 
-hpg_reserve %>%
-  mutate(reserve_date = date(reserve_datetime),
-         reserve_hour = hour(reserve_datetime),
-         reserve_wday = wday(reserve_datetime, label = TRUE),
-         reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
-         visit_date = date(visit_datetime),
-         visit_hour = hour(visit_datetime),
-         visit_wday = wday(visit_datetime, label = TRUE),
-         visit_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
-         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
-         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
+<!-- ```{r} -->
+
+<!-- air_visit <- air_visit %>% -->
+<!--   mutate(wday = wday(visit_date, label = TRUE), -->
+<!--          wday = forcats::fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), month = month(visit_date, label = TRUE)) -->
+
+<!-- air_reserve <- air_reserve %>% -->
+<!--   mutate(reserve_date = date(reserve_datetime), -->
+<!--          reserve_hour = hour(reserve_datetime), -->
+<!--          reserve_wday = wday(reserve_datetime, label = TRUE), -->
+<!--          reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
+<!--          visit_date = date(visit_datetime), -->
+<!--          visit_hour = hour(visit_datetime), -->
+<!--          visit_wday = wday(visit_datetime, label = TRUE), -->
+<!--          viist_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
+<!--          diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"), -->
+<!--          diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")) -->
 
 
-# count stores in area
-air_count <- air_store_info %>%
-  group_by(air_area_name) %>%
-  summarise(air_count = n())
-
-hpg_count <- hpg_store_info %>%
-  group_by(hpg_area_name) %>%
-  summarise(hpg_count = n())
-
-# distance
-med_coord_air <- air_store_info %>%
-  summarise_at(vars(longitude:latitude), median)
-
-med_coord_hpg <- hpg_store_info %>%
-  summarise_at(vars(longitude:latitude), median)
+<!-- hpg_reserve %>% -->
+<!--   mutate(reserve_date = date(reserve_datetime), -->
+<!--          reserve_hour = hour(reserve_datetime), -->
+<!--          reserve_wday = wday(reserve_datetime, label = TRUE), -->
+<!--          reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
+<!--          visit_date = date(visit_datetime), -->
+<!--          visit_hour = hour(visit_datetime), -->
+<!--          visit_wday = wday(visit_datetime, label = TRUE), -->
+<!--          visit_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
+<!--          diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"), -->
+<!--          diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")) -->
 
 
+<!-- # count stores in area -->
+<!-- air_count <- air_store_info %>% -->
+<!--   group_by(air_area_name) %>% -->
+<!--   summarise(air_count = n()) -->
 
-air_coords <- air_store_info %>%
-  select(longitude, latitude)
+<!-- hpg_count <- hpg_store_info %>% -->
+<!--   group_by(hpg_area_name) %>% -->
+<!--   summarise(hpg_count = n()) -->
 
-hpg_coords <- hpg_store_info %>%
-  select(longitude, latitude)
+<!-- # distance -->
+<!-- med_coord_air <- air_store_info %>% -->
+<!--   summarise_at(vars(longitude:latitude), median) -->
 
-air_store_info$dist <- geosphere::distCosine(air_coords, med_coord_air) / 1e3
-hpg_store_info$dist <- geosphere::distCosine(hpg_coords, med_coord_hpg) / 1e3
-
-# apply counts, dist; add prefecture
-
-air_store_info %>%
-  mutate(dist_group = as.integer(case_when(
-    dist < 80  ~ 1,
-    dist < 300 ~ 2, 
-    dist < 500 ~ 3,
-    dist < 750 ~ 4,
-    TRUE ~ 5 ))) %>%
-  left_join(air_count, by = "air_area_name") %>%
-  separate(air_area_name, c("preferture"), sep = " ", remove = FALSE)
+<!-- med_coord_hpg <- hpg_store_info %>% -->
+<!--   summarise_at(vars(longitude:latitude), median) -->
 
 
 
+<!-- air_coords <- air_store_info %>% -->
+<!--   select(longitude, latitude) -->
 
-```
+<!-- hpg_coords <- hpg_store_info %>% -->
+<!--   select(longitude, latitude) -->
 
-## Days of the week & months of the year
+<!-- air_store_info$dist <- geosphere::distCosine(air_coords, med_coord_air) / 1e3 -->
+<!-- hpg_store_info$dist <- geosphere::distCosine(hpg_coords, med_coord_hpg) / 1e3 -->
 
-```{r}
-air_visit %>%
-  group_by(wday) %>%
-  summarise(mean_log_visitors = mean(log1p(visitors)),
-            sd_log_visitors = sd(log1p(visitors))) %>%
-  ggplot(aes(wday, mean_log_visitors, color = wday)) +
-  geom_point(size = 4) +
-  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
-                    ymax = mean_log_visitors + sd_log_visitors,
-                    color = wday), width = 0.5, size = 0.7 ) +
-  theme(legend.position = "none")
+<!-- # apply counts, dist; add prefecture -->
 
-
-p2 <- air_visit %>%
-  mutate(visitors = log1p(visitors)) %>%
-  ggplot(aes(visitors, wday, fill = wday)) +
-  ggridges::geom_density_ridges(bandwidth = 0.1) +
-  scale_x_log10() +
-  theme(legend.position = "none") +
-  labs(x= "log1P(visitors", y ="")
-
-p3 <- air_visit %>%
-  group_by(month) %>%
-  summarise(mean_log_visitors = mean(log1p(visitors)),
-            sd_log_visitors = sd(log1p(visitors))) %>%
-  ggplot(aes(month, mean_log_visitors, color = month)) +
-  geom_point(size = 4) +
-  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
-                    ymax = mean_log_visitors + sd_log_visitors,
-                    color = month), width = 0.5, size = 0.7) +
-  theme(legend.position = "none")
-
-p4 <- air_visit %>%
-  mutate(visitors = log1p(visitors)) %>%
-  ggplot(aes(visitors, month, fill = month)) +
-  geom_density_ridges(bandwidth = 0.1) +
-  scale_x_log10() +
-  theme(legend.position = "none") +
-  labs(x = "log1p(visitors)", y = "")
-
-layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
-
-multiplot(p1, p2, p3, p4, layout=layout)
-```
+<!-- air_store_info %>% -->
+<!--   mutate(dist_group = as.integer(case_when( -->
+<!--     dist < 80  ~ 1, -->
+<!--     dist < 300 ~ 2,  -->
+<!--     dist < 500 ~ 3, -->
+<!--     dist < 750 ~ 4, -->
+<!--     TRUE ~ 5 ))) %>% -->
+<!--   left_join(air_count, by = "air_area_name") %>% -->
+<!--   separate(air_area_name, c("preferture"), sep = " ", remove = FALSE) -->
 
 
 
-# Time series parameters
 
-```{r}
+<!-- ``` -->
 
+<!-- ## Days of the week & months of the year -->
 
-
-air_visit %>%
-  left_join(air_store_info, by = "air_store_id") %>%
-  group_by(air_store_id, air_genre_name) %>%
-  summarise(mean_log_visits = mean(log1p(visitors)),
-            mean_log_visits = mean(log1p(visitors)),
-            sd_log_visits = sd(log1p(visitors))) %>%
-  ungroup()
-
-params_ts1 <- function(rownr){
-  
-  bar <- air_visit %>%
-    filter(air_store_id == foo$air_store_id[rownr])
-  slope <- summary(lm(visitors ~ visit_date, data = bar))$coef[2]
-  slope_err <- summary(lm(visitors ~ visit_date, data = bar))$coef[4]
- 
-  foobar <- tibble(
-    air_store_id = foo$air_store_id[rownr],
-    slope = slope,
-    slope_err = slope_err
-  )
-  return(foobar)
-
-}
-
-params <- params_ts1(1)
-
-for (i in seq(2,nrow(foo))){
-
-  params <- bind_rows(params, params_ts1(i))
-
-}
+<!-- ```{r} -->
+<!-- air_visit %>% -->
+<!--   group_by(wday) %>% -->
+<!--   summarise(mean_log_visitors = mean(log1p(visitors)), -->
+<!--             sd_log_visitors = sd(log1p(visitors))) %>% -->
+<!--   ggplot(aes(wday, mean_log_visitors, color = wday)) + -->
+<!--   geom_point(size = 4) + -->
+<!--   geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors, -->
+<!--                     ymax = mean_log_visitors + sd_log_visitors, -->
+<!--                     color = wday), width = 0.5, size = 0.7 ) + -->
+<!--   theme(legend.position = "none") -->
 
 
+<!-- p2 <- air_visit %>% -->
+<!--   mutate(visitors = log1p(visitors)) %>% -->
+<!--   ggplot(aes(visitors, wday, fill = wday)) + -->
+<!--   ggridges::geom_density_ridges(bandwidth = 0.1) + -->
+<!--   scale_x_log10() + -->
+<!--   theme(legend.position = "none") + -->
+<!--   labs(x= "log1P(visitors", y ="") -->
 
-ts_params <- foo %>%
-  left_join(params, by = "air_store_id")
-```
+<!-- p3 <- air_visit %>% -->
+<!--   group_by(month) %>% -->
+<!--   summarise(mean_log_visitors = mean(log1p(visitors)), -->
+<!--             sd_log_visitors = sd(log1p(visitors))) %>% -->
+<!--   ggplot(aes(month, mean_log_visitors, color = month)) + -->
+<!--   geom_point(size = 4) + -->
+<!--   geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors, -->
+<!--                     ymax = mean_log_visitors + sd_log_visitors, -->
+<!--                     color = month), width = 0.5, size = 0.7) + -->
+<!--   theme(legend.position = "none") -->
+
+<!-- p4 <- air_visit %>% -->
+<!--   mutate(visitors = log1p(visitors)) %>% -->
+<!--   ggplot(aes(visitors, month, fill = month)) + -->
+<!--   geom_density_ridges(bandwidth = 0.1) + -->
+<!--   scale_x_log10() + -->
+<!--   theme(legend.position = "none") + -->
+<!--   labs(x = "log1p(visitors)", y = "") -->
+
+<!-- layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE) -->
+
+<!-- multiplot(p1, p2, p3, p4, layout=layout) -->
+<!-- ``` -->
+
+
+
+<!-- # Time series parameters -->
+
+<!-- ```{r} -->
+
+
+
+<!-- air_visit %>% -->
+<!--   left_join(air_store_info, by = "air_store_id") %>% -->
+<!--   group_by(air_store_id, air_genre_name) %>% -->
+<!--   summarise(mean_log_visits = mean(log1p(visitors)), -->
+<!--             mean_log_visits = mean(log1p(visitors)), -->
+<!--             sd_log_visits = sd(log1p(visitors))) %>% -->
+<!--   ungroup() -->
+
+<!-- params_ts1 <- function(rownr){ -->
+
+<!--   bar <- air_visit %>% -->
+<!--     filter(air_store_id == foo$air_store_id[rownr]) -->
+<!--   slope <- summary(lm(visitors ~ visit_date, data = bar))$coef[2] -->
+<!--   slope_err <- summary(lm(visitors ~ visit_date, data = bar))$coef[4] -->
+
+<!--   foobar <- tibble( -->
+<!--     air_store_id = foo$air_store_id[rownr], -->
+<!--     slope = slope, -->
+<!--     slope_err = slope_err -->
+<!--   ) -->
+<!--   return(foobar) -->
+
+<!-- } -->
+
+<!-- params <- params_ts1(1) -->
+
+<!-- for (i in seq(2,nrow(foo))){ -->
+
+<!--   params <- bind_rows(params, params_ts1(i)) -->
+
+<!-- } -->
+
+
+
+<!-- ts_params <- foo %>% -->
+<!--   left_join(params, by = "air_store_id") -->
+<!-- ``` -->
 
 
 
