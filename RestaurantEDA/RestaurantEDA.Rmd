@@ -636,7 +636,7 @@ year(air_visit_train$date) <- 2017
 
 air_visit_train %>%
   filter(!is.na(date)) %>%
-  mutate(year = forcats::fct_relevel(as.factor(year), c("2017","2016"))) %>%
+  mutate(year = forcats::fct_relevel(as.factor(date), c("2017","2016"))) %>%
   ggplot(aes(date, year, color = dset)) +
   geom_point(shape = "|", size = 10) +
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
@@ -889,189 +889,335 @@ multiplot(p1, p2, p3, p4, layout = layout)
 ```
 
 
-<!-- ```{r} -->
-<!-- all_reserve %>% -->
-<!--   mutate(date = visit_date) %>% -->
-<!--   left_join(date_info, by = "date") %>% -->
-<!--   ggplot(aes(visitors - reserve_visitors, fill = holiday_flg)) + -->
-<!--   geom_density(alpha = 0.5) -->
+```{r}
+# density plot of visitors - reserve_visitors depending on holiday
+all_reserve %>%
+  mutate(date = visit_date) %>%
+  left_join(date_info, by = "date") %>%
+  ggplot(aes(visitors - reserve_visitors, fill = holiday_flg)) +
+  geom_density(alpha = 0.5)
+```
+
+* There are somewhat higher numbers of visitors compared to reservations on a holiday. The peaks are almost identical, but we see small yet clear differences towards larger numbers.
 
 
-<!-- ``` -->
+# Feature engineering
 
 
-<!-- # Feature engineering -->
+```{r}
+
+air_visit <- air_visit %>%
+  mutate(wday = wday(visit_date, label = TRUE),
+         wday = forcats::fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         month = month(visit_date, label = TRUE))
+
+air_reserve <- air_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         reserve_wday = wday(reserve_datetime, label = TRUE),
+         reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         visit_wday = wday(visit_datetime, label = TRUE),
+         viist_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
 
 
-<!-- ```{r} -->
-
-<!-- air_visit <- air_visit %>% -->
-<!--   mutate(wday = wday(visit_date, label = TRUE), -->
-<!--          wday = forcats::fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), month = month(visit_date, label = TRUE)) -->
-
-<!-- air_reserve <- air_reserve %>% -->
-<!--   mutate(reserve_date = date(reserve_datetime), -->
-<!--          reserve_hour = hour(reserve_datetime), -->
-<!--          reserve_wday = wday(reserve_datetime, label = TRUE), -->
-<!--          reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
-<!--          visit_date = date(visit_datetime), -->
-<!--          visit_hour = hour(visit_datetime), -->
-<!--          visit_wday = wday(visit_datetime, label = TRUE), -->
-<!--          viist_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
-<!--          diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"), -->
-<!--          diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")) -->
+hpg_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         reserve_wday = wday(reserve_datetime, label = TRUE),
+         reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         visit_wday = wday(visit_datetime, label = TRUE),
+         visit_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
 
 
-<!-- hpg_reserve %>% -->
-<!--   mutate(reserve_date = date(reserve_datetime), -->
-<!--          reserve_hour = hour(reserve_datetime), -->
-<!--          reserve_wday = wday(reserve_datetime, label = TRUE), -->
-<!--          reserve_wday = forcats::fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
-<!--          visit_date = date(visit_datetime), -->
-<!--          visit_hour = hour(visit_datetime), -->
-<!--          visit_wday = wday(visit_datetime, label = TRUE), -->
-<!--          visit_wday = forcats::fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), -->
-<!--          diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"), -->
-<!--          diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")) -->
+# count stores in area
+air_count <- air_store_info %>%
+  group_by(air_area_name) %>%
+  summarise(air_count = n())
+
+# count store in HPG
+hpg_count <- hpg_store_info %>%
+  group_by(hpg_area_name) %>%
+  summarise(hpg_count = n())
+
+# distance for air
+med_coord_air <- air_store_info %>%
+  summarise_at(vars(longitude:latitude), median)
+
+# median for HPG
+med_coord_hpg <- hpg_store_info %>%
+  summarise_at(vars(longitude:latitude), median)
+
+# select longitude and latitude (air)
+air_coords <- air_store_info %>%
+  select(longitude, latitude)
+
+# select longitude and altitude (HPG)
+hpg_coords <- hpg_store_info %>%
+  select(longitude, latitude)
 
 
-<!-- # count stores in area -->
-<!-- air_count <- air_store_info %>% -->
-<!--   group_by(air_area_name) %>% -->
-<!--   summarise(air_count = n()) -->
+air_store_info$dist <- geosphere::distCosine(air_coords, med_coord_air) / 1e3
+hpg_store_info$dist <- geosphere::distCosine(hpg_coords, med_coord_hpg) / 1e3
 
-<!-- hpg_count <- hpg_store_info %>% -->
-<!--   group_by(hpg_area_name) %>% -->
-<!--   summarise(hpg_count = n()) -->
-
-<!-- # distance -->
-<!-- med_coord_air <- air_store_info %>% -->
-<!--   summarise_at(vars(longitude:latitude), median) -->
-
-<!-- med_coord_hpg <- hpg_store_info %>% -->
-<!--   summarise_at(vars(longitude:latitude), median) -->
+# apply counts, dist; add prefecture
+air_store_info <- air_store_info %>%
+  mutate(dist_group = as.integer(case_when(
+    dist < 80  ~ 1,
+    dist < 300 ~ 2,
+    dist < 500 ~ 3,
+    dist < 750 ~ 4,
+    TRUE ~ 5 ))) %>%
+  left_join(air_count, by = "air_area_name") %>%
+  separate(air_area_name, c("preferture"), sep = " ", remove = FALSE)
 
 
+# apply counts, dist; add prefecture
+hpg_store_info <- hpg_store_info %>%
+  mutate(dist_group = as.integer(case_when(
+    dist < 80 ~ 1,
+    dist < 300 ~ 2,
+    dist < 500 ~ 3,
+    dist < 750 ~ 4,
+    TRUE ~ 5))) %>%
+  left_join(hpg_count, by = "hpg_area_name") %>%
+  separate(hpg_area_name, c("prefecture"), sep = " ", remove = FALSE)
+```
 
-<!-- air_coords <- air_store_info %>% -->
-<!--   select(longitude, latitude) -->
+## Days of the week & months of the year
 
-<!-- hpg_coords <- hpg_store_info %>% -->
-<!--   select(longitude, latitude) -->
-
-<!-- air_store_info$dist <- geosphere::distCosine(air_coords, med_coord_air) / 1e3 -->
-<!-- hpg_store_info$dist <- geosphere::distCosine(hpg_coords, med_coord_hpg) / 1e3 -->
-
-<!-- # apply counts, dist; add prefecture -->
-
-<!-- air_store_info %>% -->
-<!--   mutate(dist_group = as.integer(case_when( -->
-<!--     dist < 80  ~ 1, -->
-<!--     dist < 300 ~ 2,  -->
-<!--     dist < 500 ~ 3, -->
-<!--     dist < 750 ~ 4, -->
-<!--     TRUE ~ 5 ))) %>% -->
-<!--   left_join(air_count, by = "air_area_name") %>% -->
-<!--   separate(air_area_name, c("preferture"), sep = " ", remove = FALSE) -->
-
-
-
-
-<!-- ``` -->
-
-<!-- ## Days of the week & months of the year -->
-
-<!-- ```{r} -->
-<!-- air_visit %>% -->
-<!--   group_by(wday) %>% -->
-<!--   summarise(mean_log_visitors = mean(log1p(visitors)), -->
-<!--             sd_log_visitors = sd(log1p(visitors))) %>% -->
-<!--   ggplot(aes(wday, mean_log_visitors, color = wday)) + -->
-<!--   geom_point(size = 4) + -->
-<!--   geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors, -->
-<!--                     ymax = mean_log_visitors + sd_log_visitors, -->
-<!--                     color = wday), width = 0.5, size = 0.7 ) + -->
-<!--   theme(legend.position = "none") -->
+```{r}
+p1 <- air_visit %>%
+  group_by(wday) %>%
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+            sd_log_visitors = sd(log1p(visitors))) %>%
+  ggplot(aes(wday, mean_log_visitors, color = wday)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors,
+                    color = wday), width = 0.5, size = 0.7 ) +
+  theme(legend.position = "none")
 
 
-<!-- p2 <- air_visit %>% -->
-<!--   mutate(visitors = log1p(visitors)) %>% -->
-<!--   ggplot(aes(visitors, wday, fill = wday)) + -->
-<!--   ggridges::geom_density_ridges(bandwidth = 0.1) + -->
-<!--   scale_x_log10() + -->
-<!--   theme(legend.position = "none") + -->
-<!--   labs(x= "log1P(visitors", y ="") -->
+p2 <- air_visit %>%
+  mutate(visitors = log1p(visitors)) %>%
+  ggplot(aes(visitors, wday, fill = wday)) +
+  ggridges::geom_density_ridges(bandwidth = 0.1) +
+  scale_x_log10() +
+  theme(legend.position = "none") +
+  labs(x= "log1P(visitors", y ="")
 
-<!-- p3 <- air_visit %>% -->
-<!--   group_by(month) %>% -->
-<!--   summarise(mean_log_visitors = mean(log1p(visitors)), -->
-<!--             sd_log_visitors = sd(log1p(visitors))) %>% -->
-<!--   ggplot(aes(month, mean_log_visitors, color = month)) + -->
-<!--   geom_point(size = 4) + -->
-<!--   geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors, -->
-<!--                     ymax = mean_log_visitors + sd_log_visitors, -->
-<!--                     color = month), width = 0.5, size = 0.7) + -->
-<!--   theme(legend.position = "none") -->
+p3 <- air_visit %>%
+  group_by(month) %>%
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+            sd_log_visitors = sd(log1p(visitors))) %>%
+  ggplot(aes(month, mean_log_visitors, color = month)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors,
+                    color = month), width = 0.5, size = 0.7) +
+  theme(legend.position = "none")
 
-<!-- p4 <- air_visit %>% -->
-<!--   mutate(visitors = log1p(visitors)) %>% -->
-<!--   ggplot(aes(visitors, month, fill = month)) + -->
-<!--   geom_density_ridges(bandwidth = 0.1) + -->
-<!--   scale_x_log10() + -->
-<!--   theme(legend.position = "none") + -->
-<!--   labs(x = "log1p(visitors)", y = "") -->
+p4 <- air_visit %>%
+  mutate(visitors = log1p(visitors)) %>%
+  ggplot(aes(visitors, month, fill = month)) +
+  geom_density_ridges(bandwidth = 0.1) +
+  scale_x_log10() +
+  theme(legend.position = "none") +
+  labs(x = "log1p(visitors)", y = "")
 
-<!-- layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE) -->
+layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
 
-<!-- multiplot(p1, p2, p3, p4, layout=layout) -->
-<!-- ``` -->
-
-
-
-<!-- # Time series parameters -->
-
-<!-- ```{r} -->
+multiplot(p1, p2, p3, p4, layout=layout)
+```
 
 
+  * The differences in mean log(visitor) numbers between the days of the week are much smaller than the corresponding uncertainties. This is confirmed by the density plots that show a strong overlap. Still, there is a trend toward higher visitor numbers on the weekend that might be useful.
 
-<!-- air_visit %>% -->
-<!--   left_join(air_store_info, by = "air_store_id") %>% -->
-<!--   group_by(air_store_id, air_genre_name) %>% -->
-<!--   summarise(mean_log_visits = mean(log1p(visitors)), -->
-<!--             mean_log_visits = mean(log1p(visitors)), -->
-<!--             sd_log_visits = sd(log1p(visitors))) %>% -->
-<!--   ungroup() -->
+  * The months are even more similar, including the sligthly increased numbers in December. Overall, there is not much difference.
 
-<!-- params_ts1 <- function(rownr){ -->
+Here is a breakdown by air_genre_name:
 
-<!--   bar <- air_visit %>% -->
-<!--     filter(air_store_id == foo$air_store_id[rownr]) -->
-<!--   slope <- summary(lm(visitors ~ visit_date, data = bar))$coef[2] -->
-<!--   slope_err <- summary(lm(visitors ~ visit_date, data = bar))$coef[4] -->
+# Time series parameters
 
-<!--   foobar <- tibble( -->
-<!--     air_store_id = foo$air_store_id[rownr], -->
-<!--     slope = slope, -->
-<!--     slope_err = slope_err -->
-<!--   ) -->
-<!--   return(foobar) -->
-
-<!-- } -->
-
-<!-- params <- params_ts1(1) -->
-
-<!-- for (i in seq(2,nrow(foo))){ -->
-
-<!--   params <- bind_rows(params, params_ts1(i)) -->
-
-<!-- } -->
+```{r}
 
 
 
-<!-- ts_params <- foo %>% -->
-<!--   left_join(params, by = "air_store_id") -->
-<!-- ``` -->
+air_visit %>%
+
+  left_join(air_store_info, by = "air_store_id") %>%
+
+  group_by(wday, air_genre_name) %>%
+
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+
+            sd_log_visitors = sd(log1p(visitors))) %>%
+
+  ggplot(aes(wday, mean_log_visitors, color = wday)) +
+
+  geom_point(size = 3) +
+
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+
+                    ymax = mean_log_visitors + sd_log_visitors,
+
+                    color = wday), width = 0.5, size = 0.7) +
+
+  theme(legend.position = "none", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+
+  facet_wrap(~ air_genre_name)
+```
 
 
 
+  *  There is a stronger impact of the weekend vs weekdays for genres such as “Karaoke” or “International Cuisine”, while others show very little change over the days of the week (e.g. “Japanese food”).
+
+  * Overall, there is no significant effect for any of the genres on any day of the week.
+
+What about the statistics of visitors vs reservations? Does it depend on the day of the week? We use boxplots to find out:
+
+
+```{r}
+all_reserve %>%
+
+  mutate(wday = wday(visit_date, label=TRUE),
+
+         wday = forcats::fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))) %>%
+
+  ggplot(aes(wday, visitors - reserve_visitors, fill = wday)) +
+
+  geom_boxplot() +
+
+  theme(legend.position = "none")
+```
+
+We find that there is no significant difference, although we see a slight trend for more visitors compared to reservations on the weekend, especially Sunday.
+
+## Restaurant per area - air/hpg_count
+
+This feature will address the question of how many restaurant can be found in a certain area and whether larger numbers of restaurants per area affect the average visitor numbers.
+
+```{r}
+p1 <- air_count %>%
+
+  ggplot(aes(air_count)) +
+
+  geom_histogram(binwidth = 2, fill = "blue")
+
+
+
+p2 <- hpg_count %>%
+
+  ggplot(aes(hpg_count)) +
+
+  geom_histogram(binwidth = 5, fill = "red")
+
+
+
+p3 <- air_visit %>%
+
+  left_join(air_store_info, by = "air_store_id") %>%
+
+  group_by(air_store_id, air_count) %>%
+
+  summarise(mean_store_visit = mean(log1p(visitors))) %>%
+
+  group_by(air_count) %>%
+
+  summarise(mean_log_visitors = mean(mean_store_visit),
+
+            sd_log_visitors = sd(mean_store_visit)) %>%
+
+  ggplot(aes(air_count, mean_log_visitors)) +
+
+  geom_point(size = 4, color = "blue") +
+
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+
+                    ymax = mean_log_visitors + sd_log_visitors),
+
+                    color = "blue", width = 0.5, size = 0.7) +
+
+  geom_smooth(method = "lm", color = "black") +
+
+  labs(x = "Air restaurants per area")
+
+
+
+layout <- matrix(c(1,2,3,3),2,2,byrow=TRUE)
+
+multiplot(p1, p2, p3, layout=layout)
+```
+
+
+
+  * Most areas in the air data set have only a few restaurants, with the distribution peaking at 2. This goes back to the earlier observation that no single air_genre can ever be found in an air_area. There are always at least 2 of the same type. Still odd. The air data also has a tentative 2nd peak around 16-20. The hpg data, with larger overall numbers, also peaks at low counts and has few other, smaller peaks through its decline.
+
+  * The mean log1p visitor numbers per area have large uncertainties and are all consistent with each other. There is a slight trend, shown by the black linear regression, toward lower average numbers for larger areas but it is quite weak.
+
+
+
+# Forecasting methods and examples
+
+## ARIMA / auto.arima
+
+```{r}
+air_id <- "air_ba937bf13d40fb24"
+
+# count the nomber of date to predict
+pred_len <- sample_submission %>%
+  separate(id, c("air", "store_id", "date"), sep = "_") %>%
+  distinct(date) %>%
+  nrow()
+
+# set last date
+max_date <- max(air_visit$visit_date)
+
+# set split date
+split_date <- max_date - pred_len
+
+# set all visits in tibble
+all_visits <- tibble(visit_date = seq(min(air_visit$visit_date), max(air_visit$visit_date), 1))
+
+
+# filter visitors of air_id 
+foo <- air_visit %>%
+  filter(air_store_id == air_id)
+
+
+# only all visits of air_id
+visits <- foo %>%
+  right_join(all_visits, by = "visit_date") %>%
+  mutate(visitors = log1p(visitors)) %>%
+  replace_na(list(visitors = median(log1p(foo$visitors)))) %>%
+  rownames_to_column()
+
+# split visits
+visits_train <- visits %>% filter(visit_date <= split_date)
+
+visits_valid <- visits %>% filter(visit_date > split_date)
+
+```
+
+
+```{r}
+library(forecast)
+arima.fit <- forecast::auto.arima(forecast::tsclean(ts(visits_train$visitors, frequency = 7)),
+                        stepwise = FALSE, approximation = FALSE)
+# Using the fitted ARIMA model we will forecast for our “prediction length”. We include confidence intervals.
+arima_visits <- arima.fit %>% forecast(h = pred_len, level = c(50,95))
+
+arima_visits %>%
+  autoplot +
+  geom_line(aes(as.integer(rowname)/7, visitors), data = visits_valid, color = "grey40") +
+  labs(x = "Time [weeks]", y = "log1p visitors vs auto.arima predictions")
+```
 
