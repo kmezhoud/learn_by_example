@@ -225,19 +225,27 @@ conf240$`sparklyr.cores.local` &lt;- 2
 conf240$`sparklyr.shell.driver-memory` &lt;- &quot;4G&quot;
 conf240$spark.memory.fraction &lt;- 0.5
 
-sc240 &lt;- spark_connect(master = &quot;local&quot;,
-                      version = &quot;2.4.0&quot;,
-                      config = conf240
-                    )
 sc232 &lt;- spark_connect(master = &quot;local&quot;,
-                    version = &quot;2.3.2&quot;,
-                    config = conf232
+                       spark_home = &quot;/Users/Mezhoud/spark/spark-2.3.2-bin-hadoop2.7&quot;,
+                       version = &quot;2.3.2&quot;,
+                       config = conf232
+                    )
+
+sc240 &lt;- spark_connect(master = &quot;local&quot;,
+                       spark_home = &quot;/Users/Mezhoud/spark/spark-2.4.0-bin-hadoop2.7&quot;,
+                       version = &quot;2.4.0&quot;,
+                       config = conf240
                     )</code></pre>
 <pre><code>## Re-using existing Spark connection to local</code></pre>
+<pre class="r"><code>spark_version(sc240)</code></pre>
+<pre><code>## [1] '2.3.2'</code></pre>
+<pre class="r"><code>spark_version(sc232)</code></pre>
+<pre><code>## [1] '2.3.2'</code></pre>
 <p>Only the first connection is done!</p>
 </div>
 <div id="copy-data-set-in-different-nodes" class="section level2">
 <h2>Copy data set in different nodes</h2>
+<p>…. working….</p>
 </div>
 
 

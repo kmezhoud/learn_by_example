@@ -247,6 +247,13 @@ $(document).ready(function () {
 <pre class="r"><code>library(sparklyr)
 spark_installed_versions()</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbImRhdGEuZnJhbWUiXSwibmNvbCI6MywibnJvdyI6M30sInJkZiI6Ikg0c0lBQUFBQUFBQUE0MVJYVS9ESUJTOWcxV3pKak5ML0IxUXJadjdBNzc2WW1LeVYxYlFrbFZvb0kzR0ozLzVGR2pKVmg0V2ViaWMrM0h1dlFkZW5uWmx2c3NCQUFIT0VDRHM0Qnc1TTRNNUxQejlCWUJ2SGZDWlZiaUhSSFpQTjdTTVRra2Z6cDAxdlV2S2NVa2ZUM0I3RHFlRnRIaTF3dGppV1h6WHV1ZUZiWms1REphRWtXUXZGYWtaMTdvOTliekVDcnROV050L3NaeUloRFY5bWt5eEQySFRad25zMGJrYXFGRXNseVpwc1RENms4WTJTLzhOUHhBT1RtZFZEYk54Vmd6bW5IV012aG5IZDk0eG9WenJ0cE5hT1JMeS81Y2w1SmxKQXF0ZStVMDRxZXBlSGNobTdTZUUvSENXSThaVDdHZWkzN0ZYRm9VTDlTNlZpTXMzYkMrYTBibHhrb05pMmhxcHVpakZSUzN0ZE1kaVhWN3BKa2FDT0RqK0FXNnEySml1QWdBQSJ9 -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["spark"],"name":[1],"type":["chr"],"align":["left"]},{"label":["hadoop"],"name":[2],"type":["chr"],"align":["left"]},{"label":["dir"],"name":[3],"type":["chr"],"align":["left"]}],"data":[{"1":"1.5.2","2":"2.6","3":"/Users/Mezhoud/spark/spark-1.5.2-bin-hadoop2.6"},{"1":"2.3.2","2":"2.7","3":"/Users/Mezhoud/spark/spark-2.3.2-bin-hadoop2.7"},{"1":"2.4.0","2":"2.7","3":"/Users/Mezhoud/spark/spark-2.4.0-bin-hadoop2.7"}],"options":{"columns":{"min":{},"max":[10],"total":[3]},"rows":{"min":[10],"max":[10],"total":[3]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -257,6 +264,13 @@ spark_installed_versions()</code></pre>
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3BhcmtfYXZhaWxhYmxlX3ZlcnNpb25zKHNob3dfaGFkb29wID0gVFJVRSkgJT4lIHRhaWwoKVxuYGBgIn0= -->
 <pre class="r"><code>spark_available_versions(show_hadoop = TRUE) %&gt;% tail()</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbImRhdGEuZnJhbWUiXSwibmNvbCI6MiwibnJvdyI6Nn0sInJkZiI6Ikg0c0lBQUFBQUFBQUE1VlF5MDdETUJEY09uVlFJeFZWNGpNZ1N3bHQrUUcrZ0ZPdkpnazBhckFqeDFYNStwYU42eFhFVWc4Y3h0NFplL2IxOXJvdHNtMEdBQUlTS1VBa0ZFNEZIUk9Zd215NHZ3R1NPLzhCWUVGSXc0TXM4Qm1mcnBMaUNsbmhja3pHV1pNQ1gzN0R6Yi9VY2VOU3E2KzZEK2tGaTMybjdENlFkS2NxWTdySU43UG1pT3lkKzlZQTdna1BoSnlBaEVmQ01pNVl0cXJuZ2l4bWxYSUtQeXpsSTNhS0xEZW1jNDNSWkJMRGltVmtudGhJV0J6MDBGbVZsN3VEM3VmcjlWREJ2MTh3RDNmNkp4YVhtdUljY2ttZXZ0YWZqYTY1K1ZhOTEyMGd0N1FDdndIc2JLTWRqMEpxajg0NHhmK3kwclNzK09IZzlBTWJtVlcwVVFJQUFBPT0ifQ== -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["spark"],"name":[1],"type":["chr"],"align":["left"]},{"label":["hadoop"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"2.3.1","2":"2.7","_rn_":"43"},{"1":"2.3.1","2":"2.6","_rn_":"44"},{"1":"2.3.2","2":"2.7","_rn_":"45"},{"1":"2.3.2","2":"2.6","_rn_":"46"},{"1":"2.4.0","2":"2.7","_rn_":"47"},{"1":"2.4.0","2":"2.6","_rn_":"48"}],"options":{"columns":{"min":{},"max":[10],"total":[2]},"rows":{"min":[10],"max":[10],"total":[6]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -275,37 +289,52 @@ spark_installed_versions()</code></pre>
 <h2>Connect to two spark versions</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY29uZjIzMiA8LSBzcGFya19jb25maWcoKSAgICMgTG9hZCB2YXJpYWJsZSB3aXRoIHNwYXJrX2NvbmZpZygpXG5jb25mMjMyJGBzcGFya2x5ci5jb3Jlcy5sb2NhbGAgPC0gMlxuY29uZjIzMiRgc3BhcmtseXIuc2hlbGwuZHJpdmVyLW1lbW9yeWAgPC0gXCI0R1wiXG5jb25mMjMyJHNwYXJrLm1lbW9yeS5mcmFjdGlvbiA8LSAwLjVcblxuY29uZjI0MCA8LSBzcGFya19jb25maWcoKSAgICMgTG9hZCB2YXJpYWJsZSB3aXRoIHNwYXJrX2NvbmZpZygpXG5jb25mMjQwJGBzcGFya2x5ci5jb3Jlcy5sb2NhbGAgPC0gMlxuY29uZjI0MCRgc3BhcmtseXIuc2hlbGwuZHJpdmVyLW1lbW9yeWAgPC0gXCI0R1wiXG5jb25mMjQwJHNwYXJrLm1lbW9yeS5mcmFjdGlvbiA8LSAwLjVcblxuc2MyNDAgPC0gc3BhcmtfY29ubmVjdChtYXN0ZXIgPSBcImxvY2FsXCIsXG4gICAgICAgICAgICAgICAgICAgICAgdmVyc2lvbiA9IFwiMi40LjBcIixcbiAgICAgICAgICAgICAgICAgICAgICBjb25maWcgPSBjb25mMjQwXG4gICAgICAgICAgICAgICAgICAgIClcbnNjMjMyIDwtIHNwYXJrX2Nvbm5lY3QobWFzdGVyID0gXCJsb2NhbFwiLFxuICAgICAgICAgICAgICAgICAgICB2ZXJzaW9uID0gXCIyLjMuMlwiLFxuICAgICAgICAgICAgICAgICAgICBjb25maWcgPSBjb25mMjMyXG4gICAgICAgICAgICAgICAgICAgIClcblxuXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY29uZjIzMiA8LSBzcGFya19jb25maWcoKSAgICMgTG9hZCB2YXJpYWJsZSB3aXRoIHNwYXJrX2NvbmZpZygpXG5jb25mMjMyJGBzcGFya2x5ci5jb3Jlcy5sb2NhbGAgPC0gMlxuY29uZjIzMiRgc3BhcmtseXIuc2hlbGwuZHJpdmVyLW1lbW9yeWAgPC0gXCI0R1wiXG5jb25mMjMyJHNwYXJrLm1lbW9yeS5mcmFjdGlvbiA8LSAwLjVcbmNvbmYyNDAgPC0gc3BhcmtfY29uZmlnKCkgICAjIExvYWQgdmFyaWFibGUgd2l0aCBzcGFya19jb25maWcoKVxuY29uZjI0MCRgc3BhcmtseXIuY29yZXMubG9jYWxgIDwtIDJcbmNvbmYyNDAkYHNwYXJrbHlyLnNoZWxsLmRyaXZlci1tZW1vcnlgIDwtIFwiNEdcIlxuY29uZjI0MCRzcGFyay5tZW1vcnkuZnJhY3Rpb24gPC0gMC41XG5zYzIzMiA8LSBzcGFya19jb25uZWN0KG1hc3RlciA9IFwibG9jYWxcIixcbiAgICAgICAgICAgICAgICAgICAgICAgc3BhcmtfaG9tZSA9IFwiL1VzZXJzL01lemhvdWQvc3Bhcmsvc3BhcmstMi4zLjItYmluLWhhZG9vcDIuN1wiLFxuICAgICAgICAgICAgICAgICAgICAgICB2ZXJzaW9uID0gXCIyLjMuMlwiLFxuICAgICAgICAgICAgICAgICAgICAgICBjb25maWcgPSBjb25mMjMyXG4gICAgICAgICAgICAgICAgICAgIClcbnNjMjQwIDwtIHNwYXJrX2Nvbm5lY3QobWFzdGVyID0gXCJsb2NhbFwiLFxuICAgICAgICAgICAgICAgICAgICAgICBzcGFya19ob21lID0gXCIvVXNlcnMvTWV6aG91ZC9zcGFyay9zcGFyay0yLjQuMC1iaW4taGFkb29wMi43XCIsXG4gICAgICAgICAgICAgICAgICAgICAgIHZlcnNpb24gPSBcIjIuNC4wXCIsXG4gICAgICAgICAgICAgICAgICAgICAgIGNvbmZpZyA9IGNvbmYyNDBcbiAgICAgICAgICAgICAgICAgICAgKVxuYGBgIn0= -->
 <pre class="r"><code>conf232 &lt;- spark_config()   # Load variable with spark_config()
 conf232$`sparklyr.cores.local` &lt;- 2
 conf232$`sparklyr.shell.driver-memory` &lt;- &quot;4G&quot;
 conf232$spark.memory.fraction &lt;- 0.5
-
 conf240 &lt;- spark_config()   # Load variable with spark_config()
 conf240$`sparklyr.cores.local` &lt;- 2
 conf240$`sparklyr.shell.driver-memory` &lt;- &quot;4G&quot;
 conf240$spark.memory.fraction &lt;- 0.5
-
-sc240 &lt;- spark_connect(master = &quot;local&quot;,
-                      version = &quot;2.4.0&quot;,
-                      config = conf240
-                    )
 sc232 &lt;- spark_connect(master = &quot;local&quot;,
-                    version = &quot;2.3.2&quot;,
-                    config = conf232
+                       spark_home = &quot;/Users/Mezhoud/spark/spark-2.3.2-bin-hadoop2.7&quot;,
+                       version = &quot;2.3.2&quot;,
+                       config = conf232
                     )
-</code></pre>
+sc240 &lt;- spark_connect(master = &quot;local&quot;,
+                       spark_home = &quot;/Users/Mezhoud/spark/spark-2.4.0-bin-hadoop2.7&quot;,
+                       version = &quot;2.4.0&quot;,
+                       config = conf240
+                    )</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUmUtdXNpbmcgZXhpc3RpbmcgU3BhcmsgY29ubmVjdGlvbiB0byBsb2NhbFxuIn0= -->
+<pre><code>Re-using existing Spark connection to local</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3BhcmtfdmVyc2lvbihzYzI0MClcbmBgYCJ9 -->
+<pre class="r"><code>spark_version(sc240)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIOKAmDIuMy4y4oCZXG4ifQ== -->
+<pre><code>[1] ‘2.3.2’</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3BhcmtfdmVyc2lvbihzYzIzMilcbmBgYCJ9 -->
+<pre class="r"><code>spark_version(sc232)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIOKAmDIuMy4y4oCZXG4ifQ== -->
+<pre><code>[1] ‘2.3.2’</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Only the first connection is done!</p>
 </div>
 <div id="copy-data-set-in-different-nodes" class="section level2">
 <h2>Copy data set in different nodes</h2>
+<p>…. working….</p>
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAnU2V0dGluZyBtdWx0aXBsZSBTcGFyayBOb2RlcyAnCm91dHB1dDoKICAgIGh0bWxfZG9jdW1lbnQ6CiAgICBudW1iZXJfc2VjdGlvbnM6IHRydWUKICAgIGZpZ19jYXB0aW9uOiB0cnVlCiAgICB0b2M6IHRydWUKICAgIGZpZ193aWR0aDogNwogICAgZmlnX2hlaWdodDogNC41CiAgICB0aGVtZTogY29zbW8KICAgIGhpZ2hsaWdodDogdGFuZ28KICAgICNjb2RlX2ZvbGRpbmc6IGhpZGUKICAgIGh0bWxfbm90ZWJvb2s6IG51bGwKICAgIGRmX3ByaW50OiBwYWdlZCAKLS0tCgojIyB3aGljaCB2ZXJzaW9ucyBpbnN0YWxsZWQ/CmBgYHtyfQpsaWJyYXJ5KHNwYXJrbHlyKQpzcGFya19pbnN0YWxsZWRfdmVyc2lvbnMoKQpgYGAKCiMjIExhc3QgU3BhcmsgdmVyc2lvbiBBdmFpbGFiaWxpdHkKYGBge3J9CnNwYXJrX2F2YWlsYWJsZV92ZXJzaW9ucyhzaG93X2hhZG9vcCA9IFRSVUUpICU+JSB0YWlsKCkKYGBgCgojIyBJbnN0YWxsIFNwZWNpZmljIHNwYXJrIHZlcnNpb24KYGBge3J9CmxpYnJhcnkoc3BhcmtseXIpCiNzcGFya19pbnN0YWxsKHZlcnNpb24gPSAiMi40LjAiKQpgYGAKCgojIyBDb25uZWN0IHRvIHR3byBzcGFyayB2ZXJzaW9ucwoKYGBge3J9CmNvbmYyMzIgPC0gc3BhcmtfY29uZmlnKCkgICAjIExvYWQgdmFyaWFibGUgd2l0aCBzcGFya19jb25maWcoKQpjb25mMjMyJGBzcGFya2x5ci5jb3Jlcy5sb2NhbGAgPC0gMgpjb25mMjMyJGBzcGFya2x5ci5zaGVsbC5kcml2ZXItbWVtb3J5YCA8LSAiNEciCmNvbmYyMzIkc3BhcmsubWVtb3J5LmZyYWN0aW9uIDwtIDAuNQoKY29uZjI0MCA8LSBzcGFya19jb25maWcoKSAgICMgTG9hZCB2YXJpYWJsZSB3aXRoIHNwYXJrX2NvbmZpZygpCmNvbmYyNDAkYHNwYXJrbHlyLmNvcmVzLmxvY2FsYCA8LSAyCmNvbmYyNDAkYHNwYXJrbHlyLnNoZWxsLmRyaXZlci1tZW1vcnlgIDwtICI0RyIKY29uZjI0MCRzcGFyay5tZW1vcnkuZnJhY3Rpb24gPC0gMC41CgpzYzI0MCA8LSBzcGFya19jb25uZWN0KG1hc3RlciA9ICJsb2NhbCIsCiAgICAgICAgICAgICAgICAgICAgICB2ZXJzaW9uID0gIjIuNC4wIiwKICAgICAgICAgICAgICAgICAgICAgIGNvbmZpZyA9IGNvbmYyNDAKICAgICAgICAgICAgICAgICAgICApCnNjMjMyIDwtIHNwYXJrX2Nvbm5lY3QobWFzdGVyID0gImxvY2FsIiwKICAgICAgICAgICAgICAgICAgICB2ZXJzaW9uID0gIjIuMy4yIiwKICAgICAgICAgICAgICAgICAgICBjb25maWcgPSBjb25mMjMyCiAgICAgICAgICAgICAgICAgICAgKQoKCmBgYAoKT25seSB0aGUgZmlyc3QgY29ubmVjdGlvbiBpcyBkb25lIQoKIyMgQ29weSBkYXRhIHNldCBpbiBkaWZmZXJlbnQgbm9kZXMKCgo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAnU2V0dGluZyBtdWx0aXBsZSBTcGFyayBOb2RlcyAnCm91dHB1dDoKICAgIGh0bWxfZG9jdW1lbnQ6CiAgICBudW1iZXJfc2VjdGlvbnM6IHRydWUKICAgIGZpZ19jYXB0aW9uOiB0cnVlCiAgICB0b2M6IHRydWUKICAgIGZpZ193aWR0aDogNwogICAgZmlnX2hlaWdodDogNC41CiAgICB0aGVtZTogY29zbW8KICAgIGhpZ2hsaWdodDogdGFuZ28KICAgICNjb2RlX2ZvbGRpbmc6IGhpZGUKICAgIGh0bWxfbm90ZWJvb2s6IG51bGwKICAgIGRmX3ByaW50OiBwYWdlZCAKLS0tCgojIyB3aGljaCB2ZXJzaW9ucyBpbnN0YWxsZWQ/CmBgYHtyfQpsaWJyYXJ5KHNwYXJrbHlyKQpzcGFya19pbnN0YWxsZWRfdmVyc2lvbnMoKQpgYGAKCiMjIExhc3QgU3BhcmsgdmVyc2lvbiBBdmFpbGFiaWxpdHkKYGBge3J9CnNwYXJrX2F2YWlsYWJsZV92ZXJzaW9ucyhzaG93X2hhZG9vcCA9IFRSVUUpICU+JSB0YWlsKCkKYGBgCgojIyBJbnN0YWxsIFNwZWNpZmljIHNwYXJrIHZlcnNpb24KYGBge3J9CmxpYnJhcnkoc3BhcmtseXIpCiNzcGFya19pbnN0YWxsKHZlcnNpb24gPSAiMi40LjAiKQpgYGAKCgojIyBDb25uZWN0IHRvIHR3byBzcGFyayB2ZXJzaW9ucwoKYGBge3J9CmNvbmYyMzIgPC0gc3BhcmtfY29uZmlnKCkgICAjIExvYWQgdmFyaWFibGUgd2l0aCBzcGFya19jb25maWcoKQpjb25mMjMyJGBzcGFya2x5ci5jb3Jlcy5sb2NhbGAgPC0gMgpjb25mMjMyJGBzcGFya2x5ci5zaGVsbC5kcml2ZXItbWVtb3J5YCA8LSAiNEciCmNvbmYyMzIkc3BhcmsubWVtb3J5LmZyYWN0aW9uIDwtIDAuNQoKY29uZjI0MCA8LSBzcGFya19jb25maWcoKSAgICMgTG9hZCB2YXJpYWJsZSB3aXRoIHNwYXJrX2NvbmZpZygpCmNvbmYyNDAkYHNwYXJrbHlyLmNvcmVzLmxvY2FsYCA8LSAyCmNvbmYyNDAkYHNwYXJrbHlyLnNoZWxsLmRyaXZlci1tZW1vcnlgIDwtICI0RyIKY29uZjI0MCRzcGFyay5tZW1vcnkuZnJhY3Rpb24gPC0gMC41CgpzYzIzMiA8LSBzcGFya19jb25uZWN0KG1hc3RlciA9ICJsb2NhbCIsCiAgICAgICAgICAgICAgICAgICAgICAgc3BhcmtfaG9tZSA9ICIvVXNlcnMvTWV6aG91ZC9zcGFyay9zcGFyay0yLjMuMi1iaW4taGFkb29wMi43IiwKICAgICAgICAgICAgICAgICAgICAgICB2ZXJzaW9uID0gIjIuMy4yIiwKICAgICAgICAgICAgICAgICAgICAgICBjb25maWcgPSBjb25mMjMyCiAgICAgICAgICAgICAgICAgICAgKQoKc2MyNDAgPC0gc3BhcmtfY29ubmVjdChtYXN0ZXIgPSAibG9jYWwiLAogICAgICAgICAgICAgICAgICAgICAgIHNwYXJrX2hvbWUgPSAiL1VzZXJzL01lemhvdWQvc3Bhcmsvc3BhcmstMi40LjAtYmluLWhhZG9vcDIuNyIsCiAgICAgICAgICAgICAgICAgICAgICAgdmVyc2lvbiA9ICIyLjQuMCIsCiAgICAgICAgICAgICAgICAgICAgICAgY29uZmlnID0gY29uZjI0MAogICAgICAgICAgICAgICAgICAgICkKCgpzcGFya192ZXJzaW9uKHNjMjQwKQpzcGFya192ZXJzaW9uKHNjMjMyKQpgYGAKCk9ubHkgdGhlIGZpcnN0IGNvbm5lY3Rpb24gaXMgZG9uZSEKCiMjIENvcHkgZGF0YSBzZXQgaW4gZGlmZmVyZW50IG5vZGVzCgouLi4uIHdvcmtpbmcuLi4uCg==</div>
 
 
 

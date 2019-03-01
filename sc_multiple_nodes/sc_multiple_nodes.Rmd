@@ -45,20 +45,25 @@ conf240$`sparklyr.cores.local` <- 2
 conf240$`sparklyr.shell.driver-memory` <- "4G"
 conf240$spark.memory.fraction <- 0.5
 
-sc240 <- spark_connect(master = "local",
-                      version = "2.4.0",
-                      config = conf240
-                    )
 sc232 <- spark_connect(master = "local",
-                    version = "2.3.2",
-                    config = conf232
+                       spark_home = "/Users/Mezhoud/spark/spark-2.3.2-bin-hadoop2.7",
+                       version = "2.3.2",
+                       config = conf232
+                    )
+
+sc240 <- spark_connect(master = "local",
+                       spark_home = "/Users/Mezhoud/spark/spark-2.4.0-bin-hadoop2.7",
+                       version = "2.4.0",
+                       config = conf240
                     )
 
 
+spark_version(sc240)
+spark_version(sc232)
 ```
 
 Only the first connection is done!
 
 ## Copy data set in different nodes
 
-
+.... working....

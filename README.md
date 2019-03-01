@@ -15,5 +15,9 @@
 </a>
 
 <a href="https://kmezhoud.github.io/learn_by_example/dplyr_to_sql/dplyr_to_sql.html" target = "_blank">
-<img src="images/dplyr_to_sql.png" align="left" height="150" width="200" title="Convert dplyr code to sql">
+<img src="images/dplyr_to_sql.png" align="left" height="150" width="230" title="Convert dplyr code to sql">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/sc_multiple_npdes/sc_multiple_nodes.html" target = "_blank">
+<img src="images/sc_multiple_nodes.png" align="left" height="150" width="250" title="Convert dplyr code to sql">
 </a>
