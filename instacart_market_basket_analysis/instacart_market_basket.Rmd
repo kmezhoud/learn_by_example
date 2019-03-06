@@ -6,8 +6,8 @@ output:
     number_sections: true
     fig_caption: true
     toc: true
-#    fig_width: 7
- #   fig_height: 4.5
+    fig_width: 7
+    fig_height: 4.5
     theme: cosmo
     highlight: tango
     code_folding: show #hide
@@ -358,7 +358,7 @@ reordered_train <- order_train %>%
     ggplot(aes(x = reorder(product_name, - freq) , y = freq )) +
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   geom_col( color = "red") +
-  labs(title = "Top reordered items for train data set") +
+  labs(title = "Top reordered items for train dataset") +
   xlab("product name") +
   ylab("Reordered frequency")
   
@@ -372,7 +372,7 @@ reordered_prior <- order_prior %>%
     ggplot(aes(x = reorder(product_name, - freq) , y = freq )) +
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   geom_col( color = "blue") +
-  labs(title = "Top reordered items for prior data set") +
+  labs(title = "Top reordered items for prior dataset") +
   xlab("product name") +
   ylab("Reordered frequency")
 
@@ -433,3 +433,14 @@ order_train %>%
 we find:
 In general only the reordered items are added at the bigening  of shopping. 
 Only few cases with banana are not ordered for the first time and added the first to the cart.
+
+## To sellers of Banana
+
+```{r comment=FALSE, warning=FALSE}
+
+banana_id <- products %>%
+             filter(product_name == "Banana") %>%
+             #select(product_id) %>%
+            .$product_id
+```
+
