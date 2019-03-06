@@ -19,5 +19,9 @@
 </a>
 
 <a href="https://kmezhoud.github.io/learn_by_example/sc_multiple_nodes/sc_multiple_nodes.html" target = "_blank">
-<img src="images/sc_multiple_nodes.png" align="left" height="150" width="250" title="Convert dplyr code to sql">
+<img src="images/sc_multiple_nodes.png" align="left" height="150" width="250" title="Connect multiple spark nodes">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/instacat_market_basket_analysis/instacart_market_basket.html" target = "_blank">
+<img src="images/sc_multiple_nodes.png" align="left" height="150" width="250" title="Instacart Market Basket Analysis">
 </a>

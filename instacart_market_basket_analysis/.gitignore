@@ -1,0 +1,17 @@
+.RData.RData
+._aisles.csv
+._departments.csv
+._instacart_market_basket.Rmd
+._order_products__prior.csv
+._order_products__train.csv
+._orders.csv
+._products.csv
+._sample_submission.csv
+aisles.csv
+baskets.RDS
+departments.csv
+order_products__prior.csv
+order_products__train.csv
+orders.csv
+products.csv
+sample_submission.csv

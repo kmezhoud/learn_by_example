@@ -33,3 +33,6 @@ rsconnect/
 ._shiny_ggplot_spark_transformation.R
 ._linear_regression.Rmd
 ._shiny_ggplot_spark_transformation.Rmd
+._instacart_market_basket_analysis
+.RDataTmp1
+.RDataTmp
