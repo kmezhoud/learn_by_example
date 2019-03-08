@@ -7,7 +7,7 @@ output:
     fig_caption: true
     toc: true
     fig_width: 7
-    fig_height: 4.5
+    fig_height: 6
     theme: cosmo
     highlight: tango
     code_folding: show #hide
@@ -15,6 +15,7 @@ output:
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
 
 # Introduction  to the dataset
@@ -165,31 +166,9 @@ products <- products %>%
 # Market Basket analysis
 In this first section, we would try explore the of details of the orders, the content of baskets, the best sold items.
 
-## Regroup items per basket
-In each orders, costumers bougth multiple items forming a basket. We will regroup the orders per basket.
-
-We need to join orders by order_id and then by products_id.
-This code take a while.
-```{r}
-# transactions <- orders %>%
-#   left_join(order_prior, by = "order_id") %>%
-#   left_join(products, by = "product_id")
-# 
-# baskets <- transactions %>%
-#            plyr::ddply(c("order_id", "user_id"),
-#               function(df1) paste(df1$product_name,
-#                                   collapse = ","))
-# 
-# colnames(baskets) <- c("Order_id","user_id","Baskets")
-# baskets <- readRDS("baskets.RDS")
-# tibble::glimpse(baskets)
-# saveRDS(object = baskets, file = "baskets.RDS")
-
-```
-
 ## View the distribution of orders / transactions (hours and week days)
 
-```{r  include=TRUE, echo=FALSE, comment=FALSE, warning=FALSE}
+```{r  include=TRUE, echo=TRUE, comment=FALSE, warning=FALSE}
 ## time of ordering
 p1 <- orders %>%
   ggplot(aes(x = order_hour_of_day)) +
@@ -219,7 +198,7 @@ We can observe more ordering during weekends during a month. But we can aloso ob
 
 
 ## plot the number of prior , train, and test orders
-```{r include=TRUE, echo=FALSE, comment=FALSE, warning=FALSE}
+```{r include=TRUE, echo=TRUE, comment=FALSE, warning=FALSE}
 ## count the number of prior orders
 p3 <- orders %>%
   filter(eval_set == 'prior') %>%
@@ -246,7 +225,7 @@ We observe a pick at 100 orders number for test and train samples.
 
 ## plot the number of items per order
 
-```{r  comment=FALSE, warning=FALSE}
+```{r  comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
 prior <- order_prior %>%
   group_by(order_id) %>%
   dplyr::summarise(n_orders = n()) %>%
@@ -279,7 +258,7 @@ Ordering 25 items seems to be an exception.
 
 ## Top costomers for Top products
 
-```{r comment=FALSE, warning=FALSE}
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 10}
 # top costumers that purchased the largest number of items 
 #the dataset is limited to 100 items maximum per costumer
 top_costumers_items <- orders %>%
@@ -347,7 +326,7 @@ top_costumers_visits <- orders %>%
 
 ## Top reordered items
 
-```{r comment=FALSE, warning=FALSE}
+```{r comment=FALSE, warning=FALSE, fig.height = 4, fig.width = 7}
 
 reordered_train <- order_train %>% 
   filter(reordered == TRUE) %>%
@@ -385,9 +364,9 @@ reordered_prior <- order_prior %>%
 We find:
 The main difference is in `Organic Whole Milk` which is not in the top 10 products in train orders.
 
-## Which items added the first to the card
+## Which most items added the first to the card
 
-```{r comment=FALSE, warning=FALSE}
+```{r comment=FALSE, warning=FALSE, fig.height = 4, fig.width = 8}
 first_item_to_cart_prior <-
 order_prior %>%
   filter(add_to_cart_order == 1) %>%
@@ -409,8 +388,8 @@ order_prior %>%
 first_item_to_cart_train <-
 order_train %>%
   filter(add_to_cart_order == 1) %>%
-  #filter(product_id == "345") %>%
   group_by(product_id, reordered) %>%
+  #summarize(proportion_reordered = mean(reordered), n=n())
   dplyr::summarise(n_first = n()) %>%
   arrange(desc(n_first)) %>%
   head(10) %>%
@@ -424,17 +403,74 @@ order_train %>%
   ylab("frequency of added the first to the cart")
 
 
+
   # plot P1, P2, P3, p4 in the same plot
  layout <- matrix(c(1,2), 1, 2, byrow = TRUE)
  multiplot(first_item_to_cart_prior, first_item_to_cart_train, layout=layout)
   
 ```
-
 we find:
 In general only the reordered items are added at the bigening  of shopping. 
 Only few cases with banana are not ordered for the first time and added the first to the cart.
 
-## To sellers of Banana
+## reordering rate versus added rank to the cart
+```{r}
+order_train %>% 
+  group_by(product_id, add_to_cart_order) %>% 
+  summarize(n_items_basket = n(), reordered_rate_basket = mean(reordered)) %>% 
+  group_by(add_to_cart_order) %>%
+  summarise(reordered_rate_all = mean(reordered_rate_basket))%>%
+  ggplot(aes(x= add_to_cart_order, y = reordered_rate_all)) +
+  geom_line()
+```
+
+## Which most pourcentage of items added the first to the card
+
+```{r comment=FALSE, warning=FALSE, fig.height = 4, fig.width = 7}
+first_pct_item_to_cart_train <- order_train %>% 
+  group_by(product_id, add_to_cart_order) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct=count/sum(count)) %>% 
+  filter(add_to_cart_order == 1, count>10) %>% 
+  arrange(desc(pct)) %>% 
+  left_join(products,by='product_id') %>%
+  ungroup() %>% 
+  select(product_name, pct, count) %>% 
+  top_n(10, wt=pct) %>%
+  ggplot(aes(x = reorder(product_name,-pct), y = pct)) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_col() +
+   labs(title = "Top first % added items to the cart (Train)") +
+  xlab("Product name") +
+  ylab("Pourcentage (%) of item added the first to the cart")
+
+
+
+first_pct_item_to_cart_prior <- order_prior %>% 
+  group_by(product_id, add_to_cart_order) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct=count/sum(count)) %>% 
+  filter(add_to_cart_order == 1, count>10) %>% 
+  arrange(desc(pct)) %>% 
+  left_join(products,by='product_id') %>%
+  ungroup() %>% 
+  select(product_name, pct, count) %>% 
+  top_n(10, wt=pct) %>%
+  ggplot(aes(x = reorder(product_name,-pct), y = pct)) +
+   geom_label(stat = "count", aes(label = ..count.., y = ..count..), size=3)+
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_col() +
+   labs(title = "Top first % added items to the cart (Prior)") +
+  xlab("Product name") +
+  ylab("Pourcentage (%) of item added the first to the cart")
+
+  # plot P1, P2, P3, p4 in the same plot
+ layout <- matrix(c(1,2), 1, 2, byrow = TRUE)
+ multiplot(first_pct_item_to_cart_prior, first_pct_item_to_cart_train, layout=layout)
+```
+
+
+## Top90 sellers of Banana and Strawberries
 
 ```{r comment=FALSE, warning=FALSE}
 
@@ -442,5 +478,262 @@ banana_id <- products %>%
              filter(product_name == "Banana") %>%
              #select(product_id) %>%
             .$product_id
+strawberries_id <- products %>%
+             filter(product_name == "Strawberries") %>%
+             #select(product_id) %>%
+            .$product_id
+
+spring_water_id <- products %>%
+             filter(product_name == "Spring Water") %>%
+             #select(product_id) %>%
+            .$product_id
+
+asparagus_id <- products %>%
+             filter(product_name == "Asparagus") %>%
+             #select(product_id) %>%
+            .$product_id
+
+# filter the orders with banana
+order_train %>%
+  filter(product_id %in% c(banana_id, strawberries_id)) %>%
+  left_join(orders, by = "order_id") %>%
+  group_by( order_id, user_id) %>%
+   dplyr::summarise(n_orders = last(order_number)) %>%
+  filter(n_orders == 90) 
 ```
 
+
+## Explore Days interval of reordering items
+
+```{r comment=FALSE, warning=FALSE, fig.height = 4, fig.width = 7}
+interval_item_reordered_train <- order_train %>%
+  left_join(orders, by = "order_id") %>%
+  group_by(days_since_prior_order) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(days_since_prior_order, y = mean_reorder)) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_col( color = "red") +
+  labs(title = "Mean Interval (days) of reordered items (Train)") +
+  xlab("Days") +
+  ylab("Mean reordered (%)")
+
+
+interval_item_reordered_prior <- order_prior %>%
+  left_join(orders, by = "order_id") %>%
+  group_by(days_since_prior_order) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(days_since_prior_order, y = mean_reorder)) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_col( color = "blue") +
+  labs(title = "Mean Interval (days) of reordered items (Prior)") +
+  xlab("Days") +
+  ylab("Mean reordered (%)")
+
+
+  # plot P1, P2, P3, p4 in the same plot
+ layout <- matrix(c(1,2), 1, 2, byrow = TRUE)
+ multiplot(interval_item_reordered_train, interval_item_reordered_prior, layout=layout)
+```
+
+With 0 days items are reordered at 0.85%. After 30 days the same items are ordered at 0.45%
+
+## Explore number of orders and reordering items
+
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 10}
+
+grp_pdt_train <- order_train %>%
+  #left_join(orders, by = "order_id") %>%
+  group_by(product_id) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(n, y = mean_reorder)) +
+  #theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_point(size = 0.1, alpha = 0.3) +
+  geom_smooth(color="red")+
+  labs(title = "Number of reordered items per product_id (Train)") +
+  xlab("Number of orders") +
+  ylab("Mean reordered (%) per product_id") +
+  coord_cartesian(xlim=c(0,5000))
+
+grp_order_train <- order_train %>%
+  #left_join(orders, by = "order_id") %>%
+  group_by(order_id) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(n, y = mean_reorder)) +
+  #theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_point(color= "red", size = 0.1, alpha = 0.3) +
+  labs(title = "Number of reordered items per order_id (Train)") +
+  xlab("Number of orders") +
+  ylab("Mean reordered (%) per order_id") 
+
+grp_pdt_prior <- order_prior %>%
+  #left_join(orders, by = "order_id") %>%
+  group_by(product_id) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(n, y = mean_reorder)) +
+  #theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_point( size = 0.1, alpha = 0.3) +
+  geom_smooth(color="blue")+
+  labs(title = "Number of reordered items per product_id (Prior)") +
+  xlab("Number of orders") +
+  ylab("Mean reordered (%) per product_id") +
+  coord_cartesian(xlim=c(0,10000))
+
+grp_order_prior <- order_prior %>%
+  #left_join(orders, by = "order_id") %>%
+  group_by(order_id) %>%
+  summarize(mean_reorder = mean(reordered), n = n()) %>%
+  ggplot(aes(n, y = mean_reorder)) +
+  #theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  geom_point(color="blue", size = 0.1, alpha = 0.3) +
+  labs(title = "Number of reordered items per order_id (Prior)") +
+  xlab("Number of orders") +
+  ylab("Mean reordered (%) per order_id") 
+
+  # plot P1, P2, P3, p4 in the same plot
+ layout <- matrix(c(1,2, 3, 4), 2, 2, byrow = TRUE)
+ multiplot(grp_pdt_train, grp_order_train,grp_pdt_prior, grp_order_prior , layout=layout)
+```
+
+
+
+## Visualize Departments and Aisles
+
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
+library(treemap)
+
+items_per_aisle <- products %>% 
+  group_by(department_id, aisle_id) %>% 
+  summarize(n_items = n()) %>%
+  left_join(departments,by="department_id") %>%
+  left_join(aisles,by="aisle_id")
+
+tree_aisle <- order_train %>%
+  group_by(product_id) %>%
+  dplyr::summarise(count_ordered_item = n()) %>%
+  left_join(products, by = "product_id") %>%
+  ungroup() %>%
+  group_by(department_id, aisle_id) %>%
+  summarize(sumcount = sum(count_ordered_item)) %>%
+  left_join(items_per_aisle, by = c("department_id", "aisle_id")) %>% 
+  mutate(onesize = 1)
+
+treemap(tree_aisle,index = c("department","aisle"),
+             vSize = "onesize", 
+             vColor = "department",
+             palette = "Set3",
+             title = "super market Map", 
+             sortID = "-sumcount",
+             border.col = "#FFFFFF",
+             type = "categorical",
+             fontsize.legend = 0,
+             bg.labels = "#FFFFFF")
+```
+
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
+treemap(tree_aisle,index = c("department","aisle"),
+             vSize = "sumcount", 
+             vColor = "department",
+             palette = "Set3",
+             title = "super market Map", 
+           #  sortID = "-sumcount",
+             border.col = "#FFFFFF",
+             type = "categorical",
+             fontsize.legend = 0,
+             bg.labels = "#FFFFFF")
+```
+
+
+
+## Look for proportion of costumers that reorders the same products
+
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
+
+order_number_upper2 <- order_prior %>%
+  group_by(order_id) %>%
+  dplyr::summarise(mean_redordered_item_per_basket = mean(reordered), n_items_per_basket = n()) %>%
+  left_join(orders, by = "order_id") %>%
+  filter(order_number > 2)
+
+order_number_upper2 %>%
+  #filter(eval_set =="prior") %>% 
+  group_by(user_id) %>%
+  dplyr::summarise(sum_orders = sum(mean_redordered_item_per_basket == 1, na.rm = TRUE), ratio_reordered_items = sum_orders/n()) %>%
+  filter(ratio_reordered_items == 1) %>%
+  arrange(desc(sum_orders)) %>%
+  head(10)
+```
+Here i look for customers who just reorder the same products again all the time. To search those I look at all orders (excluding the first order), where the percentage of reordered items is exactly 1 (This can easily be adapted to look at more lenient thresholds). We can see there are in fact 3,487 customers, just always reordering products.
+user_id 99753 reorded the same items (same basket countain) for 97 visits/orders.
+
+## the basket for the most fidel user_id
+
+```{r}
+order_number_upper2 %>%
+filter(user_id == 99753) %>%
+  left_join(order_prior, by = "order_id") %>%
+  left_join(products, by = "product_id") %>%
+  select(product_name, user_id, order_id, w_day, days_since_prior_order) %>%
+  arrange(order_id) %>%
+  head(10)
+```
+The user_id buy always the same two items `Organic milk`, maybe for a baby.
+
+
+```{r}
+orders %>%
+   left_join(sample_sub, "order_id") %>%
+  head(20)
+```
+
+
+```{r}
+orders %>%
+   inner_join(sample_sub, "order_id") %>%
+   head(10)
+```
+
+
+
+# Deploy `arules` algorithme to the orders
+
+## Regroup items per basket
+In each orders, costumers bougth multiple items forming a basket. We will regroup the orders per basket.
+
+We need to join orders by order_id and then by products_id.
+This code take a while.
+```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
+transactions <- orders %>%
+  left_join(order_train, by = "order_id") %>%
+  left_join(products, by = "product_id")
+
+baskets <- transactions %>%
+           plyr::ddply(c("order_id", "user_id"),
+              function(df1) paste(df1$product_name,
+                                  collapse = ","))
+
+colnames(baskets) <- c("Order_id","user_id","Baskets")
+baskets <- readRDS("baskets_prior.RDS")
+tibble::glimpse(baskets)
+saveRDS(object = baskets, file = "baskets_train.RDS")
+
+baskets <- readRDS("baskets.RDS")
+# Write the Baskets list to a file
+write.csv(baskets$V1,"transactions_list.csv", quote = FALSE, row.names = TRUE)
+
+library(arules)
+# load the Baskets list as a basket format using arules package
+tr_list <- read.transactions('transactions_list.csv', format = 'basket', sep=',')
+```
+
+
+```{r}
+summary(tr_list)
+```
+
+
+
+    There are 3421084 transactions and 3702915 purchased items (One item can be purchased multiple times). Each transaction is a collection of items.
+
+    The Density is 2.788542e-06 tells the percentage of non-zero cells in a sparse matrix. It is the total number of items that are purchased and divided by a possible number of items in the matrix.
+
+    The multiplication of the three values is the total of products were purchased.
