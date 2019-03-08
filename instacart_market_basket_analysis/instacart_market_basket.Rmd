@@ -702,32 +702,32 @@ In each orders, costumers bougth multiple items forming a basket. We will regrou
 We need to join orders by order_id and then by products_id.
 This code take a while.
 ```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
-transactions <- orders %>%
-  left_join(order_train, by = "order_id") %>%
-  left_join(products, by = "product_id")
-
-baskets <- transactions %>%
-           plyr::ddply(c("order_id", "user_id"),
-              function(df1) paste(df1$product_name,
-                                  collapse = ","))
-
-colnames(baskets) <- c("Order_id","user_id","Baskets")
-baskets <- readRDS("baskets_prior.RDS")
-tibble::glimpse(baskets)
-saveRDS(object = baskets, file = "baskets_train.RDS")
-
-baskets <- readRDS("baskets.RDS")
-# Write the Baskets list to a file
-write.csv(baskets$V1,"transactions_list.csv", quote = FALSE, row.names = TRUE)
-
-library(arules)
-# load the Baskets list as a basket format using arules package
-tr_list <- read.transactions('transactions_list.csv', format = 'basket', sep=',')
+# transactions <- orders %>%
+#   left_join(order_train, by = "order_id") %>%
+#   left_join(products, by = "product_id")
+# 
+# baskets <- transactions %>%
+#            plyr::ddply(c("order_id", "user_id"),
+#               function(df1) paste(df1$product_name,
+#                                   collapse = ","))
+# 
+# colnames(baskets) <- c("Order_id","user_id","Baskets")
+# baskets <- readRDS("baskets_prior.RDS")
+# tibble::glimpse(baskets)
+# saveRDS(object = baskets, file = "baskets_train.RDS")
+# 
+# baskets <- readRDS("baskets.RDS")
+# # Write the Baskets list to a file
+# write.csv(baskets$V1,"transactions_list.csv", quote = FALSE, row.names = TRUE)
+# 
+# library(arules)
+# # load the Baskets list as a basket format using arules package
+# tr_list <- read.transactions('transactions_list.csv', format = 'basket', sep=',')
 ```
 
 
 ```{r}
-summary(tr_list)
+#summary(tr_list)
 ```
 
 
