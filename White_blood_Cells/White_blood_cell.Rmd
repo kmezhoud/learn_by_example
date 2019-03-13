@@ -140,7 +140,8 @@ dplyr::glimpse(list.files("dataset-master/JPEGImages/"))
 Path_to_xml_file_9 <- "dataset-master/Annotations/BloodImage_00009.xml"
 xml9 <- XML::xmlParse(Path_to_xml_file_9)
 xml_df <- XML::xmlToDataFrame(Path_to_xml_file_9)
-DT::datatable(xml_df)
+DT::datatable(xml_df) %>%
+   formatStyle(colnames(xml_df), color = 'black')
 #print(xml_df[['bndbox']])
 ```
 We converted an example of xml file to dataframe. We find intersting information about the x,y coordinates of cells.
@@ -196,7 +197,8 @@ Path_to_xml_file_list <- list.files("dataset-master/Annotations",full.names = TR
 ls_df <- lapply(Path_to_xml_file_list, function(x) extract_square_of_WBC(x))
 xy_limits_WCB <- do.call("rbind",ls_df)
 
-DT::datatable(xy_limits_WCB)
+DT::datatable(xy_limits_WCB) %>%
+      formatStyle(colnames(xy_limits_WCB), color = 'black')
 ```
 
 * Mainly we have one WBC for each image BUT some image have two type of WBC. for example image 10 has two WCB (BloodImage_00010.xml).
@@ -231,7 +233,15 @@ crops_WBC_df  <-
   drop_na() %>%
   mutate(file_path = paste0(path_to_dataset, file_name, ".jpg"))
 
-DT::datatable(crops_WBC_df)
+DT::datatable(crops_WBC_df, 
+                          options = list(
+  initComplete = JS(
+    "function(settings, json) {",
+    "$('body').css({'font-family': 'arial'});",
+    "}"
+  )
+)) %>%
+    formatStyle(colnames(crops_WBC_df), color = 'black',  `font-size` = '11px')
 ```
 
 
@@ -285,10 +295,22 @@ all_crops_WBC_df  <-
   ungroup() %>%
   select(-file_name) %>%
   left_join(WBC_seprate_multiple_label , by = "new_file_name") %>%
+  # remove all rows with any NA value , x, y, label.
   drop_na() %>%
   mutate(file_path = paste0(path_to_dataset, file_name, ".jpg"))
+
+DT::datatable(all_crops_WBC_df, editable = TRUE, 
+              options = list(
+  initComplete = JS(
+    "function(settings, json) {",
+    "$('body').css({'font-family': 'arial'});",
+    "}"
+  )
+)) %>%
+  formatStyle(colnames(all_crops_WBC_df), color = 'black',  `font-size` = '11px')
 ```
 
+* In `dataset-master/labels.csv` file we showed that the image_00117 (line 119) does not have label. After verification we annotated as `EOSINOPHIL`.
 
 
 
