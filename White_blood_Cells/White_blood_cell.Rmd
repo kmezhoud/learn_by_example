@@ -35,6 +35,7 @@ library(EBImage)
 library(XML)
 library(dplyr)
 library(tidyr)
+library(DT)
 ```
 
 ## Dataset description
@@ -150,7 +151,7 @@ We converted an example of xml file to dataframe. We find intersting information
 
 Here the coordonate of multiple RBC are poorly represented. We observe a cancatenation of 4 coordinates: xmin, xmax, ymin, ymax.
 
-I opened multiple xml file and I did not finf WBC cell with its x, y limits. 
+I opened multiple xml file and I did not find WBC cell with its x, y limits. 
 
 You can use `extract_square_of_WBC("dataset-master/Annotations/BloodImage_00019.xml")` function and change the name of the image. 
 
@@ -161,7 +162,7 @@ The output does not have WCB sample. In actual document the code was run with th
 
 [link to github](https://github.com/Shenggan/BCCD_Dataset/tree/master/BCCD)
 
-* **At first view it seems updated and xml files have WBC annotations wich it is not available for kaggle dataset version**
+* **At first view it seems updated and xml files have WBC annotations wich is not available for kaggle dataset version**
 
 ### Function to extract x, y limits of WBC from xml files
 ```{r}
@@ -198,9 +199,9 @@ xy_limits_WCB <- do.call("rbind",ls_df)
 DT::datatable(xy_limits_WCB)
 ```
 
-* Mainly we have one WBC for each image BUT some image have two type of WBC. for example image 10 has two WCB.
+* Mainly we have one WBC for each image BUT some image have two type of WBC. for example image 10 has two WCB (BloodImage_00010.xml).
 
-In the next step we need to add aannotation or type of each WBC. The annotation is transformed csv file `WBC_seprate_multiple_label`.
+In the next step we need to add annotation/type of each WBC. The annotation is in the dataframe named `WBC_seprate_multiple_label` (see above).
 
 ### Explore only image with multiple WBC
 ```{r}
@@ -262,8 +263,11 @@ multiple_plot_crops(crops_WBC_df)
 ```
 
 
-We find:
-The crps seems to be well done. Now we will crop all WBC type and generate our primary dataset with unicellular images.
+* At this step We can avoid image with two kinds of WBC. 
+* We can crop all WBC and get our unicellular dataset.
+
+Now we will crop all WBC for all images and class them to its categories. 
+
 
 ### Merge all needed informations of all images in dataset-master into dataframe
 
