@@ -15,3 +15,6 @@ order_products__train.csv
 orders.csv
 products.csv
 sample_submission.csv
+baskets_prior.RDS
+baskets_train.RDS
+transactions_list.csv
