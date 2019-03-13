@@ -25,3 +25,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/instacart_market_basket_analysis/instacart_market_basket.html" target = "_blank">
 <img src="images/instacart_market.png" align="left" height="150" width="250" title="Instacart Market Basket Analysis">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/White_blood_Cells/White_blood_cell.html" target = "_blank">
+<img src="dataset_master/JPEGImages/BloodImage_00005.jpg" align="left" height="150" width="250" title="White Blood Cells Classification">
+</a>
