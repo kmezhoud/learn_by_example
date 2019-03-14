@@ -36,6 +36,8 @@ library(XML)
 library(dplyr)
 library(tidyr)
 library(DT)
+library(OpenImageR)
+library(purrr)
 ```
 
 ## Dataset description
@@ -45,7 +47,7 @@ The images of this competition shows blood cell spread on glass slide and staine
 ```{r fig.width=7, fig.height=7}
 library(EBImage)
 path_to_dataset <- "dataset-master/JPEGImages/"
-img <- readImage(paste0(path_to_dataset, "BloodImage_00000.jpg"))
+img <- EBImage::readImage(paste0(path_to_dataset, "BloodImage_00000.jpg"))
 img_resize = resize(img, w=128, h=128)
 
 par(mfrow=c(1,2)) # , mai=c(0.1,0.1,0.2,0.1), oma=c(3,3,3,3)
@@ -62,10 +64,10 @@ title( main = "display function")
 ### Glimpse of the 4  White Blood Cell types
 ```{r}
 path_to_dataset2 <- "dataset2-master/images/TEST_SIMPLE/"
-img_eosinophil <- readImage(paste0(path_to_dataset2, "EOSINOPHIL/_0_5239.jpeg"))
-img_lymphocyte <- readImage(paste0(path_to_dataset2, "LYMPHOCYTE/_0_3975.jpeg")) 
-img_monocyte <- readImage(paste0(path_to_dataset2, "MONOCYTE/_0_5020.jpeg")) 
-img_neutrophil <- readImage(paste0(path_to_dataset2, "NEUTROPHIL/_0_1966.jpeg")) 
+img_eosinophil <- EBImage::readImage(paste0(path_to_dataset2, "EOSINOPHIL/_0_5239.jpeg"))
+img_lymphocyte <- EBImage::readImage(paste0(path_to_dataset2, "LYMPHOCYTE/_0_3975.jpeg")) 
+img_monocyte <- EBImage::readImage(paste0(path_to_dataset2, "MONOCYTE/_0_5020.jpeg")) 
+img_neutrophil <- EBImage::readImage(paste0(path_to_dataset2, "NEUTROPHIL/_0_1966.jpeg")) 
 par(mfrow=c(2,2))
 graphics::plot(img_eosinophil)
 title(main = "EOSINOPHIL white cell")
@@ -94,7 +96,7 @@ Example of image with annotation:
 ## Exploration and Transformation of the first dataset
 
 ### Transformation of `labels.csv` file
-Labels associate cells type. We can find Red Blood Cell (RBC), Platelets, and 4 types of White Bolld Cells (WBC). 
+Labels associate cells type. We can find Red Blood Cell (RBC), Platelets, and 4 types of White Blood Cells (WBC). 
 
 We renamed images as its files names. Some image have two kind of WBC. 
 
@@ -144,15 +146,15 @@ DT::datatable(xml_df) %>%
    formatStyle(colnames(xml_df), color = 'black')
 #print(xml_df[['bndbox']])
 ```
-We converted an example of xml file to dataframe. We find intersting information about the x,y coordinates of cells.
+We converted an example of XML file to dataframe. We find interesting information about the x,y coordinates of cells.
 
 * `bndbox` column show the x and y limits of the annotations. We need to extract xmin, ymin, xmax, and ymax.
 
 * `name` column indicates the type of cells.
 
-Here the coordonate of multiple RBC are poorly represented. We observe a cancatenation of 4 coordinates: xmin, xmax, ymin, ymax.
+Here the coordinate of multiple RBC are poorly represented. We observe a concatenation of 4 coordinates: xmin, xmax, ymin, ymax.
 
-I opened multiple xml file and I did not find WBC cell with its x, y limits. 
+I opened multiple XML file and I did not find WBC cell with its x, y limits. 
 
 You can use `extract_square_of_WBC("dataset-master/Annotations/BloodImage_00019.xml")` function and change the name of the image. 
 
@@ -205,7 +207,7 @@ DT::datatable(xy_limits_WCB) %>%
 
 In the next step we need to add annotation/type of each WBC. The annotation is in the dataframe named `WBC_seprate_multiple_label` (see above).
 
-### Explore only image with multiple WBC
+### Explore only images with multiple WBC
 ```{r}
 ## Explore only image with multiple WBC
 only_image_multiple_WBC <- 
@@ -219,7 +221,7 @@ only_image_multiple_WBC
 ```{r}
 ## Merge all needed informations of images with multiple WBC into dataframe
 
-path_to_images <- "dataset-master/JPEGImages/"
+path_to_dataset <- "dataset-master/JPEGImages/"
 
 crops_WBC_df  <-
   xy_limits_WCB %>%
@@ -248,7 +250,7 @@ DT::datatable(crops_WBC_df,
 ### Function to plot cropped WBC from images
 ```{r fig.width=2, fig.height=2}
 # multiple plot of crops
-multiple_plot_crops <- function(df){
+crop_and_plot <- function(df){
   l <- nrow(df)
   for(i in 1:l){
     attach(df)
@@ -267,7 +269,7 @@ multiple_plot_crops <- function(df){
  
 # l <- nrow(crops_WBC_df)
 # par(mfrow = c(l,1))
-multiple_plot_crops(crops_WBC_df)
+crop_and_plot(crops_WBC_df)
 
 
 ```
@@ -284,7 +286,7 @@ Now we will crop all WBC for all images and class them to its categories.
 ```{r}
 # we need: `xy_limits_WCB` and `WBC_seprate_multiple_label` dataframes
 
-path_to_images <- "dataset-master/JPEGImages/"
+path_to_dataset <- "dataset-master/JPEGImages/"
 
 all_crops_WBC_df  <-
   xy_limits_WCB %>%
@@ -310,8 +312,283 @@ DT::datatable(all_crops_WBC_df, editable = TRUE,
   formatStyle(colnames(all_crops_WBC_df), color = 'black',  `font-size` = '11px')
 ```
 
-* In `dataset-master/labels.csv` file we showed that the image_00117 (line 119) does not have label. After verification we annotated as `EOSINOPHIL`.
+* In `dataset-master/labels.csv` file we showed, that the image_00117 (line 119) does not have label. After verification we annotated it as `EOSINOPHIL`.
 
+### Function used to crop WBC from images
+
+We use a dataframe that contains all needed information : x, y limits of WBC, Category, image file path.
+
+```{r comment=FALSE, warning=FALSE}
+
+#path_to_dataset <- "dataset-master/JPEGImages/"
+
+crop_and_rename <- function(df){
+  l <- nrow(df)
+  all_crops <- NULL
+  #attach(df)
+  for(i in 1:l){
+      
+   img <- EBImage::readImage(df$file_path[i])
+   
+   all_crops[[i]] <- img[df$xmin[i] : df$xmax[i], df$ymin[i] : df$ymax[i],]
+    names(all_crops)[[i]] <- paste0(df$Category[i],"_", i)
+  } 
+  #detach(df)
+  return(all_crops)
+
+}
+all_crops <- crop_and_rename(all_crops_WBC_df)
+
+   attach(all_crops_WBC_df)
+  par(mfrow=c(1,4))
+   plot(all_crops[[2]])
+   title(main = Category[2], cex.main = 2, cex.sub = 0.75)
+    plot(all_crops[[12]])
+   title(main = Category[12], cex.main = 2, cex.sub = 0.75)
+    plot(all_crops[[22]])
+   title(main = Category[22], cex.main = 2, cex.sub = 0.75)
+    plot(all_crops[[9]])
+   title(main = Category[9], cex.main = 2, cex.sub = 0.75)
+   detach(all_crops_WBC_df)
+```
+
+### Glimpse of some crops
+
+We have 368 crops for 4 types of WBC. Each crop is and imageData format used by the main R image packages.
+
+
+```{r}
+all_crops[8:12]
+```
+
+
+### Dataset Augmentation
+
+#### Function generates 10 images with small modification: the input is a ImageData
+
+The crops are stored in a list as ImageData. We have 368 images for 4 WBC.
+```{r comment=FALSE, warning=FALSE, fig.width=8, fig.height=6 , include=TRUE, echo=FALSE}
+# img input is a ImageData from a list ls. Each ImageData has a name. 
+# to acces to the name we need to use  one braket ls[].
+# But to access to the array we need double brakets ls[[]]
+# in the input of img_augmentation we use img with one braket
+# and acces to the array by ls[1][[names(ls[1])]]@.Data
+
+img_augmentation <- function(img){
+
+# random rotations
+samp_rot = sample(c(seq(10, 120, 30), seq(180, 360, 30)), 10, replace = FALSE)
+
+# random shift of rows
+samp_shif_rows = sample(seq(-50, 50, 10), 10, replace = FALSE)
+
+# random shift of columns
+samp_shif_cols = sample(seq(-50, 50, 10), 10, replace = FALSE)
+
+# random flips
+samp_flip <- sample(c("horizontal", "vertical"), 10 , replace = TRUE)
+
+## access directly to the array ImageData@.Data
+im <- img[[names(img)]]@.Data
+
+#img <- EBImage::channel(all_crops[1], "gray")
+im <- OpenImageR::rgb_2gray(im)
+
+# resize image
+#im <- EBImage::resize(img, 128, 128, filter = "bilinear")
+
+im_aug = lapply(1:length(samp_rot), function(x) 
+  
+  Augmentation(im, flip_mode = samp_flip[x], #crop_width = 20:460, crop_height = 30:450, 
+               
+               resiz_width = 180, resiz_height = 180, resiz_method = 'bilinear', 
+                    
+               #shift_rows = samp_shif_rows[x], shift_cols = samp_shif_cols[x], 
+               
+               rotate_angle = samp_rot[x], rotate_method = 'bilinear', zca_comps = 0, 
+              
+               zca_epsilon = 0.0, image_thresh = 0.0, verbose = F))
+   ## name each image
+   names(im_aug) <- lapply(1:length(samp_rot), function(x) paste0(names(img),"_", x))
+
+  return(im_aug)
+}
+
+ 
+sample_im_aug <- img_augmentation(all_crops[1])
+
+## Visualise generated crops
+par(mfrow=c(2,length(sample_im_aug)/2))
+lapply(1:length(sample_im_aug), function(x) { plot(EBImage::Image(sample_im_aug[[x]]))
+                                     title(main = names(sample_im_aug[x]), cex.main = 1, cex.sub = 0.75)
+                                     }
+       ) 
+
+
+```
+
+
+#### Augmentation of all crops (368) of unicellular (WBC) dataset
+```{r}
+
+all_crops_with_augmentation <- lapply(1:length(all_crops), function(x) img_augmentation(all_crops[x]))
+                                                                                                                                    
+names(all_crops_with_augmentation) <- lapply(1:length(all_crops), function(x)  names(all_crops[x]))
+
+str(all_crops_with_augmentation[c(1:2)]) 
+
+```
+
+ * At this step we generated 10 x 368 images. 
+ * The unicellular dataset is stored as a list of 368 child lists. 
+ * In each child list there are 10 generated images.
+ * To plot an example from a list of list we need to specify the index of the first list, followed by the index of the name of child list (always 1) and the index of image.
+ 
+### Plot image from a list of list
+```{r  fig.width= 3, fig.height= 3 }
+# plot le third image of the second list
+plot(EBImage::Image(all_crops_with_augmentation[2][[1]][[3]]))
+```
+ 
+ 
+#### How many crops per Category of unicellular dataset?
+ 
+We will count the list of crops without augmentation. 
+If we consider the augmentation preprocessing, we could multiply the size by 10.
+ 
+```{r}
+neutrophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
+                             function(vec) {grepl("neutrophil", vec, ignore.case=TRUE)})
+basophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
+                           function(vec) {grepl("basophil", vec, ignore.case=TRUE)})
+eosinophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
+                             function(vec) {grepl("eosinophil", vec, ignore.case=TRUE)})
+lymphocyte_dataset_idx <- sapply(names(all_crops_with_augmentation), 
+                             function(vec) {grepl("lymphocyte", vec, ignore.case=TRUE)})
+
+data.frame(
+neutrophil = length(all_crops_with_augmentation[neutrophil_dataset_idx]),
+basophil = length(all_crops_with_augmentation[basophil_dataset_idx]),
+eosinophil = length(all_crops_with_augmentation[eosinophil_dataset_idx]),
+lymphocyte = length(all_crops_with_augmentation[lymphocyte_dataset_idx])
+)
+```
+ * The dataset has only 30 images from basophil WBC.
+
+
+#### Random sampling, Split Testing and Training datasets
+```{r}
+basophil_dataset <- all_crops_with_augmentation[basophil_dataset_idx]
+eosinophil_dataset <- all_crops_with_augmentation[eosinophil_dataset_idx]
+neutrophil_dataset <- all_crops_with_augmentation[neutrophil_dataset_idx]
+lymphocyte_dataset <- all_crops_with_augmentation[lymphocyte_dataset_idx]
+
+# Random sampling
+#str(lapply(basophil_dataset,  function(x) {sample(x,3)}))
+
+## generate index for samling
+test_idx <- sample(seq(1,10), 3, replace = FALSE)
+train_idx <- seq(1,10)[-test_idx]
+
+# Fixed index sampling to avoid redoncy between traing and testing datasets 
+eosinophil_dataset_test <- lapply(eosinophil_dataset, "[", test_idx)
+neutrophil_dataset_test <- lapply(neutrophil_dataset, "[", test_idx)
+basophil_dataset_test <- lapply(basophil_dataset, "[", test_idx)
+lymphocyte_datase_test <- lapply(lymphocyte_dataset, "[", test_idx)
+
+eosinophil_dataset_train <- lapply(eosinophil_dataset, "[", train_idx)
+neutrophil_dataset_train <- lapply(neutrophil_dataset, "[", train_idx)
+basophil_dataset_train <- lapply(basophil_dataset, "[", train_idx)
+lymphocyte_datase_train <- lapply(lymphocyte_dataset, "[", train_idx)
+
+# sample_size <- c(1, 1, 2)
+# 
+# selected_vals <- purrr::map2(
+#   .x = my_list_of_lists,
+#   .y = number_to_select,
+#   .f = function(x,y) base::sample(x, y)
+#   )
+```
+
+#### Merge Training lists and testing lists
+
+```{r}
+## do.call also works but generate cancatenated names of matrix LIST.list.
+ #testing_dataset <- do.call(c,c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
+ #testing_dataset <- purrr::flatten(c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
+
+ls1 <- purrr::flatten(basophil_dataset_test)
+
+list2df <- function(list){
+w <- 180
+h <- 180
+
+df <- data.frame(matrix(ncol = (w*h), nrow = 0))
+# Set names. The first column is the labels, the other columns are the pixels.
+colnames(df) <-   paste("pixel", c(1:(w*h) ))
+
+
+ for(k in 1: length(list)){
+  
+     # Coerce to a vector
+    img_vector <- as.vector(list[[k]])
+    
+    #vec <- c(names(list[k]), img_vector)
+  
+     df[nrow(df) + 1,] <- img_vector
+
+}
+
+rownames(df) <- names(list)
+return(df)
+}
+
+res <- list2df(ls1)
+
+res[,1:8]
+
+str(ls1)
+# 
+# str(testing_dataset[[1]][[1]])
+# as.vector(testing_dataset[[1]][[1]])
+# 
+# str(do.call(c, basophil_dataset_test))
+# str(basophil_dataset_test)
+```
+
+
+#### Function to merge a list of matrices to a vectors in dataframe 
+
+
+
+
+
+```{r}
+
+```
+
+
+### Split Testing and Training
+```{r}
+
+#plot(EBImage::Image(basophil_dataset_test[[1]][[1]]))
+# 
+# mat = matrix( 
+#    c(1, 2, 3, 4, 5, 6, 7, 8, 9), 
+#    nrow=3, 
+#    ncol=3)
+# 
+# dim(basophil_dataset_test[[1]])
+#str(basophil_dataset_test[[1]][[1]])
+```
+
+#### convert to Dataframe
+```{r}
+#Convert to a dataframe, transpose, and convert the resulting matrix back to a dataframe
+#df <- as.data.frame(t(as.data.frame(listoflists)))
+#Strip out the rownames if desired
+#rownames(df)<-NULL
+```
 
 
 ## Description of the second dataset  
