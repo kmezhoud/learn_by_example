@@ -38,6 +38,8 @@ library(tidyr)
 library(DT)
 library(OpenImageR)
 library(purrr)
+library(mxnet)
+#library(magrittr)
 ```
 
 ## Dataset description
@@ -86,9 +88,9 @@ The first dataset directory names `dataset-master` contains 3 folders:
 * JPEGImages that has 366 jpeg images
 * csv file that list the image label and the white cell type that has.
 * XML annotation folder that frame the different kind of cells in each image (343 XML files).
-    + Green square for red blood cell (RB)
-    + Red square for white blood cell (WBC)
-    + Blue square for Platelets
++ Green square for red blood cell (RB)
++ Red square for white blood cell (WBC)
++ Blue square for Platelets
 
 Example of image with annotation:
 [![link to image](https://github.com/Shenggan/BCCD_Dataset/blob/master/example.jpg)](https://github.com/Shenggan/BCCD_Dataset/blob/master/example.jpg)  
@@ -109,21 +111,21 @@ label <- read.csv(file = path_to_csv)
 # Rename images like files
 WBC_seprate_multiple_label <- label %>%
   mutate(file_name = case_when(
-           Image %in% 0:9 ~ paste0("BloodImage_0000", Image), 
-           Image %in% 10:99 ~ paste0("BloodImage_000", Image),        
-           Image %in% 100:999 ~ paste0("BloodImage_00", Image),
-                  TRUE                    ~ "huh?"
-           ))%>%
- select(file_name, Image, Category) %>%
+    Image %in% 0:9 ~ paste0("BloodImage_0000", Image), 
+    Image %in% 10:99 ~ paste0("BloodImage_000", Image),        
+    Image %in% 100:999 ~ paste0("BloodImage_00", Image),
+    TRUE                    ~ "huh?"
+  ))%>%
+  select(file_name, Image, Category) %>%
   # Separate categories in the same image
- tidyr::separate_rows(Category)
+  tidyr::separate_rows(Category)
 
 # Rename differently the cropped cells from the same image
 # This step is essential when we woulf join labels with annotations
 WBC_seprate_multiple_label <-
-WBC_seprate_multiple_label %>% group_by(file_name) %>%
-       mutate(new_file_name = if(n( ) > 1) {paste0(file_name,"_" , row_number( ))} 
-                             else {paste0(file_name)})
+  WBC_seprate_multiple_label %>% group_by(file_name) %>%
+  mutate(new_file_name = if(n( ) > 1) {paste0(file_name,"_" , row_number( ))} 
+         else {paste0(file_name)})
 
 WBC_seprate_multiple_label
 ```
@@ -143,7 +145,7 @@ Path_to_xml_file_9 <- "dataset-master/Annotations/BloodImage_00009.xml"
 xml9 <- XML::xmlParse(Path_to_xml_file_9)
 xml_df <- XML::xmlToDataFrame(Path_to_xml_file_9)
 DT::datatable(xml_df) %>%
-   formatStyle(colnames(xml_df), color = 'black')
+  formatStyle(colnames(xml_df), color = 'black')
 #print(xml_df[['bndbox']])
 ```
 We converted an example of XML file to dataframe. We find interesting information about the x,y coordinates of cells.
@@ -171,23 +173,23 @@ The output does not have WCB sample. In actual document the code was run with th
 ```{r}
 # Extract annotation of cell  as dataframe (square limits)
 extract_square_of_WBC <- function(file_path){
-xml_obj <- XML::xmlParse(file_path)
-
-xml_obj_df <- bind_cols(  # or cbind()
-## print the name of cell
-xmlToDataFrame(getNodeSet(xml_obj, "//name"),stringsAsFactors = TRUE),
-# print dimension
-xmlToDataFrame(getNodeSet(xml_obj, "//object/bndbox"), stringsAsFactors = FALSE)
-)
-
-xml_obj_df %>%
-  rename( "Cells" = text) %>%
-  mutate(xmin = as.numeric(xmin)) %>%
-  mutate(ymin = as.numeric(ymin)) %>%
-  mutate(xmax = as.numeric(xmax)) %>%
-  mutate(ymax = as.numeric(ymax)) %>%
-  filter(Cells == "WBC") %>%
-  mutate(file_name = basename(file_path))
+  xml_obj <- XML::xmlParse(file_path)
+  
+  xml_obj_df <- bind_cols(  # or cbind()
+    ## print the name of cell
+    xmlToDataFrame(getNodeSet(xml_obj, "//name"),stringsAsFactors = TRUE),
+    # print dimension
+    xmlToDataFrame(getNodeSet(xml_obj, "//object/bndbox"), stringsAsFactors = FALSE)
+  )
+  
+  xml_obj_df %>%
+    rename( "Cells" = text) %>%
+    mutate(xmin = as.numeric(xmin)) %>%
+    mutate(ymin = as.numeric(ymin)) %>%
+    mutate(xmax = as.numeric(xmax)) %>%
+    mutate(ymax = as.numeric(ymax)) %>%
+    filter(Cells == "WBC") %>%
+    mutate(file_name = basename(file_path))
 }
 extract_square_of_WBC("dataset-master/Annotations/BloodImage_00019.xml")
 ```
@@ -200,7 +202,7 @@ ls_df <- lapply(Path_to_xml_file_list, function(x) extract_square_of_WBC(x))
 xy_limits_WCB <- do.call("rbind",ls_df)
 
 DT::datatable(xy_limits_WCB) %>%
-      formatStyle(colnames(xy_limits_WCB), color = 'black')
+  formatStyle(colnames(xy_limits_WCB), color = 'black')
 ```
 
 * Mainly we have one WBC for each image BUT some image have two type of WBC. for example image 10 has two WCB (BloodImage_00010.xml).
@@ -227,8 +229,8 @@ crops_WBC_df  <-
   xy_limits_WCB %>%
   mutate(file_name = gsub(".xml", "", file_name)) %>%
   group_by(file_name) %>%
-       mutate(new_file_name = if(n( ) > 1) {paste0(file_name, "_" ,row_number( ))} 
-                            else {paste0(file_name)}) %>%
+  mutate(new_file_name = if(n( ) > 1) {paste0(file_name, "_" ,row_number( ))} 
+         else {paste0(file_name)}) %>%
   ungroup() %>%
   select(-file_name) %>%
   left_join(only_image_multiple_WBC , by = "new_file_name") %>%
@@ -236,14 +238,14 @@ crops_WBC_df  <-
   mutate(file_path = paste0(path_to_dataset, file_name, ".jpg"))
 
 DT::datatable(crops_WBC_df, 
-                          options = list(
-  initComplete = JS(
-    "function(settings, json) {",
-    "$('body').css({'font-family': 'arial'});",
-    "}"
-  )
-)) %>%
-    formatStyle(colnames(crops_WBC_df), color = 'black',  `font-size` = '11px')
+              options = list(
+                initComplete = JS(
+                  "function(settings, json) {",
+                  "$('body').css({'font-family': 'arial'});",
+                  "}"
+                )
+              )) %>%
+  formatStyle(colnames(crops_WBC_df), color = 'black',  `font-size` = '11px')
 ```
 
 
@@ -254,19 +256,19 @@ crop_and_plot <- function(df){
   l <- nrow(df)
   for(i in 1:l){
     attach(df)
-  img <- EBImage::readImage(file_path[i])
-  par(mfrow=c(1,2))
-   plot(img)
-   title(main= paste0("Img.",Image[i]), cex.main = 0.5, cex.sub = 0.75)
-   plot(img[xmin[i] : xmax[i], ymin[i] : ymax[i],])
-   title(main = Category[i], cex.main = 0.5, cex.sub = 0.75)
-   detach(df)
+    img <- EBImage::readImage(file_path[i])
+    par(mfrow=c(1,2))
+    plot(img)
+    title(main= paste0("Img.",Image[i]), cex.main = 0.5, cex.sub = 0.75)
+    plot(img[xmin[i] : xmax[i], ymin[i] : ymax[i],])
+    title(main = Category[i], cex.main = 0.5, cex.sub = 0.75)
+    detach(df)
   }
 }
 
 
- 
- 
+
+
 # l <- nrow(crops_WBC_df)
 # par(mfrow = c(l,1))
 crop_and_plot(crops_WBC_df)
@@ -292,8 +294,8 @@ all_crops_WBC_df  <-
   xy_limits_WCB %>%
   mutate(file_name = gsub(".xml", "", file_name)) %>%
   group_by(file_name) %>%
-       mutate(new_file_name = if(n( ) > 1) {paste0(file_name, "_" ,row_number( ))} 
-                            else {paste0(file_name)}) %>%
+  mutate(new_file_name = if(n( ) > 1) {paste0(file_name, "_" ,row_number( ))} 
+         else {paste0(file_name)}) %>%
   ungroup() %>%
   select(-file_name) %>%
   left_join(WBC_seprate_multiple_label , by = "new_file_name") %>%
@@ -303,12 +305,12 @@ all_crops_WBC_df  <-
 
 DT::datatable(all_crops_WBC_df, editable = TRUE, 
               options = list(
-  initComplete = JS(
-    "function(settings, json) {",
-    "$('body').css({'font-family': 'arial'});",
-    "}"
-  )
-)) %>%
+                initComplete = JS(
+                  "function(settings, json) {",
+                  "$('body').css({'font-family': 'arial'});",
+                  "}"
+                )
+              )) %>%
   formatStyle(colnames(all_crops_WBC_df), color = 'black',  `font-size` = '11px')
 ```
 
@@ -327,29 +329,29 @@ crop_and_rename <- function(df){
   all_crops <- NULL
   #attach(df)
   for(i in 1:l){
-      
-   img <- EBImage::readImage(df$file_path[i])
-   
-   all_crops[[i]] <- img[df$xmin[i] : df$xmax[i], df$ymin[i] : df$ymax[i],]
+    
+    img <- EBImage::readImage(df$file_path[i])
+    
+    all_crops[[i]] <- img[df$xmin[i] : df$xmax[i], df$ymin[i] : df$ymax[i],]
     names(all_crops)[[i]] <- paste0(df$Category[i],"_", i)
   } 
   #detach(df)
   return(all_crops)
-
+  
 }
 all_crops <- crop_and_rename(all_crops_WBC_df)
 
-   attach(all_crops_WBC_df)
-  par(mfrow=c(1,4))
-   plot(all_crops[[2]])
-   title(main = Category[2], cex.main = 2, cex.sub = 0.75)
-    plot(all_crops[[12]])
-   title(main = Category[12], cex.main = 2, cex.sub = 0.75)
-    plot(all_crops[[22]])
-   title(main = Category[22], cex.main = 2, cex.sub = 0.75)
-    plot(all_crops[[9]])
-   title(main = Category[9], cex.main = 2, cex.sub = 0.75)
-   detach(all_crops_WBC_df)
+attach(all_crops_WBC_df)
+par(mfrow=c(1,4))
+plot(all_crops[[2]])
+title(main = Category[2], cex.main = 2, cex.sub = 0.75)
+plot(all_crops[[12]])
+title(main = Category[12], cex.main = 2, cex.sub = 0.75)
+plot(all_crops[[22]])
+title(main = Category[22], cex.main = 2, cex.sub = 0.75)
+plot(all_crops[[9]])
+title(main = Category[9], cex.main = 2, cex.sub = 0.75)
+detach(all_crops_WBC_df)
 ```
 
 ### Glimpse of some crops
@@ -375,54 +377,54 @@ The crops are stored in a list as ImageData. We have 368 images for 4 WBC.
 # and acces to the array by ls[1][[names(ls[1])]]@.Data
 
 img_augmentation <- function(img){
-
-# random rotations
-samp_rot = sample(c(seq(10, 120, 30), seq(180, 360, 30)), 10, replace = FALSE)
-
-# random shift of rows
-samp_shif_rows = sample(seq(-50, 50, 10), 10, replace = FALSE)
-
-# random shift of columns
-samp_shif_cols = sample(seq(-50, 50, 10), 10, replace = FALSE)
-
-# random flips
-samp_flip <- sample(c("horizontal", "vertical"), 10 , replace = TRUE)
-
-## access directly to the array ImageData@.Data
-im <- img[[names(img)]]@.Data
-
-#img <- EBImage::channel(all_crops[1], "gray")
-im <- OpenImageR::rgb_2gray(im)
-
-# resize image
-#im <- EBImage::resize(img, 128, 128, filter = "bilinear")
-
-im_aug = lapply(1:length(samp_rot), function(x) 
   
-  Augmentation(im, flip_mode = samp_flip[x], #crop_width = 20:460, crop_height = 30:450, 
-               
-               resiz_width = 180, resiz_height = 180, resiz_method = 'bilinear', 
-                    
-               #shift_rows = samp_shif_rows[x], shift_cols = samp_shif_cols[x], 
-               
-               rotate_angle = samp_rot[x], rotate_method = 'bilinear', zca_comps = 0, 
-              
-               zca_epsilon = 0.0, image_thresh = 0.0, verbose = F))
-   ## name each image
-   names(im_aug) <- lapply(1:length(samp_rot), function(x) paste0(names(img),"_", x))
-
+  # random rotations
+  samp_rot = sample(c(seq(10, 120, 30), seq(180, 360, 30)), 10, replace = FALSE)
+  
+  # random shift of rows
+  samp_shif_rows = sample(seq(-50, 50, 10), 10, replace = FALSE)
+  
+  # random shift of columns
+  samp_shif_cols = sample(seq(-50, 50, 10), 10, replace = FALSE)
+  
+  # random flips
+  samp_flip <- sample(c("horizontal", "vertical"), 10 , replace = TRUE)
+  
+  ## access directly to the array ImageData@.Data
+  im <- img[[names(img)]]@.Data
+  
+  #img <- EBImage::channel(all_crops[1], "gray")
+  im <- OpenImageR::rgb_2gray(im)
+  
+  # resize image
+  #im <- EBImage::resize(img, 128, 128, filter = "bilinear")
+  
+  im_aug = lapply(1:length(samp_rot), function(x) 
+    
+    OpenImageR::Augmentation(im, flip_mode = samp_flip[x], #crop_width = 20:460, crop_height = 30:450, 
+                 
+                 resiz_width = 28, resiz_height = 28, resiz_method = 'bilinear', 
+                 
+                 #shift_rows = samp_shif_rows[x], shift_cols = samp_shif_cols[x], 
+                 
+                 rotate_angle = samp_rot[x], rotate_method = 'bilinear', zca_comps = 0, 
+                 
+                 zca_epsilon = 0.0, image_thresh = 0.0, verbose = F))
+  ## name each image
+  names(im_aug) <- lapply(1:length(samp_rot), function(x) paste0(names(img),"_", x))
+  
   return(im_aug)
 }
 
- 
+
 sample_im_aug <- img_augmentation(all_crops[1])
 
 ## Visualise generated crops
 par(mfrow=c(2,length(sample_im_aug)/2))
 lapply(1:length(sample_im_aug), function(x) { plot(EBImage::Image(sample_im_aug[[x]]))
-                                     title(main = names(sample_im_aug[x]), cex.main = 1, cex.sub = 0.75)
-                                     }
-       ) 
+  title(main = names(sample_im_aug[x]), cex.main = 1, cex.sub = 0.75)
+}
+) 
 
 
 ```
@@ -432,48 +434,48 @@ lapply(1:length(sample_im_aug), function(x) { plot(EBImage::Image(sample_im_aug[
 ```{r}
 
 all_crops_with_augmentation <- lapply(1:length(all_crops), function(x) img_augmentation(all_crops[x]))
-                                                                                                                                    
+
 names(all_crops_with_augmentation) <- lapply(1:length(all_crops), function(x)  names(all_crops[x]))
 
 str(all_crops_with_augmentation[c(1:2)]) 
 
 ```
 
- * At this step we generated 10 x 368 images. 
- * The unicellular dataset is stored as a list of 368 child lists. 
- * In each child list there are 10 generated images.
- * To plot an example from a list of list we need to specify the index of the first list, followed by the index of the name of child list (always 1) and the index of image.
- 
+* At this step we generated 10 x 368 images. 
+* The unicellular dataset is stored as a list of 368 child lists. 
+* In each child list there are 10 generated images.
+* To plot an example from a list of list we need to specify the index of the first list, followed by the index of the name of child list (always 1) and the index of image.
+
 ### Plot image from a list of list
 ```{r  fig.width= 3, fig.height= 3 }
 # plot le third image of the second list
 plot(EBImage::Image(all_crops_with_augmentation[2][[1]][[3]]))
 ```
- 
- 
+
+
 #### How many crops per Category of unicellular dataset?
- 
+
 We will count the list of crops without augmentation. 
 If we consider the augmentation preprocessing, we could multiply the size by 10.
- 
+
 ```{r}
 neutrophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
-                             function(vec) {grepl("neutrophil", vec, ignore.case=TRUE)})
+                                 function(vec) {grepl("neutrophil", vec, ignore.case=TRUE)})
 basophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
-                           function(vec) {grepl("basophil", vec, ignore.case=TRUE)})
+                               function(vec) {grepl("basophil", vec, ignore.case=TRUE)})
 eosinophil_dataset_idx <- sapply(names(all_crops_with_augmentation), 
-                             function(vec) {grepl("eosinophil", vec, ignore.case=TRUE)})
+                                 function(vec) {grepl("eosinophil", vec, ignore.case=TRUE)})
 lymphocyte_dataset_idx <- sapply(names(all_crops_with_augmentation), 
-                             function(vec) {grepl("lymphocyte", vec, ignore.case=TRUE)})
+                                 function(vec) {grepl("lymphocyte", vec, ignore.case=TRUE)})
 
 data.frame(
-neutrophil = length(all_crops_with_augmentation[neutrophil_dataset_idx]),
-basophil = length(all_crops_with_augmentation[basophil_dataset_idx]),
-eosinophil = length(all_crops_with_augmentation[eosinophil_dataset_idx]),
-lymphocyte = length(all_crops_with_augmentation[lymphocyte_dataset_idx])
+  neutrophil = length(all_crops_with_augmentation[neutrophil_dataset_idx]),
+  basophil = length(all_crops_with_augmentation[basophil_dataset_idx]),
+  eosinophil = length(all_crops_with_augmentation[eosinophil_dataset_idx]),
+  lymphocyte = length(all_crops_with_augmentation[lymphocyte_dataset_idx])
 )
 ```
- * The dataset has only 30 images from basophil WBC.
+* The dataset has only 30 images from basophil WBC.
 
 
 #### Random sampling, Split Testing and Training datasets
@@ -510,85 +512,271 @@ lymphocyte_datase_train <- lapply(lymphocyte_dataset, "[", train_idx)
 #   )
 ```
 
-#### Merge Training lists and testing lists
+#### Merge Training lists and testing lists (loop is very slow!)
 
 ```{r}
 ## do.call also works but generate cancatenated names of matrix LIST.list.
- #testing_dataset <- do.call(c,c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
- #testing_dataset <- purrr::flatten(c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
+#testing_dataset <- do.call(c,c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
+
+test_dataset_list <- purrr::flatten(c(basophil_dataset_test, eosinophil_dataset_test, neutrophil_dataset_test, lymphocyte_datase_test))
+
+train_dataset_list <- purrr::flatten(c(basophil_dataset_train, eosinophil_dataset_train, neutrophil_dataset_train, lymphocyte_datase_train))
+
+#ls1 <- purrr::flatten(basophil_dataset_test)
+
+# This fonction takes a list of images (matrix) and convert them to a vector into dataframe.
+# This function can resize image before storage
+img2vec_slow <- function(list, w = 28, h = 28){
+  
+  df <- data.frame(matrix(ncol = (w * h), nrow = 0))
+  
+  # Set names. The first column is the labels, the other columns are the pixels.
+  colnames(df) <-   paste("pixel", c(1:(w*h) ))
+  
+  for(k in 1: length(list)){
+    
+    # resize image if needed 
+    EBImage::resize(list[[k]], w = w, h = h)
+    
+    # Coerce matrix to a vector
+    img_vector <- as.vector(list[[k]])
+    # add avector to a row
+    df[nrow(df) + 1,] <- img_vector
+    
+  }
+  # add rownames with labels
+  rownames(df) <- names(list)
+  return(df)
+}
+
+
+
+
+
+#train_dataset_df <- img2vec_slow(train_dataset_list, w=180, h=180)
+#test_dataset_df <- img2vec_slow(test_dataset_list, w = 180, h = 180)
+
+#ptm <- proc.time()
+#res <- img2vec_slow(ls1)
+#print(proc.time() - ptm)
+
+
+```
+
+* loop is very slow process
+* Try to avoid lood and use `sapply`
+
+#### Merge Training lists and testing lists (sapply is very speed!)
+
+```{r}
+
+f <- function(x, w = w, h = h){
+    # resize image if needed 
+    EBImage::resize(x, w = w, h = h)
+    
+    # Coerce matrix to a vector
+    img_vector <- as.vector(x)
+    
+    # add avector to a row
+   # df[nrow(df) + 1,] <- img_vector
+  
+     return(img_vector)
+}
+
+img2vec <- function(list, w = 180, h = 180){
+  
+
+  
+  df <- data.frame(matrix(ncol = (w * h), nrow = 0))
+  
+  df <- sapply(list, f, w, h)
+  
+  # Set names. The first column is the labels, the other columns are the pixels.
+  
+  #colnames(df) <-   paste("pixel", c(1:(w * h) ))
+  
+  return(as.data.frame(t(df)))
+  
+  
+}
+
+
+
+train_dataset_df <- img2vec(train_dataset_list, w=28, h=28)
+test_dataset_df <- img2vec(test_dataset_list, w = 28, h = 28)
 
 ls1 <- purrr::flatten(basophil_dataset_test)
-
-list2df <- function(list){
-w <- 180
-h <- 180
-
-df <- data.frame(matrix(ncol = (w*h), nrow = 0))
-# Set names. The first column is the labels, the other columns are the pixels.
-colnames(df) <-   paste("pixel", c(1:(w*h) ))
+ptm <- proc.time()
+res <- img2vec(ls1)
+print(proc.time() - ptm)
+```
 
 
- for(k in 1: length(list)){
+#### glimpse of train and test datasets
+
+```{r}
+test_dataset_df[7:20, 1:9]
+
+```
+
+
+
+#### Plot image from dataframe (testing or training Datastes)
+
+```{r fig.width= 3, fig.height= 3}
+vec2img <- function(df, nrow, w= 180, h = 180){
   
-     # Coerce to a vector
-    img_vector <- as.vector(list[[k]])
-    
-    #vec <- c(names(list[k]), img_vector)
+  i <- EBImage::Image(as.numeric(df[nrow,]))
   
-     df[nrow(df) + 1,] <- img_vector
-
+  dim(i) <- c(w, h, 1)
+  #i <- EBImage::resize(i, w= w, h= h)
+  plot(i) 
 }
 
-rownames(df) <- names(list)
-return(df)
-}
-
-res <- list2df(ls1)
-
-res[,1:8]
-
-str(ls1)
-# 
-# str(testing_dataset[[1]][[1]])
-# as.vector(testing_dataset[[1]][[1]])
-# 
-# str(do.call(c, basophil_dataset_test))
-# str(basophil_dataset_test)
+vec2img(test_dataset_df, 212, 28, 28)
 ```
 
 
-#### Function to merge a list of matrices to a vectors in dataframe 
+
+### Deep learning using `mxnet` Package
 
 
-
-
+#### Formating datasets to arrays
 
 ```{r}
 
+train_dataset_df <- img2vec(train_dataset_list, w=28, h=28)
+test_dataset_df <- img2vec(test_dataset_list, w = 28, h = 28)
+
+## It is the fast way to transform rownames
+tmp_rowname_test <- rownames(test_dataset_df)
+labels <- stringr::str_extract(tmp_rowname_test, "\\w+[^_\\d]")
+rownames(test_dataset_df) <- NULL
+Test <- cbind(labels, test_dataset_df)
+
+tmp_rowname_train <- rownames(train_dataset_df)
+labels <- stringr::str_extract(tmp_rowname_train, "\\w+[^_\\d]")
+rownames(train_dataset_df) <- NULL
+Train <- cbind(labels, train_dataset_df)
+
+#Set up train and test arrays
+train <- data.matrix(Train)
+train_x <- t(train[, -1])
+train_y <- train[, 1]
+train_array <- train_x
+dim(train_array) <- c(28, 28, 1, ncol(train_x))
+
+test <- data.matrix(Test)
+test_x <- t(test[, -1])
+test_y <- test[, 1]
+test_array <- test_x
+dim(test_array) <- c(28, 28, 1, ncol(test_x))
+
+table(train[,1])
+```
+* The classes are converted to number with
+* ** 1 == Basophil **
+* ** 2 == Eosinophil **
+* ** 3 == Lymphocite **
+* ** 4 == neutrophil **
+
+### Set training parameters
+
+```{r}
+require(mxnet)
+data <- mx.symbol.Variable('data')
+# 1st convolutional layer
+conv_1 <- mx.symbol.Convolution(data = data, kernel = c(5, 5), num_filter = 20)
+tanh_1 <- mx.symbol.Activation(data = conv_1, act_type = "tanh")
+pool_1 <- mx.symbol.Pooling(data = tanh_1, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+# 2nd convolutional layer
+conv_2 <- mx.symbol.Convolution(data = pool_1, kernel = c(5, 5), num_filter = 50)
+tanh_2 <- mx.symbol.Activation(data = conv_2, act_type = "tanh")
+pool_2 <- mx.symbol.Pooling(data=tanh_2, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+# 1st fully connected layer
+flatten <- mx.symbol.Flatten(data = pool_2)
+fc_1 <- mx.symbol.FullyConnected(data = flatten, num_hidden = 500)
+tanh_3 <- mx.symbol.Activation(data = fc_1, act_type = "tanh")
+# 2nd fully connected layer
+fc_2 <- mx.symbol.FullyConnected(data = tanh_3, num_hidden = 40)
+# Output. Softmax output since we'd like to get some probabilities.
+NN_model <- mx.symbol.SoftmaxOutput(data = fc_2)
 ```
 
-
-### Split Testing and Training
+### Built a Model
 ```{r}
 
-#plot(EBImage::Image(basophil_dataset_test[[1]][[1]]))
-# 
-# mat = matrix( 
-#    c(1, 2, 3, 4, 5, 6, 7, 8, 9), 
-#    nrow=3, 
-#    ncol=3)
-# 
-# dim(basophil_dataset_test[[1]])
-#str(basophil_dataset_test[[1]][[1]])
+# Pre-training set up
+#-------------------------------------------------------------------------------
+
+# Set seed for reproducibility
+mx.set.seed(100)
+
+# Device used. CPU in my case.
+devices <- mx.cpu()
+
+# Training
+#-------------------------------------------------------------------------------
+ptm <- proc.time()
+# Train the model
+model <- mx.model.FeedForward.create(symbol = NN_model,       # The network schema
+                                     X = train_array,         # Training array
+                                     y = train_y,             # Labels/classes of training dataset
+                                     ctx = devices,
+                                     num.round = 200,
+                                     array.batch.size = 20,  # number of array in the batch size
+                                     learning.rate = 0.02,
+                                     momentum = 0.9,
+                                     optimizer = "sgd",
+                                     eval.metric = mx.metric.accuracy,
+                                     #initializer=mx.init.uniform(0.05),
+                                     epoch.end.callback = mx.callback.log.train.metric(100))
+
+print(proc.time() - ptm)
 ```
 
-#### convert to Dataframe
+### Summary of the model
+
 ```{r}
-#Convert to a dataframe, transpose, and convert the resulting matrix back to a dataframe
-#df <- as.data.frame(t(as.data.frame(listoflists)))
-#Strip out the rownames if desired
-#rownames(df)<-NULL
+summarymxnet <- summary(model$arg.params)
+ data.frame(do.call(rbind, list(summarymxnet))) %>% 
+  tibble::rownames_to_column("layers")
 ```
+
+
+### Test Model
+```{r}
+#Predict labels
+predicted <- predict(model, test_array)
+predicted <- mxnet:::predict.MXFeedForwardModel(model = model, X = test_array)
+# Assign labels
+predicted_labels <- max.col(t(predicted)) -1
+# Get accuracy
+table(test_y, predicted_labels) 
+```
+
+```{r}
+# remember the size of images used for testing
+table(test[,1])
+```
+
+* Category `1` corresponding to `Basophil` category seems to have the worst rate. The model was identify 1/9 image.
+* It is expected because the datasets of basophil is samll.
+* Eosinophi 163/270
+* Lymphocyte 103/114
+* Neutrophil 575/645
+
+
+### Compute the means of identical labels, located in the diagonal
+
+```{r}
+## get means of identical labels, located in the diagonal
+sum(diag(table(test_y,predicted_labels)))/length(test_y)
+```
+
+* **We identify  81% of the test dataset images**
+
+
 
 
 ## Description of the second dataset  
