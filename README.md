@@ -28,5 +28,5 @@
 
 
 <a href="https://kmezhoud.github.io/learn_by_example/White_blood_Cells/White_blood_cell.html" target = "_blank">
-<img src="images/BloodImage_00249.jpg" align="left" height="150" width="250" title="White Blood Cells Classification">
+<img src="images/synopsis.png" align="left" height="150" width="250" title="White Blood Cells Classification">
 </a>
