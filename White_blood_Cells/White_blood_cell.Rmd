@@ -585,19 +585,14 @@ f <- function(x, w = w, h = h){
 
 img2vec <- function(list, w = 180, h = 180){
   
-
-  
   df <- data.frame(matrix(ncol = (w * h), nrow = 0))
   
   df <- sapply(list, f, w, h)
   
   # Set names. The first column is the labels, the other columns are the pixels.
-  
   #colnames(df) <-   paste("pixel", c(1:(w * h) ))
   
   return(as.data.frame(t(df)))
-  
-  
 }
 
 
@@ -624,13 +619,14 @@ test_dataset_df[7:20, 1:9]
 #### Plot image from dataframe (testing or training Datastes)
 
 ```{r fig.width= 3, fig.height= 3}
-vec2img <- function(df, nrow, w= 180, h = 180){
+vec2img <- function(df, nrow, w= 180, h = 180, main = "if needed", xlab = "if needed"){
   
   i <- EBImage::Image(as.numeric(df[nrow,]))
   
   dim(i) <- c(w, h, 1)
   #i <- EBImage::resize(i, w= w, h= h)
-  plot(i) 
+  plot(i)
+  title(main = main, xlab = xlab ,cex.main = 1, cex.sub = 0.75)
 }
 
 vec2img(test_dataset_df, 212, 28, 28)
@@ -765,6 +761,7 @@ table(test[,1])
 * Eosinophi 163/270
 * Lymphocyte 103/114
 * Neutrophil 575/645
+* The model was predict 95 False Positive (FP) Neutrophil and 65 FP Eosinophil.
 
 
 ### Compute the means of identical labels, located in the diagonal
@@ -776,8 +773,43 @@ sum(diag(table(test_y,predicted_labels)))/length(test_y)
 
 * **We identify  81% of the test dataset images**
 
+### Visualize predicted class and compare them to original class from testing dataset
 
+```{r fig.width=3, fig.height=3}
+# class arg could be: "BASPPHIL", "NEUTROPHIL", "LYMPHOCYTE", "EOSINOPHIL"
+# n_img is the number of image would you want to plot.
+# If could be the sum of predicted images and image for testing for one class.
 
+plot_result <- function(class = "BASOPHIL", n_img = 10){
+
+  par(mfrow=c(4,5))
+
+  lapply(1:n_img, function(i){
+
+    ## generate index for each class/folder
+    key0 <- strsplit(unique(labels), ",")
+    df_index <- data.frame(index = rep(seq_along(key0), sapply(key0, length)), ID = unlist(key0))
+    idx <- df_index[which(df_index[,2] == class),1]
+    
+    ## we would like to select classes 3 
+    
+    
+    selected_vec_test <- test_y[test_y == idx]
+    
+    selected_vec_predicted <- which(predicted_labels == idx)
+    
+    
+    vec2img(Test[selected_vec_test,][,-1],i,w= 28, h= 28, main = class, xlab = "to test")
+    
+    vec2img(Test[selected_vec_predicted,][,-1],i,w= 28, h= 28, main = paste(selected_vec_predicted %in% selected_vec_test), xlab = "predicted")
+
+})
+}
+
+plot_result(class = "BASOPHIL", 10)
+```
+
+* The unique predicted basophil is FALSE, Hahahaha :-)
 
 ## Description of the second dataset  
 The second dataset directory named `dataset2-master` contains image folder for each class of WBC and csv file that label images.
