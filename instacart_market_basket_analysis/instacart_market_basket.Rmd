@@ -701,11 +701,12 @@ In each orders, costumers bougth multiple items forming a basket. We will regrou
 
 We need to join orders by order_id and then by products_id.
 This code take a while.
+
 ```{r comment=FALSE, warning=FALSE, fig.height = 5, fig.width = 8}
-# transactions <- orders %>%
-#   left_join(order_train, by = "order_id") %>%
-#   left_join(products, by = "product_id")
-# 
+#ransactions <- orders %>%
+#  left_join(order_train, by = "order_id") %>%
+#  left_join(products, by = "product_id")
+
 # baskets <- transactions %>%
 #            plyr::ddply(c("order_id", "user_id"),
 #               function(df1) paste(df1$product_name,
@@ -715,19 +716,17 @@ This code take a while.
 # baskets <- readRDS("baskets_prior.RDS")
 # tibble::glimpse(baskets)
 # saveRDS(object = baskets, file = "baskets_train.RDS")
-# 
-# baskets <- readRDS("baskets.RDS")
 # # Write the Baskets list to a file
 # write.csv(baskets$V1,"transactions_list.csv", quote = FALSE, row.names = TRUE)
 # 
-# library(arules)
+ library(arules)
 # # load the Baskets list as a basket format using arules package
-# tr_list <- read.transactions('transactions_list.csv', format = 'basket', sep=',')
+tr_list <- read.transactions('transactions_list.csv', format = 'basket', sep=',')
 ```
 
 
 ```{r}
-#summary(tr_list)
+summary(tr_list)
 ```
 
 
@@ -737,3 +736,120 @@ This code take a while.
     The Density is 2.788542e-06 tells the percentage of non-zero cells in a sparse matrix. It is the total number of items that are purchased and divided by a possible number of items in the matrix.
 
     The multiplication of the three values is the total of products were purchased.
+
+
+```{r}
+round( 3421084 * 3702915 * 2.788542e-06)
+```
+
+* The most frequent items are  Banana (46048), Bag of Organic Bananas (367637),    Organic Strawberries (252559),    Organic Baby Spinach (232235). 
+                         
+```{r}
+summary(tr_list)@lengths
+```
+* The element length distribution is formulated as number of `products / number of transactions`.
+* For example, there are 182058 transactions with 10 items, and 2 transactions with 100 items. 
+
+
+# Plot the most 10 frequent purchased items
+
+```{r, fig.height = 4, fig.width = 6}
+library(RColorBrewer)
+#par(mfrow=c(2,1))
+arules::itemFrequencyPlot(tr_list,topN=10,type="absolute",col=brewer.pal(8,'Pastel2'), main="Absolute Product Frequency Plot")
+```
+
+
+```{r, fig.height = 4, fig.width = 6}
+arules::itemFrequencyPlot(tr_list,topN=10,type="relative",col=brewer.pal(8,'Pastel2'), main="Relative Product Frequency Plot")
+```
+
+* The option absolute plots numeric frequencies of each item independently.
+* The relative option plots how many times these products have appeared as compared to others.
+
+# Applying of `APRIORI algorithme
+
+The next step is to mine the rules using the APRIORI algorithm. The function apriori() is from arules package.
+
+We can set and optimize the parameter of the `minimum` support of 0.0001, the `minimum confidence of 0.8, maximum of 10 items (maxlen).
+
+```{r}
+#Min Support as 0.0001, confidence as 0.8 and maximum of 10 products.
+association.rules <- arules::apriori(tr_list, parameter = list(supp=0.001, conf=0.8))  #, maxlen=10
+```
+
+**Definition**
+    * Itemset: Collection of one or more items. K-item-set means a set of k items.
+    * Support Count: Frequency of occurrence of an item-set
+    * Support(s): Fraction of transactions that contain the item-set
+
+# Inspect the top 10 rules
+
+```{r}
+inspect(association.rules[1:10])
+```
+
+**Interpretation**
+    * 100% of the customers who bought `Paper Towels Choose-A-Sheet` also bought `One-Ply`.
+    * 100% of the customers who bought `Medium Pulp` also bought `Country Stand Juice`.
+  
+
+# Extract rules for `Olives`
+
+```{r}
+Olives.association.rules <- apriori(tr_list, parameter = list(supp = 0.001, conf = 0.8), appearance = list(default="lhs", rhs = "Olives"))
+```
+
+# Inspect the top 10 rules for `Olives`
+
+```{r}
+# lhs= canned beer because you want to find out the probability of that in how many customers buy canned beer along with other items
+inspect(Olives.association.rules)
+#inspect(association.rules[1:30])
+```
+
+`Olives` (RHS) was Bought as `Kalamata` or `Pitted`.
+
+# Visualizing Association Rules
+
+A straight-forward visualization of association rules is to use a scatter plot using plot() of the arulesViz package. It uses Support and Confidence on the axes.
+
+```{r, fig.height = 4, fig.width = 6}
+library(arulesViz)
+# Filter rules with confidence greater than 0.9 or 90%
+subRules <- association.rules[quality(association.rules)$confidence > 0.8]
+#Plot SubRules
+plot(subRules, jitter = 0.3)
+```
+
+* The above plot shows that rules with high lift have low support. We can use the following options:
+
+# Two-key Plot
+
+```{r, fig.height = 4, fig.width = 6}
+plot(subRules,method="two-key plot", jitter = 0.3)
+```
+
+
+
+# Interactive visualisation of 30 Rules
+
+```{r}
+#top10subRules <- head(subRules, n = 10, by = "confidence")
+plot(subRules[1:30], method = "graph",  engine = "htmlwidget", control = list(type = "items"))
+```
+
+
+* The Arrows pointing from products to rule vertices indicate LHS products and an arrow from a rule to an product indicates the RHS.
+* Surprisingly Banana is not in the view. It means there is not rule to buy Banana.
+
+
+# Individual Rule Representation
+The Parallel Coordinates Plot is useful to visualized which items were purchased with an other one.
+
+```{r, fig.height = 4, fig.width = 6}
+# Filter top 16 rules with highest lift
+subRules2<-head(subRules, n=16, by="lift")
+plot(subRules2[1:16], method="paracoord", control = list(reorder = TRUE))
+```
+
