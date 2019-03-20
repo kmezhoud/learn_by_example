@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2019-03-19" />
+<meta name="date" content="2019-03-20" />
 
-<title>White Blood Unicellular Classification</title>
+<title>Santander Costumer Transaction Prediction</title>
 
 <script src="santander_costumer_trans_pred_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -258,8 +258,8 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">White Blood Unicellular Classification</h1>
-<h4 class="date"><em>2019-03-19</em></h4>
+<h1 class="title toc-ignore">Santander Costumer Transaction Prediction</h1>
+<h4 class="date"><em>2019-03-20</em></h4>
 
 </div>
 
@@ -268,13 +268,15 @@ $(document).ready(function () {
 <li><a href="#load-packages"><span class="toc-section-number">0.1</span> Load packages</a></li>
 <li><a href="#data-glimpse"><span class="toc-section-number">1</span> Data glimpse</a><ul>
 <li><a href="#correlation-glimps-of-variables"><span class="toc-section-number">1.1</span> Correlation glimps of variables</a></li>
+<li><a href="#chisq.test"><span class="toc-section-number">1.2</span> chisq.test</a></li>
 </ul></li>
 <li><a href="#split-dataset-by-condition-recursive-partitioninghttpsen.wikipedia.orgwikirecursive_partitioning"><span class="toc-section-number">2</span> Split dataset by condition [Recursive partitioning][<a href="https://en.wikipedia.org/wiki/Recursive_partitioning" class="uri">https://en.wikipedia.org/wiki/Recursive_partitioning</a>]</a><ul>
 <li><a href="#variable-importance"><span class="toc-section-number">2.1</span> Variable Importance</a></li>
-<li><a href="#capture-features-of-the-model"><span class="toc-section-number">2.2</span> Capture Features of the model</a></li>
-<li><a href="#capture-features-for-a-list-of-models"><span class="toc-section-number">2.3</span> Capture Features for a list of models</a></li>
-<li><a href="#extract-the-best-variables-by-median-of-scores-based-on-multiple-models"><span class="toc-section-number">2.4</span> Extract the best Variables by median of Scores based on multiple models</a></li>
-<li><a href="#use-the-best-74-variables-for-modeling"><span class="toc-section-number">2.5</span> Use the best 74 variables for modeling</a></li>
+<li><a href="#prediction-and-evaluation"><span class="toc-section-number">2.2</span> Prediction and Evaluation</a></li>
+<li><a href="#capture-features-of-the-model"><span class="toc-section-number">2.3</span> Capture Features of the model</a></li>
+<li><a href="#capture-features-for-a-list-of-models"><span class="toc-section-number">2.4</span> Capture Features for a list of models</a></li>
+<li><a href="#extract-the-best-variables-by-median-of-scores-based-on-multiple-models"><span class="toc-section-number">2.5</span> Extract the best Variables by median of Scores based on multiple models</a></li>
+<li><a href="#use-the-best-74-variables-for-modeling"><span class="toc-section-number">2.6</span> Use the best 74 variables for modeling</a></li>
 </ul></li>
 </ul>
 </div>
@@ -286,7 +288,8 @@ $(document).ready(function () {
 <h1><span class="header-section-number">1</span> Data glimpse</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">path_to_train &lt;-<span class="st"> &quot;train.csv&quot;</span>
 train &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="dt">file =</span> path_to_train)
-train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>] <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.factor</span>(target))</code></pre></div>
 <pre><code>##    ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
 ## 1  train_0      0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187
 ## 2  train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
@@ -380,6 +383,59 @@ cormat[<span class="dv">1</span><span class="op">:</span><span class="dv">9</spa
 <span class="st">  </span><span class="kw">geom_tile</span>()</code></pre></div>
 <p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
 <p>We did not find any particular correlation.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">target_corr =<span class="st"> </span><span class="kw">abs</span>(<span class="kw">cor</span>(train[,<span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>)])[<span class="st">&#39;target&#39;</span>,])
+target_corr <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>tibble<span class="op">::</span><span class="kw">rownames_to_column</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(target_corr)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">rename</span>(<span class="dt">Vairable =</span> <span class="st">&quot;rowname&quot;</span>, <span class="dt">Correlation =</span> <span class="st">&quot;.&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>()</code></pre></div>
+<pre><code>##   Vairable Correlation
+## 1   target  1.00000000
+## 2   var_81  0.08091733
+## 3  var_139  0.07407963
+## 4   var_12  0.06948928
+## 5    var_6  0.06673085
+## 6  var_110  0.06427530</code></pre>
+<ul>
+<li>As you can see, the most correlated one is the Variable 81, then comes the Variable 139 and so on. But it remains negligible to consider.</li>
+<li>Let’s take a look at the plot of the target variable against the Variable 81.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.factor</span>(target)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(target) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> target)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_boxplot</span>(<span class="kw">aes</span>( <span class="dt">y =</span> var_<span class="dv">81</span>, <span class="dt">color=</span> target))</code></pre></div>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#plot(train$var_81, y = train$target)</span></code></pre></div>
+<ul>
+<li>Apparently There is no a significant difference between var_81(0) and var_81(1).</li>
+</ul>
+</div>
+<div id="chisq.test" class="section level2">
+<h2><span class="header-section-number">1.2</span> chisq.test</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">chisq.test</span>(<span class="kw">table</span>(train[,<span class="kw">c</span>(<span class="st">&quot;target&quot;</span>, <span class="st">&quot;var_81&quot;</span>)]))</code></pre></div>
+<pre><code>## Warning in chisq.test(table(train[, c(&quot;target&quot;, &quot;var_81&quot;)])): Chi-squared
+## approximation may be incorrect</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  table(train[, c(&quot;target&quot;, &quot;var_81&quot;)])
+## X-squared = 84321, df = 79064, p-value &lt; 2.2e-16</code></pre>
+<ul>
+<li>A very low p-value means a <strong>very strong difference</strong> from the <strong>uncorrelated</strong> case. As usual in the hypothesis tests, you don’t actually accept the null hypothesis, but refuse to neglect it.</li>
+<li>We can get further confirmation by taking a look at the contingency table:</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(<span class="kw">table</span>(train[,<span class="kw">c</span>(<span class="st">&quot;var_81&quot;</span>, <span class="st">&quot;target&quot;</span>)]))</code></pre></div>
+<pre><code>## Number of cases in table: 200000 
+## Number of factors: 2 
+## Test for independence of all factors:
+##  Chisq = 84321, df = 79064, p-value = 1.341e-38
+##  Chi-squared approximation may be incorrect</code></pre>
+<ul>
+<li>Exactly what we expected.</li>
+<li>Conclusion: <code>Var_81</code> and <code>target</code> statute are independent. We suppose that all the other variables are also independent.</li>
+</ul>
 </div>
 </div>
 <div id="split-dataset-by-condition-recursive-partitioninghttpsen.wikipedia.orgwikirecursive_partitioning" class="section level1">
@@ -405,6 +461,7 @@ fit &lt;-<span class="st"> </span>rpart<span class="op">::</span><span class="kw
 
 <span class="co">#print(proc.time() - ptm)</span>
 <span class="cf">if</span>(plot <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span>){
+<span class="co">#rpart.plot(fit, type = 3, extra = 0, box.palette = &quot;Grays&quot;, roundint = FALSE)</span>
 <span class="kw">plot</span>(fit, <span class="dt">uniform=</span><span class="ot">TRUE</span>, <span class="dt">compress=</span><span class="ot">TRUE</span>, <span class="dt">margin=</span><span class="fl">0.01</span>, <span class="dt">main=</span> <span class="kw">paste</span>(<span class="st">&quot;Target vs all variables&quot;</span> ))<span class="co">#,</span>
      <span class="co">#control = rpart.control(minsplit = 1, minbucket = 1, cp = 0.01))</span>
 <span class="kw">text</span>(fit, <span class="dt">use.n=</span><span class="ot">TRUE</span>, <span class="dt">all=</span><span class="ot">TRUE</span>, <span class="dt">cex=</span><span class="fl">1.5</span>, <span class="dt">fancy=</span><span class="ot">TRUE</span>)
@@ -424,22 +481,32 @@ fit &lt;-<span class="st"> </span>rpart<span class="op">::</span><span class="kw
 <p>We tried several sample size and note that it is working if sample not exceed 4000.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">726</span>)
 fit1 &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">4000</span>, <span class="dt">plot=</span> <span class="ot">TRUE</span>)</code></pre></div>
-<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-8-1.png" width="960" /></p>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>** Interpretation** * The resulting models can be represented as binary trees with variables profiles threshold (var_13 &gt; 0.204). * Each node is a <code>class</code>. The ratio in each node is the proportion of the number of costumers by class (<code>1</code>/<code>0</code>). * Each edge is a <code>split condition</code> of selected variable in branch. * The root of the tree is the best variable divisor of classes.</p>
-<p>The goal is to predict which variables thresholds combination (var_13 &gt; 0.2 + var_111 &lt; 7.79 + car_191 &gt; 12.46) lead to 80% of <code>1</code>.</p>
+<p>The goal is to predict which variables thresholds combination (var_13 &gt; 0.2 + var_109 &lt; 12 + var_111 &gt; 7.79) lead to 3/12 of `1.</p>
 <ul>
 <li>In this run we have 7 + 3 + 5 + 6 costumers that did transaction.</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">323</span>)
 fit2 &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">4000</span>, <span class="dt">plot =</span> <span class="ot">TRUE</span>)</code></pre></div>
-<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
-<p>The order and the importance of variables change through runs. Based on the assympption that we can not run rpart model on all training dataset, we will loop several runs to get more idea about variable importance and thresholds.</p>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+<p>The order and the importance of variables change through runs. Based on the assumption that we can not run rpart model on all training dataset, we will loop several runs to get more idea about variable importance and thresholds.</p>
 <div id="variable-importance" class="section level2">
 <h2><span class="header-section-number">2.1</span> Variable Importance</h2>
 <p>The output of <code>get_tree</code> returns the score of the best variables ranked by importance.</p>
 </div>
+<div id="prediction-and-evaluation" class="section level2">
+<h2><span class="header-section-number">2.2</span> Prediction and Evaluation</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prediction &lt;-<span class="st"> </span><span class="kw">predict</span>(fit2, test, <span class="dt">type =</span> <span class="st">&quot;class&quot;</span>)
+<span class="kw">table</span>(prediction, train<span class="op">$</span>target)</code></pre></div>
+<pre><code>##           
+## prediction      0      1
+##          0 178551  19958
+##          1   1351    140</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#OneR::eval_model(prediction, train)</span></code></pre></div>
+</div>
 <div id="capture-features-of-the-model" class="section level2">
-<h2><span class="header-section-number">2.2</span> Capture Features of the model</h2>
+<h2><span class="header-section-number">2.3</span> Capture Features of the model</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">capture_thresholds &lt;-<span class="st"> </span><span class="cf">function</span>(fit_model){
   <span class="cf">if</span>(<span class="st">&quot;variable.importance&quot;</span> <span class="op">%in%</span><span class="st"> </span><span class="kw">names</span>(fit_model)){
   
@@ -505,7 +572,7 @@ Thresholds &lt;-<span class="st"> </span><span class="kw">cbind</span>(Variable,
 ## 12      R4   var_61  0.74355       NA  0.74355  6.542468        &gt;    1</code></pre>
 </div>
 <div id="capture-features-for-a-list-of-models" class="section level2">
-<h2><span class="header-section-number">2.3</span> Capture Features for a list of models</h2>
+<h2><span class="header-section-number">2.4</span> Capture Features for a list of models</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Loop to run get_tree
 mdl &lt;-<span class="st"> </span><span class="ot">NULL</span>
 <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">20</span>){
@@ -526,36 +593,31 @@ tbl &lt;-<span class="st"> </span>rlist<span class="op">::</span><span class="kw
 <p>We run a loop for 20 fits. At the end we get 17 fits. The 3 remain run do not find classification.</p>
 </div>
 <div id="extract-the-best-variables-by-median-of-scores-based-on-multiple-models" class="section level2">
-<h2><span class="header-section-number">2.4</span> Extract the best Variables by median of Scores based on multiple models</h2>
+<h2><span class="header-section-number">2.5</span> Extract the best Variables by median of Scores based on multiple models</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">best_var &lt;-<span class="st"> </span><span class="kw">do.call</span>(rbind, tbl) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">group_by</span>(Variable) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">mScore =</span> <span class="kw">median</span>(Score)) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(mScore))
 
-best_var</code></pre></div>
-<pre><code>## # A tibble: 66 x 2
-##    Variable mScore
-##    &lt;chr&gt;     &lt;dbl&gt;
-##  1 var_12     16.3
-##  2 var_2      14.5
-##  3 var_22     13.6
-##  4 var_166    12.7
-##  5 var_81     12.1
-##  6 var_165    11.3
-##  7 var_115    11.1
-##  8 var_119    10.7
-##  9 var_146    10.5
-## 10 var_107    10.5
-## # … with 56 more rows</code></pre>
+<span class="kw">head</span>(best_var)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   Variable mScore
+##   &lt;chr&gt;     &lt;dbl&gt;
+## 1 var_12     16.3
+## 2 var_2      14.5
+## 3 var_22     13.6
+## 4 var_166    12.7
+## 5 var_81     12.1
+## 6 var_165    11.3</code></pre>
 </div>
 <div id="use-the-best-74-variables-for-modeling" class="section level2">
-<h2><span class="header-section-number">2.5</span> Use the best 74 variables for modeling</h2>
+<h2><span class="header-section-number">2.6</span> Use the best 74 variables for modeling</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sub_train1 &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">select</span>(ID_code, target,  best_var<span class="op">$</span>Variable)
 
 <span class="kw">set.seed</span>(<span class="dv">1321</span>)
 fit_<span class="dv">74</span> &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> sub_train1, <span class="dt">n_sample =</span> <span class="dv">3500</span>, <span class="dt">plot=</span> <span class="ot">TRUE</span>)</code></pre></div>
-<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptest &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_<span class="dv">74</span>, test, <span class="dt">type =</span> <span class="st">&quot;class&quot;</span>)
 
 <span class="kw">table</span>(ptest, train<span class="op">$</span>target)</code></pre></div>
