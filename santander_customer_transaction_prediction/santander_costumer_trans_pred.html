@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<meta name="date" content="2019-03-19" />
+
+<title>White Blood Unicellular Classification</title>
+
+<script src="santander_costumer_trans_pred_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="santander_costumer_trans_pred_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="santander_costumer_trans_pred_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="santander_costumer_trans_pred_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="santander_costumer_trans_pred_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="santander_costumer_trans_pred_files/navigation-1.1/tabsets.js"></script>
+<script src="santander_costumer_trans_pred_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code > span.dt { color: #204a87; } /* DataType */
+code > span.dv { color: #0000cf; } /* DecVal */
+code > span.bn { color: #0000cf; } /* BaseN */
+code > span.fl { color: #0000cf; } /* Float */
+code > span.ch { color: #4e9a06; } /* Char */
+code > span.st { color: #4e9a06; } /* String */
+code > span.co { color: #8f5902; font-style: italic; } /* Comment */
+code > span.ot { color: #8f5902; } /* Other */
+code > span.al { color: #ef2929; } /* Alert */
+code > span.fu { color: #000000; } /* Function */
+code > span.er { color: #a40000; font-weight: bold; } /* Error */
+code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #000000; } /* Constant */
+code > span.sc { color: #000000; } /* SpecialChar */
+code > span.vs { color: #4e9a06; } /* VerbatimString */
+code > span.ss { color: #4e9a06; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #000000; } /* Variable */
+code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code > span.ex { } /* Extension */
+code > span.at { color: #c4a000; } /* Attribute */
+code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">White Blood Unicellular Classification</h1>
+<h4 class="date"><em>2019-03-19</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-packages"><span class="toc-section-number">0.1</span> Load packages</a></li>
+<li><a href="#data-glimpse"><span class="toc-section-number">1</span> Data glimpse</a><ul>
+<li><a href="#correlation-glimps-of-variables"><span class="toc-section-number">1.1</span> Correlation glimps of variables</a></li>
+</ul></li>
+<li><a href="#split-dataset-by-condition-recursive-partitioninghttpsen.wikipedia.orgwikirecursive_partitioning"><span class="toc-section-number">2</span> Split dataset by condition [Recursive partitioning][<a href="https://en.wikipedia.org/wiki/Recursive_partitioning" class="uri">https://en.wikipedia.org/wiki/Recursive_partitioning</a>]</a><ul>
+<li><a href="#variable-importance"><span class="toc-section-number">2.1</span> Variable Importance</a></li>
+<li><a href="#capture-features-of-the-model"><span class="toc-section-number">2.2</span> Capture Features of the model</a></li>
+<li><a href="#capture-features-for-a-list-of-models"><span class="toc-section-number">2.3</span> Capture Features for a list of models</a></li>
+<li><a href="#extract-the-best-variables-by-median-of-scores-based-on-multiple-models"><span class="toc-section-number">2.4</span> Extract the best Variables by median of Scores based on multiple models</a></li>
+<li><a href="#use-the-best-74-variables-for-modeling"><span class="toc-section-number">2.5</span> Use the best 74 variables for modeling</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="load-packages" class="section level2">
+<h2><span class="header-section-number">0.1</span> Load packages</h2>
+</div>
+<div id="data-glimpse" class="section level1">
+<h1><span class="header-section-number">1</span> Data glimpse</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">path_to_train &lt;-<span class="st"> &quot;train.csv&quot;</span>
+train &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="dt">file =</span> path_to_train)
+train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>##    ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
+## 1  train_0      0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187
+## 2  train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
+## 3  train_2      0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427
+## 4  train_3      0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428
+## 5  train_4      0  9.8369 -1.4834 12.8746 6.6375 12.2772   2.4486 5.9405
+## 6  train_5      0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322
+## 7  train_6      0 11.8091 -0.0832  9.3494 4.2916 11.1355  -8.0198 6.1961
+## 8  train_7      0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890
+## 9  train_8      0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514
+## 10 train_9      0 12.5088  1.9743  8.8960 5.4508 13.6043 -16.2859 6.0637
+##      var_7   var_8  var_9  var_10   var_11
+## 1  18.6266 -4.9200 5.7470  2.9252   3.1821
+## 2  16.5338  3.1468 8.0851 -0.4032   8.0585
+## 3  14.6155 -4.9193 5.9525 -0.3249 -11.2648
+## 4  14.9250 -5.8609 8.2450  2.3061   2.8102
+## 5  19.2514  6.2654 7.6784 -9.4458 -12.1419
+## 6  15.2255  3.5855 5.9790  0.8010  -0.6192
+## 7  12.0771 -4.3781 7.9232 -5.1288  -7.5271
+## 8  22.3262  5.0647 7.1971  1.4532  -6.7033
+## 9  10.1854 -3.1882 9.0827  0.9501   1.7982
+## 10 16.8410  0.1287 7.9682  0.8787   3.0537</code></pre>
+<ul>
+<li>The dataset consists of 200 variables labeled var_n (n 1:200),</li>
+<li>A column named <code>target</code> logical value (0,1), which 1 corresponds to a costumers that get transaction and 0, as No.</li>
+<li>ID_code corresponds to the ID of the costumers</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test &lt;-<span class="st"> </span><span class="kw">read.csv</span>((<span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>))
+test[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>##    ID_code   var_0    var_1   var_2  var_3   var_4    var_5  var_6   var_7
+## 1   test_0 11.0656   7.7798 12.9536 9.4292 11.4327  -2.3805 5.8493 18.2675
+## 2   test_1  8.5304   1.2543 11.3047 5.1858  9.1974  -4.0117 6.0196 18.6316
+## 3   test_2  5.4827 -10.3581 10.1407 7.0479 10.2628   9.8052 4.8950 20.2537
+## 4   test_3  8.5374  -1.3222 12.0220 6.5749  8.8458   3.1744 4.9397 20.5660
+## 5   test_4 11.7058  -0.1327 14.1295 7.7506  9.1035  -8.5848 6.8595 10.6048
+## 6   test_5  5.9862  -2.2913  8.6058 7.0685 14.2465  -8.6761 4.2467 14.7632
+## 7   test_6  8.4624  -6.1065  7.3603 8.2627 12.0104  -7.2073 4.1670 13.0809
+## 8   test_7 17.3035  -2.4212 13.3989 8.3998 11.0777   9.6449 5.9596 17.8477
+## 9   test_8  6.9856   0.8402 13.7161 4.7749  8.6784 -13.7607 4.3386 14.5843
+## 10  test_9 10.3811  -6.9348 14.6690 9.0941 11.9058 -10.8018 3.4508 20.2816
+##      var_8  var_9  var_10  var_11  var_12
+## 1   2.1337 8.8100 -2.0248 -4.3554 13.9696
+## 2  -4.4131 5.9739 -1.3809 -0.3310 14.1129
+## 3   1.5233 8.3442 -4.7057 -3.0422 13.6751
+## 4   3.3755 7.4578  0.0095 -5.0659 14.0526
+## 5   2.9890 7.1437  5.1025 -3.2827 14.1013
+## 6   1.8790 7.2842 -4.9194 -9.1869 14.0581
+## 7  -4.3004 6.3181  3.3959 -2.0205 13.7682
+## 8  -4.8068 7.4643  4.0355  1.6185 14.1455
+## 9   2.5883 7.2215  9.3750  8.4046 14.3322
+## 10 -1.4112 6.7401  0.3727 -4.1918 14.0862</code></pre>
+<ul>
+<li>The test dataset has the same shape than the train dataset minus target column.</li>
+<li>The goal is to predict <code>target</code> column depending on 200 double values.</li>
+<li>In the other hand <strong>split</strong> the dataset by condition if each costumer will get transaction (1) or not (0) depending on 200 variables</li>
+</ul>
+<div id="correlation-glimps-of-variables" class="section level2">
+<h2><span class="header-section-number">1.1</span> Correlation glimps of variables</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cormat &lt;-<span class="st"> </span><span class="kw">round</span>(<span class="kw">cor</span>(train[, <span class="kw">c</span>(<span class="op">-</span><span class="dv">1</span>,<span class="op">-</span><span class="dv">2</span>)]),<span class="dv">2</span>)
+cormat[<span class="dv">1</span><span class="op">:</span><span class="dv">9</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">15</span>]</code></pre></div>
+<pre><code>##       var_0 var_1 var_2 var_3 var_4 var_5 var_6 var_7 var_8 var_9 var_10
+## var_0  1.00     0  0.01     0     0     0  0.01     0     0  0.00      0
+## var_1  0.00     1  0.00     0     0     0  0.00     0     0  0.00      0
+## var_2  0.01     0  1.00     0     0     0  0.00     0     0  0.00      0
+## var_3  0.00     0  0.00     1     0     0  0.00     0     0  0.00      0
+## var_4  0.00     0  0.00     0     1     0  0.00     0     0  0.00      0
+## var_5  0.00     0  0.00     0     0     1  0.00     0     0 -0.01      0
+## var_6  0.01     0  0.00     0     0     0  1.00     0     0 -0.01      0
+## var_7  0.00     0  0.00     0     0     0  0.00     1     0  0.00      0
+## var_8  0.00     0  0.00     0     0     0  0.00     0     1  0.00      0
+##       var_11 var_12 var_13 var_14
+## var_0   0.00      0   0.00      0
+## var_1   0.00      0   0.00      0
+## var_2   0.01      0  -0.01      0
+## var_3   0.00      0  -0.01      0
+## var_4   0.00      0   0.00      0
+## var_5   0.00      0   0.00      0
+## var_6   0.00      0  -0.01      0
+## var_7   0.00      0   0.00      0
+## var_8   0.00      0   0.00      0</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">melted_cormat &lt;-<span class="st"> </span><span class="kw">melt</span>(cormat)
+<span class="kw">head</span>(melted_cormat)</code></pre></div>
+<pre><code>##    Var1  Var2 value
+## 1 var_0 var_0  1.00
+## 2 var_1 var_0  0.00
+## 3 var_2 var_0  0.01
+## 4 var_3 var_0  0.00
+## 5 var_4 var_0  0.00
+## 6 var_5 var_0  0.00</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="dt">data =</span> melted_cormat, <span class="kw">aes</span>(<span class="dt">x=</span>Var1, <span class="dt">y=</span>Var2, <span class="dt">fill=</span>value)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_tile</span>()</code></pre></div>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-6-1.png" width="960" /></p>
+<p>We did not find any particular correlation.</p>
+</div>
+</div>
+<div id="split-dataset-by-condition-recursive-partitioninghttpsen.wikipedia.orgwikirecursive_partitioning" class="section level1">
+<h1><span class="header-section-number">2</span> Split dataset by condition [Recursive partitioning][<a href="https://en.wikipedia.org/wiki/Recursive_partitioning" class="uri">https://en.wikipedia.org/wiki/Recursive_partitioning</a>]</h1>
+<p>The idea is to built a collection of variables with thresholds (pattern) that split dataset (parent) into sons (0,1).</p>
+<p>The root of the model is a threshold of a variable that splits the dataset into two biggest groups. The data is separated by the first important variable, and then this process is applied separately to each sub-group, and so on recursively until the subgroups either reach a minimum size or until no improvement can be made.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">get_tree &lt;-<span class="st"> </span><span class="cf">function</span>(dataset, n_sample, <span class="dt">plot=</span> <span class="ot">FALSE</span>){
+<span class="co"># random sampling of 5000 costumers</span>
+s &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="kw">nrow</span>(dataset), <span class="dt">size =</span> n_sample, <span class="dt">replace=</span><span class="ot">FALSE</span>)
+
+<span class="co"># test idea with sub-dataset</span>
+  sub_data &lt;-<span class="st"> </span>dataset[s,]
+  sub_data &lt;-<span class="st"> </span>sub_data <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.factor</span>(target))
+
+frmla &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;target&quot;</span>, <span class="st">&quot;~.&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+
+frmla &lt;-<span class="st"> </span><span class="kw">as.formula</span>(frmla)
+
+<span class="co">#ptm &lt;- proc.time()</span>
+
+fit &lt;-<span class="st"> </span>rpart<span class="op">::</span><span class="kw">rpart</span>(frmla, <span class="dt">method =</span>  <span class="st">&quot;class&quot;</span>, sub_data[,<span class="op">-</span><span class="dv">1</span>])
+
+<span class="co">#print(proc.time() - ptm)</span>
+<span class="cf">if</span>(plot <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span>){
+<span class="kw">plot</span>(fit, <span class="dt">uniform=</span><span class="ot">TRUE</span>, <span class="dt">compress=</span><span class="ot">TRUE</span>, <span class="dt">margin=</span><span class="fl">0.01</span>, <span class="dt">main=</span> <span class="kw">paste</span>(<span class="st">&quot;Target vs all variables&quot;</span> ))<span class="co">#,</span>
+     <span class="co">#control = rpart.control(minsplit = 1, minbucket = 1, cp = 0.01))</span>
+<span class="kw">text</span>(fit, <span class="dt">use.n=</span><span class="ot">TRUE</span>, <span class="dt">all=</span><span class="ot">TRUE</span>, <span class="dt">cex=</span><span class="fl">1.5</span>, <span class="dt">fancy=</span><span class="ot">TRUE</span>)
+}
+
+<span class="kw">return</span>(fit)
+}
+<span class="kw">set.seed</span>(<span class="dv">1</span>)
+<span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">5000</span>, <span class="dt">plot =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>## n= 5000 
+## 
+## node), split, n, loss, yval, (yprob)
+##       * denotes terminal node
+## 
+## 1) root 5000 508 0 (0.8984000 0.1016000) *</code></pre>
+<p>The error message indicates that the formula used here can not split the dataset in sub-groups.</p>
+<p>We tried several sample size and note that it is working if sample not exceed 4000.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">726</span>)
+fit1 &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">4000</span>, <span class="dt">plot=</span> <span class="ot">TRUE</span>)</code></pre></div>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-8-1.png" width="960" /></p>
+<p>** Interpretation** * The resulting models can be represented as binary trees with variables profiles threshold (var_13 &gt; 0.204). * Each node is a <code>class</code>. The ratio in each node is the proportion of the number of costumers by class (<code>1</code>/<code>0</code>). * Each edge is a <code>split condition</code> of selected variable in branch. * The root of the tree is the best variable divisor of classes.</p>
+<p>The goal is to predict which variables thresholds combination (var_13 &gt; 0.2 + var_111 &lt; 7.79 + car_191 &gt; 12.46) lead to 80% of <code>1</code>.</p>
+<ul>
+<li>In this run we have 7 + 3 + 5 + 6 costumers that did transaction.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">323</span>)
+fit2 &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">4000</span>, <span class="dt">plot =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-9-1.png" width="960" /></p>
+<p>The order and the importance of variables change through runs. Based on the assympption that we can not run rpart model on all training dataset, we will loop several runs to get more idea about variable importance and thresholds.</p>
+<div id="variable-importance" class="section level2">
+<h2><span class="header-section-number">2.1</span> Variable Importance</h2>
+<p>The output of <code>get_tree</code> returns the score of the best variables ranked by importance.</p>
+</div>
+<div id="capture-features-of-the-model" class="section level2">
+<h2><span class="header-section-number">2.2</span> Capture Features of the model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">capture_thresholds &lt;-<span class="st"> </span><span class="cf">function</span>(fit_model){
+  <span class="cf">if</span>(<span class="st">&quot;variable.importance&quot;</span> <span class="op">%in%</span><span class="st"> </span><span class="kw">names</span>(fit_model)){
+  
+var_importance &lt;-<span class="st"> </span>fit_model[<span class="st">&quot;variable.importance&quot;</span>] <span class="op">%&gt;%</span><span class="st">  </span>
+<span class="st">                  </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">                  </span>tibble<span class="op">::</span><span class="kw">rownames_to_column</span>()
+<span class="kw">colnames</span>(var_importance) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Variable&quot;</span>,<span class="st">&quot;Score&quot;</span>)
+
+fit_text &lt;-<span class="st"> </span><span class="kw">capture.output</span>(<span class="kw">print</span>(fit_model))
+
+Nodes &lt;-<span class="st"> </span><span class="kw">str_match</span>(fit_text, <span class="st">&quot;var.*(</span><span class="ch">\\</span><span class="st">d)</span><span class="ch">\\</span><span class="st">s</span><span class="ch">\\</span><span class="st">(&quot;</span>)[,<span class="dv">2</span>] <span class="op">%&gt;%</span>
+<span class="st">                    </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span>
+<span class="st">                   </span>as.data.frame
+<span class="kw">colnames</span>(Nodes) &lt;-<span class="st"> &quot;Node&quot;</span>
+
+Variable &lt;-<span class="st"> </span>stringr<span class="op">::</span><span class="kw">str_match</span>(fit_text, <span class="st">&quot;var_</span><span class="ch">\\</span><span class="st">d*&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">            </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span>
+<span class="st">           </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span>
+<span class="st">           </span>dplyr<span class="op">::</span><span class="kw">rename</span>(<span class="dt">Variable =</span> V1) <span class="op">%&gt;%</span>
+<span class="st">           </span><span class="kw">mutate</span>(<span class="dt">Variable =</span> <span class="kw">as.character</span>(Variable))
+       
+tmp &lt;-<span class="st"> </span><span class="kw">str_match</span>(fit_text, <span class="st">&quot;[=,&lt;,&gt;][=,&gt;,&lt;]?</span><span class="ch">\\</span><span class="st">s?-?</span><span class="ch">\\</span><span class="st">d</span><span class="ch">\\</span><span class="st">d?</span><span class="ch">\\</span><span class="st">.</span><span class="ch">\\</span><span class="st">d*&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">str_split</span>(<span class="dt">pattern =</span> <span class="st">&quot;(?=[&lt;,&gt;, &gt;=])&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>)  <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">as.data.frame</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Value =</span> <span class="kw">str_remove</span>(V3, <span class="st">&quot;=?&quot;</span>)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Value =</span> <span class="kw">as.numeric</span>(Value)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Operator =</span> V2) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Operator, Value)
+
+Thresholds &lt;-<span class="st"> </span><span class="kw">cbind</span>(Variable, tmp, Nodes)
+
+ fit_features &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">right_join</span>(var_importance, Thresholds, <span class="dt">by =</span><span class="st">&quot;Variable&quot;</span>)
+ 
+ ####### Add features from  rpart.utils::rpart.subrules.table
+    join_features &lt;-<span class="st"> </span>
+<span class="st">    </span>rpart.utils<span class="op">::</span><span class="kw">rpart.subrules.table</span>(fit_model) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">Value =</span> <span class="kw">as.double</span>(<span class="kw">as.character</span>(Value))) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">Less =</span> <span class="kw">as.double</span>(<span class="kw">as.character</span>(Less))) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">Greater =</span> <span class="kw">as.double</span>(<span class="kw">as.character</span>(Greater))) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">Value =</span> <span class="kw">coalesce</span>(Less, Greater)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Variable =</span> <span class="kw">as.character</span>(Variable)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">right_join</span>(fit_features, <span class="dt">by=</span> <span class="kw">c</span>(<span class="st">&quot;Variable&quot;</span>, <span class="st">&quot;Value&quot;</span>)) <span class="op">%&gt;%</span>
+<span class="st">  </span>tidyr<span class="op">::</span><span class="kw">drop_na</span>(Node) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(Greater) <span class="op">&amp;</span><span class="st"> </span>Operator <span class="op">==</span><span class="st"> &quot;&gt;&quot;</span> <span class="op">|</span><span class="st"> </span><span class="op">!</span><span class="kw">is.na</span>(Less) <span class="op">&amp;</span><span class="st"> </span>Operator <span class="op">==</span><span class="st"> &quot;&lt;&quot;</span>)
+ 
+ <span class="kw">return</span>(join_features)
+  }<span class="cf">else</span>{}
+}
+<span class="kw">capture_thresholds</span>(fit2)</code></pre></div>
+<pre><code>##    Subrule Variable    Value     Less  Greater     Score Operator Node
+## 1       L1  var_139 -3.65155       NA -3.65155 13.719459        &gt;    0
+## 2       R1  var_139 -3.65155 -3.65155       NA 13.719459        &lt;    0
+## 3       L2  var_172 16.14790       NA 16.14790 10.481976        &gt;    0
+## 4       R2  var_172 16.14790 16.14790       NA 10.481976        &lt;    0
+## 5       L3   var_48 10.32075 10.32075       NA  6.273485        &lt;    0
+## 6       R3   var_48 10.32075       NA 10.32075  6.273485        &gt;    1
+## 7       L4   var_61  0.74355  0.74355       NA  6.542468        &lt;    0
+## 8       L5    var_2 11.20965 11.20965       NA  6.464646        &lt;    0
+## 9       R5    var_2 11.20965       NA 11.20965  6.464646        &gt;    1
+## 10      L6  var_153 18.34860       NA 18.34860  5.390750        &gt;    0
+## 11      R6  var_153 18.34860 18.34860       NA  5.390750        &lt;    1
+## 12      R4   var_61  0.74355       NA  0.74355  6.542468        &gt;    1</code></pre>
+</div>
+<div id="capture-features-for-a-list-of-models" class="section level2">
+<h2><span class="header-section-number">2.3</span> Capture Features for a list of models</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Loop to run get_tree
+mdl &lt;-<span class="st"> </span><span class="ot">NULL</span>
+<span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">20</span>){
+  v &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">1000</span>, <span class="dt">size=</span> <span class="dv">1</span>, <span class="dt">replace=</span><span class="ot">FALSE</span>)
+  <span class="kw">set.seed</span>(v)
+  mdl[[i]] &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> train, <span class="dt">n_sample =</span> <span class="dv">3500</span>)
+}
+
+tbl&lt;-<span class="st"> </span><span class="kw">lapply</span>(mdl, <span class="cf">function</span>(x)
+   <span class="cf">if</span>(<span class="st">&quot;variable.importance&quot;</span> <span class="op">%in%</span><span class="st"> </span><span class="kw">names</span>(x)){
+     <span class="kw">capture_thresholds</span>(x)
+   }<span class="cf">else</span>{}
+  )
+
+tbl &lt;-<span class="st"> </span>rlist<span class="op">::</span><span class="kw">list.clean</span>(tbl)
+<span class="kw">length</span>(tbl)</code></pre></div>
+<pre><code>## [1] 14</code></pre>
+<p>We run a loop for 20 fits. At the end we get 17 fits. The 3 remain run do not find classification.</p>
+</div>
+<div id="extract-the-best-variables-by-median-of-scores-based-on-multiple-models" class="section level2">
+<h2><span class="header-section-number">2.4</span> Extract the best Variables by median of Scores based on multiple models</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">best_var &lt;-<span class="st"> </span><span class="kw">do.call</span>(rbind, tbl) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(Variable) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">mScore =</span> <span class="kw">median</span>(Score)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(mScore))
+
+best_var</code></pre></div>
+<pre><code>## # A tibble: 66 x 2
+##    Variable mScore
+##    &lt;chr&gt;     &lt;dbl&gt;
+##  1 var_12     16.3
+##  2 var_2      14.5
+##  3 var_22     13.6
+##  4 var_166    12.7
+##  5 var_81     12.1
+##  6 var_165    11.3
+##  7 var_115    11.1
+##  8 var_119    10.7
+##  9 var_146    10.5
+## 10 var_107    10.5
+## # … with 56 more rows</code></pre>
+</div>
+<div id="use-the-best-74-variables-for-modeling" class="section level2">
+<h2><span class="header-section-number">2.5</span> Use the best 74 variables for modeling</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sub_train1 &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(ID_code, target,  best_var<span class="op">$</span>Variable)
+
+<span class="kw">set.seed</span>(<span class="dv">1321</span>)
+fit_<span class="dv">74</span> &lt;-<span class="st"> </span><span class="kw">get_tree</span>(<span class="dt">dataset =</span> sub_train1, <span class="dt">n_sample =</span> <span class="dv">3500</span>, <span class="dt">plot=</span> <span class="ot">TRUE</span>)</code></pre></div>
+<p><img src="santander_costumer_trans_pred_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptest &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_<span class="dv">74</span>, test, <span class="dt">type =</span> <span class="st">&quot;class&quot;</span>)
+
+<span class="kw">table</span>(ptest, train<span class="op">$</span>target)</code></pre></div>
+<pre><code>##      
+## ptest      0      1
+##     0 178335  19944
+##     1   1567    154</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># predictions</span>
+pdata &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">predict</span>(fit_<span class="dv">74</span>, <span class="dt">newdata =</span> test, <span class="dt">type =</span> <span class="st">&quot;p&quot;</span>))
+
+<span class="co"># confusion matrix</span>
+<span class="kw">table</span>(train<span class="op">$</span>target, pdata<span class="op">$</span><span class="st">`</span><span class="dt">1</span><span class="st">`</span> <span class="op">&gt;</span><span class="st"> </span>.<span class="dv">8</span>)</code></pre></div>
+<pre><code>##    
+##      FALSE   TRUE
+##   0 178676   1226
+##   1  19977    121</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

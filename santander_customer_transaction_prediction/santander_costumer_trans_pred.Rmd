@@ -1,0 +1,313 @@
+---
+title: "A binary classification model"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(fig.width=10, fig.height=8) 
+```
+
+## Load packages
+```{r include=FALSE, echo=FALSE}
+library(dplyr)
+library(rpart)
+library(rpart.plot)
+library(rpart.utils)
+library(reshape2)
+library(ggplot2)
+library(tibble)
+library(stringr)
+library(tidyr)
+library(rlist)
+library(OneR)
+```
+
+# Data glimpse
+
+```{r}
+path_to_train <- "train.csv"
+train <- read.csv(file = path_to_train)
+train[1:10,1:14] %>%
+  mutate(target = as.factor(target))
+```
+
+* The dataset consists of 200 variables labeled var_n (n 1:200), 
+* A column named `target` logical value (0,1), which 1 corresponds to a costumers that get transaction and 0, as No.
+* ID_code corresponds to the ID of the costumers
+
+```{r}
+test <- read.csv((file = "test.csv"))
+test[1:10,1:14]
+```
+
+
+* The test dataset has the same shape than the train dataset minus target column.
+* The goal is to predict `target` column depending on 200  double values.
+* In the other hand **split** the dataset by condition if each costumer will get transaction (1) or not (0) depending on 200 variables
+
+## Correlation glimps  of variables
+```{r}
+cormat <- round(cor(train[, c(-1,-2)]),2)
+cormat[1:9,1:15]
+```
+
+
+```{r}
+
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+```
+```{r}
+
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+```
+
+We did not find any particular correlation.
+
+
+```{r}
+target_corr = abs(cor(train[,c(-1)])['target',])
+target_corr %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column() %>%
+  arrange(desc(target_corr)) %>%
+  rename(Vairable = "rowname", Correlation = ".") %>%
+  head()
+```
+* As you can see, the most correlated one is the Variable 81, then comes the Variable 139 and so on. But it remains negligible to consider.
+* Let’s take a look at the plot of the target variable against the Variable 81.
+
+```{r fig.width=7, fig.height=7}
+train %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  ggplot(aes(x = target)) +
+  geom_boxplot(aes( y = var_81, color= target))
+#plot(train$var_81, y = train$target)
+```
+
+* Apparently There is no a significant difference between var_81(0) and var_81(1).
+
+## chisq.test 
+```{r}
+chisq.test(table(train[,c("target", "var_81")]))
+```
+* A very low p-value means a **very strong difference** from the **uncorrelated** case. As usual in the hypothesis tests, you don’t actually accept the null hypothesis, but refuse to neglect it.
+* We can get further confirmation by taking a look at the contingency table:
+
+```{r}
+summary(table(train[,c("var_81", "target")]))
+```
+
+* Exactly what we expected. 
+* Conclusion: `Var_81` and `target` statute are independent.
+We suppose that all the other variables are also independent.
+
+
+# Split dataset by condition [Recursive partitioning][https://en.wikipedia.org/wiki/Recursive_partitioning]
+The idea is to built a collection of variables with thresholds (pattern) that split dataset (parent) into sons (0,1). 
+
+The root of the model is a threshold of a variable that splits the dataset into two biggest groups. The data is separated by the first important variable, and then this process is applied separately to each sub-group, and so on recursively until the subgroups either reach a minimum size or until no improvement can be made.
+
+```{r fig.width=7, fig.height=7}
+
+get_tree <- function(dataset, n_sample, plot= FALSE){
+# random sampling of 5000 costumers
+s <- sample(nrow(dataset), size = n_sample, replace=FALSE)
+
+# test idea with sub-dataset
+  sub_data <- dataset[s,]
+  sub_data <- sub_data %>%
+  mutate(target = as.factor(target))
+
+frmla <- paste0("target", "~.", sep="")
+
+frmla <- as.formula(frmla)
+
+#ptm <- proc.time()
+
+fit <- rpart::rpart(frmla, method =  "class", sub_data[,-1])
+
+#print(proc.time() - ptm)
+if(plot == TRUE){
+#rpart.plot(fit, type = 3, extra = 0, box.palette = "Grays", roundint = FALSE)
+plot(fit, uniform=TRUE, compress=TRUE, margin=0.01, main= paste("Target vs all variables" ))#,
+     #control = rpart.control(minsplit = 1, minbucket = 1, cp = 0.01))
+text(fit, use.n=TRUE, all=TRUE, cex=1.5, fancy=TRUE)
+}
+
+return(fit)
+}
+set.seed(1)
+get_tree(dataset = train, n_sample = 5000, plot = FALSE)
+```
+
+The error message indicates that the formula used here can not split the dataset in sub-groups.
+
+We tried several sample size and note that it is working if sample not exceed 4000. 
+
+
+```{r fig.width=7, fig.height=7}
+set.seed(726)
+fit1 <- get_tree(dataset = train, n_sample = 4000, plot= TRUE)
+```
+
+** Interpretation**
+* The resulting models can be represented as binary trees with variables profiles threshold (var_13 > 0.204).
+* Each node is a `class`. The ratio in each node is the proportion of the number of costumers by class (`1`/`0`). 
+* Each edge is a `split condition` of selected variable in branch. 
+* The root of the tree is the best variable divisor of classes. 
+
+The goal is to predict which variables thresholds combination (var_13 > 0.2 + var_109 < 12 + var_111 > 7.79)  lead to 3/12 of `1.
+
+* In this run we have 7 + 3 + 5 + 6 costumers that did transaction.
+
+
+
+```{r}
+set.seed(323)
+fit2 <- get_tree(dataset = train, n_sample = 4000, plot = TRUE)
+```
+
+The order and the importance of variables change through runs. Based on the assumption that we can not run rpart model on all training dataset, we will loop several runs to get more idea about variable importance and thresholds.
+
+## Variable Importance
+The output of `get_tree` returns the score of the best variables ranked by importance.
+
+
+## Prediction and Evaluation
+```{r}
+prediction <- predict(fit2, test, type = "class")
+table(prediction, train$target)
+#OneR::eval_model(prediction, train)
+```
+
+## Capture Features of the model
+```{r}
+
+capture_thresholds <- function(fit_model){
+  if("variable.importance" %in% names(fit_model)){
+  
+var_importance <- fit_model["variable.importance"] %>%  
+                  as.data.frame() %>% 
+                  tibble::rownames_to_column()
+colnames(var_importance) <- c("Variable","Score")
+
+fit_text <- capture.output(print(fit_model))
+
+Nodes <- str_match(fit_text, "var.*(\\d)\\s\\(")[,2] %>%
+                    na.omit() %>%
+                   as.data.frame
+colnames(Nodes) <- "Node"
+
+Variable <- stringr::str_match(fit_text, "var_\\d*") %>%
+            na.omit() %>%
+           as.data.frame() %>%
+           dplyr::rename(Variable = V1) %>%
+           mutate(Variable = as.character(Variable))
+       
+tmp <- str_match(fit_text, "[=,<,>][=,>,<]?\\s?-?\\d\\d?\\.\\d*") %>%
+  str_split(pattern = "(?=[<,>, >=])", simplify = TRUE)  %>%
+  as.data.frame() %>%
+  mutate(Value = str_remove(V3, "=?")) %>%
+  na.omit() %>%
+  mutate(Value = as.numeric(Value)) %>%
+  mutate(Operator = V2) %>%
+  select(Operator, Value)
+
+Thresholds <- cbind(Variable, tmp, Nodes)
+
+ fit_features <- dplyr::right_join(var_importance, Thresholds, by ="Variable")
+ 
+ ####### Add features from  rpart.utils::rpart.subrules.table
+    join_features <- 
+    rpart.utils::rpart.subrules.table(fit_model) %>%
+    mutate(Value = as.double(as.character(Value))) %>%
+    mutate(Less = as.double(as.character(Less))) %>%
+    mutate(Greater = as.double(as.character(Greater))) %>%
+    mutate(Value = coalesce(Less, Greater)) %>%
+  mutate(Variable = as.character(Variable)) %>%
+  right_join(fit_features, by= c("Variable", "Value")) %>%
+  tidyr::drop_na(Node) %>%
+  filter(!is.na(Greater) & Operator == ">" | !is.na(Less) & Operator == "<")
+ 
+ return(join_features)
+  }else{}
+}
+capture_thresholds(fit2)
+```
+
+
+
+## Capture Features for a list of models
+```{r}
+## Loop to run get_tree
+mdl <- NULL
+for(i in 1:20){
+  v <- sample(1:1000, size= 1, replace=FALSE)
+  set.seed(v)
+  mdl[[i]] <- get_tree(dataset = train, n_sample = 3500)
+}
+
+tbl<- lapply(mdl, function(x)
+   if("variable.importance" %in% names(x)){
+     capture_thresholds(x)
+   }else{}
+  )
+
+tbl <- rlist::list.clean(tbl)
+length(tbl)
+```
+We run a loop for 20 fits. At the end we get 17 fits. The 3 remain run do not find classification.
+
+## Extract the best Variables by median of Scores based on multiple models
+```{r}
+best_var <- do.call(rbind, tbl) %>%
+  group_by(Variable) %>%
+  summarise(mScore = median(Score)) %>%
+  arrange(desc(mScore))
+
+head(best_var)
+```
+
+
+## Use the best 74 variables for modeling
+
+```{r}
+sub_train1 <- train %>%
+  select(ID_code, target,  best_var$Variable)
+
+set.seed(1321)
+fit_74 <- get_tree(dataset = sub_train1, n_sample = 3500, plot= TRUE)
+```
+
+
+
+
+
+```{r}
+ptest <- predict(fit_74, test, type = "class")
+
+table(ptest, train$target)
+  
+# predictions
+pdata <- as.data.frame(predict(fit_74, newdata = test, type = "p"))
+
+# confusion matrix
+table(train$target, pdata$`1` > .8)
+
+```
+
