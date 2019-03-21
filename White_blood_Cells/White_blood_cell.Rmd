@@ -19,9 +19,8 @@ knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
 
-![Synopsis](../White_blood_Cells/synopsis.png)
 
-
+<center><img src="synopsis.jpg"></center>
 
 
 # Introduction
