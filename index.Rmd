@@ -11,3 +11,4 @@ title: "Exploratory Data Analysis"
 - [Instacart Market Basket Analysis](instacart_market_basket_analysis/instacart_market_basket.html)
 - [White Bllod Cells Classification](White_blood_Cells/dataset-master/White_blood_cell.html)
 - [Santander Customer Transaction Prediction](santander_customer_transaction_prediction/santandar_costumer_trans_pred.html)
+_ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.html)
