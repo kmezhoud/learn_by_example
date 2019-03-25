@@ -36,5 +36,5 @@
 </a>
 
 <a href="https://kmezhoud.github.io/learn_by_example/Dashboard/Dashboard.html" target = "_blank">
-<img src="images/streaming_shiny.png" align="left" height="150" width="250" title="Dashboard Streaming Shiny">
+<img src="images/streaming_shiny.gif" align="left" height="150" width="250" title="Dashboard Streaming Shiny">
 </a>
