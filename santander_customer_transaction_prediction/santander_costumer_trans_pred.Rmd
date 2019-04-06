@@ -1,5 +1,5 @@
 ---
-title: "Santander Costumer Transaction Prediction"
+title: "Santander Costumer Transaction Prediction (Tree Classification)"
 date: '`r Sys.Date()`'
 output:
   html_document:
@@ -14,9 +14,11 @@ output:
     self_contained: no
 ---
 
+
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
-knitr::opts_chunk$set(fig.width=10, fig.height=8) 
+knitr::opts_chunk$set(fig.width=10, fig.height=8)
+knitr::opts_chunk$set(echo = TRUE, message=F)
 ```
 
 ## Load packages
@@ -36,9 +38,9 @@ library(OneR)
 
 # Data glimpse
 
-```{r}
+```{r comment=FALSE, warning=FALSE}
 path_to_train <- "train.csv"
-train <- read.csv(file = path_to_train)
+train <- data.table::fread(file = path_to_train)
 train[1:10,1:14] %>%
   mutate(target = as.factor(target))
 ```
@@ -47,8 +49,8 @@ train[1:10,1:14] %>%
 * A column named `target` logical value (0,1), which 1 corresponds to a costumers that get transaction and 0, as No.
 * ID_code corresponds to the ID of the costumers
 
-```{r}
-test <- read.csv((file = "test.csv"))
+```{r comment=FALSE, warning=FALSE}
+test <- data.table::fread((file = "test.csv"))
 test[1:10,1:14]
 ```
 

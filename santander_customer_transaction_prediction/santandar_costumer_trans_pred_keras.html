@@ -596,7 +596,7 @@ keras_model</code></pre></div>
 FALSE {
 FALSE     keras$models$Model(inputs = unname(inputs), outputs = unname(outputs))
 FALSE }
-FALSE &lt;bytecode: 0x7fb12491abc0&gt;
+FALSE &lt;bytecode: 0x7fdc708cbd50&gt;
 FALSE &lt;environment: namespace:keras&gt;</code></pre>
 <p>We use the fit() function to run the ANN on our training data. * The batch_size = 500 sets the number samples per gradient update within each epoch. * We set epochs = 10 to control the number training cycles. Typically we want to keep the batch size high since this decreases the error within each training cycle (epoch). * We also want epochs to be large, which is important in visualizing the training history (discussed below). * We set validation_split = 0.30 to include 30% of the data for model validation, which prevents overfitting.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Fit the keras model to the training data</span>
@@ -615,10 +615,10 @@ history &lt;-<span class="st"> </span><span class="kw">fit</span>(
 <span class="kw">print</span>(history)</code></pre></div>
 <pre><code>## Trained on 112,000 samples, validated on 48,001 samples (batch_size=26, epochs=20)
 ## Final epoch (plot to see history):
-##      acc: 0.9433
-##     loss: 0.1749
-##  val_acc: 0.9021
-## val_loss: 0.3002</code></pre>
+##      acc: 0.9437
+##     loss: 0.1753
+##  val_acc: 0.9004
+## val_loss: 0.2957</code></pre>
 </div>
 <div id="plot-the-trainingvalidation-history-of-our-keras-model" class="section level2">
 <h2><span class="header-section-number">8.2</span> Plot the training/validation history of our Keras model</h2>
@@ -648,16 +648,16 @@ estimates_keras_tbl</code></pre></div>
 <pre><code>## # A tibble: 39,999 x 3
 ##    Truth Estimate Class_prob
 ##    &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;
-##  1 no    no          0.0519 
-##  2 no    no          0.0200 
-##  3 no    no          0.104  
-##  4 no    no          0.0117 
-##  5 no    no          0.110  
-##  6 no    no          0.0592 
-##  7 no    no          0.00751
-##  8 no    no          0.0990 
-##  9 no    no          0.427  
-## 10 no    no          0.0269 
+##  1 no    no          0.0461 
+##  2 no    no          0.0251 
+##  3 no    yes         0.722  
+##  4 no    no          0.0153 
+##  5 no    no          0.0450 
+##  6 no    no          0.0775 
+##  7 no    no          0.00805
+##  8 no    no          0.0327 
+##  9 no    no          0.0832 
+## 10 no    no          0.0161 
 ## # … with 39,989 more rows</code></pre>
 </div>
 <div id="confusion-table" class="section level1">
@@ -666,8 +666,8 @@ estimates_keras_tbl</code></pre></div>
 estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">conf_mat</span>(Truth, Estimate)</code></pre></div>
 <pre><code>##           Truth
 ## Prediction    no   yes
-##        no  35190  2869
-##        yes   927  1013</code></pre>
+##        no  35063  2780
+##        yes  1054  1102</code></pre>
 </div>
 <div id="accuracy" class="section level1">
 <h1><span class="header-section-number">12</span> Accuracy</h1>
@@ -676,8 +676,8 @@ estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span
 <pre><code>## # A tibble: 2 x 3
 ##   .metric  .estimator .estimate
 ##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
-## 1 accuracy binary         0.905
-## 2 kap      binary         0.303</code></pre>
+## 1 accuracy binary         0.904
+## 2 kap      binary         0.318</code></pre>
 <p>We are getting roughly <strong>91%</strong> accuracy.</p>
 </div>
 <div id="area-under-the-curve-auc-measurement" class="section level1">
@@ -688,7 +688,7 @@ estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span>yards
 <pre><code>## # A tibble: 1 x 3
 ##   .metric .estimator .estimate
 ##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
-## 1 roc_auc binary         0.796</code></pre>
+## 1 roc_auc binary         0.813</code></pre>
 </div>
 <div id="precision-and-recall" class="section level1">
 <h1><span class="header-section-number">14</span> Precision And Recall</h1>
@@ -699,9 +699,9 @@ estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span>yards
   <span class="dt">recall    =</span> estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">recall</span>(Truth, Estimate)
 )</code></pre></div>
 <pre><code>##   precision..metric precision..estimator precision..estimate
-## 1         precision               binary            0.924617
+## 1         precision               binary           0.9265386
 ##   recall..metric recall..estimator recall..estimate
-## 1         recall            binary        0.9743334</code></pre>
+## 1         recall            binary        0.9708171</code></pre>
 <ul>
 <li><p>We find a <strong>precision: 0.6</strong>, and <strong>recall: 0.25</strong>.</p></li>
 <li><p>Precision and recall are very important to the business case: The organization is concerned with balancing the cost of targeting and retaining customers at risk of leaving with the cost of inadvertently targeting customers that are not planning to leave (and potentially decreasing revenue from this group). The threshold above which to predict Target = <code>1</code> can be adjusted to optimize for the business problem.</p></li>
@@ -715,7 +715,7 @@ estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span
 <pre><code>## # A tibble: 1 x 3
 ##   .metric .estimator .estimate
 ##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
-## 1 f_meas  binary         0.949</code></pre>
+## 1 f_meas  binary         0.948</code></pre>
 </div>
 <div id="predict-test-dataset" class="section level1">
 <h1><span class="header-section-number">16</span> Predict test dataset</h1>
