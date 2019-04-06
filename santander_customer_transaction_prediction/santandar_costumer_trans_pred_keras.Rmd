@@ -1,0 +1,350 @@
+---
+title: "Santandar Costumer Transaction Prediction by Keras"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F)
+```
+
+## Load packages
+```{r comment=FALSE, warning=FALSE}
+library(keras)
+library(lime)
+library(tidyquant)
+library(rsample)
+library(recipes)
+library(yardstick)
+library(corrr)
+library(data.table)
+```
+
+# Data glimpse
+
+```{r comment=FALSE, warning=FALSE}
+path_to_train <- "train.csv"
+train <- fread(file = path_to_train)
+train[1:10,1:14] %>%
+  mutate(target = as.factor(target))
+```
+
+* The dataset consists of 200 variables labeled var_n (n 1:200), 
+* A column named `target` logical value (0,1), which 1 corresponds to a costumers that get transaction and 0, as No.
+* ID_code corresponds to the ID of the costumers
+
+```{r nclude=FALSE, echo=TRUE, comment=FALSE, warning=FALSE}
+test <- fread(file = "test.csv")
+test[1:10,1:14]
+```
+
+
+* The test dataset has the same shape than the train dataset minus target column.
+* The goal is to predict `target` column depending on 200  double values.
+* In the other hand **split** the dataset by condition if each costumer will get transaction (1) or not (0) depending on 200 variables
+
+
+# Prune the Data
+We can remove the first column `ID_code` and check for `NA` cases.
+deep learning model needs descrotized factor variables as `target`. We need to convert it to 0/1 as numeric.
+
+```{r}
+train_tbl <- train %>%
+  select(-ID_code) %>%
+  mutate(target = target %>% as.character() %>% as.numeric()) %>%
+  drop_na()
+
+train_tbl[1:14, 1:10]
+```
+
+# Split Into Train/Test Sets
+```{r}
+set.seed(100)
+train_test_split <- rsample::initial_split(train_tbl, prop = 0.8)
+train_test_split
+```
+
+We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
+train_8 <- rsample::training(train_test_split)
+test_2  <- rsample::testing(train_test_split)
+train_8[1:10, 1:14]
+```
+
+Artificial Neural Networks are best when the data is one-hot encoded, scaled and centered.
+
+# What Transformation Steps Are Needed For ML?
+## check for correlation
+```{r}
+# train_8 %>%
+#   mutate(target = target %>% as.factor() %>% as.numeric()) %>%
+#   correlate() %>%
+#   focus(target) %>%
+#   fashion() %>%
+#   arrange(desc(target))
+```
+
+## check `log1p` correlation
+
+```{r comment=FALSE, warning=FALSE}
+# train_8 %>%
+#   select(target, var_81, var_139, var_12, var_6, var_2, var_22) %>%
+#   mutate(target = target %>% as.factor() %>% as.numeric(),
+#          log_var81 = log(var_81),
+#          log_var139 = log(var_139),
+#          log_var12 = log(var_12),
+#          log_var6 = log(var_6),
+#          log_var2 = log(var_2),
+#          log_var22 = log(var_22)
+#          ) %>%
+#   correlate(use = "pairwise.complete.obs") %>%
+#   focus(target) %>%
+#   fashion() %>%
+#   arrange(desc(target))
+```
+
+* We will not normalize by log. We have 200000 samples. We consider the data as normal distributed.
+
+A new package, recipes, makes creating ML data preprocessing workflows a breeze!
+
+# Create recipe
+```{r}
+# Create recipe
+rec_obj <- recipe(target ~ ., data = train_8) %>%
+  # All non-numeric data will need to be converted to dummy variables. 
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  # mean center the data
+  step_center(all_predictors(), -all_outcomes()) %>%
+  # scale the data
+  step_scale(all_predictors(), -all_outcomes()) %>%
+  prep(data = train_8)
+
+rec_obj
+```
+
+# Baking With Recipe
+```{r}
+# Predictors
+x_train_8 <- bake(rec_obj, new_data = train_8) %>% select(-target)
+x_test_2  <- bake(rec_obj, new_data = test_2) %>% select(-target)
+
+x_train_8[1:10, 1:14]
+```
+
+# Don’t Forget The Target
+
+```{r}
+# Response variables for training and testing sets
+y_train_vec <- train_8$target
+y_test_vec  <- test_2$target
+
+y_train_vec[1:100]
+```
+
+
+# Building A Deep Learning Model with Keras  and MLP
+
+* `Hidden Layers`: Hidden layers form the neural network nodes that enable non-linear activation using weights. The hidden layers are created using layer_dense(). We’ll add two hidden layers. We’ll apply units = 16, which is the number of nodes. We’ll select kernel_initializer = "uniform" and activation = "relu" for both layers. The first layer needs to have the input_shape = 35, which is the number of columns in the training set. Key Point: While we are arbitrarily selecting the number of hidden layers, units, kernel initializers and activation functions, these parameters can be optimized through a process called hyperparameter tuning that is discussed in Next Steps.
+
+* `Dropout Layers`: Dropout layers are used to control overfitting. This eliminates weights below a cutoff threshold to prevent low weights from overfitting the layers. We use the layer_dropout() function add two drop out layers with rate = 0.10 to remove weights below 10%.
+
+* `Output Layer` : The output layer specifies the shape of the output and the method of assimilating the learned information. The output layer is applied using the layer_dense(). For binary values, the shape should be units = 1. For multi-classification, the units should correspond to the number of classes. We set the kernel_initializer = "uniform" and the activation = "sigmoid" (common for binary classification).
+
+**Compile the model** : The last step is to compile the model with compile(). We’ll use optimizer = "adam", which is one of the most popular optimization algorithms. We select loss = "binary_crossentropy" since this is a binary classification problem. We’ll select metrics = c("accuracy") to be evaluated during training and testing. Key Point: The optimizer is often included in the tuning process.
+
+```{r comment=FALSE, warning=FALSE}
+# Building our Artificial Neural Network
+model_keras <- keras_model_sequential()
+
+model_keras %>% 
+  
+  # First hidden layer
+  layer_dense(
+    units              = 100, 
+    kernel_initializer = "uniform", 
+    activation         = "relu", 
+    input_shape        = ncol(x_train_8)) %>% 
+  
+  # Dropout to prevent overfitting
+  layer_dropout(rate = 0.1) %>%
+  
+  # Second hidden layer
+  layer_dense(
+    units              = 50, 
+    kernel_initializer = "uniform", 
+    activation         = "relu") %>% 
+  
+  # Dropout to prevent overfitting
+  layer_dropout(rate = 0.1) %>%
+
+    # Second hidden layer
+  layer_dense(
+    units              = 50, 
+    kernel_initializer = "uniform", 
+    activation         = "relu") %>% 
+  
+  # Dropout to prevent overfitting
+  layer_dropout(rate = 0.1) %>%
+  
+  # Output layer
+  layer_dense(
+    units              = 1, 
+    kernel_initializer = "uniform", 
+    activation         = "sigmoid") %>% 
+  
+  # Compile ANN
+  compile(
+    optimizer = 'adam',
+    loss      = 'binary_crossentropy',
+    metrics   = c('accuracy')
+  )
+
+keras_model
+```
+
+We use the fit() function to run the ANN on our training data.
+* The batch_size = 500 sets the number samples per gradient update within each epoch.
+* We set epochs = 10 to control the number training cycles. Typically we want to keep the batch size high since this decreases the error within each training cycle (epoch). 
+* We also want epochs to be large, which is important in visualizing the training history (discussed below). 
+* We set validation_split = 0.30 to include 30% of the data for model validation, which prevents overfitting.
+
+```{r}
+# Fit the keras model to the training data
+history <- fit(
+  object           = model_keras, 
+  x                = as.matrix(x_train_8), 
+  y                = y_train_vec,
+  batch_size       = 26, 
+  epochs           = 20,
+  validation_split = 0.30
+)
+```
+
+
+We can inspect the training history. We want to make sure there is minimal difference between the validation accuracy and the training accuracy.
+
+## Print a summary of the training history
+```{r}
+# Print a summary of the training history
+print(history)
+```
+
+## Plot the training/validation history of our Keras model
+```{r}
+
+# Plot the training/validation history of our Keras model
+plot(history)
+```
+
+# Predictions
+
+```{r}
+# Predicted Class
+keras_class_vec <- predict_classes(object = model_keras, x = as.matrix(x_test_2)) %>% as.vector()
+
+# Predicted Class Probability
+keras_prob_vec  <- predict_proba(object = model_keras, x = as.matrix(x_test_2)) %>% as.vector()
+```
+
+# Inspect Performance With `Yardstick` package
+
+```{r}
+# Format test data and predictions for yardstick metrics
+estimates_keras_tbl <- tibble(
+  Truth      = as.factor(y_test_vec) %>% fct_recode(yes = "1", no = "0"),
+  Estimate   = as.factor(keras_class_vec) %>% fct_recode(yes = "1", no = "0"),
+  Class_prob = keras_prob_vec
+)
+
+estimates_keras_tbl
+```
+
+
+# Confusion Table
+
+```{r}
+# Confusion Table
+estimates_keras_tbl %>% conf_mat(Truth, Estimate)
+```
+
+# Accuracy
+
+```{r}
+# Accuracy
+estimates_keras_tbl %>% metrics(Truth, Estimate)
+```
+
+We are getting roughly **91%** accuracy.
+
+# Area Under the Curve (AUC) measurement
+
+AUC is often a good metric used to compare different classifiers and to compare to randomly guessing (AUC_random = 0.50). Our model has AUC = 0.85, which is much better than randomly guessing. Tuning and testing different classification algorithms may yield even better results.
+
+```{r}
+# AUC
+estimates_keras_tbl %>% yardstick::roc_auc(Truth, Class_prob)
+```
+
+# Precision And Recall
+
+Precision is when the model predicts “yes”, how often is it actually “yes”. Recall (also true positive rate or specificity) is when the actual value is “yes” how often is the model correct. We can get precision() and recall() measurements using yardstick.
+
+```{r}
+# Precision
+data.frame(
+  precision = estimates_keras_tbl %>% precision(Truth, Estimate),
+  recall    = estimates_keras_tbl %>% recall(Truth, Estimate)
+)
+```
+
+ * We find a **precision: 0.6**, and **recall: 0.25**.
+ 
+ * Precision and recall are very important to the business case: The organization is concerned with balancing the cost of targeting and retaining customers at risk of leaving with the cost of inadvertently targeting customers that are not planning to leave (and potentially decreasing revenue from this group). The threshold above which to predict Target = `1` can be adjusted to optimize for the business problem. 
+ 
+# F1 Score
+We can also get the F1-score, which is a weighted average between the precision and recall. Machine learning classifier thresholds are often adjusted to maximize the F1-score. However, this is often not the optimal solution to the business problem.
+
+```{r}
+# F1-Statistic
+estimates_keras_tbl %>% f_meas(Truth, Estimate, beta = 1)
+```
+
+# Predict test dataset
+
+```{r}
+# Predicted Class
+keras_class_test_vec <- predict_classes(object = model_keras, x = as.matrix(test[,-1])) %>% as.vector()
+
+# Predicted Class Probability
+keras_prob_test_vec  <- predict_proba(object = model_keras, x = as.matrix(test[,-1])) %>% as.vector()
+
+table(keras_class_test_vec)
+```
+
+
+
+```{r}
+dt_submission <- data.frame(
+  ID_code = test[,1],
+  target = keras_class_test_vec,
+  Prob = keras_prob_test_vec
+  
+)
+```
+
+```{r}
+#fwrite(dt_submission[,c(1,2)], "submission.csv")
+```
+

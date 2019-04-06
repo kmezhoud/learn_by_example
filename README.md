@@ -38,3 +38,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/Dashboard/Dashboard.html" target = "_blank">
 <img src="images/streaming_shiny.gif" align="left" height="150" width="250" title="Dashboard Streaming Shiny">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction/santander_costumer_trans_pred_keras.html" target = "_blank">
+<img src="images/keras.png" align="left" height="150" width="250" title="santander customer transaction prediction with keras (MLP)">
+</a>

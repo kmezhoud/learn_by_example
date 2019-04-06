@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-04-06" />
+
+<title>Santandar Costumer Transaction Prediction by Keras</title>
+
+<script src="santandar_costumer_trans_pred_keras_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="santandar_costumer_trans_pred_keras_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="santandar_costumer_trans_pred_keras_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="santandar_costumer_trans_pred_keras_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="santandar_costumer_trans_pred_keras_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="santandar_costumer_trans_pred_keras_files/navigation-1.1/tabsets.js"></script>
+<script src="santandar_costumer_trans_pred_keras_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code > span.dt { color: #204a87; } /* DataType */
+code > span.dv { color: #0000cf; } /* DecVal */
+code > span.bn { color: #0000cf; } /* BaseN */
+code > span.fl { color: #0000cf; } /* Float */
+code > span.ch { color: #4e9a06; } /* Char */
+code > span.st { color: #4e9a06; } /* String */
+code > span.co { color: #8f5902; font-style: italic; } /* Comment */
+code > span.ot { color: #8f5902; } /* Other */
+code > span.al { color: #ef2929; } /* Alert */
+code > span.fu { color: #000000; } /* Function */
+code > span.er { color: #a40000; font-weight: bold; } /* Error */
+code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #000000; } /* Constant */
+code > span.sc { color: #000000; } /* SpecialChar */
+code > span.vs { color: #4e9a06; } /* VerbatimString */
+code > span.ss { color: #4e9a06; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #000000; } /* Variable */
+code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code > span.ex { } /* Extension */
+code > span.at { color: #c4a000; } /* Attribute */
+code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Santandar Costumer Transaction Prediction by Keras</h1>
+<h4 class="author"><em>Karim Mezhoud</em></h4>
+<h4 class="date"><em>2019-04-06</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-packages"><span class="toc-section-number">0.1</span> Load packages</a></li>
+<li><a href="#data-glimpse"><span class="toc-section-number">1</span> Data glimpse</a></li>
+<li><a href="#prune-the-data"><span class="toc-section-number">2</span> Prune the Data</a></li>
+<li><a href="#split-into-traintest-sets"><span class="toc-section-number">3</span> Split Into Train/Test Sets</a></li>
+<li><a href="#what-transformation-steps-are-needed-for-ml"><span class="toc-section-number">4</span> What Transformation Steps Are Needed For ML?</a><ul>
+<li><a href="#check-for-correlation"><span class="toc-section-number">4.1</span> check for correlation</a></li>
+<li><a href="#check-log1p-correlation"><span class="toc-section-number">4.2</span> check <code>log1p</code> correlation</a></li>
+</ul></li>
+<li><a href="#create-recipe"><span class="toc-section-number">5</span> Create recipe</a></li>
+<li><a href="#baking-with-recipe"><span class="toc-section-number">6</span> Baking With Recipe</a></li>
+<li><a href="#dont-forget-the-target"><span class="toc-section-number">7</span> Don’t Forget The Target</a></li>
+<li><a href="#building-a-deep-learning-model-with-keras-and-mlp"><span class="toc-section-number">8</span> Building A Deep Learning Model with Keras and MLP</a><ul>
+<li><a href="#print-a-summary-of-the-training-history"><span class="toc-section-number">8.1</span> Print a summary of the training history</a></li>
+<li><a href="#plot-the-trainingvalidation-history-of-our-keras-model"><span class="toc-section-number">8.2</span> Plot the training/validation history of our Keras model</a></li>
+</ul></li>
+<li><a href="#predictions"><span class="toc-section-number">9</span> Predictions</a></li>
+<li><a href="#inspect-performance-with-yardstick-package"><span class="toc-section-number">10</span> Inspect Performance With <code>Yardstick</code> package</a></li>
+<li><a href="#confusion-table"><span class="toc-section-number">11</span> Confusion Table</a></li>
+<li><a href="#accuracy"><span class="toc-section-number">12</span> Accuracy</a></li>
+<li><a href="#area-under-the-curve-auc-measurement"><span class="toc-section-number">13</span> Area Under the Curve (AUC) measurement</a></li>
+<li><a href="#precision-and-recall"><span class="toc-section-number">14</span> Precision And Recall</a></li>
+<li><a href="#f1-score"><span class="toc-section-number">15</span> F1 Score</a></li>
+<li><a href="#predict-test-dataset"><span class="toc-section-number">16</span> Predict test dataset</a></li>
+</ul>
+</div>
+
+<div id="load-packages" class="section level2">
+<h2><span class="header-section-number">0.1</span> Load packages</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(keras)
+<span class="kw">library</span>(lime)
+<span class="kw">library</span>(tidyquant)
+<span class="kw">library</span>(rsample)
+<span class="kw">library</span>(recipes)
+<span class="kw">library</span>(yardstick)
+<span class="kw">library</span>(corrr)
+<span class="kw">library</span>(data.table)</code></pre></div>
+</div>
+<div id="data-glimpse" class="section level1">
+<h1><span class="header-section-number">1</span> Data glimpse</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">path_to_train &lt;-<span class="st"> &quot;train.csv&quot;</span>
+train &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="dt">file =</span> path_to_train)
+train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>] <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.factor</span>(target))</code></pre></div>
+<pre><code>FALSE    ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
+FALSE 1  train_0      0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187
+FALSE 2  train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
+FALSE 3  train_2      0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427
+FALSE 4  train_3      0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428
+FALSE 5  train_4      0  9.8369 -1.4834 12.8746 6.6375 12.2772   2.4486 5.9405
+FALSE 6  train_5      0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322
+FALSE 7  train_6      0 11.8091 -0.0832  9.3494 4.2916 11.1355  -8.0198 6.1961
+FALSE 8  train_7      0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890
+FALSE 9  train_8      0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514
+FALSE 10 train_9      0 12.5088  1.9743  8.8960 5.4508 13.6043 -16.2859 6.0637
+FALSE      var_7   var_8  var_9  var_10   var_11
+FALSE 1  18.6266 -4.9200 5.7470  2.9252   3.1821
+FALSE 2  16.5338  3.1468 8.0851 -0.4032   8.0585
+FALSE 3  14.6155 -4.9193 5.9525 -0.3249 -11.2648
+FALSE 4  14.9250 -5.8609 8.2450  2.3061   2.8102
+FALSE 5  19.2514  6.2654 7.6784 -9.4458 -12.1419
+FALSE 6  15.2255  3.5855 5.9790  0.8010  -0.6192
+FALSE 7  12.0771 -4.3781 7.9232 -5.1288  -7.5271
+FALSE 8  22.3262  5.0647 7.1971  1.4532  -6.7033
+FALSE 9  10.1854 -3.1882 9.0827  0.9501   1.7982
+FALSE 10 16.8410  0.1287 7.9682  0.8787   3.0537</code></pre>
+<ul>
+<li>The dataset consists of 200 variables labeled var_n (n 1:200),</li>
+<li>A column named <code>target</code> logical value (0,1), which 1 corresponds to a costumers that get transaction and 0, as No.</li>
+<li>ID_code corresponds to the ID of the costumers</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>)
+test[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>FALSE     ID_code   var_0    var_1   var_2  var_3   var_4    var_5  var_6
+FALSE  1:  test_0 11.0656   7.7798 12.9536 9.4292 11.4327  -2.3805 5.8493
+FALSE  2:  test_1  8.5304   1.2543 11.3047 5.1858  9.1974  -4.0117 6.0196
+FALSE  3:  test_2  5.4827 -10.3581 10.1407 7.0479 10.2628   9.8052 4.8950
+FALSE  4:  test_3  8.5374  -1.3222 12.0220 6.5749  8.8458   3.1744 4.9397
+FALSE  5:  test_4 11.7058  -0.1327 14.1295 7.7506  9.1035  -8.5848 6.8595
+FALSE  6:  test_5  5.9862  -2.2913  8.6058 7.0685 14.2465  -8.6761 4.2467
+FALSE  7:  test_6  8.4624  -6.1065  7.3603 8.2627 12.0104  -7.2073 4.1670
+FALSE  8:  test_7 17.3035  -2.4212 13.3989 8.3998 11.0777   9.6449 5.9596
+FALSE  9:  test_8  6.9856   0.8402 13.7161 4.7749  8.6784 -13.7607 4.3386
+FALSE 10:  test_9 10.3811  -6.9348 14.6690 9.0941 11.9058 -10.8018 3.4508
+FALSE       var_7   var_8  var_9  var_10  var_11  var_12
+FALSE  1: 18.2675  2.1337 8.8100 -2.0248 -4.3554 13.9696
+FALSE  2: 18.6316 -4.4131 5.9739 -1.3809 -0.3310 14.1129
+FALSE  3: 20.2537  1.5233 8.3442 -4.7057 -3.0422 13.6751
+FALSE  4: 20.5660  3.3755 7.4578  0.0095 -5.0659 14.0526
+FALSE  5: 10.6048  2.9890 7.1437  5.1025 -3.2827 14.1013
+FALSE  6: 14.7632  1.8790 7.2842 -4.9194 -9.1869 14.0581
+FALSE  7: 13.0809 -4.3004 6.3181  3.3959 -2.0205 13.7682
+FALSE  8: 17.8477 -4.8068 7.4643  4.0355  1.6185 14.1455
+FALSE  9: 14.5843  2.5883 7.2215  9.3750  8.4046 14.3322
+FALSE 10: 20.2816 -1.4112 6.7401  0.3727 -4.1918 14.0862</code></pre>
+<ul>
+<li>The test dataset has the same shape than the train dataset minus target column.</li>
+<li>The goal is to predict <code>target</code> column depending on 200 double values.</li>
+<li>In the other hand <strong>split</strong> the dataset by condition if each costumer will get transaction (1) or not (0) depending on 200 variables</li>
+</ul>
+</div>
+<div id="prune-the-data" class="section level1">
+<h1><span class="header-section-number">2</span> Prune the Data</h1>
+<p>We can remove the first column <code>ID_code</code> and check for <code>NA</code> cases. deep learning model needs descrotized factor variables as <code>target</code>. We need to convert it to 0/1 as numeric.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train_tbl &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>ID_code) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> target <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.character</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>()) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">drop_na</span>()
+
+train_tbl[<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</code></pre></div>
+<pre><code>##    target   var_0   var_1   var_2  var_3   var_4    var_5  var_6   var_7
+## 1       0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187 18.6266
+## 2       0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208 16.5338
+## 3       0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427 14.6155
+## 4       0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428 14.9250
+## 5       0  9.8369 -1.4834 12.8746 6.6375 12.2772   2.4486 5.9405 19.2514
+## 6       0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322 15.2255
+## 7       0 11.8091 -0.0832  9.3494 4.2916 11.1355  -8.0198 6.1961 12.0771
+## 8       0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890 22.3262
+## 9       0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514 10.1854
+## 10      0 12.5088  1.9743  8.8960 5.4508 13.6043 -16.2859 6.0637 16.8410
+## 11      0  5.0702 -0.5447  9.5900 4.2987 12.3910 -18.8687 6.0382 14.3797
+## 12      0 12.7188 -7.9750 10.3757 9.0101 12.8570 -12.0852 5.6464 11.8370
+## 13      0  8.7671 -4.6154  9.7242 7.4242  9.0254   1.4247 6.2815 12.3143
+## 14      1 16.3699  1.5934 16.7395 7.3330 12.1450   5.9004 4.8222 20.9729
+##      var_8
+## 1  -4.9200
+## 2   3.1468
+## 3  -4.9193
+## 4  -5.8609
+## 5   6.2654
+## 6   3.5855
+## 7  -4.3781
+## 8   5.0647
+## 9  -3.1882
+## 10  0.1287
+## 11 -0.4711
+## 12  1.2953
+## 13  5.6964
+## 14  1.1064</code></pre>
+</div>
+<div id="split-into-traintest-sets" class="section level1">
+<h1><span class="header-section-number">3</span> Split Into Train/Test Sets</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">100</span>)
+train_test_split &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">initial_split</span>(train_tbl, <span class="dt">prop =</span> <span class="fl">0.8</span>)
+train_test_split</code></pre></div>
+<pre><code>## &lt;160001/39999/200000&gt;</code></pre>
+<p>We can retrieve our training and testing sets using training() and testing() functions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Retrieve train and test sets</span>
+train_<span class="dv">8</span> &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">training</span>(train_test_split)
+test_<span class="dv">2</span>  &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">testing</span>(train_test_split)
+train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>##    target   var_0   var_1   var_2  var_3   var_4    var_5  var_6   var_7
+## 2       0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208 16.5338
+## 3       0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427 14.6155
+## 4       0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428 14.9250
+## 6       0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322 15.2255
+## 8       0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890 22.3262
+## 9       0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514 10.1854
+## 11      0  5.0702 -0.5447  9.5900 4.2987 12.3910 -18.8687 6.0382 14.3797
+## 12      0 12.7188 -7.9750 10.3757 9.0101 12.8570 -12.0852 5.6464 11.8370
+## 13      0  8.7671 -4.6154  9.7242 7.4242  9.0254   1.4247 6.2815 12.3143
+## 14      1 16.3699  1.5934 16.7395 7.3330 12.1450   5.9004 4.8222 20.9729
+##      var_8  var_9  var_10   var_11  var_12
+## 2   3.1468 8.0851 -0.4032   8.0585 14.0239
+## 3  -4.9193 5.9525 -0.3249 -11.2648 14.1929
+## 4  -5.8609 8.2450  2.3061   2.8102 13.8463
+## 6   3.5855 5.9790  0.8010  -0.6192 13.6380
+## 8   5.0647 7.1971  1.4532  -6.7033 14.2919
+## 9  -3.1882 9.0827  0.9501   1.7982 14.0654
+## 11 -0.4711 7.3198  4.6603 -14.0548 13.9059
+## 12  1.2953 6.8093 -6.1501  -5.4925 13.6713
+## 13  5.6964 6.0197  5.2524  -4.5162 14.1985
+## 14  1.1064 8.6978  2.3287 -11.3409 13.7999</code></pre>
+<p>Artificial Neural Networks are best when the data is one-hot encoded, scaled and centered.</p>
+</div>
+<div id="what-transformation-steps-are-needed-for-ml" class="section level1">
+<h1><span class="header-section-number">4</span> What Transformation Steps Are Needed For ML?</h1>
+<div id="check-for-correlation" class="section level2">
+<h2><span class="header-section-number">4.1</span> check for correlation</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># train_8 %&gt;%</span>
+<span class="co">#   mutate(target = target %&gt;% as.factor() %&gt;% as.numeric()) %&gt;%</span>
+<span class="co">#   correlate() %&gt;%</span>
+<span class="co">#   focus(target) %&gt;%</span>
+<span class="co">#   fashion() %&gt;%</span>
+<span class="co">#   arrange(desc(target))</span></code></pre></div>
+</div>
+<div id="check-log1p-correlation" class="section level2">
+<h2><span class="header-section-number">4.2</span> check <code>log1p</code> correlation</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># train_8 %&gt;%</span>
+<span class="co">#   select(target, var_81, var_139, var_12, var_6, var_2, var_22) %&gt;%</span>
+<span class="co">#   mutate(target = target %&gt;% as.factor() %&gt;% as.numeric(),</span>
+<span class="co">#          log_var81 = log(var_81),</span>
+<span class="co">#          log_var139 = log(var_139),</span>
+<span class="co">#          log_var12 = log(var_12),</span>
+<span class="co">#          log_var6 = log(var_6),</span>
+<span class="co">#          log_var2 = log(var_2),</span>
+<span class="co">#          log_var22 = log(var_22)</span>
+<span class="co">#          ) %&gt;%</span>
+<span class="co">#   correlate(use = &quot;pairwise.complete.obs&quot;) %&gt;%</span>
+<span class="co">#   focus(target) %&gt;%</span>
+<span class="co">#   fashion() %&gt;%</span>
+<span class="co">#   arrange(desc(target))</span></code></pre></div>
+<ul>
+<li>We will not normalize by log. We have 200000 samples. We consider the data as normal distributed.</li>
+</ul>
+<p>A new package, recipes, makes creating ML data preprocessing workflows a breeze!</p>
+</div>
+</div>
+<div id="create-recipe" class="section level1">
+<h1><span class="header-section-number">5</span> Create recipe</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Create recipe</span>
+rec_obj &lt;-<span class="st"> </span><span class="kw">recipe</span>(target <span class="op">~</span><span class="st"> </span>., <span class="dt">data =</span> train_<span class="dv">8</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co"># All non-numeric data will need to be converted to dummy variables. </span>
+<span class="st">  </span><span class="co">#step_dummy(all_nominal(), -all_outcomes()) %&gt;%</span>
+<span class="st">  </span><span class="co"># mean center the data</span>
+<span class="st">  </span><span class="kw">step_center</span>(<span class="kw">all_predictors</span>(), <span class="op">-</span><span class="kw">all_outcomes</span>()) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co"># scale the data</span>
+<span class="st">  </span><span class="kw">step_scale</span>(<span class="kw">all_predictors</span>(), <span class="op">-</span><span class="kw">all_outcomes</span>()) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">prep</span>(<span class="dt">data =</span> train_<span class="dv">8</span>)
+
+rec_obj</code></pre></div>
+<pre><code>## Data Recipe
+## 
+## Inputs:
+## 
+##       role #variables
+##    outcome          1
+##  predictor        200
+## 
+## Training data contained 160001 data points and no missing data.
+## 
+## Operations:
+## 
+## Centering for var_0, var_1, var_2, var_3, var_4, ... [trained]
+## Scaling for var_0, var_1, var_2, var_3, var_4, ... [trained]</code></pre>
+</div>
+<div id="baking-with-recipe" class="section level1">
+<h1><span class="header-section-number">6</span> Baking With Recipe</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Predictors</span>
+x_train_<span class="dv">8</span> &lt;-<span class="st"> </span><span class="kw">bake</span>(rec_obj, <span class="dt">new_data =</span> train_<span class="dv">8</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>target)
+x_test_<span class="dv">2</span>  &lt;-<span class="st"> </span><span class="kw">bake</span>(rec_obj, <span class="dt">new_data =</span> test_<span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>target)
+
+x_train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>## # A tibble: 10 x 14
+##     var_0  var_1  var_2  var_3   var_4  var_5  var_6    var_7  var_8  var_9
+##     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+##  1  0.270 -0.622  1.19  -0.689  0.792   1.54   0.247 -0.00521  0.859  0.420
+##  2 -0.682 -0.276  0.517  0.535 -0.305  -0.510  1.77  -0.566   -1.56  -1.31 
+##  3  0.125 -0.129 -0.668  0.194  0.929   0.412  0.503 -0.476   -1.84   0.549
+##  4  0.262 -0.170  0.717  0.894 -0.0712  1.10  -1.01  -0.388    0.991 -1.29 
+##  5  0.948 -1.57   1.20   0.391 -1.49    0.751  0.326  1.69     1.43  -0.299
+##  6  1.79   1.01   1.22  -0.570 -1.40    1.43  -1.10  -1.86    -1.04   1.23 
+##  7 -1.85   0.268 -0.427 -1.22   0.810  -1.75   0.729 -0.635   -0.226 -0.200
+##  8  0.671 -1.57  -0.129  1.08   1.10   -0.891  0.277 -1.38     0.304 -0.613
+##  9 -0.630 -0.737 -0.376  0.306 -1.27    0.826  1.01  -1.24     1.62  -1.25 
+## 10  1.87   0.796  2.28   0.261  0.658   1.40  -0.674  1.29     0.247  0.916
+## # … with 4 more variables: var_10 &lt;dbl&gt;, var_11 &lt;dbl&gt;, var_12 &lt;dbl&gt;,
+## #   var_13 &lt;dbl&gt;</code></pre>
+</div>
+<div id="dont-forget-the-target" class="section level1">
+<h1><span class="header-section-number">7</span> Don’t Forget The Target</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Response variables for training and testing sets</span>
+y_train_vec &lt;-<span class="st"> </span>train_<span class="dv">8</span><span class="op">$</span>target
+y_test_vec  &lt;-<span class="st"> </span>test_<span class="dv">2</span><span class="op">$</span>target
+
+y_train_vec[<span class="dv">1</span><span class="op">:</span><span class="dv">100</span>]</code></pre></div>
+<pre><code>##   [1] 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0
+##  [36] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 1 1 0 0 0 0 0 0 1 0 0 0
+##  [71] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0</code></pre>
+</div>
+<div id="building-a-deep-learning-model-with-keras-and-mlp" class="section level1">
+<h1><span class="header-section-number">8</span> Building A Deep Learning Model with Keras and MLP</h1>
+<ul>
+<li><p><code>Hidden Layers</code>: Hidden layers form the neural network nodes that enable non-linear activation using weights. The hidden layers are created using layer_dense(). We’ll add two hidden layers. We’ll apply units = 16, which is the number of nodes. We’ll select kernel_initializer = “uniform” and activation = “relu” for both layers. The first layer needs to have the input_shape = 35, which is the number of columns in the training set. Key Point: While we are arbitrarily selecting the number of hidden layers, units, kernel initializers and activation functions, these parameters can be optimized through a process called hyperparameter tuning that is discussed in Next Steps.</p></li>
+<li><p><code>Dropout Layers</code>: Dropout layers are used to control overfitting. This eliminates weights below a cutoff threshold to prevent low weights from overfitting the layers. We use the layer_dropout() function add two drop out layers with rate = 0.10 to remove weights below 10%.</p></li>
+<li><p><code>Output Layer</code> : The output layer specifies the shape of the output and the method of assimilating the learned information. The output layer is applied using the layer_dense(). For binary values, the shape should be units = 1. For multi-classification, the units should correspond to the number of classes. We set the kernel_initializer = “uniform” and the activation = “sigmoid” (common for binary classification).</p></li>
+</ul>
+<p><strong>Compile the model</strong> : The last step is to compile the model with compile(). We’ll use optimizer = “adam”, which is one of the most popular optimization algorithms. We select loss = “binary_crossentropy” since this is a binary classification problem. We’ll select metrics = c(“accuracy”) to be evaluated during training and testing. Key Point: The optimizer is often included in the tuning process.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Building our Artificial Neural Network</span>
+model_keras &lt;-<span class="st"> </span><span class="kw">keras_model_sequential</span>()
+
+model_keras <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># First hidden layer</span>
+<span class="st">  </span><span class="kw">layer_dense</span>(
+    <span class="dt">units              =</span> <span class="dv">100</span>, 
+    <span class="dt">kernel_initializer =</span> <span class="st">&quot;uniform&quot;</span>, 
+    <span class="dt">activation         =</span> <span class="st">&quot;relu&quot;</span>, 
+    <span class="dt">input_shape        =</span> <span class="kw">ncol</span>(x_train_<span class="dv">8</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Dropout to prevent overfitting</span>
+<span class="st">  </span><span class="kw">layer_dropout</span>(<span class="dt">rate =</span> <span class="fl">0.1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Second hidden layer</span>
+<span class="st">  </span><span class="kw">layer_dense</span>(
+    <span class="dt">units              =</span> <span class="dv">50</span>, 
+    <span class="dt">kernel_initializer =</span> <span class="st">&quot;uniform&quot;</span>, 
+    <span class="dt">activation         =</span> <span class="st">&quot;relu&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Dropout to prevent overfitting</span>
+<span class="st">  </span><span class="kw">layer_dropout</span>(<span class="dt">rate =</span> <span class="fl">0.1</span>) <span class="op">%&gt;%</span>
+
+<span class="st">    </span><span class="co"># Second hidden layer</span>
+<span class="st">  </span><span class="kw">layer_dense</span>(
+    <span class="dt">units              =</span> <span class="dv">50</span>, 
+    <span class="dt">kernel_initializer =</span> <span class="st">&quot;uniform&quot;</span>, 
+    <span class="dt">activation         =</span> <span class="st">&quot;relu&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Dropout to prevent overfitting</span>
+<span class="st">  </span><span class="kw">layer_dropout</span>(<span class="dt">rate =</span> <span class="fl">0.1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Output layer</span>
+<span class="st">  </span><span class="kw">layer_dense</span>(
+    <span class="dt">units              =</span> <span class="dv">1</span>, 
+    <span class="dt">kernel_initializer =</span> <span class="st">&quot;uniform&quot;</span>, 
+    <span class="dt">activation         =</span> <span class="st">&quot;sigmoid&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>
+<span class="st">  </span><span class="co"># Compile ANN</span>
+<span class="st">  </span><span class="kw">compile</span>(
+    <span class="dt">optimizer =</span> <span class="st">&#39;adam&#39;</span>,
+    <span class="dt">loss      =</span> <span class="st">&#39;binary_crossentropy&#39;</span>,
+    <span class="dt">metrics   =</span> <span class="kw">c</span>(<span class="st">&#39;accuracy&#39;</span>)
+  )
+
+keras_model</code></pre></div>
+<pre><code>FALSE function (inputs, outputs = NULL) 
+FALSE {
+FALSE     keras$models$Model(inputs = unname(inputs), outputs = unname(outputs))
+FALSE }
+FALSE &lt;bytecode: 0x7fb12491abc0&gt;
+FALSE &lt;environment: namespace:keras&gt;</code></pre>
+<p>We use the fit() function to run the ANN on our training data. * The batch_size = 500 sets the number samples per gradient update within each epoch. * We set epochs = 10 to control the number training cycles. Typically we want to keep the batch size high since this decreases the error within each training cycle (epoch). * We also want epochs to be large, which is important in visualizing the training history (discussed below). * We set validation_split = 0.30 to include 30% of the data for model validation, which prevents overfitting.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Fit the keras model to the training data</span>
+history &lt;-<span class="st"> </span><span class="kw">fit</span>(
+  <span class="dt">object           =</span> model_keras, 
+  <span class="dt">x                =</span> <span class="kw">as.matrix</span>(x_train_<span class="dv">8</span>), 
+  <span class="dt">y                =</span> y_train_vec,
+  <span class="dt">batch_size       =</span> <span class="dv">26</span>, 
+  <span class="dt">epochs           =</span> <span class="dv">20</span>,
+  <span class="dt">validation_split =</span> <span class="fl">0.30</span>
+)</code></pre></div>
+<p>We can inspect the training history. We want to make sure there is minimal difference between the validation accuracy and the training accuracy.</p>
+<div id="print-a-summary-of-the-training-history" class="section level2">
+<h2><span class="header-section-number">8.1</span> Print a summary of the training history</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Print a summary of the training history</span>
+<span class="kw">print</span>(history)</code></pre></div>
+<pre><code>## Trained on 112,000 samples, validated on 48,001 samples (batch_size=26, epochs=20)
+## Final epoch (plot to see history):
+##      acc: 0.9433
+##     loss: 0.1749
+##  val_acc: 0.9021
+## val_loss: 0.3002</code></pre>
+</div>
+<div id="plot-the-trainingvalidation-history-of-our-keras-model" class="section level2">
+<h2><span class="header-section-number">8.2</span> Plot the training/validation history of our Keras model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Plot the training/validation history of our Keras model</span>
+<span class="kw">plot</span>(history)</code></pre></div>
+<p><img src="santandar_costumer_trans_pred_keras_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+</div>
+</div>
+<div id="predictions" class="section level1">
+<h1><span class="header-section-number">9</span> Predictions</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Predicted Class</span>
+keras_class_vec &lt;-<span class="st"> </span><span class="kw">predict_classes</span>(<span class="dt">object =</span> model_keras, <span class="dt">x =</span> <span class="kw">as.matrix</span>(x_test_<span class="dv">2</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.vector</span>()
+
+<span class="co"># Predicted Class Probability</span>
+keras_prob_vec  &lt;-<span class="st"> </span><span class="kw">predict_proba</span>(<span class="dt">object =</span> model_keras, <span class="dt">x =</span> <span class="kw">as.matrix</span>(x_test_<span class="dv">2</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.vector</span>()</code></pre></div>
+</div>
+<div id="inspect-performance-with-yardstick-package" class="section level1">
+<h1><span class="header-section-number">10</span> Inspect Performance With <code>Yardstick</code> package</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Format test data and predictions for yardstick metrics</span>
+estimates_keras_tbl &lt;-<span class="st"> </span><span class="kw">tibble</span>(
+  <span class="dt">Truth      =</span> <span class="kw">as.factor</span>(y_test_vec) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fct_recode</span>(<span class="dt">yes =</span> <span class="st">&quot;1&quot;</span>, <span class="dt">no =</span> <span class="st">&quot;0&quot;</span>),
+  <span class="dt">Estimate   =</span> <span class="kw">as.factor</span>(keras_class_vec) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fct_recode</span>(<span class="dt">yes =</span> <span class="st">&quot;1&quot;</span>, <span class="dt">no =</span> <span class="st">&quot;0&quot;</span>),
+  <span class="dt">Class_prob =</span> keras_prob_vec
+)
+
+estimates_keras_tbl</code></pre></div>
+<pre><code>## # A tibble: 39,999 x 3
+##    Truth Estimate Class_prob
+##    &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;
+##  1 no    no          0.0519 
+##  2 no    no          0.0200 
+##  3 no    no          0.104  
+##  4 no    no          0.0117 
+##  5 no    no          0.110  
+##  6 no    no          0.0592 
+##  7 no    no          0.00751
+##  8 no    no          0.0990 
+##  9 no    no          0.427  
+## 10 no    no          0.0269 
+## # … with 39,989 more rows</code></pre>
+</div>
+<div id="confusion-table" class="section level1">
+<h1><span class="header-section-number">11</span> Confusion Table</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Confusion Table</span>
+estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">conf_mat</span>(Truth, Estimate)</code></pre></div>
+<pre><code>##           Truth
+## Prediction    no   yes
+##        no  35190  2869
+##        yes   927  1013</code></pre>
+</div>
+<div id="accuracy" class="section level1">
+<h1><span class="header-section-number">12</span> Accuracy</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Accuracy</span>
+estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">metrics</span>(Truth, Estimate)</code></pre></div>
+<pre><code>## # A tibble: 2 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy binary         0.905
+## 2 kap      binary         0.303</code></pre>
+<p>We are getting roughly <strong>91%</strong> accuracy.</p>
+</div>
+<div id="area-under-the-curve-auc-measurement" class="section level1">
+<h1><span class="header-section-number">13</span> Area Under the Curve (AUC) measurement</h1>
+<p>AUC is often a good metric used to compare different classifiers and to compare to randomly guessing (AUC_random = 0.50). Our model has AUC = 0.85, which is much better than randomly guessing. Tuning and testing different classification algorithms may yield even better results.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># AUC</span>
+estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span>yardstick<span class="op">::</span><span class="kw">roc_auc</span>(Truth, Class_prob)</code></pre></div>
+<pre><code>## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 roc_auc binary         0.796</code></pre>
+</div>
+<div id="precision-and-recall" class="section level1">
+<h1><span class="header-section-number">14</span> Precision And Recall</h1>
+<p>Precision is when the model predicts “yes”, how often is it actually “yes”. Recall (also true positive rate or specificity) is when the actual value is “yes” how often is the model correct. We can get precision() and recall() measurements using yardstick.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Precision</span>
+<span class="kw">data.frame</span>(
+  <span class="dt">precision =</span> estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">precision</span>(Truth, Estimate),
+  <span class="dt">recall    =</span> estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">recall</span>(Truth, Estimate)
+)</code></pre></div>
+<pre><code>##   precision..metric precision..estimator precision..estimate
+## 1         precision               binary            0.924617
+##   recall..metric recall..estimator recall..estimate
+## 1         recall            binary        0.9743334</code></pre>
+<ul>
+<li><p>We find a <strong>precision: 0.6</strong>, and <strong>recall: 0.25</strong>.</p></li>
+<li><p>Precision and recall are very important to the business case: The organization is concerned with balancing the cost of targeting and retaining customers at risk of leaving with the cost of inadvertently targeting customers that are not planning to leave (and potentially decreasing revenue from this group). The threshold above which to predict Target = <code>1</code> can be adjusted to optimize for the business problem.</p></li>
+</ul>
+</div>
+<div id="f1-score" class="section level1">
+<h1><span class="header-section-number">15</span> F1 Score</h1>
+<p>We can also get the F1-score, which is a weighted average between the precision and recall. Machine learning classifier thresholds are often adjusted to maximize the F1-score. However, this is often not the optimal solution to the business problem.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># F1-Statistic</span>
+estimates_keras_tbl <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">f_meas</span>(Truth, Estimate, <span class="dt">beta =</span> <span class="dv">1</span>)</code></pre></div>
+<pre><code>## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 f_meas  binary         0.949</code></pre>
+</div>
+<div id="predict-test-dataset" class="section level1">
+<h1><span class="header-section-number">16</span> Predict test dataset</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Predicted Class</span>
+keras_class_test_vec &lt;-<span class="st"> </span><span class="kw">predict_classes</span>(<span class="dt">object =</span> model_keras, <span class="dt">x =</span> <span class="kw">as.matrix</span>(test[,<span class="op">-</span><span class="dv">1</span>])) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.vector</span>()
+
+<span class="co"># Predicted Class Probability</span>
+keras_prob_test_vec  &lt;-<span class="st"> </span><span class="kw">predict_proba</span>(<span class="dt">object =</span> model_keras, <span class="dt">x =</span> <span class="kw">as.matrix</span>(test[,<span class="op">-</span><span class="dv">1</span>])) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.vector</span>()
+
+<span class="kw">table</span>(keras_class_test_vec)</code></pre></div>
+<pre><code>## keras_class_test_vec
+##      0 
+## 200000</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt_submission &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
+  <span class="dt">ID_code =</span> test[,<span class="dv">1</span>],
+  <span class="dt">target =</span> keras_class_test_vec,
+  <span class="dt">Prob =</span> keras_prob_test_vec
+  
+)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#fwrite(dt_submission[,c(1,2)], &quot;submission.csv&quot;)</span></code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
