@@ -1,0 +1,245 @@
+---
+title: "Santandar Costumer Transaction Prediction with xgboost"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+# Load packages
+```{r comment=FALSE, warning=FALSE}
+library(data.table)
+library(dplyr)
+library(rsample)
+library(xgboost)
+require(Ckmeans.1d.dp)
+library(ggplot2)
+
+```
+
+# Load Data
+
+```{r}
+train <- fread(file = "train.csv")
+train[1:10,1:14]
+```
+
+# Split Into Train/Test Sets
+```{r}
+set.seed(100)
+train_test_split <- rsample::initial_split(train, prop = 0.8)
+train_test_split
+```
+
+We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
+train_8 <- rsample::training(train_test_split)
+test_2  <- rsample::testing(train_test_split)
+train_8[1:10, 1:14]
+```
+
+# Optimize features
+
+Here, we can see after how many rounds, we achieved the smallest test error:
+
+```{r}
+dtrain <- xgb.DMatrix(as.matrix(train_8[, -c(1,2)]), 
+                      label = as.numeric(train_8$target))
+dtest <- xgb.DMatrix(as.matrix(test_2[, -c(1,2)]), 
+                      label = as.numeric(test_2$target))
+
+params <- list(max_depth = 2, 
+               objective = "binary:logistic",
+               silent = 0)
+
+watchlist <- list(train = dtrain, eval = dtest)
+
+
+
+
+cv_model <- xgb.cv(params = params,
+                   data = dtrain,
+                   nrounds = 100,
+                   eta = 1,
+                   watchlist = watchlist,
+                   nfold = 5,
+                   verbose = TRUE,
+                   prediction = TRUE) # prediction of cv folds
+
+
+# eval_model <- xgb.train(data=dtrain, 
+#                         max.depth=2,
+#                         eta = 0.5,
+#                         nthread = 4, 
+#                         nrounds=50,
+#                         watchlist=watchlist,
+#                         eval.metric = "error", 
+#                         eval.metric = "logloss", 
+#                         objective = "binary:logistic")
+```
+
+# Train the model
+## Tree boosting
+```{r}
+xgboost_tree <- xgb.train(data = dtrain, 
+                         max_depth = 2, 
+                         eta = 0.5, 
+                         objective = "binary:logistic", 
+                         nrounds = 100, 
+                         verbose = TRUE)
+```
+
+## Linear boosting (algorithme)
+```{r}
+
+xgboost_linear <- xgboost(data = as.matrix(train_8[, c(-1,-2)]), 
+                         label = as.numeric(train_8$target),
+                         booster = "gblinear",
+                         learning_rates = 1,
+                         max_depth = 2, 
+                         objective = "binary:logistic", 
+                         nrounds = 100, 
+                         verbose = TRUE)
+
+
+
+```
+
+
+## Extract important features from tree xgboost model
+```{r}
+features <- colnames(train_8[, c(-1,-2)])
+importance_matrix_tree <- xgb.importance(features, model = xgboost_tree)
+importance_matrix_tree
+```
+
+## Extract important features from linear xgboost model
+```{r}
+features <- colnames(train_8[, c(-1,-2)])
+importance_matrix_lm <- xgb.importance(features, model = xgboost_linear)
+importance_matrix_lm %>%
+arrange(desc(Weight)) %>%
+  head(30)
+```
+
+## plot important features (linear model)
+
+```{r}
+xgb.ggplot.importance(importance_matrix_lm[1:30,]) +
+ggplot2::theme_minimal()
+```
+
+## plot important features (Tree model)
+```{r}
+xgb.ggplot.importance(importance_matrix_tree[1:30,]) +
+ggplot2::theme_minimal()
+```
+
+# Testing models
+## Testing linear model
+```{r}
+pred_lm_2 <- predict(xgboost_linear, as.matrix(test_2[, c(-1,-2)]))
+head(pred_lm_2)
+```
+
+## testing Tree model
+```{r}
+pred_tree_2 <- predict(xgboost_tree, as.matrix(test_2[, c(-1,-2)]))
+head(pred_tree_2)
+```
+
+## Transform propability to binary classification
+```{r}
+prediction_lm_2 <- as.numeric(pred_lm_2 > 0.6)
+table(prediction_lm_2)
+```
+```{r}
+prediction_tree_2 <- as.numeric(pred_tree_2 > 0.6)
+table(prediction_tree_2)
+```
+
+## Confusion Matrix for linear model
+```{r}
+
+data.frame(prediction = as.numeric(prediction_lm_2),
+         label = as.numeric(test_2$target)) %>%
+  count(prediction, label)
+```
+
+## Confusion matric for Tree model
+```{r}
+data.frame(prediction = as.numeric(prediction_tree_2),
+         label = as.numeric(test_2$target)) %>%
+  count(prediction, label)
+```
+
+# Prediction
+
+## Load test data
+```{r}
+test <- fread(file = "test.csv")
+test[1:10,1:14]
+```
+
+## Prediction with linear xgboost model
+```{r}
+
+pred_lm <- predict(xgboost_linear, as.matrix(test[,-1]))
+head(pred_lm)
+```
+
+## Prediction with Tree xgboost model
+
+```{r}
+pred_tree <- predict(xgboost_tree, as.matrix(test[,-1]))
+head(pred_tree)
+```
+
+These numbers doesn’t look like binary classification `{0,1}. We need to perform a simple transformation before being able to use these results.
+
+# Transform the regression in a binary classification
+If we think about the meaning of a regression applied to our data, the numbers we get are probabilities that a datum will be classified as 1. Therefore, we will set the rule that if this probability for a specific datum is > 0.5 then the observation is classified as 1 (or 0 otherwise).
+
+```{r}
+prediction_lm <- as.numeric(pred_lm > 0.5)
+table(prediction_lm)
+```
+
+```{r}
+prediction_tree <- as.numeric(pred_tree > 0.5)
+table(prediction_tree)
+
+```
+
+# submission
+
+We select linear model for submission. Linear model prediction has about 1% rate of `1`, like in the train dataset.
+
+```{r}
+dt_submission <- data.frame(
+  ID_code = test[,1],
+  target = pred_tree
+)
+head(dt_submission)
+```
+
+```{r}
+#fwrite(dt_submission[,c(1,2)], "submission.csv")
+```
+
+

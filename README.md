@@ -39,7 +39,10 @@
 <img src="images/streaming_shiny.gif" align="left" height="150" width="250" title="Dashboard Streaming Shiny">
 </a>
 
-
-<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santander_costumer_trans_pred_keras.html" target = "_blank">
+<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santandar_costumer_trans_pred_keras.html" target = "_blank">
 <img src="images/keras.png" align="left" height="150" width="250" title="santander customer transaction prediction with keras (MLP)">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santander_trans_pred_xgboost.html" target = "_blank">
+<img src="images/xgboost_tree.png" align="left" height="150" width="250" title="santander customer transaction prediction with xgboost">
 </a>
