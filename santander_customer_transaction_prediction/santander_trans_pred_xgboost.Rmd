@@ -53,6 +53,7 @@ test_2  <- rsample::testing(train_test_split)
 train_8[1:10, 1:14]
 ```
 
+
 # Optimize features
 
 Here, we can see after how many rounds, we achieved the smallest test error:
@@ -96,12 +97,16 @@ cv_model <- xgb.cv(params = params,
 # Train the model
 ## Tree boosting
 ```{r}
+tme <- Sys.time()
 xgboost_tree <- xgb.train(data = dtrain, 
                          max_depth = 2, 
-                         eta = 0.5, 
-                         objective = "binary:logistic", 
-                         nrounds = 100, 
+                         eta = 0.1, 
+                         objective = "binary:logistic",
+                         nthread = 2,
+                         nrounds = 1500,
+                         eval_metric = "auc",
                          verbose = TRUE)
+Sys.time() - tme
 ```
 
 ## Linear boosting (algorithme)

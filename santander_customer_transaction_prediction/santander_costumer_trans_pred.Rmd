@@ -313,3 +313,11 @@ table(train$target, pdata$`1` > .8)
 
 ```
 
+```{r}
+dt_submission <- data.frame(
+  ID_code = test[,1],
+  target = ptest
+)
+fwrite(dt_submission, "submission_keras.csv")
+```
+
