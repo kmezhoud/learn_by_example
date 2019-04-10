@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-04-10" />
+
+<title>Santandar Costumer Transaction Prediction with xgboost (cleanup)</title>
+
+<script src="Santanser_trans_pred_xgboost_cleanup_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="Santanser_trans_pred_xgboost_cleanup_files/navigation-1.1/tabsets.js"></script>
+<script src="Santanser_trans_pred_xgboost_cleanup_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code > span.dt { color: #204a87; } /* DataType */
+code > span.dv { color: #0000cf; } /* DecVal */
+code > span.bn { color: #0000cf; } /* BaseN */
+code > span.fl { color: #0000cf; } /* Float */
+code > span.ch { color: #4e9a06; } /* Char */
+code > span.st { color: #4e9a06; } /* String */
+code > span.co { color: #8f5902; font-style: italic; } /* Comment */
+code > span.ot { color: #8f5902; } /* Other */
+code > span.al { color: #ef2929; } /* Alert */
+code > span.fu { color: #000000; } /* Function */
+code > span.er { color: #a40000; font-weight: bold; } /* Error */
+code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #000000; } /* Constant */
+code > span.sc { color: #000000; } /* SpecialChar */
+code > span.vs { color: #4e9a06; } /* VerbatimString */
+code > span.ss { color: #4e9a06; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #000000; } /* Variable */
+code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code > span.ex { } /* Extension */
+code > span.at { color: #c4a000; } /* Attribute */
+code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Santandar Costumer Transaction Prediction with xgboost (cleanup)</h1>
+<h4 class="author"><em>Karim Mezhoud</em></h4>
+<h4 class="date"><em>2019-04-10</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-packages"><span class="toc-section-number">1</span> Load packages</a></li>
+<li><a href="#load-train-data-and-format-to-dmatrix"><span class="toc-section-number">2</span> Load train Data and format to DMatrix</a></li>
+<li><a href="#split-into-traintest-sets"><span class="toc-section-number">3</span> Split Into Train/Test Sets</a><ul>
+<li><a href="#format-train-and-test-to-dmatrix"><span class="toc-section-number">3.1</span> format train and test to DMatrix</a></li>
+</ul></li>
+<li><a href="#optimize-features-with-cross-validation"><span class="toc-section-number">4</span> Optimize features with Cross validation</a></li>
+<li><a href="#train-the-model"><span class="toc-section-number">5</span> Train the model</a></li>
+<li><a href="#prediction"><span class="toc-section-number">6</span> Prediction</a><ul>
+<li><a href="#load-test-data-and-format-to-dmatrix"><span class="toc-section-number">6.1</span> Load test data and format to DMatrix</a></li>
+<li><a href="#prediction-with-tree-xgboost-model"><span class="toc-section-number">6.2</span> Prediction with Tree xgboost model</a></li>
+<li><a href="#summarize-probabilities-of-targets"><span class="toc-section-number">6.3</span> summarize probabilities of targets</a></li>
+</ul></li>
+<li><a href="#submission"><span class="toc-section-number">7</span> submission</a></li>
+</ul>
+</div>
+
+<div id="load-packages" class="section level1">
+<h1><span class="header-section-number">1</span> Load packages</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(data.table)
+<span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(rsample)
+<span class="kw">library</span>(xgboost)
+<span class="kw">require</span>(Ckmeans.1d.dp)
+<span class="kw">library</span>(ggplot2)
+<span class="kw">library</span>(Matrix)</code></pre></div>
+</div>
+<div id="load-train-data-and-format-to-dmatrix" class="section level1">
+<h1><span class="header-section-number">2</span> Load train Data and format to DMatrix</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;train.csv&quot;</span>)
+train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>##     ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
+##  1: train_0      0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187
+##  2: train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
+##  3: train_2      0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427
+##  4: train_3      0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428
+##  5: train_4      0  9.8369 -1.4834 12.8746 6.6375 12.2772   2.4486 5.9405
+##  6: train_5      0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322
+##  7: train_6      0 11.8091 -0.0832  9.3494 4.2916 11.1355  -8.0198 6.1961
+##  8: train_7      0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890
+##  9: train_8      0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514
+## 10: train_9      0 12.5088  1.9743  8.8960 5.4508 13.6043 -16.2859 6.0637
+##       var_7   var_8  var_9  var_10   var_11
+##  1: 18.6266 -4.9200 5.7470  2.9252   3.1821
+##  2: 16.5338  3.1468 8.0851 -0.4032   8.0585
+##  3: 14.6155 -4.9193 5.9525 -0.3249 -11.2648
+##  4: 14.9250 -5.8609 8.2450  2.3061   2.8102
+##  5: 19.2514  6.2654 7.6784 -9.4458 -12.1419
+##  6: 15.2255  3.5855 5.9790  0.8010  -0.6192
+##  7: 12.0771 -4.3781 7.9232 -5.1288  -7.5271
+##  8: 22.3262  5.0647 7.1971  1.4532  -6.7033
+##  9: 10.1854 -3.1882 9.0827  0.9501   1.7982
+## 10: 16.8410  0.1287 7.9682  0.8787   3.0537</code></pre>
+</div>
+<div id="split-into-traintest-sets" class="section level1">
+<h1><span class="header-section-number">3</span> Split Into Train/Test Sets</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">100</span>)
+train_test_split &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">initial_split</span>(train, <span class="dt">prop =</span> <span class="fl">0.8</span>)
+train_test_split</code></pre></div>
+<pre><code>## &lt;160001/39999/200000&gt;</code></pre>
+<p>We can retrieve our training and testing sets using training() and testing() functions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Retrieve train and test sets</span>
+train_<span class="dv">8</span> &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">training</span>(train_test_split)
+test_<span class="dv">2</span>  &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">testing</span>(train_test_split)
+train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<pre><code>##      ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
+##  1:  train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
+##  2:  train_2      0  8.6093 -2.7457 12.0805 7.8928 10.5825  -9.0837 6.9427
+##  3:  train_3      0 11.0604 -2.1518  8.9522 7.1957 12.5846  -1.8361 5.8428
+##  4:  train_5      0 11.4763 -2.3182 12.6080 8.6264 10.9621   3.5609 4.5322
+##  5:  train_7      0 13.5580 -7.9881 13.8776 7.5985  8.6543   0.8310 5.6890
+##  6:  train_8      0 16.1071  2.4426 13.9307 5.6327  8.8014   6.1630 4.4514
+##  7: train_10      0  5.0702 -0.5447  9.5900 4.2987 12.3910 -18.8687 6.0382
+##  8: train_11      0 12.7188 -7.9750 10.3757 9.0101 12.8570 -12.0852 5.6464
+##  9: train_12      0  8.7671 -4.6154  9.7242 7.4242  9.0254   1.4247 6.2815
+## 10: train_13      1 16.3699  1.5934 16.7395 7.3330 12.1450   5.9004 4.8222
+##       var_7   var_8  var_9  var_10   var_11
+##  1: 16.5338  3.1468 8.0851 -0.4032   8.0585
+##  2: 14.6155 -4.9193 5.9525 -0.3249 -11.2648
+##  3: 14.9250 -5.8609 8.2450  2.3061   2.8102
+##  4: 15.2255  3.5855 5.9790  0.8010  -0.6192
+##  5: 22.3262  5.0647 7.1971  1.4532  -6.7033
+##  6: 10.1854 -3.1882 9.0827  0.9501   1.7982
+##  7: 14.3797 -0.4711 7.3198  4.6603 -14.0548
+##  8: 11.8370  1.2953 6.8093 -6.1501  -5.4925
+##  9: 12.3143  5.6964 6.0197  5.2524  -4.5162
+## 10: 20.9729  1.1064 8.6978  2.3287 -11.3409</code></pre>
+<div id="format-train-and-test-to-dmatrix" class="section level2">
+<h2><span class="header-section-number">3.1</span> format train and test to DMatrix</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train_<span class="dv">8</span><span class="op">$</span>ID_code &lt;-<span class="st"> </span><span class="ot">NULL</span>
+train_8_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>train_<span class="dv">8</span>)
+dtrain_<span class="dv">8</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>train_8_sparse, <span class="dt">label =</span> train_<span class="dv">8</span><span class="op">$</span>target)
+
+test_<span class="dv">2</span><span class="op">$</span>ID_code &lt;-<span class="st"> </span><span class="ot">NULL</span>
+test_2_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>test_<span class="dv">2</span>)
+dtest_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_2_sparse, <span class="dt">label =</span> test_<span class="dv">2</span><span class="op">$</span>target)</code></pre></div>
+</div>
+</div>
+<div id="optimize-features-with-cross-validation" class="section level1">
+<h1><span class="header-section-number">4</span> Optimize features with Cross validation</h1>
+<p>Here, we can see after how many rounds, we achieved the smallest test error.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">params &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">booster =</span> <span class="st">&quot;gbtree&quot;</span>,
+               <span class="dt">tree_method =</span> <span class="st">&quot;auto&quot;</span>,
+              <span class="dt">objective =</span> <span class="st">&quot;binary:logistic&quot;</span>,
+              <span class="dt">eval_metric =</span> <span class="st">&quot;auc&quot;</span>,         <span class="co">#  for Binary classification error rate</span>
+              <span class="dt">max_depth =</span> <span class="dv">2</span>,                 <span class="co"># 6 makes training heavy, there is no correlation between features</span>
+              <span class="dt">eta =</span> <span class="fl">0.01</span>,                     <span class="co"># learning rate</span>
+              <span class="dt">subsample =</span> <span class="fl">0.5</span>,              <span class="co"># prevent overfitting</span>
+              <span class="dt">colsample_bytree =</span> <span class="fl">0.1</span>         <span class="co"># specify the fraction of columns to be subsampled.</span>
+             )
+
+
+tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+cv_model &lt;-<span class="st"> </span><span class="kw">xgb.cv</span>(<span class="dt">params =</span> params,
+                   <span class="dt">data =</span> dtrain_<span class="dv">8</span>,
+                   <span class="dt">nthread =</span> <span class="dv">2</span>,
+                   <span class="dt">nrounds =</span> <span class="dv">30</span>,
+                   <span class="dt">verbose =</span> <span class="ot">TRUE</span>,
+                   <span class="dt">nfold =</span> <span class="dv">5</span>,
+                   <span class="dt">print_every_n =</span> <span class="dv">100</span>,
+                   <span class="dt">early_stopping_rounds =</span> <span class="dv">500</span>,
+                   <span class="dt">maximize =</span> <span class="ot">TRUE</span>,
+                   <span class="dt">prediction =</span> <span class="ot">TRUE</span>) <span class="co"># prediction of cv folds</span></code></pre></div>
+<pre><code>## [1]  train-auc:0.554846+0.020935 test-auc:0.547460+0.021108 
+## Multiple eval metrics are present. Will use test_auc for early stopping.
+## Will train until test_auc hasn&#39;t improved in 500 rounds.
+## 
+## [30] train-auc:0.752490+0.005958 test-auc:0.743105+0.008052</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</code></pre></div>
+<pre><code>## Time difference of 2.243731 mins</code></pre>
+</div>
+<div id="train-the-model" class="section level1">
+<h1><span class="header-section-number">5</span> Train the model</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">watchlist &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">train =</span> dtrain_<span class="dv">8</span>, <span class="dt">eval =</span> dtest_<span class="dv">2</span>)
+tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+xgboost_tree &lt;-<span class="st"> </span><span class="kw">xgb.train</span>(<span class="dt">data =</span> dtrain_<span class="dv">8</span>, 
+                         <span class="dt">params =</span> params,
+                         <span class="dt">watchlist =</span> watchlist,
+                         <span class="dt">nrounds =</span> cv_model<span class="op">$</span>best_iteration,
+                         <span class="dt">print_every_n =</span> <span class="dv">1</span>,
+                         <span class="dt">verbose =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1]  train-auc:0.558384  eval-auc:0.553842 
+## [2]  train-auc:0.608052  eval-auc:0.598967 
+## [3]  train-auc:0.634052  eval-auc:0.629834 
+## [4]  train-auc:0.647446  eval-auc:0.643818 
+## [5]  train-auc:0.653050  eval-auc:0.647592 
+## [6]  train-auc:0.669032  eval-auc:0.659484 
+## [7]  train-auc:0.683517  eval-auc:0.674060 
+## [8]  train-auc:0.686786  eval-auc:0.676499 
+## [9]  train-auc:0.703505  eval-auc:0.690069 
+## [10] train-auc:0.711097  eval-auc:0.699301 
+## [11] train-auc:0.720596  eval-auc:0.708189 
+## [12] train-auc:0.731117  eval-auc:0.717701 
+## [13] train-auc:0.737937  eval-auc:0.726305 
+## [14] train-auc:0.736488  eval-auc:0.724226 
+## [15] train-auc:0.740318  eval-auc:0.728985 
+## [16] train-auc:0.737047  eval-auc:0.725558 
+## [17] train-auc:0.744476  eval-auc:0.733449 
+## [18] train-auc:0.745037  eval-auc:0.734179 
+## [19] train-auc:0.747674  eval-auc:0.735266 
+## [20] train-auc:0.747316  eval-auc:0.734157 
+## [21] train-auc:0.742329  eval-auc:0.729237 
+## [22] train-auc:0.744019  eval-auc:0.731924 
+## [23] train-auc:0.744380  eval-auc:0.732381 
+## [24] train-auc:0.742863  eval-auc:0.730240 
+## [25] train-auc:0.743155  eval-auc:0.730240 
+## [26] train-auc:0.744608  eval-auc:0.731326 
+## [27] train-auc:0.744701  eval-auc:0.731780 
+## [28] train-auc:0.744457  eval-auc:0.731215 
+## [29] train-auc:0.743944  eval-auc:0.730661 
+## [30] train-auc:0.746815  eval-auc:0.732647</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</code></pre></div>
+<pre><code>## Time difference of 37.41911 secs</code></pre>
+</div>
+<div id="prediction" class="section level1">
+<h1><span class="header-section-number">6</span> Prediction</h1>
+<div id="load-test-data-and-format-to-dmatrix" class="section level2">
+<h2><span class="header-section-number">6.1</span> Load test data and format to DMatrix</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test &lt;-<span class="st"> </span>data.table<span class="op">::</span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>)
+ID_code &lt;-<span class="st"> </span>test<span class="op">$</span>ID_code
+test<span class="op">$</span>ID_code &lt;-<span class="st"> </span><span class="ot">NULL</span>
+test_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(ID_code <span class="op">~</span>., <span class="dt">data=</span>test)
+ dtest &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_sparse, <span class="dt">label =</span> ID_code)</code></pre></div>
+<pre><code>## Warning in setinfo.xgb.DMatrix(dmat, names(p), p[[1]]): NAs introduced by
+## coercion</code></pre>
+</div>
+<div id="prediction-with-tree-xgboost-model" class="section level2">
+<h2><span class="header-section-number">6.2</span> Prediction with Tree xgboost model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pred_tree &lt;-<span class="st"> </span><span class="kw">predict</span>(xgboost_tree, dtest)
+<span class="kw">head</span>(pred_tree)</code></pre></div>
+<pre><code>## [1] 0.4019109 0.3954378 0.4001880 0.3940031 0.3980342 0.3940164</code></pre>
+</div>
+<div id="summarize-probabilities-of-targets" class="section level2">
+<h2><span class="header-section-number">6.3</span> summarize probabilities of targets</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(pred_tree)</code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  0.3928  0.3943  0.3957  0.3963  0.3977  0.4176</code></pre>
+</div>
+</div>
+<div id="submission" class="section level1">
+<h1><span class="header-section-number">7</span> submission</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt_submission &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
+  <span class="dt">ID_code =</span> ID_code,
+  <span class="dt">target =</span> pred_tree
+)
+<span class="kw">summary</span>(dt_submission)</code></pre></div>
+<pre><code>##        ID_code           target      
+##  test_0    :     1   Min.   :0.3928  
+##  test_1    :     1   1st Qu.:0.3943  
+##  test_10   :     1   Median :0.3957  
+##  test_100  :     1   Mean   :0.3963  
+##  test_1000 :     1   3rd Qu.:0.3977  
+##  test_10000:     1   Max.   :0.4176  
+##  (Other)   :199994</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fwrite</span>(dt_submission, <span class="st">&quot;dt_submission.csv&quot;</span>)</code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

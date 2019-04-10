@@ -27,36 +27,50 @@ library(rsample)
 library(xgboost)
 require(Ckmeans.1d.dp)
 library(ggplot2)
+library(Matrix)
 ```
-# Load Data
+# Load train Data and format to DMatrix
 
 ```{r}
 train <- fread(file = "train.csv")
 train[1:10,1:14]
+
 ```
 # Split Into Train/Test Sets
 ```{r}
 set.seed(100)
 train_test_split <- rsample::initial_split(train, prop = 0.8)
+train_test_split
+```
 
+We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
 train_8 <- rsample::training(train_test_split)
 test_2  <- rsample::testing(train_test_split)
-
+train_8[1:10, 1:14]
 ```
+
+
+## format train and test to DMatrix 
+```{r}
+train_8$ID_code <- NULL
+train_8_sparse <- sparse.model.matrix(target ~., data=train_8)
+dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$target)
+
+test_2$ID_code <- NULL
+test_2_sparse <- sparse.model.matrix(target ~., data=test_2)
+dtest_2 <- xgb.DMatrix(data=test_2_sparse, label = test_2$target)
+```
+
+
+
 
 # Optimize features with Cross validation
 
 Here, we can see after how many rounds, we achieved the smallest test error.
 ```{r}
-train <- train[,-1]
-train_sparse <- Matrix::sparse.model.matrix(target ~., data=train)
-dtrain <- xgb.DMatrix(data=train_sparse, label = train$target)
-
-#dtrain <- xgb.DMatrix(as.matrix(train_8[, -c(1,2)]), 
-#                      label = as.numeric(train_8$target))
-#dtest <- xgb.DMatrix(as.matrix(test_2[, -c(1,2)]), 
-#                      label = as.numeric(test_2$target))
-
 
 params <- list(booster = "gbtree",
                tree_method = "auto",
@@ -68,67 +82,57 @@ params <- list(booster = "gbtree",
               colsample_bytree = 0.1         # specify the fraction of columns to be subsampled.
              )
 
-#watchlist <- list(train = dtrain, eval = dtest)
-
 
 tme <- Sys.time()
 cv_model <- xgb.cv(params = params,
-                   data = dtrain,
+                   data = dtrain_8,
                    nthread = 2,
-                   nrounds = 150,
+                   nrounds = 30,
                    verbose = TRUE,
                    nfold = 5,
-                   early_stopping_rounds = 8,
+                   print_every_n = 100,
+                   early_stopping_rounds = 500,
                    maximize = TRUE,
                    prediction = TRUE) # prediction of cv folds
 Sys.time() - tme
-cv_model$best_iteration
 ```
 
 
 
 # Train the model
 ```{r}
+watchlist <- list(train = dtrain_8, eval = dtest_2)
 tme <- Sys.time()
-xgboost_tree <- xgb.train(data = dtrain, 
-                          #params = params,
-                         nrounds = 10, #cv_model$best_iteration,
-                         print_every_n = 100,
+xgboost_tree <- xgb.train(data = dtrain_8, 
+                         params = params,
+                         watchlist = watchlist,
+                         nrounds = cv_model$best_iteration,
+                         print_every_n = 1,
                          verbose = TRUE)
 Sys.time() - tme
 ```
 
-## testing Tree model
-```{r}
-pred_tree_2 <- predict(xgboost_tree, as.matrix(test_2[, c(-1,-2)]))
-head(pred_tree_2)
-```
-
-## Confusion matric for Tree model
-```{r}
-data.frame(prediction = as.numeric(prediction_tree_2),
-         label = as.numeric(test_2$target)) %>%
-  count(prediction, label)
-```
 
 # Prediction
-
-## Load test data
+## Load test data and format to DMatrix
 ```{r}
-test <- fread(file = "test.csv")
-test[1:10,1:14]
+test <- data.table::fread(file = "test.csv")
+ID_code <- test$ID_code
+test$ID_code <- NULL
+test_sparse <- sparse.model.matrix(ID_code ~., data=test)
+ dtest <- xgb.DMatrix(data=test_sparse, label = ID_code)
+
 ```
 ## Prediction with Tree xgboost model
 
 ```{r}
-pred_tree <- predict(xgboost_tree, as.matrix(test[,-1]))
+pred_tree <- predict(xgboost_tree, dtest)
 head(pred_tree)
 ```
 
-## Glimpse proportion 1/0
+## summarize probabilities of targets
 ```{r}
-prediction_tree <- as.numeric(pred_tree > 0.5)
-table(prediction_tree)
+summary(pred_tree)
 ```
 # submission
 
@@ -137,14 +141,10 @@ dt_submission <- data.frame(
   ID_code = ID_code,
   target = pred_tree
 )
-head(dt_submission)
+summary(dt_submission)
 ```
 
 ```{r}
-sub_tmp <- fread(file = "submission_cleanup.csv")
-sub_tmp <- sub_tmp %>%
-  mutate(var_0 = NULL) %>%
-  mutate(ID_code = test$ID_code, target = target)
-#fwrite(sub_tmp, "submission_cleanup.csv")
+fwrite(dt_submission, "dt_submission.csv")
 ```
 
