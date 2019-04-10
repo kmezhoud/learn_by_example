@@ -47,6 +47,6 @@
 <img src="images/xgboost_tree.png" align="left" height="150" width="250" title="santander customer transaction prediction with xgboost">
 </a>
 
-<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santander_trans_pred_xgboost_cleanup.html" target = "_blank">
-<img src="images/xgb.train.png" align="left" height="150" width="250" title="santander customer transaction prediction with xgboost xgb.train & xgb.cv">
+<a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santanser_trans_pred_xgboost_cleanup.html" target = "_blank">
+<img src="images/xgb.train.gif" align="left" height="150" width="250" title="santander customer transaction prediction with xgboost xgb.train & xgb.cv">
 </a>
