@@ -50,3 +50,11 @@
 <a href="https://kmezhoud.github.io/learn_by_example/santander_customer_transaction_prediction/santanser_trans_pred_xgboost_cleanup.html" target = "_blank">
 <img src="images/xgb.train.gif" align="left" height="150" width="250" title="santander customer transaction prediction with xgboost xgb.train & xgb.cv">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/Smile_kinships/parental_facial_recogn.html" target = "_blank">
+<img src="images/Smile_kinships.png" align="left" height="150" width="250" title="Facial & Smile kinships dectection (mxnet)">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/Smile_kinships/Smile_related_keras.html" target = "_blank">
+<img src="images/Smile_kinships.png" align="left" height="150" width="250" title="Smile related with keras">
+</a>

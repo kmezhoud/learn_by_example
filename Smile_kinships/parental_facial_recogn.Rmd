@@ -1,0 +1,466 @@
+---
+title: "Smile Parental recognizing (MXNET)"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+
+```{r , message=FALSE}
+library(data.table)
+library(dplyr)
+library(plyr)
+library(stringr)
+library(EBImage)
+library(mxnet)
+```
+
+```{r}
+sample_submission <- fread("sample_submission.csv")
+head(sample_submission)
+```
+
+```{r}
+relationship <- data.table::fread("train_relationships.csv")
+relationship %>%
+  filter(p1 == "F0058/MID2")
+```
+# Processing relationships
+The goal is to group and list the folders with kinship.
+
+## Collapse from p1 to p2
+```{r}
+collaps_P1P2 <- plyr::ddply(relationship,c("p1"),
+                            function(df1)paste(df1$p2,
+                                               collapse = ","))
+colnames(collaps_P1P2) <- c("p1", "p2")
+collaps_P1P2 %>%
+  head(20) 
+
+```
+
+## Cancatenate subfamilies 1
+```{r}
+subfamilies1 <- paste(collaps_P1P2$p1, collaps_P1P2$p2, sep=",")
+## extract subfamilies with more than two persons
+subfamilies1_  <- subfamilies1[stringr::str_detect(subfamilies1, "\\w\\d*\\/\\w*\\d*,\\w\\d*\\/\\w*\\d*")]
+subfamilies1_ %>%
+  head(20)
+```
+
+## Collapse from p2 to p1
+```{r}
+collaps_P2P1 <- plyr::ddply(relationship,c("p2"),
+                            function(df1)paste(df1$p1,
+                                               collapse = ","))
+colnames(collaps_P2P1) <- c("p2", "p1")
+collaps_P2P1 %>%
+  head(20)
+```
+
+## Cancatenate subfamilies 2
+
+```{r}
+subfamilies2 <- paste(collaps_P2P1$p1, collaps_P2P1$p2, sep=",")
+## extract subfamilies with more than two persons
+subfamilies2_  <- subfamilies2[stringr::str_detect(subfamilies2, "\\w\\d*\\/\\w*\\d*,\\w\\d*\\/\\w*\\d*")]
+subfamilies2_ %>%
+  head(20)
+```
+
+
+```{r}
+families <- unique(c(subfamilies1_, subfamilies2_))
+length(families)
+
+```
+
+## Index of person in the same family
+```{r}
+family_idx <- 
+  unique(unlist(strsplit(families, ","))) %>% 
+  str_extract("\\w\\d*") %>% 
+  as.factor() %>%
+  as.numeric() %>%
+  -2
+
+family_idx
+```
+
+## Collapse Persons by family index
+```{r}
+fam <- as.data.frame(cbind(Person = unique(unlist(strsplit(families, ","))),family_idx))
+fam %>%
+  head(20)
+```
+
+
+```{r}
+unique_families <- plyr::ddply(fam,c("family_idx"),
+                               function(df1)paste(df1$Person,
+                                                  collapse = ","))
+colnames(unique_families) <- c("index", "Persons with kinship relationships")
+DT::datatable(unique_families) %>%
+  DT::formatStyle( colnames(unique_families), color = 'black')
+```
+
+**There are 470 kinship relationships **
+
+
+```{r}
+unique_families$`Persons with kinship relationships`[1:10]
+
+#length(str_split(unique_families$`Persons with kinship relationships`[10],pattern = ","))
+```
+
+
+# Images Data processing 
+
+## read and reshape Images of 470 classes
+
+```{r}
+kinships <- as.list(unique_families$`Persons with kinship relationships`)
+
+read_reshape <- function(kinships){
+  
+  classes <- NULL
+  for(i in seq_len(length(kinships))){
+    
+    listfolder <- kinships[[i]]
+    folders <- str_split(kinships[[i]], pattern = ",", simplify = TRUE)
+    
+    
+    family <- NULL
+    for(j in seq_len(length(folders))){
+      
+      path <- paste0("train/", folders[j],"/")
+      label <- paste0(str_split(folders[j], "/", simplify = TRUE)[1])
+      
+      ## Check if the path exists && the folder is not empty
+      if(dir.exists(path) && !length(list.files(path)) == 0){
+        
+        person <- NULL
+        for(m in seq_len(length(list.files(path)))){
+          ## get image name
+          nameFile <- list.files(path)[m]
+          # load image 
+          tmp_img <- EBImage::readImage(paste0(path,nameFile, sep=""))
+          tmp_img <-   EBImage::resize(tmp_img, 28, 28)
+          ## reshape images
+          img <- keras::array_reshape(tmp_img, c(28,28,3))
+          #df <- images2matrix(path, w = 28, h = 28, class = label)
+          
+          ## add to list image from different persons in the same group
+          person[[m]] <-  img
+        }
+      }
+      family[[i]] <-  c(family[[i]], person)
+      
+    }
+    classes[[label]] <- family[[i]]
+    #names(classes[[i]]) <- label
+    #print(label)
+  }
+  return(classes)
+}
+classes <-  read_reshape(kinships)
+
+str(classes$F0002)
+```
+## Train and test sampling
+
+```{r}
+smplist <- function(ls){
+  idx <- seq_len(length(ls))
+  idx_train <- sample(idx, max(idx) * 0.8, replace = FALSE)
+  train <- ls[idx_train]
+  test <- ls[-idx_train]
+  return(list(train = train, test = test))
+}
+  
+set.seed(100)
+train_test <- lapply(classes, 
+                function(x) smplist(x)
+                )
+str(train_test$F0002)
+```
+
+
+# Mxnet tentative
+## Convert images of the same familly (kinships) to matrice
+This function convert the group of images to matrice. Each row corresponds to one image. The output is a list of matrices for 413 kinship relationships.
+
+### Function
+```{r}
+# Convert image files into matrix from folder. Each row corresponds to one image
+#
+# @param inputFolder Folder that content supported image bmp, jpeg, bnp. 
+# @param w The resized width of image (pixels).
+# @param h The resized length of image (pixels)
+# @param class class label as integer (1, 2, 3,...).
+#
+# @return a data frame. The first column is the label of each image. the other column are the value of the pixels.
+
+images2matrix <- function(inputFolder, w= 28, h = 28, class){
+  
+  names_files <- list.files(inputFolder)
+  nfiles <- length(list.files(inputFolder))
+  
+  df <- data.frame(matrix(ncol = (w*h)+1, nrow = 0))
+  # Set names. The first column is the labels, the other columns are the pixels.
+  colnames(df) <-  c("Labels", paste("pixel", c(1:(w*h) )))
+  
+  
+  for(k in 1:nfiles){
+    ## get image name
+    nameFile <- names_files[k]
+    # load image 
+    tmp_img <- EBImage::readImage(paste0(inputFolder,nameFile, sep=""))
+    
+    ## convet to grayscale
+    tmp_img <- EBImage::channel(tmp_img, mode = 'gray')
+    
+    # Resize image to 28x28 pixels
+    ims <- EBImage::resize(tmp_img, w = w, h = h)
+    ## reduce the size of image 1/2
+    #ims <- EBImage::resize(tmp_img, dim(tmp_img)[1] * scale)
+    
+    # Get image matrix (there should be another function to do this faster and more neatly!)
+    img_matrix <- ims@.Data
+    #print(dim(img_matrix))
+    
+    # Coerce to a vector
+    img_vector <- as.double(as.vector(img_matrix))
+    
+    
+    # Add label
+    label <- class
+    vec <- c(label, img_vector)
+    # Stack in rs_df using rbind
+    ## AVoid rbind, it ignore empty dataframe and colnames
+    #df <- rbind(df_bkp, vec)
+    
+    df[nrow(df)+1,] <- vec
+    
+    # Print status
+    #print(paste(k, inputFolder, names_files[k],sep = "_"))
+    
+  }
+  
+  rownames(df) <- NULL
+  return(df)
+  
+}
+```
+
+
+```{r}
+
+kinships <- as.list(unique_families$`Persons with kinship relationships`)
+
+img2mat <- function(kinships){
+  
+  classes <- list()
+  for(i in seq_len(length(kinships))){
+    
+    listfolder <- kinships[[i]]
+    mat <- str_split(kinships[[i]], pattern = ",", simplify = TRUE)
+    
+    for(j in seq_len(length(mat))){
+      
+      path <- paste0("train/", mat[j],"/")
+      label <- paste0(str_split(mat[j], "/", simplify = TRUE)[1])
+      
+      ## Check if the path exists && the folder is not empty
+      ifelse(dir.exists(path) && !length(list.files(path)) == 0 , 
+             df <- images2matrix(path, w = 28, h = 28, class = label)
+             , FALSE)
+      ## rbind image from different persons in the same group
+      classes[[label]] <-  rbind(classes[[label]], df)
+      
+    }
+  }
+  return(classes)
+}
+
+ptm <- proc.time()
+list_df <- img2mat(kinships)
+
+print(proc.time() - ptm)
+
+```
+
+```{r}
+list_df$F0002[1:20, 1:10]
+str(list_df)
+```
+There are 27 images for the kinship F0002
+
+## Sample Train and test datasets
+
+```{r}
+
+# Sampling training and testing row from dataframe
+#
+# @param df dataframe with samples in the row and pixels in columns.
+#          The first column is the label or class
+# @param n_test number of test samples for each class 
+# @usage sampling_train_test(df, n_test = 5 )
+# 
+# @return A list of train and test dataframes
+
+sampling_train_test <- function(df, n_test = 5 ){
+  
+  test <- dplyr::sample_n(df, n_test )
+  #test_bkp <<- test
+  ## omit test rows from train and remove duplicates if exist
+  train <- df[!(rownames(df) %in% rownames(test)),]
+  
+  
+  #train_bkp <<- train
+  return(list(train = train, test = test))
+}
+
+# Merge training and testing datasets from a list of dataframes (classes)
+#
+# @param list.df list of train and test dataframes
+# @param n_test  number of test samples for each class
+# @usage merge_train_test(list.df, n_test)
+#
+# @return A list of merged classes of tain and test dataframes
+merge_train_test <- function(list.df, n_test ){
+  
+  set.seed(1234)
+  
+  list_train_test <- lapply(list.df, sampling_train_test, n_test)
+  
+  sum_train <- data.frame()
+  sum_test <- data.frame()
+  for(i in 1:length(list_train_test)){
+    
+    sum_train <-rbind( sum_train, list_train_test[[i]]$train)
+    
+    sum_test <- rbind( sum_test, list_train_test[[i]]$test)
+    
+  }
+  return(list(allTrain = sum_train, allTest = sum_test))
+  
+}
+
+alll <- merge_train_test(list.df = list_df, n_test = 5)
+alll$allTrain[1:30,1:10]
+```
+
+## Plot image from dataframe (testing or training Datastes)
+```{r}
+vec2img <- function(df, nrow, w= 180, h = 180, main = "if needed", xlab = "if needed"){
+  
+  i <- EBImage::Image(as.numeric(df[nrow,]))
+  
+  dim(i) <- c(w, h, 1)
+  #i <- EBImage::resize(i, w= w, h= h)
+  plot(i)
+  title(main = main, xlab = xlab ,cex.main = 1, cex.sub = 0.75)
+}
+
+vec2img(alll$allTrain[-1], 1, 28, 28)
+```
+
+# Deep learning using mxnet Package
+## Formating datasets to arrays
+```{r}
+Train <- alll$allTrain
+Test <- alll$allTest
+
+#Set up train and test arrays
+train_y <- as.factor(Train[, 1])
+train <- apply(Train[-1],2, function(x) as.numeric(x))
+train_x <- t(data.matrix(train))
+train_array <- train_x
+dim(train_array) <- c(28, 28, 1, ncol(train_x))
+
+test_y <- as.factor(Test[, 1])
+test <- apply(Test[-1],2, function(x) as.numeric(x))
+test_x <- t(test)
+
+test_array <- test_x
+dim(test_array) <- c(28, 28, 1, ncol(test_x))
+
+str(train_array)
+class(train_y)
+```
+
+
+
+
+
+
+## Set training parameters
+```{r}
+require(mxnet)
+data <- mx.symbol.Variable('data')
+# 1st convolutional layer
+conv_1 <- mx.symbol.Convolution(data = data, kernel = c(5, 5), num_filter = 20)
+tanh_1 <- mx.symbol.Activation(data = conv_1, act_type = "relu")
+pool_1 <- mx.symbol.Pooling(data = tanh_1, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+# 2nd convolutional layer
+conv_2 <- mx.symbol.Convolution(data = pool_1, kernel = c(5, 5), num_filter = 50)
+tanh_2 <- mx.symbol.Activation(data = conv_2, act_type = "relu")
+pool_2 <- mx.symbol.Pooling(data=tanh_2, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+# 1st fully connected layer
+flatten <- mx.symbol.Flatten(data = pool_2)
+fc_1 <- mx.symbol.FullyConnected(data = flatten, num_hidden = 500)
+tanh_3 <- mx.symbol.Activation(data = fc_1, act_type = "relu")
+# 2nd fully connected layer
+fc_2 <- mx.symbol.FullyConnected(data = tanh_3, num_hidden = 40)
+# Output. Softmax output since we'd like to get some probabilities.
+NN_model <- mx.symbol.SoftmaxOutput(data = fc_2)
+```
+
+## Built a Model
+
+```{r}
+
+# Pre-training set up
+#-------------------------------------------------------------------------------
+
+# Set seed for reproducibility
+mx.set.seed(100)
+
+# Device used. CPU in my case.
+devices <- mx.cpu()
+
+# Training
+#-------------------------------------------------------------------------------
+ptm <- proc.time()
+# Train the model
+model <- mx.model.FeedForward.create(symbol = NN_model,       # The network schema
+                                     X = train_array,         # Training array
+                                     y = train_y,             # Labels/classes of training dataset
+                                     ctx = devices,
+                                     num.round = 10,
+                                     array.batch.size = 20,  # number of array in the batch size
+                                     learning.rate = 0.02,
+                                     momentum = 0.9,
+                                     optimizer = "sgd",
+                                     eval.metric = mx.metric.accuracy,
+                                     #initializer=mx.init.uniform(0.05),
+                                     epoch.end.callback = mx.callback.log.train.metric(100))
+
+```
+

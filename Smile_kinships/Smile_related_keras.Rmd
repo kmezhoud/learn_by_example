@@ -1,0 +1,694 @@
+---
+title: "The smile is related or not?"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=6, fig.height=4) 
+```
+
+
+```{r , message=FALSE}
+library(data.table)
+library(dplyr)
+library(plyr)
+library(stringr)
+library(EBImage)
+library(keras)
+```
+
+
+
+```{r}
+sample_submission <- fread("sample_submission.csv")
+head(sample_submission)
+```
+
+```{r}
+relationship <- data.table::fread("train_relationships.csv",stringsAsFactors = TRUE)
+relationship %>%
+  filter(p1 == "F0058/MID2")
+```
+# Processing relationships
+The goal is to group and list the folders with kinship.
+
+## Collapse from p1 to p2
+```{r}
+collaps_P1P2 <- plyr::ddply(relationship,c("p1"),
+                            function(df1)paste(df1$p2,
+                                               collapse = ","))
+colnames(collaps_P1P2) <- c("p1", "p2")
+collaps_P1P2 %>%
+  head(20) 
+
+```
+
+## Cancatenate subfamilies 1
+```{r}
+subfamilies1 <- paste(collaps_P1P2$p1, collaps_P1P2$p2, sep=",")
+## extract subfamilies with more than two persons
+subfamilies1_  <- subfamilies1[stringr::str_detect(subfamilies1, "\\w\\d*\\/\\w*\\d*,\\w\\d*\\/\\w*\\d*")]
+subfamilies1_ %>%
+  head(20)
+```
+
+## Collapse from p2 to p1
+```{r}
+collaps_P2P1 <- plyr::ddply(relationship,c("p2"),
+                            function(df1)paste(df1$p1,
+                                               collapse = ","))
+colnames(collaps_P2P1) <- c("p2", "p1")
+collaps_P2P1 %>%
+  head(20)
+```
+
+## Cancatenate subfamilies 2
+
+```{r}
+subfamilies2 <- paste(collaps_P2P1$p1, collaps_P2P1$p2, sep=",")
+## extract subfamilies with more than two persons
+subfamilies2_  <- subfamilies2[stringr::str_detect(subfamilies2, "\\w\\d*\\/\\w*\\d*,\\w\\d*\\/\\w*\\d*")]
+subfamilies2_ %>%
+  head(20)
+```
+
+
+```{r}
+families <- unique(c(subfamilies1_, subfamilies2_))
+length(families)
+
+```
+
+## Index of person in the same family
+```{r}
+family_idx <- 
+  unique(unlist(strsplit(families, ","))) %>% 
+  str_extract("\\w\\d*") %>% 
+  as.factor() %>%
+  as.numeric()
+
+family_idx
+```
+
+## Collapse Persons by family index
+```{r}
+fam <- as.data.frame(cbind(Person = unique(unlist(strsplit(families, ","))),family_idx))
+fam %>%
+  head(20)
+```
+
+
+```{r}
+unique_families <- plyr::ddply(fam,c("family_idx"),
+                               function(df1)paste(df1$Person,
+                                                  collapse = ","))
+colnames(unique_families) <- c("index", "Persons with kinship relationships")
+DT::datatable(unique_families) %>%
+  DT::formatStyle( colnames(unique_families), color = 'black')
+```
+
+**There are 470 kinship relationships **
+
+
+```{r}
+unique_families$`Persons with kinship relationships`[1:10]
+
+#length(str_split(unique_families$`Persons with kinship relationships`[10],pattern = ","))
+```
+
+# Generate all combinations `is_related` and `no_related` from each family
+```{r, warning=FALSE}
+person <- unique_families$`Persons with kinship relationships`[1] %>%
+  str_split(pattern = ",", simplify = TRUE)
+
+person_permut <-
+  gtools::permutations(n = length(person),
+                       r = 2,
+                       v = person,
+                       repeats.allowed = FALSE) 
+
+## split the list of related person by comma
+split_person <-    lapply(unique_families[,2], function(x) str_split(x, pattern = ",", simplify = TRUE))
+## get all possible permutation between persons for each family
+split_person_permut <- lapply(split_person, function(x)  gtools::permutations(n = length(x),
+                                                                              r = 2,
+                                                                              v = x,
+                                                                              repeats.allowed = FALSE))
+## merge the list of dataframe to dataframe
+all_person_permut <- plyr::ldply(split_person_permut, data.frame)
+colnames(all_person_permut) <- c("p1", "p2")
+
+## 
+no_related <- dplyr::anti_join( all_person_permut,relationship, by = c("p1", "p2"))
+## 
+is_related <- dplyr::semi_join( all_person_permut,relationship, by = c("p1", "p2"))
+
+## clean related person but in opposite format: p1 -> p2 or p2 -> p1
+## we need to rename zero (p2, p1) and omit commun row with one.
+colnames(no_related) <- c("p2", "p1")
+
+## There is two way of relation p1 -> p2 and p2 -> p1
+
+## extract the second way of relation from no_related df
+is_related_inverse <- dplyr::semi_join(no_related, is_related, by= c("p1", "p2"))
+## remove related person p2 -> p1
+no_related_inverse <- dplyr::anti_join(no_related, is_related, by = c("p1", "p2"))
+
+colnames(is_related_inverse) <- c("p1", "p2")
+colnames(no_related_inverse) <- c("p1", "p2")
+
+## Merge the 2 ways of relation
+is_related_all <- rbind(is_related, is_related_inverse)
+
+
+no_related_all <-  no_related_inverse
+
+## Annotate 0, 1
+is_related_all <- cbind(is_related_all, is_related = 1)
+no_related_all <- cbind(no_related_all, is_related = 0)
+
+head(is_related_all)
+```
+# Check folder and files availabilities
+The goal is to clean up `is_related_all` and `no_related_all` from not existing folders or images.
+
+```{r}
+is_related_all <-
+is_related_all %>%
+  filter(file.exists(paste0("train/", p1))) %>%
+  filter(file.exists(paste0("train/", p2))) %>%
+  filter(!length(list.files(paste0("train/", p1))) == 0) %>%
+  filter(!length(list.files(paste0("train/", p2))) == 0)
+
+
+no_related_all <-
+  no_related_all %>%
+  filter(file.exists(paste0("train/", p1))) %>%
+  filter(file.exists(paste0("train/", p2))) %>%
+  filter(!(length(list.files(paste0("train/", p1))) == 0)) %>%
+  filter(!(length(list.files(paste0("train/", p2))) == 0))
+  
+is_related_all %>%
+  filter(p1 == "F0460/MID8") 
+
+length(list.files("train/F0460/MID8/"))
+```
+
+**Note** `filter` can not detect particular empty folders
+
+```{r}
+kinships_all <- 
+  is_related_all %>%
+  bind_rows(no_related_all) %>%
+  arrange(by = p1)
+
+kinships_all %>%
+  head(8)
+```
+
+
+# Images Data processing 
+
+# Read and reshape related images and label from dataframe
+
+```{r}
+# #inputs are 2 images and one category
+# # df shape : 1 row ,3 columns
+# loadinputs <- function(df){
+#   
+#   pathfile1 <-  paste0("train/", df[[1]])
+#   pathfile2 <-  paste0("train/", df[[2]])
+#   #label     <-  keras::to_categorical(df[[3]])
+#   label     <-           as.factor(df[[3]])
+#   
+#   # sample one image
+#   name1 <- sample(x = list.files(pathfile1), size = 1, replace = TRUE)
+#   name2 <- sample(x = list.files(pathfile2), size = 1, replace = TRUE)
+#   
+#   # load image 
+#   img1 <- EBImage::readImage(paste0(pathfile1,"/",name1))
+#   img2 <- EBImage::readImage(paste0(pathfile2,"/",name2))
+#   # resize images
+#   img1 <-   EBImage::resize(img1, 28, 28)
+#   img2 <-   EBImage::resize(img2, 28, 28)
+#   ## reshape images
+#   img1 <- keras::array_reshape(img1, c(28,28,3))
+#   img2 <- keras::array_reshape(img2, c(28,28,3))
+#   
+#   train1 <- rbind(train1, img1)
+#   train2 <- rbind(train2, img2)
+#   trainy <- label
+#   ls <- list(train1, train2, label)
+#   #train1 <- t(train1)
+#   return(train1)
+#   
+#   ## return as a list
+#   #ls <- list(img1,img2,label)
+#   #names(ls) <- c(basename(pathfile1), basename(pathfile2), "label")
+#   #return(ls)
+# }
+# 
+# train1 <- NULL
+# train2 <- NULL
+# trainy <- NULL
+# lklk <- apply(is_related_all[1:38,],1, function(row) loadinputs(row))
+# 
+# ## family label
+# #names(lklk) <- apply(is_related_all[1:3,], 1, function(x) 
+# #                    names(x) <- stringr::str_split(string = x[[1]],
+# #                                                  pattern = '/',
+# 
+# ## Unname dimnames attributes of the matrix. We can not do this in apply function.
+# lklk <- unname(lklk)
+# lklk <- t(lklk)
+# str(lklk)
+```
+
+## get Train matrix from images
+In our case we need as input two images and one label. The setting of the model will accept 2 matrices as `trainx` and a label as `trainy`.
+
+```{r}
+get_train_matrix <- function(df, col){
+   pathfolder <-  paste0("train/", df[col])
+
+    ## Check if the path exists && the folder is not empty
+  if(file.exists(pathfolder) && !length(list.files(pathfolder)) == 0){
+
+  set.seed(123)
+  # sample one image
+   name1 <- sample(x = list.files(pathfolder), size = 1, replace = TRUE)
+
+  # load image
+  img1 <- EBImage::readImage(paste0(pathfolder,"/",name1))
+
+  # resize images
+  img1 <-   EBImage::resize(img1, 28, 28)
+
+  ## reshape images
+  img1 <- keras::array_reshape(img1, c(28,28,3))
+
+  trainx <- rbind(trainx, img1)
+
+  }else{
+    to_delete <<- c(to_delete, paste0(pathfolder))
+  }
+   return(trainx)
+}
+to_delete <- NULL
+trainx <- NULL
+star <- Sys.time()
+trainx1 <-  apply( kinships_all, 1, function(row) get_train_matrix(row, 1))
+end <- Sys.time()
+print(end - star)
+# Time difference of 2.872232 mins
+
+#trainx1 <- NULL
+#star <- Sys.time()
+## works but same think can not remove attributes in each matrix
+#trainx1 <-purrr::map(kinships_all, .f = function(row) get_train_matrix(row, 1))
+#end <- Sys.time()
+#print(end - star)
+
+## clean empty list of not existing folder or images
+#trainx <- rlist::list.clean(trainx, recursive = TRUE)
+## works also
+#trainx <-  trainx[unlist(lapply(trainx, length) != 0)]
+ 
+
+trainx1 <- ldply(trainx1, function(x) x <- unname(x))
+trainx1 <- t(trainx1)
+#trainx1 <-lapply(trainx1, function(x) unname(x)) 
+#str(lapply(trainx1, function(x) unname(x)) )
+trainx1 <- unname(trainx1)
+str(trainx1)
+```
+
+```{r}
+# store empty folders that not filtred 
+to_delete1 <- to_delete %>% unique() %>%
+  stringr::str_split(pattern ="/", simplify = TRUE, n = 2)
+  
+  
+to_delete1 <- to_delete1[,2]
+to_delete1
+```
+
+## Loop is not the best way but I am sure that the str of images is conserved.
+```{r}
+
+get_trainx <- function(df){
+  
+  pb = txtProgressBar(min = 0, max = length(df), initial = 0)
+  
+  trainx <- NULL
+  
+  for(i in seq_len(length(df))){
+    
+      setTxtProgressBar(pb,i,
+                       title=paste(round(i/length(df) *100, 0),"% done"))
+
+    pathfolder <-  paste0("train/", df[i])
+    
+    ## Check if the path exists && the folder is not empty
+    if(file.exists(pathfolder) && !length(list.files(pathfolder)) == 0){
+      
+      set.seed(123)
+      # sample one image
+      name1 <- sample(x = list.files(pathfolder), size = 1, replace = TRUE)
+      
+      # load image 
+      img1 <- EBImage::readImage(paste0(pathfolder,"/",name1))
+      
+      # resize images
+      img1 <-   EBImage::resize(img1, 28, 28)
+      
+      ## reshape images
+      img1 <- keras::array_reshape(img1, c(28,28,3))
+      
+      trainx <- rbind( trainx, img1)
+      
+    }
+  }
+  return(trainx)
+}
+
+star <- Sys.time()
+trainx <- get_trainx(kinships_all[1:10,1])
+end <- Sys.time()
+print(end - star)
+# difference of 27.67416 mins
+trainx <- unname(trainx)
+str(trainx)
+```
+Just to verify if the matrix structure is the same afetr looping and applying. 
+
+## get trainx 2
+```{r}
+to_delete <- NULL
+trainx <- NULL
+star <- Sys.time()
+trainx2 <-  apply( kinships_all, 1, function(row) get_train_matrix(row, 2))
+end <- Sys.time()
+print(end - star)
+
+
+trainx2 <- ldply(trainx2, function(x) x <- unname(x))
+trainx2 <- t(trainx2)
+trainx2 <- unname(trainx2)
+str(trainx2)
+```
+
+```{r}
+## store to_delete2
+to_delete2 <- to_delete %>% unique() %>%
+  stringr::str_split(pattern ="/", simplify = TRUE, n = 2)
+
+to_delete2 <- to_delete2[,2]
+to_delete2
+```
+
+
+## re--filter kinships_all
+
+```{r}
+kinships_all_filtered <-
+  kinships_all %>%
+  filter(p1 != to_delete1[1]) %>%
+  filter(p1 != to_delete1[2]) %>%
+  filter(p2 != to_delete2[1]) %>%
+  filter(p2 != to_delete2[2])
+
+kinships_all_filtered %>%
+  filter(p1== to_delete[1])
+dim(kinships_all_filtered)
+```
+
+**Note**
+We found 12.474 rows while trainx1 and trainx2 have 12.497.
+There are also 2 empty folders that we have to identify.
+We will re-run `get_train_matrix` with the new filtered a list of folders.
+
+```{r}
+to_delete <- NULL
+trainx <- NULL
+star <- Sys.time()
+trainx2 <-  apply( kinships_all_filtered, 1, function(row) get_train_matrix(row, 2))
+end <- Sys.time()
+print(end - star)
+
+trainx2 <- t(trainx2)
+# trainx2 <- as.matrix(ldply(trainx2, function(x) x <- unname(x)))
+# trainx2 <- unname(trainx2)
+ str(trainx2)
+
+
+## store to_delete2
+to_delete2 <- to_delete %>% unique() %>%
+  stringr::str_split(pattern ="/", simplify = TRUE, n = 2)
+
+to_delete2 <- to_delete2[,2]
+to_delete2
+```
+
+```{r}
+to_delete <- NULL
+trainx <- NULL
+star <- Sys.time()
+trainx1 <-  apply( kinships_all_filtered, 1, function(row) get_train_matrix(row, 1))
+end <- Sys.time()
+print(end - star)
+
+ trainx1 <- t(trainx1)
+# trainx1 <- as.matrix(ldply(trainx1, function(x) x <- unname(x)))
+# trainx1 <- unname(trainx1)
+str(trainx1)
+
+
+## store to_delete2
+to_delete1 <- to_delete %>% unique() %>%
+  stringr::str_split(pattern ="/", simplify = TRUE, n = 2)
+
+to_delete1 <- to_delete1[,2]
+to_delete1
+```
+
+
+##  get Labels
+```{r}
+Labels <- keras::to_categorical(kinships_all_filtered[,3])
+str(Labels)
+```
+
+
+# Keras tentative
+## sample test and Train data
+```{r}
+set.seed(982)
+idx <- seq_len(nrow(trainx1))
+idx_train <- sample(idx, max(idx) * 0.8, replace = FALSE)
+  
+  train_x1 <- trainx1[idx_train,]
+  test_x1 <- trainx1[-idx_train,]
+  train_x2 <- trainx2[idx_train,]
+  test_x2 <- trainx2[-idx_train,]
+  
+  Labels_train <- keras::to_categorical(Labels[idx_train])
+  Labels_test <- keras::to_categorical(Labels[idx[-idx_train]])
+ 
+  dim(train_x1)
+str(Labels_test)
+```
+## Set the model
+```{r}
+
+# input1 <- layer_input(shape =  c(28, 28, 3))
+# input2 <- layer_input(shape = c(28, 28, 3))
+# 
+# conv1 <- input1 %>% 
+#   layer_conv_2d(filters = 7, kernel_size = c(1, 1), padding='same', activation='relu') %>% 
+#   layer_conv_2d(filters = 7, kernel_size = c(3, 3), padding='same', activation='relu')
+# 
+# conv2 <- input2 %>% 
+#   layer_conv_2d(filters = 7, kernel_size = c(1, 1), padding='same', activation='relu') %>% 
+#   layer_conv_2d(filters = 7, kernel_size = c(3, 3), padding='same', activation='relu')
+# 
+# 
+# output <- 
+#   layer_concatenate(c(conv1, conv2), axis = 1) %>%
+#   layer_dense(units = 256, activation = 'relu', input_shape = c(2352)) %>% # 28 x 28 x 3
+#   layer_dense(units = 128, activation = 'relu') %>%
+#   layer_dense(units = 2, activation = 'softmax') # we have two output 0,1
+
+
+input1 <- layer_input(shape =  c(2352))
+input2 <- layer_input(shape =  c(2352))
+
+#conv1 <- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)
+#conv2 <- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)
+
+output <-
+  layer_concatenate(list(input1, input2)) %>% 
+ #  layer_dense(units = 512, activation = 'relu',
+  #           kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+  # layer_dropout(rate = 0.1) %>% 
+  #    layer_dense(units = 256, activation = 'relu',
+   #              kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+  #  layer_dropout(rate = 0.05) %>%
+       layer_dense(units = 256, activation = 'relu',
+               kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+  #  layer_dropout(rate = 0.02) %>%
+      layer_dense(units = 64, activation = 'relu',
+             kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+ layer_dropout(rate = 0.01) %>%
+
+  layer_dense(units = 2, activation = 'softmax') # we have two output 0,1
+  #  layer_flatten() %>%
+  #layer_dense(units = 2, activation = "softmax")
+
+
+model <-
+  keras_model(inputs = list(input1, input2), outputs = output)
+
+model %>% compile(optimizer =  "adam", # , optimizer_rmsprop()
+                  loss =  'binary_crossentropy',
+                  metrics = 'accuracy')
+
+summary(model)
+
+```
+
+## train the model
+```{r}
+history <- 
+  model %>% 
+  fit(list(train_x1, train_x2),
+      Labels_train, 
+      epochs = 100,
+      batch_size = 256,
+      verbose = 1,             # 2
+      validation_split = 0.2) # list(test_x1, Labels_test),
+
+plot(history)
+
+
+
+```
+
+
+##  Evaluate
+```{r}
+score <- model %>% evaluate(
+  list(test_x1, test_x2),
+  Labels_test,
+  verbose = 0
+)
+
+# Output metrics
+cat('Test loss:', score[[1]], '\n')
+cat('Test accuracy:', score[[2]], '\n')
+```
+
+
+# Prediction
+```{r}
+sample_submission <- fread("sample_submission.csv")
+head(sample_submission)
+```
+
+## get testx1 and testx2 from sample_submission file
+```{r}
+
+sample_submission[, c("p1", "p2") := tstrsplit(img_pair, "-", fixed=TRUE)]
+sample_submission %>%
+  head()
+```
+
+
+
+
+```{r}
+get_test_matrix <- function(df, col){
+   pathfile <-  paste0("test/", df[col])
+
+    ## Check if the path exists && the folder is not empty
+  if(file.exists(pathfile)){
+
+  # load image
+  img <- EBImage::readImage(pathfile)
+
+  # resize images
+  img <-   EBImage::resize(img, 28, 28)
+
+  ## reshape images
+  img <- keras::array_reshape(img, c(28,28,3))
+
+  testx <- rbind(testx, img)
+
+  }else{
+    to_delete <<- c(to_delete, paste0(pathfile))
+  }
+   return(testx)
+}
+
+to_delete <- NULL
+testx <- NULL
+star <- Sys.time()
+testx1 <-  apply(sample_submission, 1, function(row) get_test_matrix(row, 3))
+end <- Sys.time()
+print(end - star)
+testx1 <- t(testx1)
+str(testx1)
+to_delete
+```
+
+```{r}
+to_delete <- NULL
+testx <- NULL
+star <- Sys.time()
+testx2 <-  apply(sample_submission, 1, function(row) get_test_matrix(row, 4))
+end <- Sys.time()
+print(end - star)
+testx2 <- t(testx2)
+str(testx2)
+to_delete
+```
+
+
+```{r}
+is_related <- predict(model, list(testx1, testx2))
+is_related %>%
+  head()
+```
+
+# submission
+```{r}
+dt_submission <- data.table(
+  img_pair = sample_submission$img_pair,
+  is_related = round(is_related[,1], digits = 1))
+head(dt_submission)
+```
+
+```{r}
+fwrite(dt_submission, file = "submission.csv")
+```
+
+
+# save model
+```{r}
+#model %>% save_model_hdf5("my_model.h5")
+#new_model <- load_model_hdf5("my_model.h5")
+```
+

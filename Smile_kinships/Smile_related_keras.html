@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-05-28" />
+
+<title>The smile is related or not?</title>
+
+<script src="Smile_related_keras_files/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="Smile_related_keras_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="Smile_related_keras_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="Smile_related_keras_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="Smile_related_keras_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="Smile_related_keras_files/navigation-1.1/tabsets.js"></script>
+<script src="Smile_related_keras_files/navigation-1.1/codefolding.js"></script>
+<script src="Smile_related_keras_files/htmlwidgets-1.3/htmlwidgets.js"></script>
+<link href="Smile_related_keras_files/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="Smile_related_keras_files/datatables-binding-0.5/datatables.js"></script>
+<link href="Smile_related_keras_files/dt-core-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="Smile_related_keras_files/dt-core-1.10.16/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="Smile_related_keras_files/dt-core-1.10.16/js/jquery.dataTables.min.js"></script>
+<link href="Smile_related_keras_files/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="Smile_related_keras_files/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code > span.dt { color: #204a87; } /* DataType */
+code > span.dv { color: #0000cf; } /* DecVal */
+code > span.bn { color: #0000cf; } /* BaseN */
+code > span.fl { color: #0000cf; } /* Float */
+code > span.ch { color: #4e9a06; } /* Char */
+code > span.st { color: #4e9a06; } /* String */
+code > span.co { color: #8f5902; font-style: italic; } /* Comment */
+code > span.ot { color: #8f5902; } /* Other */
+code > span.al { color: #ef2929; } /* Alert */
+code > span.fu { color: #000000; } /* Function */
+code > span.er { color: #a40000; font-weight: bold; } /* Error */
+code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #000000; } /* Constant */
+code > span.sc { color: #000000; } /* SpecialChar */
+code > span.vs { color: #4e9a06; } /* VerbatimString */
+code > span.ss { color: #4e9a06; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #000000; } /* Variable */
+code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code > span.ex { } /* Extension */
+code > span.at { color: #c4a000; } /* Attribute */
+code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">The smile is related or not?</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-05-28</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#processing-relationships"><span class="toc-section-number">1</span> Processing relationships</a><ul>
+<li><a href="#collapse-from-p1-to-p2"><span class="toc-section-number">1.1</span> Collapse from p1 to p2</a></li>
+<li><a href="#cancatenate-subfamilies-1"><span class="toc-section-number">1.2</span> Cancatenate subfamilies 1</a></li>
+<li><a href="#collapse-from-p2-to-p1"><span class="toc-section-number">1.3</span> Collapse from p2 to p1</a></li>
+<li><a href="#cancatenate-subfamilies-2"><span class="toc-section-number">1.4</span> Cancatenate subfamilies 2</a></li>
+<li><a href="#index-of-person-in-the-same-family"><span class="toc-section-number">1.5</span> Index of person in the same family</a></li>
+<li><a href="#collapse-persons-by-family-index"><span class="toc-section-number">1.6</span> Collapse Persons by family index</a></li>
+</ul></li>
+<li><a href="#generate-all-combinations-is_related-and-no_related-from-each-family"><span class="toc-section-number">2</span> Generate all combinations <code>is_related</code> and <code>no_related</code> from each family</a></li>
+<li><a href="#check-folder-and-files-availabilities"><span class="toc-section-number">3</span> Check folder and files availabilities</a></li>
+<li><a href="#images-data-processing"><span class="toc-section-number">4</span> Images Data processing</a></li>
+<li><a href="#read-and-reshape-related-images-and-label-from-dataframe"><span class="toc-section-number">5</span> Read and reshape related images and label from dataframe</a><ul>
+<li><a href="#get-train-matrix-from-images"><span class="toc-section-number">5.1</span> get Train matrix from images</a></li>
+<li><a href="#loop-is-not-the-best-way-but-i-am-sure-that-the-str-of-images-is-conserved."><span class="toc-section-number">5.2</span> Loop is not the best way but I am sure that the str of images is conserved.</a></li>
+<li><a href="#get-trainx-2"><span class="toc-section-number">5.3</span> get trainx 2</a></li>
+<li><a href="#refilter-kinships_all"><span class="toc-section-number">5.4</span> re–filter kinships_all</a></li>
+<li><a href="#get-labels"><span class="toc-section-number">5.5</span> get Labels</a></li>
+</ul></li>
+<li><a href="#keras-tentative"><span class="toc-section-number">6</span> Keras tentative</a><ul>
+<li><a href="#sample-test-and-train-data"><span class="toc-section-number">6.1</span> sample test and Train data</a></li>
+<li><a href="#set-the-model"><span class="toc-section-number">6.2</span> Set the model</a></li>
+<li><a href="#train-the-model"><span class="toc-section-number">6.3</span> train the model</a></li>
+<li><a href="#evaluate"><span class="toc-section-number">6.4</span> Evaluate</a></li>
+</ul></li>
+<li><a href="#prediction"><span class="toc-section-number">7</span> Prediction</a><ul>
+<li><a href="#get-testx1-and-testx2-from-sample_submission-file"><span class="toc-section-number">7.1</span> get testx1 and testx2 from sample_submission file</a></li>
+</ul></li>
+<li><a href="#submission"><span class="toc-section-number">8</span> submission</a></li>
+<li><a href="#save-model"><span class="toc-section-number">9</span> save model</a></li>
+</ul>
+</div>
+
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(data.table)
+<span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(plyr)
+<span class="kw">library</span>(stringr)
+<span class="kw">library</span>(EBImage)
+<span class="kw">library</span>(keras)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sample_submission &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;sample_submission.csv&quot;</span>)
+<span class="kw">head</span>(sample_submission)</code></pre></div>
+<pre><code>##                       img_pair is_related
+## 1: face05508.jpg-face01210.jpg          0
+## 2: face05750.jpg-face00898.jpg          0
+## 3: face05820.jpg-face03938.jpg          0
+## 4: face02104.jpg-face01172.jpg          0
+## 5: face02428.jpg-face05611.jpg          0
+## 6: face01219.jpg-face00274.jpg          0</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">relationship &lt;-<span class="st"> </span>data.table<span class="op">::</span><span class="kw">fread</span>(<span class="st">&quot;train_relationships.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">TRUE</span>)
+relationship <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p1 <span class="op">==</span><span class="st"> &quot;F0058/MID2&quot;</span>)</code></pre></div>
+<pre><code>##           p1         p2
+## 1 F0058/MID2 F0058/MID4
+## 2 F0058/MID2 F0058/MID5
+## 3 F0058/MID2 F0058/MID1</code></pre>
+<div id="processing-relationships" class="section level1">
+<h1><span class="header-section-number">1</span> Processing relationships</h1>
+<p>The goal is to group and list the folders with kinship.</p>
+<div id="collapse-from-p1-to-p2" class="section level2">
+<h2><span class="header-section-number">1.1</span> Collapse from p1 to p2</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">collaps_P1P2 &lt;-<span class="st"> </span>plyr<span class="op">::</span><span class="kw">ddply</span>(relationship,<span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>),
+                            <span class="cf">function</span>(df1)<span class="kw">paste</span>(df1<span class="op">$</span>p2,
+                                               <span class="dt">collapse =</span> <span class="st">&quot;,&quot;</span>))
+<span class="kw">colnames</span>(collaps_P1P2) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>)
+collaps_P1P2 <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">20</span>) </code></pre></div>
+<pre><code>##            p1                                                     p2
+## 1  F0002/MID1                                             F0002/MID3
+## 2  F0002/MID2                                             F0002/MID3
+## 3  F0005/MID1                                             F0005/MID2
+## 4  F0005/MID3                                             F0005/MID2
+## 5  F0009/MID1            F0009/MID4,F0009/MID3,F0009/MID2,F0009/MID6
+## 6  F0009/MID2                       F0009/MID4,F0009/MID6,F0009/MID3
+## 7  F0009/MID3                                  F0009/MID4,F0009/MID6
+## 8  F0009/MID4                                             F0009/MID6
+## 9  F0009/MID5 F0009/MID1,F0009/MID2,F0009/MID4,F0009/MID6,F0009/MID3
+## 10 F0009/MID7 F0009/MID3,F0009/MID6,F0009/MID4,F0009/MID1,F0009/MID2
+## 11 F0010/MID1                                  F0010/MID3,F0010/MID4
+## 12 F0010/MID2                                  F0010/MID3,F0010/MID4
+## 13 F0010/MID3                                             F0010/MID4
+## 14 F0016/MID1                                  F0016/MID5,F0016/MID2
+## 15 F0016/MID2                                  F0016/MID4,F0016/MID3
+## 16 F0016/MID3                                             F0016/MID4
+## 17 F0017/MID1 F0017/MID3,F0017/MID4,F0017/MID7,F0017/MID5,F0017/MID6
+## 18 F0017/MID2 F0017/MID5,F0017/MID4,F0017/MID3,F0017/MID7,F0017/MID6
+## 19 F0017/MID3                       F0017/MID4,F0017/MID6,F0017/MID5
+## 20 F0017/MID4                                  F0017/MID5,F0017/MID6</code></pre>
+</div>
+<div id="cancatenate-subfamilies-1" class="section level2">
+<h2><span class="header-section-number">1.2</span> Cancatenate subfamilies 1</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subfamilies1 &lt;-<span class="st"> </span><span class="kw">paste</span>(collaps_P1P2<span class="op">$</span>p1, collaps_P1P2<span class="op">$</span>p2, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>)
+## extract subfamilies with more than two persons
+subfamilies1_  &lt;-<span class="st"> </span>subfamilies1[stringr<span class="op">::</span><span class="kw">str_detect</span>(subfamilies1, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">w</span><span class="ch">\\</span><span class="st">d*</span><span class="ch">\\</span><span class="st">/</span><span class="ch">\\</span><span class="st">w*</span><span class="ch">\\</span><span class="st">d*,</span><span class="ch">\\</span><span class="st">w</span><span class="ch">\\</span><span class="st">d*</span><span class="ch">\\</span><span class="st">/</span><span class="ch">\\</span><span class="st">w*</span><span class="ch">\\</span><span class="st">d*&quot;</span>)]
+subfamilies1_ <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">20</span>)</code></pre></div>
+<pre><code>##  [1] &quot;F0002/MID1,F0002/MID3&quot;                                            
+##  [2] &quot;F0002/MID2,F0002/MID3&quot;                                            
+##  [3] &quot;F0005/MID1,F0005/MID2&quot;                                            
+##  [4] &quot;F0005/MID3,F0005/MID2&quot;                                            
+##  [5] &quot;F0009/MID1,F0009/MID4,F0009/MID3,F0009/MID2,F0009/MID6&quot;           
+##  [6] &quot;F0009/MID2,F0009/MID4,F0009/MID6,F0009/MID3&quot;                      
+##  [7] &quot;F0009/MID3,F0009/MID4,F0009/MID6&quot;                                 
+##  [8] &quot;F0009/MID4,F0009/MID6&quot;                                            
+##  [9] &quot;F0009/MID5,F0009/MID1,F0009/MID2,F0009/MID4,F0009/MID6,F0009/MID3&quot;
+## [10] &quot;F0009/MID7,F0009/MID3,F0009/MID6,F0009/MID4,F0009/MID1,F0009/MID2&quot;
+## [11] &quot;F0010/MID1,F0010/MID3,F0010/MID4&quot;                                 
+## [12] &quot;F0010/MID2,F0010/MID3,F0010/MID4&quot;                                 
+## [13] &quot;F0010/MID3,F0010/MID4&quot;                                            
+## [14] &quot;F0016/MID1,F0016/MID5,F0016/MID2&quot;                                 
+## [15] &quot;F0016/MID2,F0016/MID4,F0016/MID3&quot;                                 
+## [16] &quot;F0016/MID3,F0016/MID4&quot;                                            
+## [17] &quot;F0017/MID1,F0017/MID3,F0017/MID4,F0017/MID7,F0017/MID5,F0017/MID6&quot;
+## [18] &quot;F0017/MID2,F0017/MID5,F0017/MID4,F0017/MID3,F0017/MID7,F0017/MID6&quot;
+## [19] &quot;F0017/MID3,F0017/MID4,F0017/MID6,F0017/MID5&quot;                      
+## [20] &quot;F0017/MID4,F0017/MID5,F0017/MID6&quot;</code></pre>
+</div>
+<div id="collapse-from-p2-to-p1" class="section level2">
+<h2><span class="header-section-number">1.3</span> Collapse from p2 to p1</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">collaps_P2P1 &lt;-<span class="st"> </span>plyr<span class="op">::</span><span class="kw">ddply</span>(relationship,<span class="kw">c</span>(<span class="st">&quot;p2&quot;</span>),
+                            <span class="cf">function</span>(df1)<span class="kw">paste</span>(df1<span class="op">$</span>p1,
+                                               <span class="dt">collapse =</span> <span class="st">&quot;,&quot;</span>))
+<span class="kw">colnames</span>(collaps_P2P1) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p2&quot;</span>, <span class="st">&quot;p1&quot;</span>)
+collaps_P2P1 <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">20</span>)</code></pre></div>
+<pre><code>##             p2
+## 1   F0002/MID3
+## 2   F0005/MID2
+## 3   F0009/MID1
+## 4   F0009/MID2
+## 5   F0009/MID3
+## 6   F0009/MID4
+## 7   F0009/MID6
+## 8   F0010/MID3
+## 9   F0010/MID4
+## 10  F0016/MID2
+## 11  F0016/MID3
+## 12  F0016/MID4
+## 13  F0016/MID5
+## 14  F0017/MID3
+## 15  F0017/MID4
+## 16  F0017/MID5
+## 17  F0017/MID6
+## 18  F0017/MID7
+## 19  F0020/MID1
+## 20 F0020/MID10
+##                                                                                          p1
+## 1                                                                     F0002/MID1,F0002/MID2
+## 2                                                                     F0005/MID1,F0005/MID3
+## 3                                                                     F0009/MID5,F0009/MID7
+## 4                                                          F0009/MID1,F0009/MID5,F0009/MID7
+## 5                                               F0009/MID1,F0009/MID2,F0009/MID5,F0009/MID7
+## 6                                    F0009/MID1,F0009/MID2,F0009/MID3,F0009/MID5,F0009/MID7
+## 7                         F0009/MID1,F0009/MID2,F0009/MID3,F0009/MID4,F0009/MID5,F0009/MID7
+## 8                                                                     F0010/MID1,F0010/MID2
+## 9                                                          F0010/MID1,F0010/MID2,F0010/MID3
+## 10                                                                               F0016/MID1
+## 11                                                                               F0016/MID2
+## 12                                                                    F0016/MID2,F0016/MID3
+## 13                                                                               F0016/MID1
+## 14                                                                    F0017/MID1,F0017/MID2
+## 15                                                         F0017/MID1,F0017/MID2,F0017/MID3
+## 16                                              F0017/MID1,F0017/MID2,F0017/MID3,F0017/MID4
+## 17                                              F0017/MID1,F0017/MID2,F0017/MID3,F0017/MID4
+## 18                                                         F0017/MID1,F0017/MID2,F0017/MID5
+## 19                                                                               F0020/MID7
+## 20 F0020/MID1,F0020/MID11,F0020/MID2,F0020/MID3,F0020/MID5,F0020/MID6,F0020/MID7,F0020/MID8</code></pre>
+</div>
+<div id="cancatenate-subfamilies-2" class="section level2">
+<h2><span class="header-section-number">1.4</span> Cancatenate subfamilies 2</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subfamilies2 &lt;-<span class="st"> </span><span class="kw">paste</span>(collaps_P2P1<span class="op">$</span>p1, collaps_P2P1<span class="op">$</span>p2, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>)
+## extract subfamilies with more than two persons
+subfamilies2_  &lt;-<span class="st"> </span>subfamilies2[stringr<span class="op">::</span><span class="kw">str_detect</span>(subfamilies2, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">w</span><span class="ch">\\</span><span class="st">d*</span><span class="ch">\\</span><span class="st">/</span><span class="ch">\\</span><span class="st">w*</span><span class="ch">\\</span><span class="st">d*,</span><span class="ch">\\</span><span class="st">w</span><span class="ch">\\</span><span class="st">d*</span><span class="ch">\\</span><span class="st">/</span><span class="ch">\\</span><span class="st">w*</span><span class="ch">\\</span><span class="st">d*&quot;</span>)]
+subfamilies2_ <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">20</span>)</code></pre></div>
+<pre><code>##  [1] &quot;F0002/MID1,F0002/MID2,F0002/MID3&quot;                                                                    
+##  [2] &quot;F0005/MID1,F0005/MID3,F0005/MID2&quot;                                                                    
+##  [3] &quot;F0009/MID5,F0009/MID7,F0009/MID1&quot;                                                                    
+##  [4] &quot;F0009/MID1,F0009/MID5,F0009/MID7,F0009/MID2&quot;                                                         
+##  [5] &quot;F0009/MID1,F0009/MID2,F0009/MID5,F0009/MID7,F0009/MID3&quot;                                              
+##  [6] &quot;F0009/MID1,F0009/MID2,F0009/MID3,F0009/MID5,F0009/MID7,F0009/MID4&quot;                                   
+##  [7] &quot;F0009/MID1,F0009/MID2,F0009/MID3,F0009/MID4,F0009/MID5,F0009/MID7,F0009/MID6&quot;                        
+##  [8] &quot;F0010/MID1,F0010/MID2,F0010/MID3&quot;                                                                    
+##  [9] &quot;F0010/MID1,F0010/MID2,F0010/MID3,F0010/MID4&quot;                                                         
+## [10] &quot;F0016/MID1,F0016/MID2&quot;                                                                               
+## [11] &quot;F0016/MID2,F0016/MID3&quot;                                                                               
+## [12] &quot;F0016/MID2,F0016/MID3,F0016/MID4&quot;                                                                    
+## [13] &quot;F0016/MID1,F0016/MID5&quot;                                                                               
+## [14] &quot;F0017/MID1,F0017/MID2,F0017/MID3&quot;                                                                    
+## [15] &quot;F0017/MID1,F0017/MID2,F0017/MID3,F0017/MID4&quot;                                                         
+## [16] &quot;F0017/MID1,F0017/MID2,F0017/MID3,F0017/MID4,F0017/MID5&quot;                                              
+## [17] &quot;F0017/MID1,F0017/MID2,F0017/MID3,F0017/MID4,F0017/MID6&quot;                                              
+## [18] &quot;F0017/MID1,F0017/MID2,F0017/MID5,F0017/MID7&quot;                                                         
+## [19] &quot;F0020/MID7,F0020/MID1&quot;                                                                               
+## [20] &quot;F0020/MID1,F0020/MID11,F0020/MID2,F0020/MID3,F0020/MID5,F0020/MID6,F0020/MID7,F0020/MID8,F0020/MID10&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">families &lt;-<span class="st"> </span><span class="kw">unique</span>(<span class="kw">c</span>(subfamilies1_, subfamilies2_))
+<span class="kw">length</span>(families)</code></pre></div>
+<pre><code>## [1] 3023</code></pre>
+</div>
+<div id="index-of-person-in-the-same-family" class="section level2">
+<h2><span class="header-section-number">1.5</span> Index of person in the same family</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">family_idx &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">unique</span>(<span class="kw">unlist</span>(<span class="kw">strsplit</span>(families, <span class="st">&quot;,&quot;</span>))) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">str_extract</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">w</span><span class="ch">\\</span><span class="st">d*&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">as.factor</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">as.numeric</span>()
+
+family_idx</code></pre></div>
+<pre><code>##    [1]   1   1   1   2   2   2   3   3   3   3   3   3   3   4   4   4   4
+##   [18]   5   5   5   5   5   6   6   6   6   6   6   6   7   7   7   7   7
+##   [35]   7   7   7   7   7   8   8   8   8   8   9   9   9   9   9   9  10
+##   [52]  10  10  10  10  11  11  11  11  12  12  12  12  12  13  13  13  13
+##   [69]  13  13  13  14  14  14  14  14  14  15  15  15  16  16  17  17  17
+##   [86]  17  17  17  18  18  19  19  19  19  19  20  20  20  21  21  21  21
+##  [103]  21  21  22  22  22  22  23  23  23  23  24  24  24  24  24  24  25
+##  [120]  25  25  25  26  26  27  27  27  27  27  27  28  28  28  28  28  29
+##  [137]  29  29  29  29  29  29  30  30  30  30  30  30  31  31  31  31  31
+##  [154]  32  32  32  32  32  32  32  32  33  33  33  33  34  34  34  34  34
+##  [171]  34  34  34  35  35  35  35  35  36  36  36  36  37  37  37  37  37
+##  [188]  37  37  37  37  37  38  38  38  38  38  38  38  38  38  38  38  38
+##  [205]  38  38  38  39  39  39  39  39  39  40  40  40  40  40  40  40  41
+##  [222]  41  41  41  42  42  42  42  43  43  43  43  44  44  44  44  44  45
+##  [239]  45  45  45  45  45  45  46  46  46  47  47  47  47  47  47  48  48
+##  [256]  48  48  48  48  48  49  49  49  50  50  50  50  50  50  51  51  51
+##  [273]  51  51  51  51  51  52  52  52  52  52  52  52  52  53  53  53  53
+##  [290]  53  54  54  55  55  55  56  56  56  57  57  58  58  58  58  59  59
+##  [307]  59  59  60  60  60  60  60  60  60  60  61  61  61  61  61  61  61
+##  [324]  61  62  62  62  63  63  63  63  64  64  64  64  64  65  65  65  65
+##  [341]  66  66  66  66  66  66  66  66  67  67  67  68  68  68  68  68  69
+##  [358]  69  69  69  70  70  70  70  70  70  71  71  71  71  72  72  72  72
+##  [375]  72  72  72  72  72  73  73  73  73  73  73  73  73  74  74  74  74
+##  [392]  75  75  75  75  76  76  76  76  77  77  77  77  77  77  77  78  78
+##  [409]  78  79  79  79  79  80  80  80  80  80  81  81  81  81  81  81  82
+##  [426]  82  82  82  83  83  83  83  83  83  83  83  84  84  84  84  84  84
+##  [443]  85  85  85  86  86  86  86  87  87  87  87  87  87  88  88  88  88
+##  [460]  88  89  89  89  89  89  89  90  90  90  90  90  91  91  91  91  91
+##  [477]  91  91  91  91  91  92  92  92  92  92  92  92  92  92  92  92  92
+##  [494]  92  92  93  93  93  93  93  93  93  94  94  94  94  95  95  95  95
+##  [511]  96  96  96  96  96  97  97  97  97  98  98  98  98  98  98  98  98
+##  [528]  99  99  99  99  99  99  99 100 100 100 100 101 101 101 101 101 102
+##  [545] 102 102 102 103 103 103 103 103 103 103 103 103 103 103 103 103 103
+##  [562] 104 104 104 104 104 105 105 105 105 106 106 106 106 106 106 107 107
+##  [579] 107 107 107 107 107 108 108 108 108 109 109 109 109 110 110 110 110
+##  [596] 111 111 111 111 111 112 112 112 113 113 113 113 113 113 113 113 113
+##  [613] 113 114 114 114 114 115 115 115 116 116 116 116 117 117 118 118 118
+##  [630] 118 118 119 119 119 120 120 120 120 120 120 120 121 121 121 121 121
+##  [647] 121 121 121 121 122 122 123 123 124 124 125 125 126 126 126 126 127
+##  [664] 127 127 127 128 128 128 128 128 128 128 128 128 128 129 129 129 129
+##  [681] 129 130 130 130 130 130 130 131 131 131 131 131 131 132 132 132 132
+##  [698] 133 133 133 133 133 133 134 134 134 134 134 135 135 135 135 136 136
+##  [715] 136 136 136 136 137 137 137 137 137 138 138 138 138 139 139 139 139
+##  [732] 139 139 139 139 139 139 139 140 140 140 140 140 140 141 141 142 142
+##  [749] 142 142 143 143 143 144 144 144 145 145 146 146 146 146 146 146 146
+##  [766] 146 147 147 147 147 147 147 148 148 148 148 148 148 149 149 150 150
+##  [783] 150 150 150 151 151 151 152 152 152 152 153 153 153 153 153 154 154
+##  [800] 154 154 154 154 154 154 154 154 154 154 154 155 155 155 155 156 156
+##  [817] 156 156 156 156 157 157 157 157 158 158 158 158 158 158 158 158 159
+##  [834] 159 159 160 160 160 160 161 161 161 161 161 161 161 162 162 162 163
+##  [851] 163 163 163 164 164 164 164 164 164 164 164 164 164 165 165 165 165
+##  [868] 165 165 166 166 166 167 167 167 167 167 167 167 168 168 168 168 168
+##  [885] 168 168 168 168 168 168 169 169 169 169 169 169 170 170 170 170 171
+##  [902] 171 171 172 172 172 172 172 172 172 172 173 173 173 173 173 174 174
+##  [919] 174 174 175 175 175 175 176 176 177 177 177 178 178 178 178 178 178
+##  [936] 179 179 179 180 180 180 180 180 181 181 181 181 181 181 181 181 181
+##  [953] 181 182 182 182 182 182 182 182 183 183 183 184 184 184 184 184 184
+##  [970] 184 184 184 184 185 185 185 185 185 186 186 186 186 186 186 187 187
+##  [987] 188 188 188 188 188 188 189 189 189 189 189 190 190 190 190 190 190
+## [1004] 190 191 191 191 191 191 191 191 191 191 192 192 192 192 193 193 193
+## [1021] 193 193 194 194 194 194 195 195 195 195 195 195 195 196 196 196 197
+## [1038] 197 197 197 198 198 198 198 198 198 198 198 199 199 199 199 199 199
+## [1055] 199 199 199 199 200 200 200 201 201 201 202 202 202 202 203 203 203
+## [1072] 204 204 204 205 205 205 205 205 206 206 206 206 206 206 206 207 207
+## [1089] 207 207 207 207 207 207 208 208 208 209 209 209 209 209 209 210 210
+## [1106] 210 211 211 211 211 212 212 212 212 213 213 213 213 214 214 214 214
+## [1123] 214 215 215 215 216 216 216 216 216 217 217 217 218 218 218 218 218
+## [1140] 219 219 219 219 219 220 220 221 221 221 221 221 221 221 221 221 221
+## [1157] 221 222 222 223 223 223 223 223 224 224 224 224 225 225 225 225 226
+## [1174] 226 226 226 227 227 227 227 227 228 228 229 229 229 230 230 230 230
+## [1191] 230 231 231 231 231 232 232 232 232 233 233 233 233 234 234 234 234
+## [1208] 234 234 235 235 235 235 235 235 236 236 236 236 236 236 237 237 237
+## [1225] 237 237 238 238 238 238 239 239 239 239 240 240 240 240 240 241 241
+## [1242] 241 241 241 241 242 242 242 242 243 243 243 243 243 243 243 243 243
+## [1259] 243 243 243 243 244 244 244 244 244 245 245 245 245 246 246 246 246
+## [1276] 247 247 247 247 247 248 248 248 248 249 249 249 249 249 249 249 249
+## [1293] 249 250 250 250 251 251 251 251 252 252 252 252 252 252 253 253 253
+## [1310] 254 254 254 254 254 254 254 254 255 255 255 256 256 256 256 256 257
+## [1327] 257 257 257 257 258 258 258 258 258 258 259 259 259 259 260 260 260
+## [1344] 260 260 260 261 261 261 261 261 261 261 261 261 261 261 261 261 261
+## [1361] 261 261 261 261 261 261 261 261 261 261 261 261 261 261 261 261 261
+## [1378] 261 261 261 261 261 261 261 261 261 261 261 262 262 262 263 263 263
+## [1395] 263 264 264 264 265 265 265 265 265 265 265 266 266 266 266 266 266
+## [1412] 266 267 267 267 267 267 268 268 269 269 269 269 269 269 270 270 270
+## [1429] 271 271 271 272 272 272 272 272 273 273 273 273 273 274 274 274 274
+## [1446] 274 274 274 275 275 275 275 275 275 275 276 276 276 276 276 276 276
+## [1463] 277 277 277 277 277 277 277 278 278 278 278 278 279 279 279 279 279
+## [1480] 279 280 280 280 280 281 281 281 282 282 282 282 283 283 283 283 283
+## [1497] 283 283 283 284 284 285 285 285 285 286 286 286 286 286 286 286 286
+## [1514] 286 287 287 287 287 287 288 288 288 288 289 289 289 290 290 290 290
+## [1531] 290 290 290 291 291 291 291 291 291 291 292 292 292 292 292 293 293
+## [1548] 293 293 293 293 294 294 295 295 295 295 295 296 296 297 297 297 297
+## [1565] 297 298 298 298 298 298 298 299 299 299 299 299 300 300 300 301 301
+## [1582] 301 301 302 302 302 302 303 303 303 303 303 303 303 303 303 303 304
+## [1599] 304 304 305 305 305 305 306 306 306 306 306 307 307 307 307 307 307
+## [1616] 307 308 308 308 308 308 308 308 308 308 309 309 309 309 310 310 310
+## [1633] 310 311 311 311 311 311 311 311 311 311 311 312 312 312 312 313 313
+## [1650] 313 313 314 314 314 314 314 315 315 315 315 315 315 315 316 316 316
+## [1667] 316 317 317 317 317 317 317 318 318 318 319 319 319 320 320 320 320
+## [1684] 321 321 321 321 321 322 322 322 322 322 322 323 323 323 323 323 324
+## [1701] 324 324 324 324 325 325 325 325 326 326 326 326 326 326 326 326 326
+## [1718] 327 327 327 327 327 328 328 328 328 328 328 329 329 329 329 329 329
+## [1735] 329 329 330 330 330 330 331 331 331 331 332 332 332 332 333 333 334
+## [1752] 334 334 334 334 334 334 334 334 334 335 335 335 335 335 335 335 335
+## [1769] 336 336 336 336 336 337 337 338 338 338 338 339 339 339 340 340 340
+## [1786] 340 340 340 341 341 341 341 341 341 341 341 341 342 342 342 342 342
+## [1803] 343 343 343 343 343 343 344 344 344 344 344 344 344 345 345 345 345
+## [1820] 346 346 346 346 346 346 347 347 347 347 347 347 348 348 348 348 348
+## [1837] 348 348 349 349 349 350 350 350 351 351 351 351 351 352 352 352 353
+## [1854] 353 353 353 353 353 353 353 353 353 354 354 354 354 355 355 355 355
+## [1871] 355 356 356 357 357 357 357 357 357 357 357 358 358 358 358 358 358
+## [1888] 358 359 359 359 359 359 360 360 361 361 361 361 361 362 362 362 362
+## [1905] 363 363 363 363 363 363 363 363 364 364 364 364 364 364 365 365 366
+## [1922] 366 366 366 366 366 367 367 367 368 368 368 368 368 368 368 368 369
+## [1939] 369 369 370 370 370 370 371 371 371 371 371 372 372 372 372 372 372
+## [1956] 372 372 372 373 373 373 373 373 373 374 374 374 374 374 374 374 374
+## [1973] 375 375 375 375 376 376 376 376 376 376 376 376 376 376 376 377 377
+## [1990] 377 377 378 378 378 378 378 379 379 379 379 379 380 380 380 380 380
+## [2007] 380 380 381 381 381 381 381 382 382 382 382 382 382 383 383 383 383
+## [2024] 383 383 383 383 383 383 384 384 384 384 384 385 385 386 386 387 387
+## [2041] 387 387 387 387 388 388 388 388 389 389 389 389 389 390 390 390 391
+## [2058] 391 391 391 392 392 392 392 392 392 393 393 394 394 394 395 395 395
+## [2075] 395 395 395 396 396 397 397 398 398 398 399 399 400 400 400 401 401
+## [2092] 402 402 402 402 403 403 403 403 404 404 405 405 405 406 406 407 407
+## [2109] 407 407 407 407 407 407 408 408 408 408 408 409 409 409 409 409 409
+## [2126] 410 410 410 410 410 410 411 411 411 411 411 412 412 412 413 413 413
+## [2143] 413 414 414 414 414 415 415 415 415 416 416 416 417 417 417 417 417
+## [2160] 418 418 418 418 418 418 418 419 419 419 420 420 420 421 421 421 421
+## [2177] 421 422 422 422 422 423 423 424 424 424 424 424 425 425 425 425 426
+## [2194] 426 426 426 427 427 427 427 428 428 428 428 428 428 429 429 429 430
+## [2211] 430 430 430 430 430 430 430 431 431 431 431 431 432 432 432 432 432
+## [2228] 433 433 433 433 433 433 434 434 434 434 435 435 435 435 435 436 436
+## [2245] 436 436 437 437 437 437 438 438 438 438 439 439 439 440 440 440 441
+## [2262] 441 441 442 442 442 443 443 443 443 444 444 444 444 445 445 445 445
+## [2279] 445 445 445 445 445 446 446 446 446 446 447 447 447 447 447 447 448
+## [2296] 448 448 448 448 448 448 448 449 449 449 449 450 450 450 450 451 451
+## [2313] 451 451 452 452 452 452 453 453 453 454 454 454 454 455 455 456 456
+## [2330] 456 456 457 457 457 457 457 457 458 458 458 458 458 458 459 459 459
+## [2347] 459 459 459 459 459 460 460 460 460 460 461 461 461 462 462 462 462
+## [2364] 463 463 463 463 463 463 463 464 464 464 464 465 465 465 465 465 465
+## [2381] 465 465 465 466 466 466 466 466 467 467 467 467 467 468 468 468 468
+## [2398] 469 469 469 469 469 469 470 470 470 470 470 470 470 470 470</code></pre>
+</div>
+<div id="collapse-persons-by-family-index" class="section level2">
+<h2><span class="header-section-number">1.6</span> Collapse Persons by family index</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fam &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">cbind</span>(<span class="dt">Person =</span> <span class="kw">unique</span>(<span class="kw">unlist</span>(<span class="kw">strsplit</span>(families, <span class="st">&quot;,&quot;</span>))),family_idx))
+fam <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">20</span>)</code></pre></div>
+<pre><code>##        Person family_idx
+## 1  F0002/MID1          1
+## 2  F0002/MID3          1
+## 3  F0002/MID2          1
+## 4  F0005/MID1          2
+## 5  F0005/MID2          2
+## 6  F0005/MID3          2
+## 7  F0009/MID1          3
+## 8  F0009/MID4          3
+## 9  F0009/MID3          3
+## 10 F0009/MID2          3
+## 11 F0009/MID6          3
+## 12 F0009/MID5          3
+## 13 F0009/MID7          3
+## 14 F0010/MID1          4
+## 15 F0010/MID3          4
+## 16 F0010/MID4          4
+## 17 F0010/MID2          4
+## 18 F0016/MID1          5
+## 19 F0016/MID5          5
+## 20 F0016/MID2          5</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">unique_families &lt;-<span class="st"> </span>plyr<span class="op">::</span><span class="kw">ddply</span>(fam,<span class="kw">c</span>(<span class="st">&quot;family_idx&quot;</span>),
+                               <span class="cf">function</span>(df1)<span class="kw">paste</span>(df1<span class="op">$</span>Person,
+                                                  <span class="dt">collapse =</span> <span class="st">&quot;,&quot;</span>))
+<span class="kw">colnames</span>(unique_families) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;Persons with kinship relationships&quot;</span>)
+DT<span class="op">::</span><span class="kw">datatable</span>(unique_families) <span class="op">%&gt;%</span>
+<span class="st">  </span>DT<span class="op">::</span><span class="kw">formatStyle</span>( <span class="kw">colnames</span>(unique_families), <span class="dt">color =</span> <span class="st">&#39;black&#39;</span>)</code></pre></div>
+<div id="htmlwidget-4f3d71227376057d0b7f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4f3d71227376057d0b7f">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286","287","288","289","290","291","292","293","294","295","296","297","298","299","300","301","302","303","304","305","306","307","308","309","310","311","312","313","314","315","316","317","318","319","320","321","322","323","324","325","326","327","328","329","330","331","332","333","334","335","336","337","338","339","340","341","342","343","344","345","346","347","348","349","350","351","352","353","354","355","356","357","358","359","360","361","362","363","364","365","366","367","368","369","370","371","372","373","374","375","376","377","378","379","380","381","382","383","384","385","386","387","388","389","390","391","392","393","394","395","396","397","398","399","400","401","402","403","404","405","406","407","408","409","410","411","412","413","414","415","416","417","418","419","420","421","422","423","424","425","426","427","428","429","430","431","432","433","434","435","436","437","438","439","440","441","442","443","444","445","446","447","448","449","450","451","452","453","454","455","456","457","458","459","460","461","462","463","464","465","466","467","468","469","470"],["1","10","100","101","102","103","104","105","106","107","108","109","11","110","111","112","113","114","115","116","117","118","119","12","120","121","122","123","124","125","126","127","128","129","13","130","131","132","133","134","135","136","137","138","139","14","140","141","142","143","144","145","146","147","148","149","15","150","151","152","153","154","155","156","157","158","159","16","160","161","162","163","164","165","166","167","168","169","17","170","171","172","173","174","175","176","177","178","179","18","180","181","182","183","184","185","186","187","188","189","19","190","191","192","193","194","195","196","197","198","199","2","20","200","201","202","203","204","205","206","207","208","209","21","210","211","212","213","214","215","216","217","218","219","22","220","221","222","223","224","225","226","227","228","229","23","230","231","232","233","234","235","236","237","238","239","24","240","241","242","243","244","245","246","247","248","249","25","250","251","252","253","254","255","256","257","258","259","26","260","261","262","263","264","265","266","267","268","269","27","270","271","272","273","274","275","276","277","278","279","28","280","281","282","283","284","285","286","287","288","289","29","290","291","292","293","294","295","296","297","298","299","3","30","300","301","302","303","304","305","306","307","308","309","31","310","311","312","313","314","315","316","317","318","319","32","320","321","322","323","324","325","326","327","328","329","33","330","331","332","333","334","335","336","337","338","339","34","340","341","342","343","344","345","346","347","348","349","35","350","351","352","353","354","355","356","357","358","359","36","360","361","362","363","364","365","366","367","368","369","37","370","371","372","373","374","375","376","377","378","379","38","380","381","382","383","384","385","386","387","388","389","39","390","391","392","393","394","395","396","397","398","399","4","40","400","401","402","403","404","405","406","407","408","409","41","410","411","412","413","414","415","416","417","418","419","42","420","421","422","423","424","425","426","427","428","429","43","430","431","432","433","434","435","436","437","438","439","44","440","441","442","443","444","445","446","447","448","449","45","450","451","452","453","454","455","456","457","458","459","46","460","461","462","463","464","465","466","467","468","469","47","470","48","49","5","50","51","52","53","54","55","56","57","58","59","6","60","61","62","63","64","65","66","67","68","69","7","70","71","72","73","74","75","76","77","78","79","8","80","81","82","83","84","85","86","87","88","89","9","90","91","92","93","94","95","96","97","98","99"],["F0002/MID1,F0002/MID3,F0002/MID2","F0024/MID2,F0024/MID1,F0024/MID3,F0024/MID5,F0024/MID4","F0225/MID1,F0225/MID2,F0225/MID3,F0225/MID4","F0227/MID1,F0227/MID3,F0227/MID5,F0227/MID2,F0227/MID4","F0228/MID1,F0228/MID3,F0228/MID4,F0228/MID2","F0231/MID1,F0231/MID7,F0231/MID11,F0231/MID10,F0231/MID12,F0231/MID13,F0231/MID14,F0231/MID2,F0231/MID5,F0231/MID4,F0231/MID6,F0231/MID9,F0231/MID3,F0231/MID8","F0233/MID1,F0233/MID5,F0233/MID3,F0233/MID2,F0233/MID6","F0236/MID1,F0236/MID4,F0236/MID3,F0236/MID2","F0237/MID1,F0237/MID3,F0237/MID2,F0237/MID4,F0237/MID5,F0237/MID6","F0238/MID1,F0238/MID4,F0238/MID8,F0238/MID3,F0238/MID7,F0238/MID5,F0238/MID6","F0241/MID1,F0241/MID4,F0241/MID2,F0241/MID3","F0242/MID1,F0242/MID5,F0242/MID2,F0242/MID3","F0030/MID1,F0030/MID4,F0030/MID3,F0030/MID2","F0244/MID1,F0244/MID7,F0244/MID4,F0244/MID5","F0245/MID1,F0245/MID3,F0245/MID4,F0245/MID2,F0245/MID5","F0248/MID1,F0248/MID3,F0248/MID2","F0249/MID1,F0249/MID10,F0249/MID4,F0249/MID9,F0249/MID5,F0249/MID2,F0249/MID3,F0249/MID6,F0249/MID7,F0249/MID8","F0252/MID1,F0252/MID3,F0252/MID4,F0252/MID5","F0253/MID2,F0253/MID4,F0253/MID3","F0254/MID1,F0254/MID4,F0254/MID3,F0254/MID6","F0255/MID3,F0255/MID4","F0257/MID1,F0257/MID2,F0257/MID4,F0257/MID3,F0257/MID5","F0258/MID3,F0258/MID1,F0258/MID4","F0031/MID1,F0031/MID5,F0031/MID3,F0031/MID2,F0031/MID4","F0262/MID1,F0262/MID5,F0262/MID4,F0262/MID3,F0262/MID2,F0262/MID7,F0262/MID6","F0264/MID1,F0264/MID5,F0264/MID2,F0264/MID7,F0264/MID4,F0264/MID10,F0264/MID8,F0264/MID6,F0264/MID9","F0266/MID1,F0266/MID2","F0268/MID1,F0268/MID2","F0271/MID3,F0271/MID2","F0275/MID2,F0275/MID3","F0277/MID2,F0277/MID4,F0277/MID1,F0277/MID3","F0281/MID1,F0281/MID4,F0281/MID3,F0281/MID2","F0282/MID1,F0282/MID7,F0282/MID5,F0282/MID2,F0282/MID6,F0282/MID10,F0282/MID4,F0282/MID3,F0282/MID8,F0282/MID9","F0283/MID1,F0283/MID4,F0283/MID5,F0283/MID2,F0283/MID3","F0036/MID1,F0036/MID4,F0036/MID3,F0036/MID7,F0036/MID2,F0036/MID5,F0036/MID6","F0284/MID3,F0284/MID1,F0284/MID4,F0284/MID2,F0284/MID5,F0284/MID6","F0285/MID1,F0285/MID6,F0285/MID2,F0285/MID4,F0285/MID5,F0285/MID3","F0287/MID1,F0287/MID4,F0287/MID3,F0287/MID2","F0290/MID1,F0290/MID6,F0290/MID3,F0290/MID4,F0290/MID2,F0290/MID5","F0294/MID1,F0294/MID3,F0294/MID4,F0294/MID2,F0294/MID5","F0297/MID1,F0297/MID3,F0297/MID4,F0297/MID2","F0298/MID1,F0298/MID4,F0298/MID3,F0298/MID2,F0298/MID5,F0298/MID6","F0299/MID1,F0299/MID3,F0299/MID4,F0299/MID5,F0299/MID2","F0302/MID1,F0302/MID4,F0302/MID3,F0302/MID2","F0303/MID1,F0303/MID3,F0303/MID10,F0303/MID5,F0303/MID2,F0303/MID4,F0303/MID11,F0303/MID6,F0303/MID7,F0303/MID8,F0303/MID9","F0038/MID1,F0038/MID2,F0038/MID5,F0038/MID4,F0038/MID6,F0038/MID3","F0309/MID1,F0309/MID2,F0309/MID4,F0309/MID5,F0309/MID3,F0309/MID6","F0313/MID1,F0313/MID2","F0315/MID1,F0315/MID2,F0315/MID3,F0315/MID4","F0319/MID1,F0319/MID3,F0319/MID2","F0321/MID1,F0321/MID3,F0321/MID2","F0322/MID1,F0322/MID2","F0326/MID1,F0326/MID7,F0326/MID3,F0326/MID6,F0326/MID2,F0326/MID8,F0326/MID5,F0326/MID4","F0332/MID1,F0332/MID6,F0332/MID2,F0332/MID3,F0332/MID4,F0332/MID5","F0334/MID1,F0334/MID3,F0334/MID2,F0334/MID4,F0334/MID5,F0334/MID6","F0336/MID3,F0336/MID1","F0039/MID1,F0039/MID4,F0039/MID3","F0339/MID1,F0339/MID4,F0339/MID2,F0339/MID5,F0339/MID3","F0341/MID1,F0341/MID3,F0341/MID2","F0344/MID1,F0344/MID2,F0344/MID4,F0344/MID5","F0350/MID1,F0350/MID2,F0350/MID3,F0350/MID4,F0350/MID5","F0357/MID1,F0357/MID10,F0357/MID9,F0357/MID3,F0357/MID8,F0357/MID11,F0357/MID7,F0357/MID12,F0357/MID13,F0357/MID6,F0357/MID2,F0357/MID5,F0357/MID4","F0359/MID1,F0359/MID4,F0359/MID3,F0359/MID2","F0360/MID1,F0360/MID3,F0360/MID4,F0360/MID2,F0360/MID5,F0360/MID6","F0361/MID1,F0361/MID3,F0361/MID4,F0361/MID2","F0363/MID1,F0363/MID3,F0363/MID5,F0363/MID8,F0363/MID6,F0363/MID4,F0363/MID2,F0363/MID7","F0365/MID1,F0365/MID3,F0365/MID2","F0040/MID1,F0040/MID3","F0367/MID1,F0367/MID4,F0367/MID3,F0367/MID2","F0368/MID2,F0368/MID1,F0368/MID7,F0368/MID3,F0368/MID4,F0368/MID5,F0368/MID6","F0369/MID1,F0369/MID3,F0369/MID2","F0373/MID1,F0373/MID4,F0373/MID3,F0373/MID2","F0376/MID1,F0376/MID4,F0376/MID10,F0376/MID7,F0376/MID9,F0376/MID5,F0376/MID6,F0376/MID2,F0376/MID3,F0376/MID8","F0378/MID1,F0378/MID6,F0378/MID3,F0378/MID2,F0378/MID4,F0378/MID5","F0385/MID3,F0385/MID1,F0385/MID4","F0387/MID1,F0387/MID5,F0387/MID3,F0387/MID2,F0387/MID4,F0387/MID7,F0387/MID6","F0390/MID1,F0390/MID6,F0390/MID5,F0390/MID8,F0390/MID3,F0390/MID10,F0390/MID7,F0390/MID11,F0390/MID2,F0390/MID4,F0390/MID9","F0393/MID1,F0393/MID3,F0393/MID5,F0393/MID6,F0393/MID2,F0393/MID4","F0041/MID1,F0041/MID6,F0041/MID7,F0041/MID3,F0041/MID4,F0041/MID5","F0394/MID1,F0394/MID2,F0394/MID3,F0394/MID4","F0399/MID1,F0399/MID2,F0399/MID3","F0402/MID1,F0402/MID4,F0402/MID5,F0402/MID6,F0402/MID3,F0402/MID2,F0402/MID7,F0402/MID8","F0403/MID1,F0403/MID3,F0403/MID4,F0403/MID5,F0403/MID2","F0408/MID1,F0408/MID4,F0408/MID2,F0408/MID3","F0409/MID1,F0409/MID3,F0409/MID4,F0409/MID2","F0410/MID3,F0410/MID1","F0411/MID1,F0411/MID3,F0411/MID2","F0413/MID1,F0413/MID6,F0413/MID4,F0413/MID2,F0413/MID3,F0413/MID5","F0415/MID3,F0415/MID1,F0415/MID2","F0044/MID1,F0044/MID2","F0416/MID1,F0416/MID5,F0416/MID6,F0416/MID3,F0416/MID4","F0421/MID1,F0421/MID10,F0421/MID3,F0421/MID2,F0421/MID9,F0421/MID6,F0421/MID7,F0421/MID4,F0421/MID5,F0421/MID8","F0423/MID1,F0423/MID2,F0423/MID3,F0423/MID7,F0423/MID4,F0423/MID5,F0423/MID6","F0424/MID1,F0424/MID3,F0424/MID2","F0425/MID1,F0425/MID3,F0425/MID7,F0425/MID8,F0425/MID4,F0425/MID9,F0425/MID10,F0425/MID2,F0425/MID5,F0425/MID6","F0426/MID1,F0426/MID6,F0426/MID4,F0426/MID3,F0426/MID5","F0427/MID1,F0427/MID3,F0427/MID2,F0427/MID4,F0427/MID5,F0427/MID6","F0431/MID2,F0431/MID4","F0432/MID1,F0432/MID5,F0432/MID2,F0432/MID3,F0432/MID4,F0432/MID6","F0435/MID1,F0435/MID5,F0435/MID4,F0435/MID2,F0435/MID3","F0049/MID4,F0049/MID5,F0049/MID6,F0049/MID7,F0049/MID3","F0438/MID1,F0438/MID2,F0438/MID7,F0438/MID6,F0438/MID3,F0438/MID4,F0438/MID5","F0439/MID1,F0439/MID6,F0439/MID9,F0439/MID8,F0439/MID3,F0439/MID5,F0439/MID2,F0439/MID4,F0439/MID7","F0440/MID1,F0440/MID2,F0440/MID3,F0440/MID4","F0443/MID1,F0443/MID4,F0443/MID2,F0443/MID5,F0443/MID3","F0444/MID1,F0444/MID3,F0444/MID2,F0444/MID4","F0446/MID1,F0446/MID3,F0446/MID4,F0446/MID6,F0446/MID2,F0446/MID5,F0446/MID7","F0452/MID1,F0452/MID4,F0452/MID2","F0456/MID1,F0456/MID3,F0456/MID4,F0456/MID2","F0459/MID1,F0459/MID2,F0459/MID7,F0459/MID8,F0459/MID4,F0459/MID3,F0459/MID5,F0459/MID6","F0460/MID1,F0460/MID5,F0460/MID10,F0460/MID9,F0460/MID2,F0460/MID4,F0460/MID3,F0460/MID8,F0460/MID7,F0460/MID6","F0005/MID1,F0005/MID2,F0005/MID3","F0050/MID1,F0050/MID3,F0050/MID2","F0464/MID1,F0464/MID3,F0464/MID2","F0465/MID1,F0465/MID2,F0465/MID4","F0468/MID1,F0468/MID2,F0468/MID3,F0468/MID4","F0470/MID2,F0470/MID3,F0470/MID4","F0472/MID1,F0472/MID2,F0472/MID4","F0473/MID2,F0473/MID6,F0473/MID3,F0473/MID4,F0473/MID5","F0479/MID1,F0479/MID3,F0479/MID6,F0479/MID5,F0479/MID4,F0479/MID2,F0479/MID7","F0481/MID1,F0481/MID4,F0481/MID3,F0481/MID5,F0481/MID8,F0481/MID2,F0481/MID6,F0481/MID9","F0482/MID1,F0482/MID4,F0482/MID3","F0486/MID1,F0486/MID6,F0486/MID2,F0486/MID4,F0486/MID3,F0486/MID5","F0051/MID1,F0051/MID3,F0051/MID4,F0051/MID2,F0051/MID5,F0051/MID6","F0487/MID1,F0487/MID2,F0487/MID3","F0488/MID1,F0488/MID4,F0488/MID3,F0488/MID2","F0489/MID1,F0489/MID2,F0489/MID3,F0489/MID4","F0491/MID1,F0491/MID3,F0491/MID2,F0491/MID4","F0494/MID1,F0494/MID3,F0494/MID5,F0494/MID4,F0494/MID2","F0497/MID1,F0497/MID3,F0497/MID2","F0498/MID1,F0498/MID4,F0498/MID3,F0498/MID5,F0498/MID6","F0499/MID1,F0499/MID3,F0499/MID2","F0500/MID1,F0500/MID2,F0500/MID5,F0500/MID3,F0500/MID4","F0501/MID1,F0501/MID4,F0501/MID5,F0501/MID3,F0501/MID2","F0052/MID1,F0052/MID4,F0052/MID3,F0052/MID2","F0502/MID1,F0502/MID2","F0503/MID1,F0503/MID7,F0503/MID6,F0503/MID10,F0503/MID3,F0503/MID11,F0503/MID8,F0503/MID2,F0503/MID4,F0503/MID5,F0503/MID9","F0504/MID1,F0504/MID2","F0508/MID1,F0508/MID4,F0508/MID5,F0508/MID2,F0508/MID3","F0512/MID1,F0512/MID3,F0512/MID4,F0512/MID5","F0515/MID1,F0515/MID4,F0515/MID2,F0515/MID3","F0516/MID1,F0516/MID2,F0516/MID3,F0516/MID4","F0517/MID1,F0517/MID2,F0517/MID4,F0517/MID5,F0517/MID3","F0519/MID2,F0519/MID1","F0524/MID1,F0524/MID4,F0524/MID3","F0054/MID1,F0054/MID3,F0054/MID2,F0054/MID4","F0526/MID1,F0526/MID3,F0526/MID2,F0526/MID4,F0526/MID5","F0530/MID1,F0530/MID4,F0530/MID3,F0530/MID2","F0531/MID1,F0531/MID3,F0531/MID4,F0531/MID2","F0532/MID3,F0532/MID4,F0532/MID1,F0532/MID5","F0533/MID1,F0533/MID5,F0533/MID2,F0533/MID6,F0533/MID3,F0533/MID4","F0536/MID1,F0536/MID5,F0536/MID3,F0536/MID2,F0536/MID4,F0536/MID6","F0537/MID1,F0537/MID6,F0537/MID3,F0537/MID5,F0537/MID4,F0537/MID2","F0538/MID1,F0538/MID3,F0538/MID2,F0538/MID4,F0538/MID5","F0539/MID1,F0539/MID3,F0539/MID4,F0539/MID2","F0540/MID1,F0540/MID2,F0540/MID4,F0540/MID3","F0058/MID1,F0058/MID5,F0058/MID2,F0058/MID4,F0058/MID3,F0058/MID6","F0543/MID1,F0543/MID2,F0543/MID3,F0543/MID4,F0543/MID5","F0545/MID1,F0545/MID3,F0545/MID4,F0545/MID6,F0545/MID2,F0545/MID5","F0548/MID1,F0548/MID4,F0548/MID3,F0548/MID2","F0552/MID1,F0552/MID10,F0552/MID6,F0552/MID12,F0552/MID5,F0552/MID4,F0552/MID3,F0552/MID13,F0552/MID9,F0552/MID8,F0552/MID11,F0552/MID2,F0552/MID7","F0556/MID1,F0556/MID2,F0556/MID3,F0556/MID4,F0556/MID5","F0561/MID1,F0561/MID5,F0561/MID3,F0561/MID4","F0565/MID1,F0565/MID4,F0565/MID2,F0565/MID3","F0568/MID1,F0568/MID5,F0568/MID4,F0568/MID2,F0568/MID3","F0574/MID1,F0574/MID3,F0574/MID2,F0574/MID4","F0579/MID1,F0579/MID7,F0579/MID2,F0579/MID6,F0579/MID5,F0579/MID3,F0579/MID4,F0579/MID8,F0579/MID9","F0059/MID1,F0059/MID2,F0059/MID4,F0059/MID3","F0582/MID1,F0582/MID3,F0582/MID2","F0584/MID1,F0584/MID2,F0584/MID3,F0584/MID4","F0585/MID1,F0585/MID6,F0585/MID5,F0585/MID2,F0585/MID3,F0585/MID4","F0589/MID2,F0589/MID4,F0589/MID3","F0590/MID1,F0590/MID7,F0590/MID3,F0590/MID2,F0590/MID5,F0590/MID4,F0590/MID6,F0590/MID8","F0591/MID1,F0591/MID3,F0591/MID2","F0592/MID1,F0592/MID3,F0592/MID2,F0592/MID4,F0592/MID5","F0593/MID1,F0593/MID4,F0593/MID3,F0593/MID5,F0593/MID2","F0595/MID1,F0595/MID4,F0595/MID5,F0595/MID6,F0595/MID2,F0595/MID3","F0596/MID1,F0596/MID3,F0596/MID4,F0596/MID2","F0063/MID1,F0063/MID3","F0599/MID1,F0599/MID3,F0599/MID2,F0599/MID5,F0599/MID4,F0599/MID6","F0601/MID1,F0601/MID24,F0601/MID26,F0601/MID27,F0601/MID8,F0601/MID5,F0601/MID10,F0601/MID13,F0601/MID11,F0601/MID12,F0601/MID14,F0601/MID15,F0601/MID16,F0601/MID41,F0601/MID40,F0601/MID17,F0601/MID25,F0601/MID18,F0601/MID31,F0601/MID28,F0601/MID30,F0601/MID19,F0601/MID7,F0601/MID6,F0601/MID2,F0601/MID9,F0601/MID20,F0601/MID33,F0601/MID42,F0601/MID38,F0601/MID21,F0601/MID22,F0601/MID23,F0601/MID36,F0601/MID34,F0601/MID29,F0601/MID3,F0601/MID32,F0601/MID35,F0601/MID37,F0601/MID39,F0601/MID4","F0603/MID1,F0603/MID3,F0603/MID2","F0604/MID1,F0604/MID3,F0604/MID4,F0604/MID2","F0607/MID1,F0607/MID3,F0607/MID2","F0610/MID1,F0610/MID5,F0610/MID3,F0610/MID2,F0610/MID4,F0610/MID7,F0610/MID6","F0617/MID1,F0617/MID4,F0617/MID3,F0617/MID6,F0617/MID2,F0617/MID5,F0617/MID7","F0621/MID1,F0621/MID4,F0621/MID3,F0621/MID5,F0621/MID2","F0623/MID1,F0623/MID2","F0625/MID1,F0625/MID5,F0625/MID3,F0625/MID4,F0625/MID6,F0625/MID2","F0064/MID1,F0064/MID3,F0064/MID5,F0064/MID2,F0064/MID6,F0064/MID4","F0627/MID1,F0627/MID3,F0627/MID2","F0630/MID1,F0630/MID3,F0630/MID2","F0631/MID1,F0631/MID2,F0631/MID4,F0631/MID3,F0631/MID5","F0635/MID1,F0635/MID2,F0635/MID5,F0635/MID4,F0635/MID3","F0638/MID2,F0638/MID3,F0638/MID4,F0638/MID5,F0638/MID6,F0638/MID1,F0638/MID7","F0639/MID1,F0639/MID3,F0639/MID2,F0639/MID4,F0639/MID7,F0639/MID5,F0639/MID6","F0641/MID1,F0641/MID3,F0641/MID7,F0641/MID6,F0641/MID5,F0641/MID4,F0641/MID2","F0642/MID1,F0642/MID7,F0642/MID3,F0642/MID5,F0642/MID2,F0642/MID4,F0642/MID6","F0644/MID1,F0644/MID2,F0644/MID5,F0644/MID3,F0644/MID4","F0646/MID1,F0646/MID5,F0646/MID2,F0646/MID6,F0646/MID4,F0646/MID3","F0068/MID1,F0068/MID4,F0068/MID5,F0068/MID3,F0068/MID2","F0651/MID1,F0651/MID4,F0651/MID2,F0651/MID3","F0655/MID1,F0655/MID2,F0655/MID3","F0656/MID1,F0656/MID5,F0656/MID2,F0656/MID4","F0658/MID1,F0658/MID7,F0658/MID6,F0658/MID8,F0658/MID3,F0658/MID2,F0658/MID4,F0658/MID5","F0659/MID1,F0659/MID2","F0661/MID1,F0661/MID2,F0661/MID4,F0661/MID3","F0664/MID1,F0664/MID6,F0664/MID7,F0664/MID3,F0664/MID5,F0664/MID2,F0664/MID4,F0664/MID8,F0664/MID9","F0665/MID1,F0665/MID4,F0665/MID5,F0665/MID3,F0665/MID2","F0669/MID1,F0669/MID2,F0669/MID4,F0669/MID3","F0670/MID1,F0670/MID3,F0670/MID2","F0070/MID1,F0070/MID4,F0070/MID7,F0070/MID3,F0070/MID5,F0070/MID2,F0070/MID6","F0672/MID1,F0672/MID2,F0672/MID4,F0672/MID3,F0672/MID7,F0672/MID5,F0672/MID6","F0673/MID1,F0673/MID3,F0673/MID5,F0673/MID8,F0673/MID6,F0673/MID7,F0673/MID4","F0674/MID1,F0674/MID3,F0674/MID5,F0674/MID4,F0674/MID2","F0675/MID1,F0675/MID5,F0675/MID3,F0675/MID2,F0675/MID4,F0675/MID6","F0677/MID2,F0677/MID1","F0678/MID1,F0678/MID4,F0678/MID5,F0678/MID3,F0678/MID2","F0679/MID1,F0679/MID2","F0680/MID1,F0680/MID2,F0680/MID3,F0680/MID4,F0680/MID5","F0683/MID1,F0683/MID6,F0683/MID3,F0683/MID2,F0683/MID5,F0683/MID4","F0686/MID1,F0686/MID2,F0686/MID3,F0686/MID5,F0686/MID6","F0009/MID1,F0009/MID4,F0009/MID3,F0009/MID2,F0009/MID6,F0009/MID5,F0009/MID7","F0074/MID1,F0074/MID4,F0074/MID3,F0074/MID6,F0074/MID2,F0074/MID5","F0687/MID1,F0687/MID3,F0687/MID2","F0688/MID1,F0688/MID3,F0688/MID2,F0688/MID4","F0689/MID1,F0689/MID4,F0689/MID2,F0689/MID3","F0690/MID1,F0690/MID8,F0690/MID10,F0690/MID3,F0690/MID7,F0690/MID9,F0690/MID2,F0690/MID4,F0690/MID5,F0690/MID6","F0691/MID4,F0691/MID2,F0691/MID1","F0693/MID1,F0693/MID4,F0693/MID2,F0693/MID3","F0695/MID1,F0695/MID5,F0695/MID4,F0695/MID2,F0695/MID3","F0696/MID1,F0696/MID5,F0696/MID3,F0696/MID6,F0696/MID2,F0696/MID4,F0696/MID7","F0703/MID1,F0703/MID3,F0703/MID9,F0703/MID6,F0703/MID7,F0703/MID2,F0703/MID10,F0703/MID4,F0703/MID5","F0704/MID2,F0704/MID3,F0704/MID5,F0704/MID4","F0077/MID1,F0077/MID4,F0077/MID6,F0077/MID2,F0077/MID3","F0705/MID1,F0705/MID2,F0705/MID3,F0705/MID4","F0708/MID1,F0708/MID4,F0708/MID8,F0708/MID3,F0708/MID7,F0708/MID9,F0708/MID10,F0708/MID2,F0708/MID5,F0708/MID6","F0711/MID1,F0711/MID4,F0711/MID2,F0711/MID3","F0714/MID1,F0714/MID3,F0714/MID4,F0714/MID2","F0716/MID1,F0716/MID4,F0716/MID5,F0716/MID3,F0716/MID2","F0717/MID1,F0717/MID2,F0717/MID7,F0717/MID3,F0717/MID5,F0717/MID4,F0717/MID6","F0718/MID1,F0718/MID3,F0718/MID2,F0718/MID4","F0721/MID1,F0721/MID2,F0721/MID5,F0721/MID7,F0721/MID4,F0721/MID6","F0724/MID1,F0724/MID2,F0724/MID3","F0725/MID1,F0725/MID2,F0725/MID3","F0081/MID1,F0081/MID6,F0081/MID7,F0081/MID2,F0081/MID8,F0081/MID3,F0081/MID4,F0081/MID5","F0726/MID1,F0726/MID4,F0726/MID2,F0726/MID3","F0728/MID1,F0728/MID4,F0728/MID3,F0728/MID5,F0728/MID2","F0730/MID1,F0730/MID5,F0730/MID6,F0730/MID2,F0730/MID3,F0730/MID4","F0733/MID1,F0733/MID5,F0733/MID2,F0733/MID3,F0733/MID4","F0734/MID1,F0734/MID3,F0734/MID5,F0734/MID4,F0734/MID2","F0735/MID1,F0735/MID3,F0735/MID4,F0735/MID2","F0736/MID1,F0736/MID5,F0736/MID2,F0736/MID8,F0736/MID9,F0736/MID3,F0736/MID4,F0736/MID6,F0736/MID7","F0737/MID1,F0737/MID4,F0737/MID2,F0737/MID3,F0737/MID5","F0739/MID1,F0739/MID3,F0739/MID2,F0739/MID4,F0739/MID5,F0739/MID6","F0742/MID1,F0742/MID4,F0742/MID3,F0742/MID2,F0742/MID5,F0742/MID7,F0742/MID6,F0742/MID8","F0086/MID1,F0086/MID4,F0086/MID3,F0086/MID2","F0744/MID1,F0744/MID3,F0744/MID2,F0744/MID4","F0745/MID1,F0745/MID4,F0745/MID2,F0745/MID3","F0746/MID1,F0746/MID2,F0746/MID4,F0746/MID3","F0748/MID1,F0748/MID3","F0752/MID1,F0752/MID10,F0752/MID6,F0752/MID7,F0752/MID8,F0752/MID4,F0752/MID5,F0752/MID2,F0752/MID3,F0752/MID9","F0754/MID1,F0754/MID5,F0754/MID2,F0754/MID4,F0754/MID3,F0754/MID7,F0754/MID8,F0754/MID9","F0756/MID1,F0756/MID4,F0756/MID3,F0756/MID2,F0756/MID5","F0758/MID1,F0758/MID2","F0760/MID1,F0760/MID3,F0760/MID4,F0760/MID2","F0761/MID1,F0761/MID3,F0761/MID2","F0091/MID1,F0091/MID5,F0091/MID4,F0091/MID3,F0091/MID2,F0091/MID6,F0091/MID7,F0091/MID8","F0762/MID1,F0762/MID2,F0762/MID3,F0762/MID4,F0762/MID5,F0762/MID6","F0763/MID1,F0763/MID4,F0763/MID5,F0763/MID2,F0763/MID7,F0763/MID6,F0763/MID3,F0763/MID8,F0763/MID9","F0765/MID1,F0765/MID2,F0765/MID5,F0765/MID4,F0765/MID3","F0768/MID1,F0768/MID6,F0768/MID5,F0768/MID2,F0768/MID3,F0768/MID4","F0769/MID1,F0769/MID2,F0769/MID3,F0769/MID7,F0769/MID4,F0769/MID5,F0769/MID6","F0770/MID1,F0770/MID3,F0770/MID2,F0770/MID5","F0771/MID1,F0771/MID6,F0771/MID5,F0771/MID2,F0771/MID4,F0771/MID3","F0773/MID1,F0773/MID3,F0773/MID4,F0773/MID2,F0773/MID5,F0773/MID6","F0774/MID1,F0774/MID3,F0774/MID7,F0774/MID4,F0774/MID2,F0774/MID5,F0774/MID6","F0778/MID3,F0778/MID1,F0778/MID4","F0093/MID1,F0093/MID4,F0093/MID3,F0093/MID2,F0093/MID6","F0780/MID2,F0780/MID1,F0780/MID3","F0783/MID1,F0783/MID2,F0783/MID5,F0783/MID4,F0783/MID3","F0784/MID1,F0784/MID3,F0784/MID2","F0785/MID1,F0785/MID5,F0785/MID2,F0785/MID3,F0785/MID4,F0785/MID10,F0785/MID8,F0785/MID7,F0785/MID9,F0785/MID6","F0787/MID1,F0787/MID3,F0787/MID4,F0787/MID2","F0788/MID1,F0788/MID2,F0788/MID3,F0788/MID4,F0788/MID5","F0789/MID1,F0789/MID2","F0791/MID1,F0791/MID8,F0791/MID7,F0791/MID6,F0791/MID4,F0791/MID2,F0791/MID3,F0791/MID5","F0794/MID1,F0794/MID5,F0794/MID2,F0794/MID4,F0794/MID3,F0794/MID6,F0794/MID7","F0795/MID1,F0795/MID4,F0795/MID2,F0795/MID5,F0795/MID3","F0097/MID2,F0097/MID4,F0097/MID5,F0097/MID3","F0800/MID1,F0800/MID3","F0801/MID1,F0801/MID4,F0801/MID3,F0801/MID2,F0801/MID5","F0803/MID1,F0803/MID4,F0803/MID2,F0803/MID3","F0805/MID1,F0805/MID2,F0805/MID5,F0805/MID7,F0805/MID8,F0805/MID6,F0805/MID3,F0805/MID4","F0806/MID1,F0806/MID2,F0806/MID4,F0806/MID5,F0806/MID3,F0806/MID6","F0808/MID1,F0808/MID2","F0809/MID1,F0809/MID4,F0809/MID3,F0809/MID2,F0809/MID5,F0809/MID6","F0810/MID1,F0810/MID3,F0810/MID2","F0811/MID1,F0811/MID2,F0811/MID6,F0811/MID7,F0811/MID3,F0811/MID4,F0811/MID8,F0811/MID5","F0812/MID1,F0812/MID3,F0812/MID2","F0099/MID1,F0099/MID6,F0099/MID5,F0099/MID4,F0099/MID8,F0099/MID3,F0099/MID10,F0099/MID9,F0099/MID2,F0099/MID7","F0813/MID1,F0813/MID4,F0813/MID3,F0813/MID2","F0816/MID1,F0816/MID5,F0816/MID3,F0816/MID4,F0816/MID2","F0818/MID1,F0818/MID8,F0818/MID5,F0818/MID4,F0818/MID6,F0818/MID3,F0818/MID7,F0818/MID9,F0818/MID2","F0820/MID1,F0820/MID4,F0820/MID2,F0820/MID5,F0820/MID3,F0820/MID6","F0821/MID1,F0821/MID5,F0821/MID7,F0821/MID2,F0821/MID4,F0821/MID8,F0821/MID9,F0821/MID3","F0822/MID2,F0822/MID4,F0822/MID1,F0822/MID3","F0825/MID1,F0825/MID3,F0825/MID4,F0825/MID2,F0825/MID12,F0825/MID10,F0825/MID9,F0825/MID8,F0825/MID7,F0825/MID5,F0825/MID6","F0826/MID1,F0826/MID4,F0826/MID3,F0826/MID2","F0828/MID1,F0828/MID4,F0828/MID3,F0828/MID2,F0828/MID5","F0829/MID1,F0829/MID4,F0829/MID3,F0829/MID5,F0829/MID6","F0101/MID1,F0101/MID4,F0101/MID6,F0101/MID10,F0101/MID12,F0101/MID13,F0101/MID11,F0101/MID14,F0101/MID15,F0101/MID8,F0101/MID2,F0101/MID3,F0101/MID7,F0101/MID5,F0101/MID9","F0831/MID1,F0831/MID3,F0831/MID4,F0831/MID2,F0831/MID5,F0831/MID6,F0831/MID7","F0832/MID1,F0832/MID5,F0832/MID4,F0832/MID3,F0832/MID2","F0833/MID1,F0833/MID4,F0833/MID3,F0833/MID2,F0833/MID5,F0833/MID6","F0836/MID1,F0836/MID2,F0836/MID8,F0836/MID5,F0836/MID4,F0836/MID9,F0836/MID7,F0836/MID10,F0836/MID3,F0836/MID6","F0837/MID1,F0837/MID6,F0837/MID4,F0837/MID2,F0837/MID5","F0838/MID2,F0838/MID1","F0840/MID1,F0840/MID3","F0841/MID1,F0841/MID4,F0841/MID2,F0841/MID3,F0841/MID5,F0841/MID6","F0842/MID1,F0842/MID4,F0842/MID2,F0842/MID3","F0843/MID1,F0843/MID3,F0843/MID5,F0843/MID2,F0843/MID4","F0105/MID1,F0105/MID5,F0105/MID4,F0105/MID3,F0105/MID2,F0105/MID6","F0845/MID1,F0845/MID3,F0845/MID2","F0846/MID1,F0846/MID4,F0846/MID2,F0846/MID3","F0848/MID1,F0848/MID4,F0848/MID3,F0848/MID2,F0848/MID6,F0848/MID5","F0849/MID2,F0849/MID1","F0850/MID1,F0850/MID2,F0850/MID4","F0851/MID1,F0851/MID6,F0851/MID2,F0851/MID3,F0851/MID4,F0851/MID5","F0853/MID2,F0853/MID3","F0854/MID3,F0854/MID4","F0855/MID1,F0855/MID3,F0855/MID2","F0856/MID3,F0856/MID1","F0010/MID1,F0010/MID3,F0010/MID4,F0010/MID2","F0106/MID1,F0106/MID5,F0106/MID2,F0106/MID6,F0106/MID3,F0106/MID4,F0106/MID7","F0857/MID1,F0857/MID2,F0857/MID3","F0861/MID1,F0861/MID2","F0862/MID2,F0862/MID1,F0862/MID3,F0862/MID4","F0863/MID1,F0863/MID3,F0863/MID2,F0863/MID4","F0866/MID1,F0866/MID2","F0868/MID1,F0868/MID2,F0868/MID3","F0869/MID1,F0869/MID3","F0872/MID1,F0872/MID8,F0872/MID3,F0872/MID6,F0872/MID4,F0872/MID7,F0872/MID5,F0872/MID2","F0874/MID1,F0874/MID4,F0874/MID5,F0874/MID3,F0874/MID6","F0879/MID1,F0879/MID4,F0879/MID6,F0879/MID5,F0879/MID3,F0879/MID2","F0109/MID1,F0109/MID2,F0109/MID3,F0109/MID4","F0881/MID1,F0881/MID2,F0881/MID4,F0881/MID3,F0881/MID5,F0881/MID6","F0882/MID1,F0882/MID3,F0882/MID2,F0882/MID4,F0882/MID5","F0884/MID1,F0884/MID3,F0884/MID2","F0891/MID1,F0891/MID4,F0891/MID3,F0891/MID2","F0892/MID1,F0892/MID3,F0892/MID4,F0892/MID2","F0893/MID1,F0893/MID4,F0893/MID3,F0893/MID2","F0894/MID1,F0894/MID2,F0894/MID3","F0895/MID1,F0895/MID3,F0895/MID4,F0895/MID2,F0895/MID5","F0897/MID1,F0897/MID5,F0897/MID2,F0897/MID7,F0897/MID9,F0897/MID4,F0897/MID3","F0899/MID2,F0899/MID1,F0899/MID3","F0110/MID1,F0110/MID3,F0110/MID2,F0110/MID4","F0900/MID2,F0900/MID1,F0900/MID3","F0901/MID1,F0901/MID4,F0901/MID2,F0901/MID3,F0901/MID5","F0903/MID1,F0903/MID2,F0903/MID3,F0903/MID4","F0904/MID2,F0904/MID1","F0908/MID1,F0908/MID2,F0908/MID5,F0908/MID4,F0908/MID3","F0909/MID1,F0909/MID3,F0909/MID4,F0909/MID2","F0912/MID1,F0912/MID4,F0912/MID3,F0912/MID2","F0914/MID1,F0914/MID3,F0914/MID4,F0914/MID2","F0915/MID1,F0915/MID6,F0915/MID3,F0915/MID2,F0915/MID4,F0915/MID5","F0916/MID1,F0916/MID2,F0916/MID3","F0112/MID1,F0112/MID2,F0112/MID3,F0112/MID4","F0918/MID1,F0918/MID8,F0918/MID5,F0918/MID4,F0918/MID2,F0918/MID3,F0918/MID6,F0918/MID7","F0920/MID1,F0920/MID5,F0920/MID2,F0920/MID4,F0920/MID6","F0922/MID1,F0922/MID5,F0922/MID4,F0922/MID2,F0922/MID3","F0930/MID1,F0930/MID4,F0930/MID5,F0930/MID2,F0930/MID6,F0930/MID3","F0931/MID1,F0931/MID2,F0931/MID4,F0931/MID3","F0933/MID1,F0933/MID3,F0933/MID2,F0933/MID5,F0933/MID4","F0939/MID1,F0939/MID3,F0939/MID4,F0939/MID2","F0942/MID1,F0942/MID3,F0942/MID4,F0942/MID2","F0944/MID1,F0944/MID4,F0944/MID3,F0944/MID2","F0945/MID1,F0945/MID3,F0945/MID2","F0113/MID1,F0113/MID2,F0113/MID4,F0113/MID3,F0113/MID5","F0946/MID1,F0946/MID2,F0946/MID3","F0947/MID2,F0947/MID1,F0947/MID3","F0951/MID1,F0951/MID3,F0951/MID2","F0952/MID1,F0952/MID4,F0952/MID2,F0952/MID3","F0953/MID1,F0953/MID4,F0953/MID2,F0953/MID3","F0955/MID1,F0955/MID2,F0955/MID3,F0955/MID9,F0955/MID4,F0955/MID5,F0955/MID6,F0955/MID7,F0955/MID8","F0959/MID1,F0959/MID3,F0959/MID4,F0959/MID2,F0959/MID5","F0960/MID1,F0960/MID4,F0960/MID3,F0960/MID2,F0960/MID5,F0960/MID6","F0965/MID1,F0965/MID3,F0965/MID6,F0965/MID4,F0965/MID5,F0965/MID7,F0965/MID9,F0965/MID8","F0966/MID1,F0966/MID3,F0966/MID2,F0966/MID4","F0118/MID1,F0118/MID5,F0118/MID7,F0118/MID3,F0118/MID4,F0118/MID6,F0118/MID2","F0967/MID1,F0967/MID3,F0967/MID4,F0967/MID2","F0968/MID1,F0968/MID3,F0968/MID2,F0968/MID4","F0969/MID1,F0969/MID5,F0969/MID3,F0969/MID2","F0970/MID1,F0970/MID2,F0970/MID3","F0971/MID1,F0971/MID5,F0971/MID2,F0971/MID3","F0972/MID4,F0972/MID5","F0973/MID1,F0973/MID2,F0973/MID3,F0973/MID4","F0974/MID1,F0974/MID6,F0974/MID3,F0974/MID2,F0974/MID7,F0974/MID5","F0977/MID1,F0977/MID3,F0977/MID4,F0977/MID7,F0977/MID5,F0977/MID6","F0978/MID1,F0978/MID2,F0978/MID3,F0978/MID8,F0978/MID5,F0978/MID7,F0978/MID4,F0978/MID6","F0119/MID1,F0119/MID2,F0119/MID3","F0981/MID1,F0981/MID3,F0981/MID2,F0981/MID4,F0981/MID5","F0982/MID1,F0982/MID2,F0982/MID3","F0983/MID1,F0983/MID3,F0983/MID4,F0983/MID2","F0984/MID1,F0984/MID5,F0984/MID6,F0984/MID3,F0984/MID4,F0984/MID7,F0984/MID2","F0985/MID1,F0985/MID4,F0985/MID3,F0985/MID2","F0988/MID1,F0988/MID4,F0988/MID5,F0988/MID3,F0988/MID6,F0988/MID2,F0988/MID7,F0988/MID8,F0988/MID9","F0993/MID2,F0993/MID4,F0993/MID3,F0993/MID5,F0993/MID6","F0994/MID1,F0994/MID2,F0994/MID3,F0994/MID5,F0994/MID4","F0997/MID1,F0997/MID2,F0997/MID3,F0997/MID4","F0998/MID1,F0998/MID2,F0998/MID3,F0998/MID4,F0998/MID5,F0998/MID6","F0122/MID1,F0122/MID3,F0122/MID4,F0122/MID7,F0122/MID5,F0122/MID2","F1000/MID1,F1000/MID7,F1000/MID6,F1000/MID3,F1000/MID8,F1000/MID9,F1000/MID2,F1000/MID4,F1000/MID5","F0123/MID1,F0123/MID5,F0123/MID4,F0123/MID3,F0123/MID6,F0123/MID7,F0123/MID2","F0124/MID1,F0124/MID2,F0124/MID3","F0016/MID1,F0016/MID5,F0016/MID2,F0016/MID4,F0016/MID3","F0126/MID1,F0126/MID3,F0126/MID2,F0126/MID4,F0126/MID5,F0126/MID6","F0128/MID1,F0128/MID6,F0128/MID8,F0128/MID3,F0128/MID7,F0128/MID5,F0128/MID2,F0128/MID4","F0129/MID1,F0129/MID7,F0129/MID4,F0129/MID8,F0129/MID3,F0129/MID2,F0129/MID5,F0129/MID6","F0130/MID1,F0130/MID5,F0130/MID2,F0130/MID3,F0130/MID4","F0132/MID1,F0132/MID4","F0134/MID1,F0134/MID2,F0134/MID4","F0135/MID1,F0135/MID5,F0135/MID4","F0137/MID2,F0137/MID4","F0138/MID4,F0138/MID2,F0138/MID6,F0138/MID3","F0142/MID5,F0142/MID8,F0142/MID6,F0142/MID3","F0017/MID1,F0017/MID3,F0017/MID4,F0017/MID7,F0017/MID5,F0017/MID6,F0017/MID2","F0146/MID1,F0146/MID3,F0146/MID2,F0146/MID4,F0146/MID5,F0146/MID6,F0146/MID7,F0146/MID8","F0150/MID1,F0150/MID3,F0150/MID5,F0150/MID4,F0150/MID2,F0150/MID8,F0150/MID6,F0150/MID7","F0151/MID1,F0151/MID3,F0151/MID2","F0154/MID1,F0154/MID3,F0154/MID2,F0154/MID4","F0155/MID2,F0155/MID3,F0155/MID1,F0155/MID5,F0155/MID4","F0157/MID1,F0157/MID2,F0157/MID4,F0157/MID3","F0158/MID1,F0158/MID6,F0158/MID7,F0158/MID8,F0158/MID5,F0158/MID2,F0158/MID3,F0158/MID4","F0159/MID1,F0159/MID2,F0159/MID3","F0160/MID3,F0160/MID6,F0160/MID7,F0160/MID5,F0160/MID4","F0161/MID1,F0161/MID2,F0161/MID3,F0161/MID4","F0020/MID1,F0020/MID10,F0020/MID6,F0020/MID5,F0020/MID3,F0020/MID2,F0020/MID11,F0020/MID7,F0020/MID8,F0020/MID9","F0162/MID1,F0162/MID5,F0162/MID4,F0162/MID2,F0162/MID3,F0162/MID6","F0164/MID1,F0164/MID3,F0164/MID2,F0164/MID4","F0165/MID1,F0165/MID2,F0165/MID4,F0165/MID8,F0165/MID6,F0165/MID7,F0165/MID3,F0165/MID9,F0165/MID5","F0167/MID1,F0167/MID3,F0167/MID4,F0167/MID2,F0167/MID7,F0167/MID8,F0167/MID5,F0167/MID6","F0168/MID1,F0168/MID3,F0168/MID4,F0168/MID2","F0169/MID1,F0169/MID4,F0169/MID2,F0169/MID3","F0170/MID1,F0170/MID3,F0170/MID2,F0170/MID4","F0174/MID1,F0174/MID4,F0174/MID5,F0174/MID6,F0174/MID7,F0174/MID2,F0174/MID3","F0178/MID1,F0178/MID2,F0178/MID3","F0179/MID1,F0179/MID3,F0179/MID2,F0179/MID4","F0022/MID1,F0022/MID3,F0022/MID2,F0022/MID4,F0022/MID5","F0183/MID1,F0183/MID5,F0183/MID4,F0183/MID2,F0183/MID3","F0188/MID1,F0188/MID5,F0188/MID6,F0188/MID2,F0188/MID3,F0188/MID4","F0191/MID1,F0191/MID3,F0191/MID4,F0191/MID2","F0192/MID1,F0192/MID5,F0192/MID4,F0192/MID3,F0192/MID7,F0192/MID2,F0192/MID6,F0192/MID8","F0194/MID1,F0194/MID3,F0194/MID5,F0194/MID2,F0194/MID4,F0194/MID6","F0195/MID1,F0195/MID2,F0195/MID3","F0196/MID1,F0196/MID3,F0196/MID2,F0196/MID5","F0197/MID1,F0197/MID5,F0197/MID4,F0197/MID3,F0197/MID6,F0197/MID2","F0198/MID1,F0198/MID3,F0198/MID4,F0198/MID2,F0198/MID5","F0199/MID1,F0199/MID3,F0199/MID6,F0199/MID2,F0199/MID4,F0199/MID5","F0023/MID1,F0023/MID5,F0023/MID4,F0023/MID2,F0023/MID6,F0023/MID3","F0202/MID1,F0202/MID5,F0202/MID2,F0202/MID3,F0202/MID4","F0203/MID1,F0203/MID10,F0203/MID9,F0203/MID6,F0203/MID5,F0203/MID4,F0203/MID3,F0203/MID2,F0203/MID7,F0203/MID8","F0206/MID1,F0206/MID3,F0206/MID14,F0206/MID10,F0206/MID4,F0206/MID13,F0206/MID11,F0206/MID2,F0206/MID9,F0206/MID8,F0206/MID12,F0206/MID5,F0206/MID6,F0206/MID7","F0209/MID1,F0209/MID5,F0209/MID2,F0209/MID4,F0209/MID7,F0209/MID3,F0209/MID6","F0210/MID1,F0210/MID2,F0210/MID3,F0210/MID4","F0211/MID1,F0211/MID5,F0211/MID4,F0211/MID3","F0212/MID1,F0212/MID4,F0212/MID2,F0212/MID5,F0212/MID3","F0214/MID1,F0214/MID2,F0214/MID3,F0214/MID4","F0215/MID1,F0215/MID3,F0215/MID8,F0215/MID2,F0215/MID9,F0215/MID4,F0215/MID5,F0215/MID6","F0216/MID1,F0216/MID7,F0216/MID6,F0216/MID5,F0216/MID3,F0216/MID4,F0216/MID2"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>index<\/th>\n      <th>Persons with kinship relationships<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}],"rowCallback":"function(row, data) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'color':'black'});\nvar value=data[2]; $(this.api().cell(row, 2).node()).css({'color':'black'});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+<p><strong>There are 470 kinship relationships </strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">unique_families<span class="op">$</span><span class="st">`</span><span class="dt">Persons with kinship relationships</span><span class="st">`</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]</code></pre></div>
+<pre><code>##  [1] &quot;F0002/MID1,F0002/MID3,F0002/MID2&quot;                                                                                                                              
+##  [2] &quot;F0024/MID2,F0024/MID1,F0024/MID3,F0024/MID5,F0024/MID4&quot;                                                                                                        
+##  [3] &quot;F0225/MID1,F0225/MID2,F0225/MID3,F0225/MID4&quot;                                                                                                                   
+##  [4] &quot;F0227/MID1,F0227/MID3,F0227/MID5,F0227/MID2,F0227/MID4&quot;                                                                                                        
+##  [5] &quot;F0228/MID1,F0228/MID3,F0228/MID4,F0228/MID2&quot;                                                                                                                   
+##  [6] &quot;F0231/MID1,F0231/MID7,F0231/MID11,F0231/MID10,F0231/MID12,F0231/MID13,F0231/MID14,F0231/MID2,F0231/MID5,F0231/MID4,F0231/MID6,F0231/MID9,F0231/MID3,F0231/MID8&quot;
+##  [7] &quot;F0233/MID1,F0233/MID5,F0233/MID3,F0233/MID2,F0233/MID6&quot;                                                                                                        
+##  [8] &quot;F0236/MID1,F0236/MID4,F0236/MID3,F0236/MID2&quot;                                                                                                                   
+##  [9] &quot;F0237/MID1,F0237/MID3,F0237/MID2,F0237/MID4,F0237/MID5,F0237/MID6&quot;                                                                                             
+## [10] &quot;F0238/MID1,F0238/MID4,F0238/MID8,F0238/MID3,F0238/MID7,F0238/MID5,F0238/MID6&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#length(str_split(unique_families$`Persons with kinship relationships`[10],pattern = &quot;,&quot;))</span></code></pre></div>
+</div>
+</div>
+<div id="generate-all-combinations-is_related-and-no_related-from-each-family" class="section level1">
+<h1><span class="header-section-number">2</span> Generate all combinations <code>is_related</code> and <code>no_related</code> from each family</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">person &lt;-<span class="st"> </span>unique_families<span class="op">$</span><span class="st">`</span><span class="dt">Persons with kinship relationships</span><span class="st">`</span>[<span class="dv">1</span>] <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">str_split</span>(<span class="dt">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>)
+
+person_permut &lt;-
+<span class="st">  </span>gtools<span class="op">::</span><span class="kw">permutations</span>(<span class="dt">n =</span> <span class="kw">length</span>(person),
+                       <span class="dt">r =</span> <span class="dv">2</span>,
+                       <span class="dt">v =</span> person,
+                       <span class="dt">repeats.allowed =</span> <span class="ot">FALSE</span>) 
+
+## split the list of related person by comma
+split_person &lt;-<span class="st">    </span><span class="kw">lapply</span>(unique_families[,<span class="dv">2</span>], <span class="cf">function</span>(x) <span class="kw">str_split</span>(x, <span class="dt">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>))
+## get all possible permutation between persons for each family
+split_person_permut &lt;-<span class="st"> </span><span class="kw">lapply</span>(split_person, <span class="cf">function</span>(x)  gtools<span class="op">::</span><span class="kw">permutations</span>(<span class="dt">n =</span> <span class="kw">length</span>(x),
+                                                                              <span class="dt">r =</span> <span class="dv">2</span>,
+                                                                              <span class="dt">v =</span> x,
+                                                                              <span class="dt">repeats.allowed =</span> <span class="ot">FALSE</span>))
+## merge the list of dataframe to dataframe
+all_person_permut &lt;-<span class="st"> </span>plyr<span class="op">::</span><span class="kw">ldply</span>(split_person_permut, data.frame)
+<span class="kw">colnames</span>(all_person_permut) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>)
+
+## 
+no_related &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">anti_join</span>( all_person_permut,relationship, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>))
+## 
+is_related &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">semi_join</span>( all_person_permut,relationship, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>))
+
+## clean related person but in opposite format: p1 -&gt; p2 or p2 -&gt; p1
+## we need to rename zero (p2, p1) and omit commun row with one.
+<span class="kw">colnames</span>(no_related) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p2&quot;</span>, <span class="st">&quot;p1&quot;</span>)
+
+## There is two way of relation p1 -&gt; p2 and p2 -&gt; p1
+
+## extract the second way of relation from no_related df
+is_related_inverse &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">semi_join</span>(no_related, is_related, <span class="dt">by=</span> <span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>))
+## remove related person p2 -&gt; p1
+no_related_inverse &lt;-<span class="st"> </span>dplyr<span class="op">::</span><span class="kw">anti_join</span>(no_related, is_related, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>))
+
+<span class="kw">colnames</span>(is_related_inverse) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>)
+<span class="kw">colnames</span>(no_related_inverse) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>)
+
+## Merge the 2 ways of relation
+is_related_all &lt;-<span class="st"> </span><span class="kw">rbind</span>(is_related, is_related_inverse)
+
+
+no_related_all &lt;-<span class="st">  </span>no_related_inverse
+
+## Annotate 0, 1
+is_related_all &lt;-<span class="st"> </span><span class="kw">cbind</span>(is_related_all, <span class="dt">is_related =</span> <span class="dv">1</span>)
+no_related_all &lt;-<span class="st"> </span><span class="kw">cbind</span>(no_related_all, <span class="dt">is_related =</span> <span class="dv">0</span>)
+
+<span class="kw">head</span>(is_related_all)</code></pre></div>
+<pre><code>##           p1         p2 is_related
+## 1 F0002/MID1 F0002/MID3          1
+## 2 F0002/MID2 F0002/MID3          1
+## 3 F0024/MID2 F0024/MID1          1
+## 4 F0024/MID3 F0024/MID1          1
+## 5 F0024/MID3 F0024/MID5          1
+## 6 F0024/MID4 F0024/MID5          1</code></pre>
+</div>
+<div id="check-folder-and-files-availabilities" class="section level1">
+<h1><span class="header-section-number">3</span> Check folder and files availabilities</h1>
+<p>The goal is to clean up <code>is_related_all</code> and <code>no_related_all</code> from not existing folders or images.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">is_related_all &lt;-
+is_related_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="kw">file.exists</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p1))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="kw">file.exists</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p2))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">length</span>(<span class="kw">list.files</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p1))) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">length</span>(<span class="kw">list.files</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p2))) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>)
+
+
+no_related_all &lt;-
+<span class="st">  </span>no_related_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="kw">file.exists</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p1))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="kw">file.exists</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p2))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(<span class="kw">length</span>(<span class="kw">list.files</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p1))) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(<span class="kw">length</span>(<span class="kw">list.files</span>(<span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, p2))) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>))
+  
+is_related_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p1 <span class="op">==</span><span class="st"> &quot;F0460/MID8&quot;</span>) </code></pre></div>
+<pre><code>##           p1         p2 is_related
+## 1 F0460/MID8 F0460/MID1          1
+## 2 F0460/MID8 F0460/MID5          1
+## 3 F0460/MID8 F0460/MID6          1
+## 4 F0460/MID8 F0460/MID7          1</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(<span class="kw">list.files</span>(<span class="st">&quot;train/F0460/MID8/&quot;</span>))</code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<p><strong>Note</strong> <code>filter</code> can not detect particular empty folders</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">kinships_all &lt;-<span class="st"> </span>
+<span class="st">  </span>is_related_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">bind_rows</span>(no_related_all) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="dt">by =</span> p1)
+
+kinships_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">8</span>)</code></pre></div>
+<pre><code>##           p1         p2 is_related
+## 1 F0002/MID1 F0002/MID3          1
+## 2 F0002/MID1 F0002/MID2          0
+## 3 F0002/MID2 F0002/MID3          1
+## 4 F0002/MID2 F0002/MID1          0
+## 5 F0002/MID3 F0002/MID1          1
+## 6 F0002/MID3 F0002/MID2          1
+## 7 F0024/MID1 F0024/MID2          1
+## 8 F0024/MID1 F0024/MID3          1</code></pre>
+</div>
+<div id="images-data-processing" class="section level1">
+<h1><span class="header-section-number">4</span> Images Data processing</h1>
+</div>
+<div id="read-and-reshape-related-images-and-label-from-dataframe" class="section level1">
+<h1><span class="header-section-number">5</span> Read and reshape related images and label from dataframe</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># #inputs are 2 images and one category</span>
+<span class="co"># # df shape : 1 row ,3 columns</span>
+<span class="co"># loadinputs &lt;- function(df){</span>
+<span class="co">#   </span>
+<span class="co">#   pathfile1 &lt;-  paste0(&quot;train/&quot;, df[[1]])</span>
+<span class="co">#   pathfile2 &lt;-  paste0(&quot;train/&quot;, df[[2]])</span>
+<span class="co">#   #label     &lt;-  keras::to_categorical(df[[3]])</span>
+<span class="co">#   label     &lt;-           as.factor(df[[3]])</span>
+<span class="co">#   </span>
+<span class="co">#   # sample one image</span>
+<span class="co">#   name1 &lt;- sample(x = list.files(pathfile1), size = 1, replace = TRUE)</span>
+<span class="co">#   name2 &lt;- sample(x = list.files(pathfile2), size = 1, replace = TRUE)</span>
+<span class="co">#   </span>
+<span class="co">#   # load image </span>
+<span class="co">#   img1 &lt;- EBImage::readImage(paste0(pathfile1,&quot;/&quot;,name1))</span>
+<span class="co">#   img2 &lt;- EBImage::readImage(paste0(pathfile2,&quot;/&quot;,name2))</span>
+<span class="co">#   # resize images</span>
+<span class="co">#   img1 &lt;-   EBImage::resize(img1, 28, 28)</span>
+<span class="co">#   img2 &lt;-   EBImage::resize(img2, 28, 28)</span>
+<span class="co">#   ## reshape images</span>
+<span class="co">#   img1 &lt;- keras::array_reshape(img1, c(28,28,3))</span>
+<span class="co">#   img2 &lt;- keras::array_reshape(img2, c(28,28,3))</span>
+<span class="co">#   </span>
+<span class="co">#   train1 &lt;- rbind(train1, img1)</span>
+<span class="co">#   train2 &lt;- rbind(train2, img2)</span>
+<span class="co">#   trainy &lt;- label</span>
+<span class="co">#   ls &lt;- list(train1, train2, label)</span>
+<span class="co">#   #train1 &lt;- t(train1)</span>
+<span class="co">#   return(train1)</span>
+<span class="co">#   </span>
+<span class="co">#   ## return as a list</span>
+<span class="co">#   #ls &lt;- list(img1,img2,label)</span>
+<span class="co">#   #names(ls) &lt;- c(basename(pathfile1), basename(pathfile2), &quot;label&quot;)</span>
+<span class="co">#   #return(ls)</span>
+<span class="co"># }</span>
+<span class="co"># </span>
+<span class="co"># train1 &lt;- NULL</span>
+<span class="co"># train2 &lt;- NULL</span>
+<span class="co"># trainy &lt;- NULL</span>
+<span class="co"># lklk &lt;- apply(is_related_all[1:38,],1, function(row) loadinputs(row))</span>
+<span class="co"># </span>
+<span class="co"># ## family label</span>
+<span class="co"># #names(lklk) &lt;- apply(is_related_all[1:3,], 1, function(x) </span>
+<span class="co"># #                    names(x) &lt;- stringr::str_split(string = x[[1]],</span>
+<span class="co"># #                                                  pattern = &#39;/&#39;,</span>
+<span class="co"># </span>
+<span class="co"># ## Unname dimnames attributes of the matrix. We can not do this in apply function.</span>
+<span class="co"># lklk &lt;- unname(lklk)</span>
+<span class="co"># lklk &lt;- t(lklk)</span>
+<span class="co"># str(lklk)</span></code></pre></div>
+<div id="get-train-matrix-from-images" class="section level2">
+<h2><span class="header-section-number">5.1</span> get Train matrix from images</h2>
+<p>In our case we need as input two images and one label. The setting of the model will accept 2 matrices as <code>trainx</code> and a label as <code>trainy</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">get_train_matrix &lt;-<span class="st"> </span><span class="cf">function</span>(df, col){
+   pathfolder &lt;-<span class="st">  </span><span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, df[col])
+
+    ## Check if the path exists &amp;&amp; the folder is not empty
+  <span class="cf">if</span>(<span class="kw">file.exists</span>(pathfolder) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">length</span>(<span class="kw">list.files</span>(pathfolder)) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>){
+
+  <span class="kw">set.seed</span>(<span class="dv">123</span>)
+  <span class="co"># sample one image</span>
+   name1 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dt">x =</span> <span class="kw">list.files</span>(pathfolder), <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">TRUE</span>)
+
+  <span class="co"># load image</span>
+  img1 &lt;-<span class="st"> </span>EBImage<span class="op">::</span><span class="kw">readImage</span>(<span class="kw">paste0</span>(pathfolder,<span class="st">&quot;/&quot;</span>,name1))
+
+  <span class="co"># resize images</span>
+  img1 &lt;-<span class="st">   </span>EBImage<span class="op">::</span><span class="kw">resize</span>(img1, <span class="dv">28</span>, <span class="dv">28</span>)
+
+  ## reshape images
+  img1 &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">array_reshape</span>(img1, <span class="kw">c</span>(<span class="dv">28</span>,<span class="dv">28</span>,<span class="dv">3</span>))
+
+  trainx &lt;-<span class="st"> </span><span class="kw">rbind</span>(trainx, img1)
+
+  }<span class="cf">else</span>{
+    to_delete &lt;&lt;-<span class="st"> </span><span class="kw">c</span>(to_delete, <span class="kw">paste0</span>(pathfolder))
+  }
+   <span class="kw">return</span>(trainx)
+}
+to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+trainx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+trainx1 &lt;-<span class="st">  </span><span class="kw">apply</span>( kinships_all, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_train_matrix</span>(row, <span class="dv">1</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 10.39976 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Time difference of 2.872232 mins</span>
+
+<span class="co">#trainx1 &lt;- NULL</span>
+<span class="co">#star &lt;- Sys.time()</span>
+## works but same think can not remove attributes in each matrix
+<span class="co">#trainx1 &lt;-purrr::map(kinships_all, .f = function(row) get_train_matrix(row, 1))</span>
+<span class="co">#end &lt;- Sys.time()</span>
+<span class="co">#print(end - star)</span>
+
+## clean empty list of not existing folder or images
+<span class="co">#trainx &lt;- rlist::list.clean(trainx, recursive = TRUE)</span>
+## works also
+<span class="co">#trainx &lt;-  trainx[unlist(lapply(trainx, length) != 0)]</span>
+ 
+
+trainx1 &lt;-<span class="st"> </span><span class="kw">ldply</span>(trainx1, <span class="cf">function</span>(x) x &lt;-<span class="st"> </span><span class="kw">unname</span>(x))
+trainx1 &lt;-<span class="st"> </span><span class="kw">t</span>(trainx1)
+<span class="co">#trainx1 &lt;-lapply(trainx1, function(x) unname(x)) </span>
+<span class="co">#str(lapply(trainx1, function(x) unname(x)) )</span>
+trainx1 &lt;-<span class="st"> </span><span class="kw">unname</span>(trainx1)
+<span class="kw">str</span>(trainx1)</code></pre></div>
+<pre><code>##  num [1:2352, 1:12497] 0.671 0.725 0.761 0.81 0.821 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># store empty folders that not filtred </span>
+to_delete1 &lt;-<span class="st"> </span>to_delete <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unique</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>stringr<span class="op">::</span><span class="kw">str_split</span>(<span class="dt">pattern =</span><span class="st">&quot;/&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>, <span class="dt">n =</span> <span class="dv">2</span>)
+  
+  
+to_delete1 &lt;-<span class="st"> </span>to_delete1[,<span class="dv">2</span>]
+to_delete1</code></pre></div>
+<pre><code>## [1] &quot;F0460/MID8&quot;  &quot;F0101/MID11&quot;</code></pre>
+</div>
+<div id="loop-is-not-the-best-way-but-i-am-sure-that-the-str-of-images-is-conserved." class="section level2">
+<h2><span class="header-section-number">5.2</span> Loop is not the best way but I am sure that the str of images is conserved.</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">get_trainx &lt;-<span class="st"> </span><span class="cf">function</span>(df){
+  
+  pb =<span class="st"> </span><span class="kw">txtProgressBar</span>(<span class="dt">min =</span> <span class="dv">0</span>, <span class="dt">max =</span> <span class="kw">length</span>(df), <span class="dt">initial =</span> <span class="dv">0</span>)
+  
+  trainx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+  
+  <span class="cf">for</span>(i <span class="cf">in</span> <span class="kw">seq_len</span>(<span class="kw">length</span>(df))){
+    
+      <span class="kw">setTxtProgressBar</span>(pb,i,
+                       <span class="dt">title=</span><span class="kw">paste</span>(<span class="kw">round</span>(i<span class="op">/</span><span class="kw">length</span>(df) <span class="op">*</span><span class="dv">100</span>, <span class="dv">0</span>),<span class="st">&quot;% done&quot;</span>))
+
+    pathfolder &lt;-<span class="st">  </span><span class="kw">paste0</span>(<span class="st">&quot;train/&quot;</span>, df[i])
+    
+    ## Check if the path exists &amp;&amp; the folder is not empty
+    <span class="cf">if</span>(<span class="kw">file.exists</span>(pathfolder) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="op">!</span><span class="kw">length</span>(<span class="kw">list.files</span>(pathfolder)) <span class="op">==</span><span class="st"> </span><span class="dv">0</span>){
+      
+      <span class="kw">set.seed</span>(<span class="dv">123</span>)
+      <span class="co"># sample one image</span>
+      name1 &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dt">x =</span> <span class="kw">list.files</span>(pathfolder), <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">replace =</span> <span class="ot">TRUE</span>)
+      
+      <span class="co"># load image </span>
+      img1 &lt;-<span class="st"> </span>EBImage<span class="op">::</span><span class="kw">readImage</span>(<span class="kw">paste0</span>(pathfolder,<span class="st">&quot;/&quot;</span>,name1))
+      
+      <span class="co"># resize images</span>
+      img1 &lt;-<span class="st">   </span>EBImage<span class="op">::</span><span class="kw">resize</span>(img1, <span class="dv">28</span>, <span class="dv">28</span>)
+      
+      ## reshape images
+      img1 &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">array_reshape</span>(img1, <span class="kw">c</span>(<span class="dv">28</span>,<span class="dv">28</span>,<span class="dv">3</span>))
+      
+      trainx &lt;-<span class="st"> </span><span class="kw">rbind</span>( trainx, img1)
+      
+    }
+  }
+  <span class="kw">return</span>(trainx)
+}
+
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+trainx &lt;-<span class="st"> </span><span class="kw">get_trainx</span>(kinships_all[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span>])</code></pre></div>
+<pre><code>## ===========================================================================</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 0.815274 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># difference of 27.67416 mins</span>
+trainx &lt;-<span class="st"> </span><span class="kw">unname</span>(trainx)
+<span class="kw">str</span>(trainx)</code></pre></div>
+<pre><code>##  num [1:10, 1:2352] 0.671 0.671 0.311 0.311 0.689 ...</code></pre>
+<p>Just to verify if the matrix structure is the same afetr looping and applying.</p>
+</div>
+<div id="get-trainx-2" class="section level2">
+<h2><span class="header-section-number">5.3</span> get trainx 2</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+trainx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+trainx2 &lt;-<span class="st">  </span><span class="kw">apply</span>( kinships_all, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_train_matrix</span>(row, <span class="dv">2</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 7.071155 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trainx2 &lt;-<span class="st"> </span><span class="kw">ldply</span>(trainx2, <span class="cf">function</span>(x) x &lt;-<span class="st"> </span><span class="kw">unname</span>(x))
+trainx2 &lt;-<span class="st"> </span><span class="kw">t</span>(trainx2)
+trainx2 &lt;-<span class="st"> </span><span class="kw">unname</span>(trainx2)
+<span class="kw">str</span>(trainx2)</code></pre></div>
+<pre><code>##  num [1:2352, 1:12497] 0.689 0.762 0.843 0.863 0.877 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## store to_delete2
+to_delete2 &lt;-<span class="st"> </span>to_delete <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unique</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>stringr<span class="op">::</span><span class="kw">str_split</span>(<span class="dt">pattern =</span><span class="st">&quot;/&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>, <span class="dt">n =</span> <span class="dv">2</span>)
+
+to_delete2 &lt;-<span class="st"> </span>to_delete2[,<span class="dv">2</span>]
+to_delete2</code></pre></div>
+<pre><code>## [1] &quot;F0460/MID8&quot;  &quot;F0101/MID11&quot;</code></pre>
+</div>
+<div id="refilter-kinships_all" class="section level2">
+<h2><span class="header-section-number">5.4</span> re–filter kinships_all</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">kinships_all_filtered &lt;-
+<span class="st">  </span>kinships_all <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p1 <span class="op">!=</span><span class="st"> </span>to_delete1[<span class="dv">1</span>]) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p1 <span class="op">!=</span><span class="st"> </span>to_delete1[<span class="dv">2</span>]) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p2 <span class="op">!=</span><span class="st"> </span>to_delete2[<span class="dv">1</span>]) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p2 <span class="op">!=</span><span class="st"> </span>to_delete2[<span class="dv">2</span>])
+
+kinships_all_filtered <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(p1<span class="op">==</span><span class="st"> </span>to_delete[<span class="dv">1</span>])</code></pre></div>
+<pre><code>## [1] p1         p2         is_related
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(kinships_all_filtered)</code></pre></div>
+<pre><code>## [1] 12474     3</code></pre>
+<p><strong>Note</strong> We found 12.474 rows while trainx1 and trainx2 have 12.497. There are also 2 empty folders that we have to identify. We will re-run <code>get_train_matrix</code> with the new filtered a list of folders.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+trainx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+trainx2 &lt;-<span class="st">  </span><span class="kw">apply</span>( kinships_all_filtered, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_train_matrix</span>(row, <span class="dv">2</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 4.075043 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trainx2 &lt;-<span class="st"> </span><span class="kw">t</span>(trainx2)
+<span class="co"># trainx2 &lt;- as.matrix(ldply(trainx2, function(x) x &lt;- unname(x)))</span>
+<span class="co"># trainx2 &lt;- unname(trainx2)</span>
+ <span class="kw">str</span>(trainx2)</code></pre></div>
+<pre><code>##  num [1:12474, 1:2352] 0.689 0.311 0.689 0.671 0.671 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## store to_delete2
+to_delete2 &lt;-<span class="st"> </span>to_delete <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unique</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>stringr<span class="op">::</span><span class="kw">str_split</span>(<span class="dt">pattern =</span><span class="st">&quot;/&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>, <span class="dt">n =</span> <span class="dv">2</span>)
+
+to_delete2 &lt;-<span class="st"> </span>to_delete2[,<span class="dv">2</span>]
+to_delete2</code></pre></div>
+<pre><code>## character(0)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+trainx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+trainx1 &lt;-<span class="st">  </span><span class="kw">apply</span>( kinships_all_filtered, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_train_matrix</span>(row, <span class="dv">1</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 3.899389 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"> trainx1 &lt;-<span class="st"> </span><span class="kw">t</span>(trainx1)
+<span class="co"># trainx1 &lt;- as.matrix(ldply(trainx1, function(x) x &lt;- unname(x)))</span>
+<span class="co"># trainx1 &lt;- unname(trainx1)</span>
+<span class="kw">str</span>(trainx1)</code></pre></div>
+<pre><code>##  num [1:12474, 1:2352] 0.671 0.671 0.311 0.311 0.689 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## store to_delete2
+to_delete1 &lt;-<span class="st"> </span>to_delete <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unique</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>stringr<span class="op">::</span><span class="kw">str_split</span>(<span class="dt">pattern =</span><span class="st">&quot;/&quot;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>, <span class="dt">n =</span> <span class="dv">2</span>)
+
+to_delete1 &lt;-<span class="st"> </span>to_delete1[,<span class="dv">2</span>]
+to_delete1</code></pre></div>
+<pre><code>## character(0)</code></pre>
+</div>
+<div id="get-labels" class="section level2">
+<h2><span class="header-section-number">5.5</span> get Labels</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Labels &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">to_categorical</span>(kinships_all_filtered[,<span class="dv">3</span>])
+<span class="kw">str</span>(Labels)</code></pre></div>
+<pre><code>##  num [1:12474, 1:2] 0 1 0 1 0 0 0 0 1 1 ...</code></pre>
+</div>
+</div>
+<div id="keras-tentative" class="section level1">
+<h1><span class="header-section-number">6</span> Keras tentative</h1>
+<div id="sample-test-and-train-data" class="section level2">
+<h2><span class="header-section-number">6.1</span> sample test and Train data</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">982</span>)
+idx &lt;-<span class="st"> </span><span class="kw">seq_len</span>(<span class="kw">nrow</span>(trainx1))
+idx_train &lt;-<span class="st"> </span><span class="kw">sample</span>(idx, <span class="kw">max</span>(idx) <span class="op">*</span><span class="st"> </span><span class="fl">0.8</span>, <span class="dt">replace =</span> <span class="ot">FALSE</span>)
+  
+  train_x1 &lt;-<span class="st"> </span>trainx1[idx_train,]
+  test_x1 &lt;-<span class="st"> </span>trainx1[<span class="op">-</span>idx_train,]
+  train_x2 &lt;-<span class="st"> </span>trainx2[idx_train,]
+  test_x2 &lt;-<span class="st"> </span>trainx2[<span class="op">-</span>idx_train,]
+  
+  Labels_train &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">to_categorical</span>(Labels[idx_train])
+  Labels_test &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">to_categorical</span>(Labels[idx[<span class="op">-</span>idx_train]])
+ 
+  <span class="kw">dim</span>(train_x1)</code></pre></div>
+<pre><code>## [1] 9979 2352</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(Labels_test)</code></pre></div>
+<pre><code>##  num [1:2495, 1:2] 0 0 1 0 1 1 1 1 0 1 ...</code></pre>
+</div>
+<div id="set-the-model" class="section level2">
+<h2><span class="header-section-number">6.2</span> Set the model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># input1 &lt;- layer_input(shape =  c(28, 28, 3))</span>
+<span class="co"># input2 &lt;- layer_input(shape = c(28, 28, 3))</span>
+<span class="co"># </span>
+<span class="co"># conv1 &lt;- input1 %&gt;% </span>
+<span class="co">#   layer_conv_2d(filters = 7, kernel_size = c(1, 1), padding=&#39;same&#39;, activation=&#39;relu&#39;) %&gt;% </span>
+<span class="co">#   layer_conv_2d(filters = 7, kernel_size = c(3, 3), padding=&#39;same&#39;, activation=&#39;relu&#39;)</span>
+<span class="co"># </span>
+<span class="co"># conv2 &lt;- input2 %&gt;% </span>
+<span class="co">#   layer_conv_2d(filters = 7, kernel_size = c(1, 1), padding=&#39;same&#39;, activation=&#39;relu&#39;) %&gt;% </span>
+<span class="co">#   layer_conv_2d(filters = 7, kernel_size = c(3, 3), padding=&#39;same&#39;, activation=&#39;relu&#39;)</span>
+<span class="co"># </span>
+<span class="co"># </span>
+<span class="co"># output &lt;- </span>
+<span class="co">#   layer_concatenate(c(conv1, conv2), axis = 1) %&gt;%</span>
+<span class="co">#   layer_dense(units = 256, activation = &#39;relu&#39;, input_shape = c(2352)) %&gt;% # 28 x 28 x 3</span>
+<span class="co">#   layer_dense(units = 128, activation = &#39;relu&#39;) %&gt;%</span>
+<span class="co">#   layer_dense(units = 2, activation = &#39;softmax&#39;) # we have two output 0,1</span>
+
+
+input1 &lt;-<span class="st"> </span><span class="kw">layer_input</span>(<span class="dt">shape =</span>  <span class="kw">c</span>(<span class="dv">2352</span>))
+input2 &lt;-<span class="st"> </span><span class="kw">layer_input</span>(<span class="dt">shape =</span>  <span class="kw">c</span>(<span class="dv">2352</span>))
+
+<span class="co">#conv1 &lt;- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)</span>
+<span class="co">#conv2 &lt;- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)</span>
+
+output &lt;-
+<span class="st">  </span><span class="kw">layer_concatenate</span>(<span class="kw">list</span>(input1, input2)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st"> </span><span class="co">#  layer_dense(units = 512, activation = &#39;relu&#39;,</span>
+<span class="st">  </span><span class="co">#           kernel_regularizer = regularizer_l2(l = 0.001)) %&gt;%</span>
+<span class="st">  </span><span class="co"># layer_dropout(rate = 0.1) %&gt;% </span>
+<span class="st">  </span><span class="co">#    layer_dense(units = 256, activation = &#39;relu&#39;,</span>
+<span class="st">   </span><span class="co">#              kernel_regularizer = regularizer_l2(l = 0.001)) %&gt;%</span>
+<span class="st">  </span><span class="co">#  layer_dropout(rate = 0.05) %&gt;%</span>
+<span class="st">       </span><span class="kw">layer_dense</span>(<span class="dt">units =</span> <span class="dv">256</span>, <span class="dt">activation =</span> <span class="st">&#39;relu&#39;</span>,
+               <span class="dt">kernel_regularizer =</span> <span class="kw">regularizer_l2</span>(<span class="dt">l =</span> <span class="fl">0.001</span>)) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co">#  layer_dropout(rate = 0.02) %&gt;%</span>
+<span class="st">       </span><span class="kw">layer_dense</span>(<span class="dt">units =</span> <span class="dv">64</span>, <span class="dt">activation =</span> <span class="st">&#39;relu&#39;</span>,
+              <span class="dt">kernel_regularizer =</span> <span class="kw">regularizer_l2</span>(<span class="dt">l =</span> <span class="fl">0.001</span>)) <span class="op">%&gt;%</span>
+<span class="st"> </span><span class="co"># layer_dropout(rate = 0.01) %&gt;%</span>
+<span class="st">  </span><span class="kw">layer_dense</span>(<span class="dt">units =</span> <span class="dv">2</span>, <span class="dt">activation =</span> <span class="st">&#39;softmax&#39;</span>) <span class="co"># we have two output 0,1</span>
+  <span class="co">#layer_flatten() %&gt;% </span>
+  <span class="co">#layer_dense(units = 2, activation = &quot;softmax&quot;)</span>
+
+
+model &lt;-
+<span class="st">  </span><span class="kw">keras_model</span>(<span class="dt">inputs =</span> <span class="kw">list</span>(input1, input2), <span class="dt">outputs =</span> output)
+
+model <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">compile</span>(<span class="dt">optimizer =</span>  <span class="st">&quot;adam&quot;</span>, <span class="co"># , optimizer_rmsprop()</span>
+                  <span class="dt">loss =</span>  <span class="st">&#39;binary_crossentropy&#39;</span>,
+                  <span class="dt">metrics =</span> <span class="st">&#39;accuracy&#39;</span>)
+
+<span class="kw">summary</span>(model)</code></pre></div>
+<pre><code>## ___________________________________________________________________________
+## Layer (type)            Output Shape     Param #  Connected to             
+## ===========================================================================
+## input_1 (InputLayer)    (None, 2352)     0                                 
+## ___________________________________________________________________________
+## input_2 (InputLayer)    (None, 2352)     0                                 
+## ___________________________________________________________________________
+## concatenate (Concatenat (None, 4704)     0        input_1[0][0]            
+##                                                   input_2[0][0]            
+## ___________________________________________________________________________
+## dense (Dense)           (None, 256)      1204480  concatenate[0][0]        
+## ___________________________________________________________________________
+## dense_1 (Dense)         (None, 64)       16448    dense[0][0]              
+## ___________________________________________________________________________
+## dense_2 (Dense)         (None, 2)        130      dense_1[0][0]            
+## ===========================================================================
+## Total params: 1,221,058
+## Trainable params: 1,221,058
+## Non-trainable params: 0
+## ___________________________________________________________________________</code></pre>
+</div>
+<div id="train-the-model" class="section level2">
+<h2><span class="header-section-number">6.3</span> train the model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">history &lt;-<span class="st"> </span>
+<span class="st">  </span>model <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">fit</span>(<span class="kw">list</span>(train_x1, train_x2),
+      Labels_train, 
+      <span class="dt">epochs =</span> <span class="dv">100</span>,
+      <span class="dt">batch_size =</span> <span class="dv">256</span>,
+      <span class="dt">verbose =</span> <span class="dv">1</span>,             <span class="co"># 2</span>
+      <span class="dt">validation_split =</span> <span class="fl">0.2</span>) <span class="co"># list(test_x1, Labels_test),</span>
+
+<span class="kw">plot</span>(history)</code></pre></div>
+<p><img src="Smile_related_keras_files/figure-html/unnamed-chunk-28-1.png" width="576" /></p>
+</div>
+<div id="evaluate" class="section level2">
+<h2><span class="header-section-number">6.4</span> Evaluate</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">score &lt;-<span class="st"> </span>model <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">evaluate</span>(
+  <span class="kw">list</span>(test_x1, test_x2),
+  Labels_test,
+  <span class="dt">verbose =</span> <span class="dv">0</span>
+)
+
+<span class="co"># Output metrics</span>
+<span class="kw">cat</span>(<span class="st">&#39;Test loss:&#39;</span>, score[[<span class="dv">1</span>]], <span class="st">&#39;</span><span class="ch">\n</span><span class="st">&#39;</span>)</code></pre></div>
+<pre><code>## Test loss: 0.6601205</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="st">&#39;Test accuracy:&#39;</span>, score[[<span class="dv">2</span>]], <span class="st">&#39;</span><span class="ch">\n</span><span class="st">&#39;</span>)</code></pre></div>
+<pre><code>## Test accuracy: 0.6264529</code></pre>
+</div>
+</div>
+<div id="prediction" class="section level1">
+<h1><span class="header-section-number">7</span> Prediction</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sample_submission &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;sample_submission.csv&quot;</span>)
+<span class="kw">head</span>(sample_submission)</code></pre></div>
+<pre><code>##                       img_pair is_related
+## 1: face05508.jpg-face01210.jpg          0
+## 2: face05750.jpg-face00898.jpg          0
+## 3: face05820.jpg-face03938.jpg          0
+## 4: face02104.jpg-face01172.jpg          0
+## 5: face02428.jpg-face05611.jpg          0
+## 6: face01219.jpg-face00274.jpg          0</code></pre>
+<div id="get-testx1-and-testx2-from-sample_submission-file" class="section level2">
+<h2><span class="header-section-number">7.1</span> get testx1 and testx2 from sample_submission file</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sample_submission[, <span class="kw">c</span>(<span class="st">&quot;p1&quot;</span>, <span class="st">&quot;p2&quot;</span>) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">tstrsplit</span>(img_pair, <span class="st">&quot;-&quot;</span>, <span class="dt">fixed=</span><span class="ot">TRUE</span>)]
+sample_submission <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>()</code></pre></div>
+<pre><code>##                       img_pair is_related            p1            p2
+## 1: face05508.jpg-face01210.jpg          0 face05508.jpg face01210.jpg
+## 2: face05750.jpg-face00898.jpg          0 face05750.jpg face00898.jpg
+## 3: face05820.jpg-face03938.jpg          0 face05820.jpg face03938.jpg
+## 4: face02104.jpg-face01172.jpg          0 face02104.jpg face01172.jpg
+## 5: face02428.jpg-face05611.jpg          0 face02428.jpg face05611.jpg
+## 6: face01219.jpg-face00274.jpg          0 face01219.jpg face00274.jpg</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">get_test_matrix &lt;-<span class="st"> </span><span class="cf">function</span>(df, col){
+   pathfile &lt;-<span class="st">  </span><span class="kw">paste0</span>(<span class="st">&quot;test/&quot;</span>, df[col])
+
+    ## Check if the path exists &amp;&amp; the folder is not empty
+  <span class="cf">if</span>(<span class="kw">file.exists</span>(pathfile)){
+
+  <span class="co"># load image</span>
+  img &lt;-<span class="st"> </span>EBImage<span class="op">::</span><span class="kw">readImage</span>(pathfile)
+
+  <span class="co"># resize images</span>
+  img &lt;-<span class="st">   </span>EBImage<span class="op">::</span><span class="kw">resize</span>(img, <span class="dv">28</span>, <span class="dv">28</span>)
+
+  ## reshape images
+  img &lt;-<span class="st"> </span>keras<span class="op">::</span><span class="kw">array_reshape</span>(img, <span class="kw">c</span>(<span class="dv">28</span>,<span class="dv">28</span>,<span class="dv">3</span>))
+
+  testx &lt;-<span class="st"> </span><span class="kw">rbind</span>(testx, img)
+
+  }<span class="cf">else</span>{
+    to_delete &lt;&lt;-<span class="st"> </span><span class="kw">c</span>(to_delete, <span class="kw">paste0</span>(pathfile))
+  }
+   <span class="kw">return</span>(testx)
+}
+
+to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+testx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+testx1 &lt;-<span class="st">  </span><span class="kw">apply</span>(sample_submission, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_test_matrix</span>(row, <span class="dv">3</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 1.266156 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">testx1 &lt;-<span class="st"> </span><span class="kw">t</span>(testx1)
+<span class="kw">str</span>(testx1)</code></pre></div>
+<pre><code>##  num [1:5310, 1:2352] 0.481 0.146 0.455 0.647 0.655 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete</code></pre></div>
+<pre><code>## NULL</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete &lt;-<span class="st"> </span><span class="ot">NULL</span>
+testx &lt;-<span class="st"> </span><span class="ot">NULL</span>
+star &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+testx2 &lt;-<span class="st">  </span><span class="kw">apply</span>(sample_submission, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="kw">get_test_matrix</span>(row, <span class="dv">4</span>))
+end &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
+<span class="kw">print</span>(end <span class="op">-</span><span class="st"> </span>star)</code></pre></div>
+<pre><code>## Time difference of 1.360726 mins</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">testx2 &lt;-<span class="st"> </span><span class="kw">t</span>(testx2)
+<span class="kw">str</span>(testx2)</code></pre></div>
+<pre><code>##  num [1:5310, 1:2352] 0.431 0.315 0.383 0.517 0.751 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">to_delete</code></pre></div>
+<pre><code>## NULL</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">is_related &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <span class="kw">list</span>(testx1, testx2))
+is_related <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>()</code></pre></div>
+<pre><code>##           [,1]      [,2]
+## [1,] 0.4591229 0.5408770
+## [2,] 0.6044239 0.3955760
+## [3,] 0.5666160 0.4333840
+## [4,] 0.6910377 0.3089623
+## [5,] 0.6339806 0.3660194
+## [6,] 0.5956860 0.4043140</code></pre>
+</div>
+</div>
+<div id="submission" class="section level1">
+<h1><span class="header-section-number">8</span> submission</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt_submission &lt;-<span class="st"> </span><span class="kw">data.table</span>(
+  <span class="dt">img_pair =</span> sample_submission<span class="op">$</span>img_pair,
+  <span class="dt">is_related =</span> is_related[,<span class="dv">2</span>])
+<span class="kw">head</span>(dt_submission)</code></pre></div>
+<pre><code>##                       img_pair is_related
+## 1: face05508.jpg-face01210.jpg  0.5408770
+## 2: face05750.jpg-face00898.jpg  0.3955760
+## 3: face05820.jpg-face03938.jpg  0.4333840
+## 4: face02104.jpg-face01172.jpg  0.3089623
+## 5: face02428.jpg-face05611.jpg  0.3660194
+## 6: face01219.jpg-face00274.jpg  0.4043140</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fwrite</span>(dt_submission, <span class="dt">file =</span> <span class="st">&quot;submission.csv&quot;</span>)</code></pre></div>
+</div>
+<div id="save-model" class="section level1">
+<h1><span class="header-section-number">9</span> save model</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#model %&gt;% save_model_hdf5(&quot;my_model.h5&quot;)</span>
+<span class="co">#new_model &lt;- load_model_hdf5(&quot;my_model.h5&quot;)</span></code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
