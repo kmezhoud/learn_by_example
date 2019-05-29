@@ -53,6 +53,27 @@ test[1:10,1:14]
 * The goal is to predict `target` column depending on 200  double values.
 * In the other hand **split** the dataset by condition if each costumer will get transaction (1) or not (0) depending on 200 variables
 
+# Scaling 
+```{r}
+trainremoveCols <- c('target','ID_code')
+testremoveCols <- c('ID_code')
+
+target <- train$target
+ID_code <- test$ID_code
+
+train[,(trainremoveCols) := NULL]
+test[,(testremoveCols) := NULL]
+
+# Do scaling
+dt <- rbind(train, test)
+scale.cols <- colnames(dt)
+dt[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
+train <- cbind(target, head(dt,nrow(train)))
+test  <- cbind(ID_code, tail(dt, nrow(test)))
+rm(dt)
+gc() # It can be useful to call gc after a large object has been removed, as this may prompt R to return memory to the operating system.
+test[1:10,1:14]
+```
 
 # Prune the Data
 We can remove the first column `ID_code` and check for `NA` cases.
@@ -60,7 +81,6 @@ deep learning model needs descrotized factor variables as `target`. We need to c
 
 ```{r}
 train_tbl <- train %>%
-  select(-ID_code) %>%
   mutate(target = target %>% as.character() %>% as.numeric()) %>%
   drop_na()
 
@@ -117,7 +137,7 @@ Artificial Neural Networks are best when the data is one-hot encoded, scaled and
 
 * We will not normalize by log. We have 200000 samples. We consider the data as normal distributed.
 
-A new package, recipes, makes creating ML data preprocessing workflows a breeze!
+The package,`recipes`, makes creating ML data preprocessing workflows a breeze!
 
 # Create recipe
 ```{r}
@@ -172,28 +192,10 @@ model_keras %>%
   
   # First hidden layer
   layer_dense(
-    units              = 100, 
-    kernel_initializer = "uniform", 
+    units              = 16, 
+    kernel_initializer = "normal", 
     activation         = "relu", 
     input_shape        = ncol(x_train_8)) %>% 
-  
-  # Dropout to prevent overfitting
-  layer_dropout(rate = 0.1) %>%
-  
-  # Second hidden layer
-  layer_dense(
-    units              = 50, 
-    kernel_initializer = "uniform", 
-    activation         = "relu") %>% 
-  
-  # Dropout to prevent overfitting
-  layer_dropout(rate = 0.1) %>%
-
-    # Second hidden layer
-  layer_dense(
-    units              = 50, 
-    kernel_initializer = "uniform", 
-    activation         = "relu") %>% 
   
   # Dropout to prevent overfitting
   layer_dropout(rate = 0.1) %>%
@@ -221,14 +223,16 @@ We use the fit() function to run the ANN on our training data.
 * We set validation_split = 0.30 to include 30% of the data for model validation, which prevents overfitting.
 
 ```{r}
+set.seed(546)
 # Fit the keras model to the training data
 history <- fit(
   object           = model_keras, 
   x                = as.matrix(x_train_8), 
   y                = y_train_vec,
   batch_size       = 26, 
-  epochs           = 20,
-  validation_split = 0.30
+  epochs           = 15,
+  validation_split = 0.30,
+  verbose = 1
 )
 ```
 
@@ -345,6 +349,6 @@ dt_submission <- data.frame(
 ```
 
 ```{r}
-#fwrite(dt_submission[,c(1,2)], "submission.csv")
+fwrite(dt_submission, "submission.csv")
 ```
 

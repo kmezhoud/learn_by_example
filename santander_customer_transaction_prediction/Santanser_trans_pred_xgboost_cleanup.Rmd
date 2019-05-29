@@ -28,13 +28,36 @@ library(xgboost)
 require(Ckmeans.1d.dp)
 library(ggplot2)
 library(Matrix)
+library(parallel)
 ```
 # Load train Data and format to DMatrix
 
 ```{r}
-train <- fread(file = "train.csv")
+train <- fread(file = "train.csv", showProgress = TRUE)
+test <- data.table::fread(file = "test.csv")
 train[1:10,1:14]
+```
 
+# Scaling 
+```{r}
+trainremoveCols <- c('target','ID_code')
+testremoveCols <- c('ID_code')
+
+target <- train$target
+ID_code <- test$ID_code
+
+train[,(trainremoveCols) := NULL]
+test[,(testremoveCols) := NULL]
+
+# Do scaling
+dt <- rbind(train, test)
+scale.cols <- colnames(dt)
+dt[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
+train <- cbind(target, head(dt,nrow(train)))
+test  <- cbind(ID_code, tail(dt, nrow(test)))
+rm(dt)
+gc() # It can be useful to call gc after a large object has been removed, as this may prompt R to return memory to the operating system.
+test[1:10,1:14]
 ```
 # Split Into Train/Test Sets
 ```{r}
@@ -55,17 +78,14 @@ train_8[1:10, 1:14]
 
 ## format train and test to DMatrix 
 ```{r}
-train_8$ID_code <- NULL
+#train_8$ID_code <- NULL
 train_8_sparse <- sparse.model.matrix(target ~., data=train_8)
 dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$target)
 
-test_2$ID_code <- NULL
+#test_2$ID_code <- NULL
 test_2_sparse <- sparse.model.matrix(target ~., data=test_2)
 dtest_2 <- xgb.DMatrix(data=test_2_sparse, label = test_2$target)
 ```
-
-
-
 
 # Optimize features with Cross validation
 
@@ -73,26 +93,26 @@ Here, we can see after how many rounds, we achieved the smallest test error.
 ```{r}
 
 params <- list(booster = "gbtree",
-               tree_method = "auto",
+              tree_method = "auto",
               objective = "binary:logistic",
               eval_metric = "auc",         #  for Binary classification error rate
-              max_depth = 2,                 # 6 makes training heavy, there is no correlation between features
+              max_depth = 2,                 # default 6, it makes training heavy, there is no correlation between features nor complex data/classification (binary)
               eta = 0.01,                     # learning rate
-              subsample = 0.5,              # prevent overfitting
-              colsample_bytree = 0.1         # specify the fraction of columns to be subsampled.
+              subsample = 0.5,              #  (1) prevent overfitting. O.5 means xgboost samples half of the training data prior to growing trees.
+              colsample_bytree = 0.1,         # specify the fraction of columns to be subsampled.
+              nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE)  # detect and use all cpu in any OS.
              )
 
 
 tme <- Sys.time()
 cv_model <- xgb.cv(params = params,
                    data = dtrain_8,
-                   nthread = 2,
                    nrounds = 30,
-                   verbose = TRUE,
-                   nfold = 5,
-                   print_every_n = 100,
-                   early_stopping_rounds = 500,
-                   maximize = TRUE,
+                   verbose = TRUE,     # print AUC
+                   print_every_n = 5,  # print 
+                   nfold = 5,          # default = 3
+                   early_stopping_rounds = 5,      # CV error needs to decrease at least every <early_stopping_rounds>
+                   maximize = TRUE,   # When it is TRUE, it means the larger evaluation score of <early_stopping_rounds>.
                    prediction = TRUE) # prediction of cv folds
 Sys.time() - tme
 ```
@@ -114,14 +134,13 @@ Sys.time() - tme
 
 
 # Prediction
-## Load test data and format to DMatrix
+## Format test dataset to DMatrix
 ```{r}
-test <- data.table::fread(file = "test.csv")
-ID_code <- test$ID_code
-test$ID_code <- NULL
+#test <- data.table::fread(file = "test.csv")
+#ID_code <- test$ID_code
+#test$ID_code <- NULL
 test_sparse <- sparse.model.matrix(ID_code ~., data=test)
- dtest <- xgb.DMatrix(data=test_sparse, label = ID_code)
-
+dtest <- xgb.DMatrix(data=test_sparse, label = test$ID_code)
 ```
 ## Prediction with Tree xgboost model
 
@@ -146,5 +165,20 @@ summary(dt_submission)
 
 ```{r}
 fwrite(dt_submission, "dt_submission.csv")
+```
+
+```{r}
+# r <- 8
+# c <- 10
+# m0 <- matrix(0, r, c)
+# features<-apply(m0, c(1,2), function(x) sample(c(0,1),1))
+# folds<-CreateFolds(features,4)
+# 
+# Subtrain <- train[1:10, 1:10]
+# Subtrain[,ID_code := NULL]
+# Subtrain[2, `:=`(target =3)]
+# Subtrain_bkp <- Subtrain
+# scale.cols <- colnames(Subtrain)
+# Subtrain[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
 ```
 
