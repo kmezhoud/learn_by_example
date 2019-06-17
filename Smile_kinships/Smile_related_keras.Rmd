@@ -28,6 +28,7 @@ library(plyr)
 library(stringr)
 library(EBImage)
 library(keras)
+library(imager)
 ```
 
 
@@ -292,13 +293,15 @@ get_train_matrix <- function(df, col){
    name1 <- sample(x = list.files(pathfolder), size = 1, replace = TRUE)
 
   # load image
-  img1 <- EBImage::readImage(paste0(pathfolder,"/",name1))
+  img1 <- imager::load.image(paste0(pathfolder,"/",name1))
+  #img1 <- EBImage::readImage(paste0(pathfolder,"/",name1))
 
   # resize images
-  img1 <-   EBImage::resize(img1, 28, 28)
+  img1 <- imager::resize(img1, 32, 32)
+  #img1 <-   EBImage::resize(img1, 32, 32)
 
   ## reshape images
-  img1 <- keras::array_reshape(img1, c(28,28,3))
+  img1 <- keras::array_reshape(img1, c(32,32,3))
 
   trainx <- rbind(trainx, img1)
 
@@ -334,6 +337,7 @@ trainx1 <- t(trainx1)
 #str(lapply(trainx1, function(x) unname(x)) )
 trainx1 <- unname(trainx1)
 str(trainx1)
+
 ```
 
 ```{r}
@@ -370,13 +374,15 @@ get_trainx <- function(df){
       name1 <- sample(x = list.files(pathfolder), size = 1, replace = TRUE)
       
       # load image 
+      #img1 <- imager::load.image(paste0(pathfolder,"/",name1))
       img1 <- EBImage::readImage(paste0(pathfolder,"/",name1))
       
       # resize images
-      img1 <-   EBImage::resize(img1, 28, 28)
+      #img1 <- imager::resize(img1, 32, 32)
+      img1 <-   EBImage::resize(img1, 32, 32)
       
       ## reshape images
-      img1 <- keras::array_reshape(img1, c(28,28,3))
+      img1 <- keras::array_reshape(img1, c(32,32,3))
       
       trainx <- rbind( trainx, img1)
       
@@ -528,13 +534,13 @@ str(Labels_test)
 # 
 # output <- 
 #   layer_concatenate(c(conv1, conv2), axis = 1) %>%
-#   layer_dense(units = 256, activation = 'relu', input_shape = c(2352)) %>% # 28 x 28 x 3
-#   layer_dense(units = 128, activation = 'relu') %>%
+#   layer_dense(units = 256, activation = 'relu', input_shape = c(3072)) %>% # 28 x 28 x 3
+#   layer_dense(units = 32, activation = 'relu') %>%
 #   layer_dense(units = 2, activation = 'softmax') # we have two output 0,1
 
 
-input1 <- layer_input(shape =  c(2352))
-input2 <- layer_input(shape =  c(2352))
+input1 <- layer_input(shape =  c(3072))
+input2 <- layer_input(shape =  c(3072))
 
 #conv1 <- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)
 #conv2 <- layer_conv_2d( filters = 4, input_shape = c(28, 28, 3), kernel_size = 3)
@@ -547,14 +553,14 @@ output <-
   #    layer_dense(units = 256, activation = 'relu',
    #              kernel_regularizer = regularizer_l2(l = 0.001)) %>%
   #  layer_dropout(rate = 0.05) %>%
-       layer_dense(units = 256, activation = 'relu',
+       layer_dense(units = 100, activation = 'relu',
                kernel_regularizer = regularizer_l2(l = 0.001)) %>%
   #  layer_dropout(rate = 0.02) %>%
-      layer_dense(units = 64, activation = 'relu',
+      layer_dense(units = 50, activation = 'relu',
              kernel_regularizer = regularizer_l2(l = 0.001)) %>%
- layer_dropout(rate = 0.01) %>%
+ #layer_dropout(rate = 0.01) %>%
 
-  layer_dense(units = 2, activation = 'softmax') # we have two output 0,1
+  layer_dense(units = 2, activation = 'sigmoid') # we have two output 0,1
   #  layer_flatten() %>%
   #layer_dense(units = 2, activation = "softmax")
 
@@ -577,7 +583,7 @@ history <-
   fit(list(train_x1, train_x2),
       Labels_train, 
       epochs = 100,
-      batch_size = 256,
+      batch_size = 16,
       verbose = 1,             # 2
       validation_split = 0.2) # list(test_x1, Labels_test),
 
@@ -588,6 +594,31 @@ plot(history)
 ```
 
 
+
+## fit_generator
+
+```{r}
+sampling_generator <- function(train_x1, train_x2, Labels_train, batch_size){
+    function() {
+    rows <- sample(1:nrow(train_x1), batch_size, replace = TRUE)
+    
+  ls_train <-  list(train_x1[rows,],
+         train_x2[rows,],
+         Labels_train[rows,])
+    #return(ls_train)
+    }
+
+}
+
+model %>% 
+  keras::fit_generator(sampling_generator(train_x1, 
+                                          train_x2,
+                                          Labels_train,
+                                          batch_size = 128),
+            steps_per_epoch = nrow(train_x1) / 128, epochs = 10)
+
+```
+
 ##  Evaluate
 ```{r}
 score <- model %>% evaluate(
@@ -597,8 +628,9 @@ score <- model %>% evaluate(
 )
 
 # Output metrics
-cat('Test loss:', score[[1]], '\n')
 cat('Test accuracy:', score[[2]], '\n')
+cat('Test loss:', score[[1]], '\n')
+
 ```
 
 
@@ -630,10 +662,10 @@ get_test_matrix <- function(df, col){
   img <- EBImage::readImage(pathfile)
 
   # resize images
-  img <-   EBImage::resize(img, 28, 28)
+  img <-   EBImage::resize(img, 32, 32)
 
   ## reshape images
-  img <- keras::array_reshape(img, c(28,28,3))
+  img <- keras::array_reshape(img, c(32,32,3))
 
   testx <- rbind(testx, img)
 
