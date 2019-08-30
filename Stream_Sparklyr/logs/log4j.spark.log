@@ -1,0 +1,1264 @@
+19/08/30 15:05:00 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+19/08/30 15:05:07 INFO SparkContext: Running Spark version 2.4.0
+19/08/30 15:05:07 INFO SparkContext: Submitted application: sparklyr
+19/08/30 15:05:07 INFO SecurityManager: Changing view acls to: Mezhoud
+19/08/30 15:05:07 INFO SecurityManager: Changing modify acls to: Mezhoud
+19/08/30 15:05:07 INFO SecurityManager: Changing view acls groups to: 
+19/08/30 15:05:07 INFO SecurityManager: Changing modify acls groups to: 
+19/08/30 15:05:07 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(Mezhoud); groups with view permissions: Set(); users  with modify permissions: Set(Mezhoud); groups with modify permissions: Set()
+19/08/30 15:05:07 INFO Utils: Successfully started service 'sparkDriver' on port 51430.
+19/08/30 15:05:07 INFO SparkEnv: Registering MapOutputTracker
+19/08/30 15:05:07 INFO SparkEnv: Registering BlockManagerMaster
+19/08/30 15:05:07 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+19/08/30 15:05:07 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+19/08/30 15:05:07 INFO DiskBlockManager: Created local directory at /private/var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/blockmgr-afc1ee14-de3a-4087-9442-11700a03cfdf
+19/08/30 15:05:07 INFO MemoryStore: MemoryStore started with capacity 912.3 MB
+19/08/30 15:05:07 INFO SparkEnv: Registering OutputCommitCoordinator
+19/08/30 15:05:08 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+19/08/30 15:05:08 INFO SparkUI: Bound SparkUI to 127.0.0.1, and started at http://localhost:4040
+19/08/30 15:05:08 INFO SparkContext: Added JAR file:/Library/Frameworks/R.framework/Versions/3.5/Resources/library/sparklyr/java/sparklyr-2.3-2.11.jar at spark://localhost:51430/jars/sparklyr-2.3-2.11.jar with timestamp 1567173908304
+19/08/30 15:05:08 INFO Executor: Starting executor ID driver on host localhost
+19/08/30 15:05:08 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 51431.
+19/08/30 15:05:08 INFO NettyBlockTransferService: Server created on localhost:51431
+19/08/30 15:05:08 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+19/08/30 15:05:08 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, localhost, 51431, None)
+19/08/30 15:05:08 INFO BlockManagerMasterEndpoint: Registering block manager localhost:51431 with 912.3 MB RAM, BlockManagerId(driver, localhost, 51431, None)
+19/08/30 15:05:08 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, localhost, 51431, None)
+19/08/30 15:05:08 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, localhost, 51431, None)
+19/08/30 15:05:09 INFO SharedState: loading hive config file: file:/Users/Mezhoud/spark/spark-2.4.0-bin-hadoop2.7/conf/hive-site.xml
+19/08/30 15:05:09 INFO SharedState: Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir ('file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/spark-warehouse/').
+19/08/30 15:05:09 INFO SharedState: Warehouse path is 'file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/spark-warehouse/'.
+19/08/30 15:05:11 INFO StateStoreCoordinatorRef: Registered StateStoreCoordinator endpoint
+19/08/30 15:05:15 INFO HiveUtils: Initializing HiveMetastoreConnection version 1.2.1 using Spark classes.
+19/08/30 15:05:16 INFO HiveMetaStore: 0: Opening raw store with implemenation class:org.apache.hadoop.hive.metastore.ObjectStore
+19/08/30 15:05:21 INFO ObjectStore: ObjectStore, initialize called
+19/08/30 15:05:22 INFO Persistence: Property hive.metastore.integral.jdo.pushdown unknown - will be ignored
+19/08/30 15:05:22 INFO Persistence: Property datanucleus.cache.level2 unknown - will be ignored
+19/08/30 15:05:25 INFO ObjectStore: Setting MetaStore object pin classes with hive.metastore.cache.pinobjtypes="Table,StorageDescriptor,SerDeInfo,Partition,Database,Type,FieldSchema,Order"
+19/08/30 15:05:26 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+19/08/30 15:05:26 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+19/08/30 15:05:28 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MFieldSchema" is tagged as "embedded-only" so does not have its own datastore table.
+19/08/30 15:05:28 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MOrder" is tagged as "embedded-only" so does not have its own datastore table.
+19/08/30 15:05:28 INFO MetaStoreDirectSql: Using direct SQL, underlying DB is DERBY
+19/08/30 15:05:28 INFO ObjectStore: Initialized ObjectStore
+19/08/30 15:05:28 WARN ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.2.0
+19/08/30 15:05:28 WARN ObjectStore: Failed to get database default, returning NoSuchObjectException
+19/08/30 15:05:28 INFO HiveMetaStore: Added admin role in metastore
+19/08/30 15:05:28 INFO HiveMetaStore: Added public role in metastore
+19/08/30 15:05:29 INFO HiveMetaStore: No user is added in admin role, since config is empty
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_all_databases
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_all_databases	
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_functions: db=default pat=*
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_functions: db=default pat=*	
+19/08/30 15:05:29 INFO Datastore: The class "org.apache.hadoop.hive.metastore.model.MResourceUri" is tagged as "embedded-only" so does not have its own datastore table.
+19/08/30 15:05:29 INFO SessionState: Created HDFS directory: /tmp/hive/Mezhoud
+19/08/30 15:05:29 INFO SessionState: Created local directory: /var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/Mezhoud
+19/08/30 15:05:29 INFO SessionState: Created local directory: /var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/1678e5ad-5ad0-45ba-91d5-611065900489_resources
+19/08/30 15:05:29 INFO SessionState: Created HDFS directory: /tmp/hive/Mezhoud/1678e5ad-5ad0-45ba-91d5-611065900489
+19/08/30 15:05:29 INFO SessionState: Created local directory: /var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/Mezhoud/1678e5ad-5ad0-45ba-91d5-611065900489
+19/08/30 15:05:29 INFO SessionState: Created HDFS directory: /tmp/hive/Mezhoud/1678e5ad-5ad0-45ba-91d5-611065900489/_tmp_space.db
+19/08/30 15:05:29 INFO HiveClientImpl: Warehouse location for Hive client (version 1.2.2) is file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/spark-warehouse/
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_database: default
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: default	
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_database: global_temp
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: global_temp	
+19/08/30 15:05:29 WARN ObjectStore: Failed to get database global_temp, returning NoSuchObjectException
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_database: default
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: default	
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_database: default
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: default	
+19/08/30 15:05:29 INFO HiveMetaStore: 0: get_tables: db=default pat=*
+19/08/30 15:05:29 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_tables: db=default pat=*	
+19/08/30 15:05:30 INFO CodeGenerator: Code generated in 446.905036 ms
+19/08/30 15:05:33 INFO HiveMetaStore: 0: get_database: default
+19/08/30 15:05:33 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: default	
+19/08/30 15:05:33 INFO HiveMetaStore: 0: get_database: default
+19/08/30 15:05:33 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_database: default	
+19/08/30 15:05:33 INFO HiveMetaStore: 0: get_tables: db=default pat=*
+19/08/30 15:05:33 INFO audit: ugi=Mezhoud	ip=unknown-ip-addr	cmd=get_tables: db=default pat=*	
+19/08/30 15:05:36 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:05:36 INFO FileSourceStrategy: Post-Scan Filters: (length(trim(value#14, None)) > 0)
+19/08/30 15:05:36 INFO FileSourceStrategy: Output Data Schema: struct<value: string>
+19/08/30 15:05:36 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:05:36 INFO CodeGenerator: Code generated in 30.068095 ms
+19/08/30 15:05:36 INFO CodeGenerator: Code generated in 57.340503 ms
+19/08/30 15:05:37 INFO MemoryStore: Block broadcast_0 stored as values in memory (estimated size 282.4 KB, free 912.0 MB)
+19/08/30 15:05:37 INFO MemoryStore: Block broadcast_0_piece0 stored as bytes in memory (estimated size 24.0 KB, free 912.0 MB)
+19/08/30 15:05:37 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.3 MB)
+19/08/30 15:05:37 INFO SparkContext: Created broadcast 0 from csv at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:37 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:05:37 INFO SparkContext: Starting job: csv at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:37 INFO DAGScheduler: Got job 0 (csv at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:05:37 INFO DAGScheduler: Final stage: ResultStage 0 (csv at NativeMethodAccessorImpl.java:0)
+19/08/30 15:05:37 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:05:37 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:05:37 INFO DAGScheduler: Submitting ResultStage 0 (MapPartitionsRDD[3] at csv at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:05:37 INFO MemoryStore: Block broadcast_1 stored as values in memory (estimated size 8.8 KB, free 912.0 MB)
+19/08/30 15:05:37 INFO MemoryStore: Block broadcast_1_piece0 stored as bytes in memory (estimated size 4.5 KB, free 912.0 MB)
+19/08/30 15:05:37 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on localhost:51431 (size: 4.5 KB, free: 912.3 MB)
+19/08/30 15:05:37 INFO SparkContext: Created broadcast 1 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:05:37 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 0 (MapPartitionsRDD[3] at csv at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:05:37 INFO TaskSchedulerImpl: Adding task set 0.0 with 1 tasks
+19/08/30 15:05:38 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:05:38 INFO Executor: Running task 0.0 in stage 0.0 (TID 0)
+19/08/30 15:05:38 INFO Executor: Fetching spark://localhost:51430/jars/sparklyr-2.3-2.11.jar with timestamp 1567173908304
+19/08/30 15:05:38 INFO TransportClientFactory: Successfully created connection to localhost/127.0.0.1:51430 after 36 ms (0 ms spent in bootstraps)
+19/08/30 15:05:38 INFO Utils: Fetching spark://localhost:51430/jars/sparklyr-2.3-2.11.jar to /private/var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/spark-f40d3263-d485-4668-8746-463272bdb904/userFiles-b9efaaca-02cc-4107-aab2-dd703bc9ec06/fetchFileTemp5978823002485910066.tmp
+19/08/30 15:05:38 INFO Executor: Adding file:/private/var/folders/ww/z_jbqfm56xb_2d4np5gwcv2c0000gp/T/spark-f40d3263-d485-4668-8746-463272bdb904/userFiles-b9efaaca-02cc-4107-aab2-dd703bc9ec06/sparklyr-2.3-2.11.jar to class loader
+19/08/30 15:05:38 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_1.csv, range: 0-31, partition values: [empty row]
+19/08/30 15:05:38 INFO CodeGenerator: Code generated in 18.772865 ms
+19/08/30 15:05:38 INFO Executor: Finished task 0.0 in stage 0.0 (TID 0). 1267 bytes result sent to driver
+19/08/30 15:05:38 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 478 ms on localhost (executor driver) (1/1)
+19/08/30 15:05:38 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool 
+19/08/30 15:05:38 INFO DAGScheduler: ResultStage 0 (csv at NativeMethodAccessorImpl.java:0) finished in 0.665 s
+19/08/30 15:05:38 INFO DAGScheduler: Job 0 finished: csv at NativeMethodAccessorImpl.java:0, took 0.757512 s
+19/08/30 15:05:38 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:05:38 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:05:38 INFO FileSourceStrategy: Output Data Schema: struct<value: string>
+19/08/30 15:05:38 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:05:38 INFO CodeGenerator: Code generated in 11.158555 ms
+19/08/30 15:05:38 INFO MemoryStore: Block broadcast_2 stored as values in memory (estimated size 282.4 KB, free 911.7 MB)
+19/08/30 15:05:38 INFO MemoryStore: Block broadcast_2_piece0 stored as bytes in memory (estimated size 24.0 KB, free 911.7 MB)
+19/08/30 15:05:38 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.2 MB)
+19/08/30 15:05:38 INFO SparkContext: Created broadcast 2 from csv at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:38 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:05:38 INFO SparkContext: Starting job: csv at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:38 INFO DAGScheduler: Got job 1 (csv at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:05:38 INFO DAGScheduler: Final stage: ResultStage 1 (csv at NativeMethodAccessorImpl.java:0)
+19/08/30 15:05:38 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:05:38 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:05:38 INFO DAGScheduler: Submitting ResultStage 1 (MapPartitionsRDD[8] at csv at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:05:38 INFO MemoryStore: Block broadcast_3 stored as values in memory (estimated size 13.4 KB, free 911.7 MB)
+19/08/30 15:05:38 INFO MemoryStore: Block broadcast_3_piece0 stored as bytes in memory (estimated size 7.3 KB, free 911.7 MB)
+19/08/30 15:05:38 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on localhost:51431 (size: 7.3 KB, free: 912.2 MB)
+19/08/30 15:05:38 INFO SparkContext: Created broadcast 3 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:05:38 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 1 (MapPartitionsRDD[8] at csv at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:05:38 INFO TaskSchedulerImpl: Adding task set 1.0 with 1 tasks
+19/08/30 15:05:38 INFO TaskSetManager: Starting task 0.0 in stage 1.0 (TID 1, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:05:38 INFO Executor: Running task 0.0 in stage 1.0 (TID 1)
+19/08/30 15:05:38 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_1.csv, range: 0-31, partition values: [empty row]
+19/08/30 15:05:38 INFO Executor: Finished task 0.0 in stage 1.0 (TID 1). 1512 bytes result sent to driver
+19/08/30 15:05:38 INFO TaskSetManager: Finished task 0.0 in stage 1.0 (TID 1) in 46 ms on localhost (executor driver) (1/1)
+19/08/30 15:05:38 INFO TaskSchedulerImpl: Removed TaskSet 1.0, whose tasks have all completed, from pool 
+19/08/30 15:05:38 INFO DAGScheduler: ResultStage 1 (csv at NativeMethodAccessorImpl.java:0) finished in 0.057 s
+19/08/30 15:05:38 INFO DAGScheduler: Job 1 finished: csv at NativeMethodAccessorImpl.java:0, took 0.062877 s
+19/08/30 15:05:40 INFO MicroBatchExecution: Starting stream_2ec69d42981 [id = ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc, runId = 8d6e11a7-e94b-4164-920b-dc87ae113a1a]. Use file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint to store the query checkpoint.
+19/08/30 15:05:40 INFO FileStreamSourceLog: Set the compact interval to 10 [defaultCompactInterval: 10]
+19/08/30 15:05:40 INFO FileStreamSource: maxFilesPerBatch = None, maxFileAgeMs = 604800000
+19/08/30 15:05:40 INFO MicroBatchExecution: Using Source [FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]] from DataSourceV1 named 'FileSource[source]' [DataSource(org.apache.spark.sql.SparkSession@37a4461f,csv,List(),Some(StructType(StructField(x,IntegerType,true))),List(),None,Map(path -> source, nullValue -> , inferSchema -> true, quote -> ", escape -> \, charset -> UTF-8, header -> true, delimiter -> ,),None)]
+19/08/30 15:05:40 INFO MicroBatchExecution: Starting new streaming query.
+19/08/30 15:05:40 INFO MicroBatchExecution: Stream started from {}
+19/08/30 15:05:40 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/0 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.0.10458e17-cfb3-4c28-8351-1b0467b50476.tmp
+19/08/30 15:05:40 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.0.10458e17-cfb3-4c28-8351-1b0467b50476.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/0
+19/08/30 15:05:40 INFO FileStreamSource: Log offset set to 0 with 1 new files
+19/08/30 15:05:40 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/0 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.0.272d73cd-0da2-48e3-8f5d-87531c3c011d.tmp
+19/08/30 15:05:40 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.0.272d73cd-0da2-48e3-8f5d-87531c3c011d.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/0
+19/08/30 15:05:40 INFO MicroBatchExecution: Committed offsets for batch 0. Metadata OffsetSeqMetadata(0,1567173940771,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:05:40 INFO FileStreamSource: Processing 1 files from 0:0
+19/08/30 15:05:41 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:05:41 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:05:41 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:05:41 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:05:41 INFO MemoryStore: Block broadcast_4 stored as values in memory (estimated size 282.6 KB, free 911.4 MB)
+19/08/30 15:05:41 INFO MemoryStore: Block broadcast_4_piece0 stored as bytes in memory (estimated size 24.0 KB, free 911.4 MB)
+19/08/30 15:05:41 INFO BlockManagerInfo: Added broadcast_4_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.2 MB)
+19/08/30 15:05:41 INFO SparkContext: Created broadcast 4 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:41 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:05:41 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:41 INFO DAGScheduler: Got job 2 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:05:41 INFO DAGScheduler: Final stage: ResultStage 2 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:05:41 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:05:41 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:05:41 INFO DAGScheduler: Submitting ResultStage 2 (MapPartitionsRDD[10] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:05:41 INFO MemoryStore: Block broadcast_5 stored as values in memory (estimated size 148.1 KB, free 911.2 MB)
+19/08/30 15:05:41 INFO MemoryStore: Block broadcast_5_piece0 stored as bytes in memory (estimated size 53.8 KB, free 911.2 MB)
+19/08/30 15:05:41 INFO BlockManagerInfo: Added broadcast_5_piece0 in memory on localhost:51431 (size: 53.8 KB, free: 912.2 MB)
+19/08/30 15:05:41 INFO SparkContext: Created broadcast 5 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:05:41 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 2 (MapPartitionsRDD[10] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:05:41 INFO TaskSchedulerImpl: Adding task set 2.0 with 1 tasks
+19/08/30 15:05:41 INFO TaskSetManager: Starting task 0.0 in stage 2.0 (TID 2, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:05:41 INFO Executor: Running task 0.0 in stage 2.0 (TID 2)
+19/08/30 15:05:41 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_1.csv, range: 0-31, partition values: [empty row]
+19/08/30 15:05:41 INFO CodeGenerator: Code generated in 136.752232 ms
+19/08/30 15:05:41 INFO Executor: Finished task 0.0 in stage 2.0 (TID 2). 2587 bytes result sent to driver
+19/08/30 15:05:41 INFO TaskSetManager: Finished task 0.0 in stage 2.0 (TID 2) in 515 ms on localhost (executor driver) (1/1)
+19/08/30 15:05:41 INFO TaskSchedulerImpl: Removed TaskSet 2.0, whose tasks have all completed, from pool 
+19/08/30 15:05:41 INFO DAGScheduler: ResultStage 2 (start at NativeMethodAccessorImpl.java:0) finished in 0.570 s
+19/08/30 15:05:41 INFO DAGScheduler: Job 2 finished: start at NativeMethodAccessorImpl.java:0, took 0.573009 s
+19/08/30 15:05:41 INFO FileStreamSinkLog: Set the compact interval to 10 [defaultCompactInterval: 10]
+19/08/30 15:05:41 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/0 using temp file source-out/_spark_metadata/.0.bbcd970d-4aab-4118-aa87-ebbc643d35b9.tmp
+19/08/30 15:05:42 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.0.bbcd970d-4aab-4118-aa87-ebbc643d35b9.tmp to source-out/_spark_metadata/0
+19/08/30 15:05:42 INFO ManifestFileCommitProtocol: Committed batch 0
+19/08/30 15:05:42 INFO FileFormatWriter: Write Job cae23764-1ab4-46e3-89ee-8251746dcfdf committed.
+19/08/30 15:05:42 INFO FileFormatWriter: Finished processing stats for write job cae23764-1ab4-46e3-89ee-8251746dcfdf.
+19/08/30 15:05:42 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/0 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.0.93b9a86c-dbdf-4ee3-b0bf-23af4d467139.tmp
+19/08/30 15:05:42 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.0.93b9a86c-dbdf-4ee3-b0bf-23af4d467139.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/0
+19/08/30 15:05:42 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:05:40.587Z",
+  "batchId" : 0,
+  "numInputRows" : 12,
+  "processedRowsPerSecond" : 7.285974499089253,
+  "durationMs" : {
+    "addBatch" : 967,
+    "getBatch" : 124,
+    "getOffset" : 165,
+    "queryPlanning" : 88,
+    "triggerExecution" : 1646,
+    "walCommit" : 103
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : null,
+    "endOffset" : {
+      "logOffset" : 0
+    },
+    "numInputRows" : 12,
+    "processedRowsPerSecond" : 7.285974499089253
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:05:42 WARN ProcessingTimeExecutor: Current batch is falling behind. The trigger interval is 1000 milliseconds, but spent 1742 milliseconds
+19/08/30 15:05:42 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:05:42.326Z",
+  "batchId" : 1,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 4,
+    "triggerExecution" : 7
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 0
+    },
+    "endOffset" : {
+      "logOffset" : 0
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:05:53 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:05:53.001Z",
+  "batchId" : 1,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 5
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 0
+    },
+    "endOffset" : {
+      "logOffset" : 0
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:05:58 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/1 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.1.85a70108-749e-4458-8b48-9de44fa7fc22.tmp
+19/08/30 15:05:58 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.1.85a70108-749e-4458-8b48-9de44fa7fc22.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/1
+19/08/30 15:05:58 INFO FileStreamSource: Log offset set to 1 with 1 new files
+19/08/30 15:05:58 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/1 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.1.741b0ad7-d55c-4ec5-9c15-a6e5ec2ef14e.tmp
+19/08/30 15:05:58 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.1.741b0ad7-d55c-4ec5-9c15-a6e5ec2ef14e.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/1
+19/08/30 15:05:58 INFO MicroBatchExecution: Committed offsets for batch 1. Metadata OffsetSeqMetadata(0,1567173958106,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:05:58 INFO FileStreamSource: Processing 1 files from 1:1
+19/08/30 15:05:58 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:05:58 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:05:58 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:05:58 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:05:58 INFO MemoryStore: Block broadcast_6 stored as values in memory (estimated size 282.6 KB, free 910.9 MB)
+19/08/30 15:05:58 INFO MemoryStore: Block broadcast_6_piece0 stored as bytes in memory (estimated size 24.0 KB, free 910.9 MB)
+19/08/30 15:05:58 INFO BlockManagerInfo: Added broadcast_6_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:05:58 INFO SparkContext: Created broadcast 6 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:58 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:05:58 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:05:58 INFO DAGScheduler: Got job 3 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:05:58 INFO DAGScheduler: Final stage: ResultStage 3 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:05:58 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:05:58 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:05:58 INFO DAGScheduler: Submitting ResultStage 3 (MapPartitionsRDD[12] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:05:58 INFO MemoryStore: Block broadcast_7 stored as values in memory (estimated size 148.1 KB, free 910.7 MB)
+19/08/30 15:05:58 INFO MemoryStore: Block broadcast_7_piece0 stored as bytes in memory (estimated size 53.8 KB, free 910.7 MB)
+19/08/30 15:05:58 INFO BlockManagerInfo: Added broadcast_7_piece0 in memory on localhost:51431 (size: 53.8 KB, free: 912.1 MB)
+19/08/30 15:05:58 INFO SparkContext: Created broadcast 7 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:05:58 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 3 (MapPartitionsRDD[12] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:05:58 INFO TaskSchedulerImpl: Adding task set 3.0 with 1 tasks
+19/08/30 15:05:58 INFO TaskSetManager: Starting task 0.0 in stage 3.0 (TID 3, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:05:58 INFO Executor: Running task 0.0 in stage 3.0 (TID 3)
+19/08/30 15:05:58 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_2.csv, range: 0-91, partition values: [empty row]
+19/08/30 15:05:58 INFO Executor: Finished task 0.0 in stage 3.0 (TID 3). 2544 bytes result sent to driver
+19/08/30 15:05:58 INFO TaskSetManager: Finished task 0.0 in stage 3.0 (TID 3) in 70 ms on localhost (executor driver) (1/1)
+19/08/30 15:05:58 INFO TaskSchedulerImpl: Removed TaskSet 3.0, whose tasks have all completed, from pool 
+19/08/30 15:05:58 INFO DAGScheduler: ResultStage 3 (start at NativeMethodAccessorImpl.java:0) finished in 0.116 s
+19/08/30 15:05:58 INFO DAGScheduler: Job 3 finished: start at NativeMethodAccessorImpl.java:0, took 0.124839 s
+19/08/30 15:05:58 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/1 using temp file source-out/_spark_metadata/.1.edbd6c0a-6667-4db5-a647-99973da4065e.tmp
+19/08/30 15:05:58 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.1.edbd6c0a-6667-4db5-a647-99973da4065e.tmp to source-out/_spark_metadata/1
+19/08/30 15:05:58 INFO ManifestFileCommitProtocol: Committed batch 1
+19/08/30 15:05:58 INFO FileFormatWriter: Write Job 889b6590-dbc9-4482-8ac0-19703b47e988 committed.
+19/08/30 15:05:58 INFO FileFormatWriter: Finished processing stats for write job 889b6590-dbc9-4482-8ac0-19703b47e988.
+19/08/30 15:05:58 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/1 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.1.4178a0ac-8a18-4d27-954e-32ebf030d494.tmp
+19/08/30 15:05:59 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.1.4178a0ac-8a18-4d27-954e-32ebf030d494.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/1
+19/08/30 15:05:59 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:05:58.002Z",
+  "batchId" : 1,
+  "numInputRows" : 29,
+  "inputRowsPerSecond" : 28.971028971028975,
+  "processedRowsPerSecond" : 28.884462151394423,
+  "durationMs" : {
+    "addBatch" : 626,
+    "getBatch" : 15,
+    "getOffset" : 104,
+    "queryPlanning" : 44,
+    "triggerExecution" : 1004,
+    "walCommit" : 127
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 0
+    },
+    "endOffset" : {
+      "logOffset" : 1
+    },
+    "numInputRows" : 29,
+    "inputRowsPerSecond" : 28.971028971028975,
+    "processedRowsPerSecond" : 28.884462151394423
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:05:59 WARN ProcessingTimeExecutor: Current batch is falling behind. The trigger interval is 1000 milliseconds, but spent 1007 milliseconds
+19/08/30 15:05:59 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:05:59.009Z",
+  "batchId" : 2,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 4
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 1
+    },
+    "endOffset" : {
+      "logOffset" : 1
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:01 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/2 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.2.83f70a8b-e39b-454d-876f-5f0e6fc7e668.tmp
+19/08/30 15:06:01 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.2.83f70a8b-e39b-454d-876f-5f0e6fc7e668.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/2
+19/08/30 15:06:01 INFO FileStreamSource: Log offset set to 2 with 1 new files
+19/08/30 15:06:01 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/2 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.2.e7176e6f-232d-47b0-9afd-4542c3c649dc.tmp
+19/08/30 15:06:01 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.2.e7176e6f-232d-47b0-9afd-4542c3c649dc.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/2
+19/08/30 15:06:01 INFO MicroBatchExecution: Committed offsets for batch 2. Metadata OffsetSeqMetadata(0,1567173961112,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:06:01 INFO FileStreamSource: Processing 1 files from 2:2
+19/08/30 15:06:01 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:06:01 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:06:01 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:06:01 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:06:01 INFO MemoryStore: Block broadcast_8 stored as values in memory (estimated size 282.6 KB, free 910.4 MB)
+19/08/30 15:06:01 INFO MemoryStore: Block broadcast_8_piece0 stored as bytes in memory (estimated size 24.0 KB, free 910.4 MB)
+19/08/30 15:06:01 INFO BlockManagerInfo: Added broadcast_8_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:06:01 INFO SparkContext: Created broadcast 8 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:01 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:06:01 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:01 INFO DAGScheduler: Got job 4 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:06:01 INFO DAGScheduler: Final stage: ResultStage 4 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:06:01 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:06:01 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:06:01 INFO DAGScheduler: Submitting ResultStage 4 (ParallelCollectionRDD[15] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:06:01 INFO MemoryStore: Block broadcast_9 stored as values in memory (estimated size 143.2 KB, free 910.2 MB)
+19/08/30 15:06:01 INFO MemoryStore: Block broadcast_9_piece0 stored as bytes in memory (estimated size 51.2 KB, free 910.2 MB)
+19/08/30 15:06:01 INFO BlockManagerInfo: Added broadcast_9_piece0 in memory on localhost:51431 (size: 51.2 KB, free: 912.0 MB)
+19/08/30 15:06:01 INFO SparkContext: Created broadcast 9 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:06:01 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 4 (ParallelCollectionRDD[15] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:06:01 INFO TaskSchedulerImpl: Adding task set 4.0 with 1 tasks
+19/08/30 15:06:01 INFO TaskSetManager: Starting task 0.0 in stage 4.0 (TID 4, localhost, executor driver, partition 0, PROCESS_LOCAL, 7893 bytes)
+19/08/30 15:06:01 INFO Executor: Running task 0.0 in stage 4.0 (TID 4)
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 80
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 82
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 76
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 68
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 94
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 96
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 128
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 63
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 98
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 116
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 112
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 123
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 87
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 73
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 75
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 97
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 113
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 65
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 88
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 115
+19/08/30 15:06:01 INFO BlockManagerInfo: Removed broadcast_4_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.0 MB)
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 125
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 109
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 79
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 108
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 114
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 117
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 104
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 81
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 86
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 70
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 111
+19/08/30 15:06:01 INFO BlockManagerInfo: Removed broadcast_7_piece0 on localhost:51431 in memory (size: 53.8 KB, free: 912.1 MB)
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 121
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 118
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 119
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 99
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 72
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 71
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 84
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 101
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 100
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 106
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 127
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 122
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 67
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 69
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 126
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 110
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 107
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 74
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 91
+19/08/30 15:06:01 INFO BlockManagerInfo: Removed broadcast_5_piece0 on localhost:51431 in memory (size: 53.8 KB, free: 912.1 MB)
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 83
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 90
+19/08/30 15:06:01 INFO BlockManagerInfo: Removed broadcast_6_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.2 MB)
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 95
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 64
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 89
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 105
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 120
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 62
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 78
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 92
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 77
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 85
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 61
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 102
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 93
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 103
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 124
+19/08/30 15:06:01 INFO ContextCleaner: Cleaned accumulator 66
+19/08/30 15:06:01 INFO Executor: Finished task 0.0 in stage 4.0 (TID 4). 2016 bytes result sent to driver
+19/08/30 15:06:01 INFO TaskSetManager: Finished task 0.0 in stage 4.0 (TID 4) in 68 ms on localhost (executor driver) (1/1)
+19/08/30 15:06:01 INFO TaskSchedulerImpl: Removed TaskSet 4.0, whose tasks have all completed, from pool 
+19/08/30 15:06:01 INFO DAGScheduler: ResultStage 4 (start at NativeMethodAccessorImpl.java:0) finished in 0.152 s
+19/08/30 15:06:01 INFO DAGScheduler: Job 4 finished: start at NativeMethodAccessorImpl.java:0, took 0.157112 s
+19/08/30 15:06:01 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/2 using temp file source-out/_spark_metadata/.2.6e96fdb6-70f5-4981-8fa4-da1fcc0489ce.tmp
+19/08/30 15:06:01 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.2.6e96fdb6-70f5-4981-8fa4-da1fcc0489ce.tmp to source-out/_spark_metadata/2
+19/08/30 15:06:01 INFO ManifestFileCommitProtocol: Committed batch 2
+19/08/30 15:06:01 INFO FileFormatWriter: Write Job 7f8cc6df-ae53-43ec-8c2b-905ad0591e0e committed.
+19/08/30 15:06:01 INFO FileFormatWriter: Finished processing stats for write job 7f8cc6df-ae53-43ec-8c2b-905ad0591e0e.
+19/08/30 15:06:01 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/2 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.2.3e3e2e43-e33a-47d4-bca5-75d97b4d9a04.tmp
+19/08/30 15:06:01 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.2.3e3e2e43-e33a-47d4-bca5-75d97b4d9a04.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/2
+19/08/30 15:06:01 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:01.005Z",
+  "batchId" : 2,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "addBatch" : 440,
+    "getBatch" : 34,
+    "getOffset" : 107,
+    "queryPlanning" : 35,
+    "triggerExecution" : 763,
+    "walCommit" : 67
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 1
+    },
+    "endOffset" : {
+      "logOffset" : 2
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:02 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:02.003Z",
+  "batchId" : 3,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 2,
+    "triggerExecution" : 4
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 2
+    },
+    "endOffset" : {
+      "logOffset" : 2
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:12 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/3 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.3.16c3b4cf-5e59-4f43-ac74-06dc6f15bbc1.tmp
+19/08/30 15:06:12 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.3.16c3b4cf-5e59-4f43-ac74-06dc6f15bbc1.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/3
+19/08/30 15:06:12 INFO FileStreamSource: Log offset set to 3 with 1 new files
+19/08/30 15:06:12 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/3 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.3.2fc5c502-176a-48f4-a23e-9641f29ffb38.tmp
+19/08/30 15:06:12 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.3.2fc5c502-176a-48f4-a23e-9641f29ffb38.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/3
+19/08/30 15:06:12 INFO MicroBatchExecution: Committed offsets for batch 3. Metadata OffsetSeqMetadata(0,1567173972078,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:06:12 INFO FileStreamSource: Processing 1 files from 3:3
+19/08/30 15:06:12 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:06:12 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:06:12 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:06:12 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:06:12 INFO MemoryStore: Block broadcast_10 stored as values in memory (estimated size 282.6 KB, free 910.9 MB)
+19/08/30 15:06:12 INFO MemoryStore: Block broadcast_10_piece0 stored as bytes in memory (estimated size 24.0 KB, free 910.9 MB)
+19/08/30 15:06:12 INFO BlockManagerInfo: Added broadcast_10_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:06:12 INFO SparkContext: Created broadcast 10 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:12 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:06:12 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:12 INFO DAGScheduler: Got job 5 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:06:12 INFO DAGScheduler: Final stage: ResultStage 5 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:06:12 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:06:12 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:06:12 INFO DAGScheduler: Submitting ResultStage 5 (MapPartitionsRDD[17] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:06:12 INFO MemoryStore: Block broadcast_11 stored as values in memory (estimated size 148.1 KB, free 910.7 MB)
+19/08/30 15:06:12 INFO MemoryStore: Block broadcast_11_piece0 stored as bytes in memory (estimated size 53.8 KB, free 910.7 MB)
+19/08/30 15:06:12 INFO BlockManagerInfo: Added broadcast_11_piece0 in memory on localhost:51431 (size: 53.8 KB, free: 912.1 MB)
+19/08/30 15:06:12 INFO SparkContext: Created broadcast 11 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:06:12 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 5 (MapPartitionsRDD[17] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:06:12 INFO TaskSchedulerImpl: Adding task set 5.0 with 1 tasks
+19/08/30 15:06:12 INFO TaskSetManager: Starting task 0.0 in stage 5.0 (TID 5, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:06:12 INFO Executor: Running task 0.0 in stage 5.0 (TID 5)
+19/08/30 15:06:12 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_4.csv, range: 0-1896, partition values: [empty row]
+19/08/30 15:06:12 INFO Executor: Finished task 0.0 in stage 5.0 (TID 5). 2544 bytes result sent to driver
+19/08/30 15:06:12 INFO TaskSetManager: Finished task 0.0 in stage 5.0 (TID 5) in 103 ms on localhost (executor driver) (1/1)
+19/08/30 15:06:12 INFO TaskSchedulerImpl: Removed TaskSet 5.0, whose tasks have all completed, from pool 
+19/08/30 15:06:12 INFO DAGScheduler: ResultStage 5 (start at NativeMethodAccessorImpl.java:0) finished in 0.152 s
+19/08/30 15:06:12 INFO DAGScheduler: Job 5 finished: start at NativeMethodAccessorImpl.java:0, took 0.156799 s
+19/08/30 15:06:12 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/3 using temp file source-out/_spark_metadata/.3.b28c75dd-e9ba-41a4-b587-cf5aa33e2095.tmp
+19/08/30 15:06:12 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.3.b28c75dd-e9ba-41a4-b587-cf5aa33e2095.tmp to source-out/_spark_metadata/3
+19/08/30 15:06:12 INFO ManifestFileCommitProtocol: Committed batch 3
+19/08/30 15:06:12 INFO FileFormatWriter: Write Job f512daa2-2263-4a15-85ae-2d7f1ef393e4 committed.
+19/08/30 15:06:12 INFO FileFormatWriter: Finished processing stats for write job f512daa2-2263-4a15-85ae-2d7f1ef393e4.
+19/08/30 15:06:12 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/3 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.3.12383f8f-7880-4769-9f8d-94cf3a887221.tmp
+19/08/30 15:06:12 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.3.12383f8f-7880-4769-9f8d-94cf3a887221.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/3
+19/08/30 15:06:12 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:12.004Z",
+  "batchId" : 3,
+  "numInputRows" : 473,
+  "inputRowsPerSecond" : 471.58524426719845,
+  "processedRowsPerSecond" : 624.0105540897098,
+  "durationMs" : {
+    "addBatch" : 429,
+    "getBatch" : 8,
+    "getOffset" : 74,
+    "queryPlanning" : 62,
+    "triggerExecution" : 758,
+    "walCommit" : 74
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 2
+    },
+    "endOffset" : {
+      "logOffset" : 3
+    },
+    "numInputRows" : 473,
+    "inputRowsPerSecond" : 471.58524426719845,
+    "processedRowsPerSecond" : 624.0105540897098
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:13 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:13.001Z",
+  "batchId" : 4,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 4
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 3
+    },
+    "endOffset" : {
+      "logOffset" : 3
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:17 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/4 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.4.7559e2e1-e4a3-4028-81a0-3fcb7789eb2f.tmp
+19/08/30 15:06:17 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.4.7559e2e1-e4a3-4028-81a0-3fcb7789eb2f.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/4
+19/08/30 15:06:17 INFO FileStreamSource: Log offset set to 4 with 1 new files
+19/08/30 15:06:17 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/4 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.4.9061e2de-5dba-41aa-aace-42d39d2aac13.tmp
+19/08/30 15:06:17 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.4.9061e2de-5dba-41aa-aace-42d39d2aac13.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/4
+19/08/30 15:06:17 INFO MicroBatchExecution: Committed offsets for batch 4. Metadata OffsetSeqMetadata(0,1567173977077,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:06:17 INFO FileStreamSource: Processing 1 files from 4:4
+19/08/30 15:06:17 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:06:17 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:06:17 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:06:17 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:06:17 INFO MemoryStore: Block broadcast_12 stored as values in memory (estimated size 282.6 KB, free 910.4 MB)
+19/08/30 15:06:17 INFO MemoryStore: Block broadcast_12_piece0 stored as bytes in memory (estimated size 24.0 KB, free 910.4 MB)
+19/08/30 15:06:17 INFO BlockManagerInfo: Added broadcast_12_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:06:17 INFO SparkContext: Created broadcast 12 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:17 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:06:17 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:17 INFO DAGScheduler: Got job 6 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:06:17 INFO DAGScheduler: Final stage: ResultStage 6 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:06:17 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:06:17 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:06:17 INFO DAGScheduler: Submitting ResultStage 6 (MapPartitionsRDD[19] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:06:17 INFO MemoryStore: Block broadcast_13 stored as values in memory (estimated size 148.1 KB, free 910.2 MB)
+19/08/30 15:06:17 INFO MemoryStore: Block broadcast_13_piece0 stored as bytes in memory (estimated size 53.9 KB, free 910.2 MB)
+19/08/30 15:06:17 INFO BlockManagerInfo: Added broadcast_13_piece0 in memory on localhost:51431 (size: 53.9 KB, free: 912.0 MB)
+19/08/30 15:06:17 INFO SparkContext: Created broadcast 13 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:06:17 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 6 (MapPartitionsRDD[19] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:06:17 INFO TaskSchedulerImpl: Adding task set 6.0 with 1 tasks
+19/08/30 15:06:17 INFO TaskSetManager: Starting task 0.0 in stage 6.0 (TID 6, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:06:17 INFO Executor: Running task 0.0 in stage 6.0 (TID 6)
+19/08/30 15:06:17 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_5.csv, range: 0-5746, partition values: [empty row]
+19/08/30 15:06:17 INFO Executor: Finished task 0.0 in stage 6.0 (TID 6). 2587 bytes result sent to driver
+19/08/30 15:06:17 INFO TaskSetManager: Finished task 0.0 in stage 6.0 (TID 6) in 121 ms on localhost (executor driver) (1/1)
+19/08/30 15:06:17 INFO TaskSchedulerImpl: Removed TaskSet 6.0, whose tasks have all completed, from pool 
+19/08/30 15:06:17 INFO DAGScheduler: ResultStage 6 (start at NativeMethodAccessorImpl.java:0) finished in 0.190 s
+19/08/30 15:06:17 INFO DAGScheduler: Job 6 finished: start at NativeMethodAccessorImpl.java:0, took 0.194227 s
+19/08/30 15:06:17 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/4 using temp file source-out/_spark_metadata/.4.589a9b26-1630-4cd0-8df3-379485f8e204.tmp
+19/08/30 15:06:17 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.4.589a9b26-1630-4cd0-8df3-379485f8e204.tmp to source-out/_spark_metadata/4
+19/08/30 15:06:17 INFO ManifestFileCommitProtocol: Committed batch 4
+19/08/30 15:06:17 INFO FileFormatWriter: Write Job d85ee486-d6e4-494e-a393-f9512b400c97 committed.
+19/08/30 15:06:17 INFO FileFormatWriter: Finished processing stats for write job d85ee486-d6e4-494e-a393-f9512b400c97.
+19/08/30 15:06:17 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/4 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.4.9385ded6-0de1-465c-a28f-2bd6b3318fcc.tmp
+19/08/30 15:06:17 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.4.9385ded6-0de1-465c-a28f-2bd6b3318fcc.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/4
+19/08/30 15:06:17 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:17.001Z",
+  "batchId" : 4,
+  "numInputRows" : 1489,
+  "inputRowsPerSecond" : 1487.5124875124877,
+  "processedRowsPerSecond" : 2433.0065359477126,
+  "durationMs" : {
+    "addBatch" : 392,
+    "getBatch" : 8,
+    "getOffset" : 76,
+    "queryPlanning" : 18,
+    "triggerExecution" : 611,
+    "walCommit" : 53
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 3
+    },
+    "endOffset" : {
+      "logOffset" : 4
+    },
+    "numInputRows" : 1489,
+    "inputRowsPerSecond" : 1487.5124875124877,
+    "processedRowsPerSecond" : 2433.0065359477126
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:18 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/5 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.5.4e158615-8180-4d51-9e56-c080003b8efa.tmp
+19/08/30 15:06:18 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.5.4e158615-8180-4d51-9e56-c080003b8efa.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/5
+19/08/30 15:06:18 INFO FileStreamSource: Log offset set to 5 with 1 new files
+19/08/30 15:06:18 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/5 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.5.0f9c7d8d-0928-4553-9e87-7914f8580b49.tmp
+19/08/30 15:06:18 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.5.0f9c7d8d-0928-4553-9e87-7914f8580b49.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/5
+19/08/30 15:06:18 INFO MicroBatchExecution: Committed offsets for batch 5. Metadata OffsetSeqMetadata(0,1567173978063,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:06:18 INFO FileStreamSource: Processing 1 files from 5:5
+19/08/30 15:06:18 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:06:18 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:06:18 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:06:18 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:06:18 INFO MemoryStore: Block broadcast_14 stored as values in memory (estimated size 282.6 KB, free 909.9 MB)
+19/08/30 15:06:18 INFO MemoryStore: Block broadcast_14_piece0 stored as bytes in memory (estimated size 24.0 KB, free 909.9 MB)
+19/08/30 15:06:18 INFO BlockManagerInfo: Added broadcast_14_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 912.0 MB)
+19/08/30 15:06:18 INFO SparkContext: Created broadcast 14 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:18 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:06:18 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:18 INFO DAGScheduler: Got job 7 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:06:18 INFO DAGScheduler: Final stage: ResultStage 7 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:06:18 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:06:18 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:06:18 INFO DAGScheduler: Submitting ResultStage 7 (MapPartitionsRDD[21] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:06:18 INFO MemoryStore: Block broadcast_15 stored as values in memory (estimated size 148.1 KB, free 909.7 MB)
+19/08/30 15:06:18 INFO MemoryStore: Block broadcast_15_piece0 stored as bytes in memory (estimated size 53.8 KB, free 909.7 MB)
+19/08/30 15:06:18 INFO BlockManagerInfo: Added broadcast_15_piece0 in memory on localhost:51431 (size: 53.8 KB, free: 911.9 MB)
+19/08/30 15:06:18 INFO SparkContext: Created broadcast 15 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:06:18 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 7 (MapPartitionsRDD[21] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:06:18 INFO TaskSchedulerImpl: Adding task set 7.0 with 1 tasks
+19/08/30 15:06:18 INFO TaskSetManager: Starting task 0.0 in stage 7.0 (TID 7, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:06:18 INFO Executor: Running task 0.0 in stage 7.0 (TID 7)
+19/08/30 15:06:18 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_6.csv, range: 0-14511, partition values: [empty row]
+19/08/30 15:06:18 INFO Executor: Finished task 0.0 in stage 7.0 (TID 7). 2544 bytes result sent to driver
+19/08/30 15:06:18 INFO TaskSetManager: Finished task 0.0 in stage 7.0 (TID 7) in 132 ms on localhost (executor driver) (1/1)
+19/08/30 15:06:18 INFO TaskSchedulerImpl: Removed TaskSet 7.0, whose tasks have all completed, from pool 
+19/08/30 15:06:18 INFO DAGScheduler: ResultStage 7 (start at NativeMethodAccessorImpl.java:0) finished in 0.184 s
+19/08/30 15:06:18 INFO DAGScheduler: Job 7 finished: start at NativeMethodAccessorImpl.java:0, took 0.186983 s
+19/08/30 15:06:18 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/5 using temp file source-out/_spark_metadata/.5.b87c14f2-b47b-4633-af5c-ed3095fa73de.tmp
+19/08/30 15:06:18 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.5.b87c14f2-b47b-4633-af5c-ed3095fa73de.tmp to source-out/_spark_metadata/5
+19/08/30 15:06:18 INFO ManifestFileCommitProtocol: Committed batch 5
+19/08/30 15:06:18 INFO FileFormatWriter: Write Job db0f56ab-9885-4a5a-b3ca-945089ad4ef0 committed.
+19/08/30 15:06:18 INFO FileFormatWriter: Finished processing stats for write job db0f56ab-9885-4a5a-b3ca-945089ad4ef0.
+19/08/30 15:06:18 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/5 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.5.734cbee2-bdcc-4aba-95eb-1636a8832dc3.tmp
+19/08/30 15:06:18 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.5.734cbee2-bdcc-4aba-95eb-1636a8832dc3.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/5
+19/08/30 15:06:18 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:18.001Z",
+  "batchId" : 5,
+  "numInputRows" : 3707,
+  "inputRowsPerSecond" : 3707.0,
+  "processedRowsPerSecond" : 5435.4838709677415,
+  "durationMs" : {
+    "addBatch" : 393,
+    "getBatch" : 7,
+    "getOffset" : 62,
+    "queryPlanning" : 22,
+    "triggerExecution" : 682,
+    "walCommit" : 62
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 4
+    },
+    "endOffset" : {
+      "logOffset" : 5
+    },
+    "numInputRows" : 3707,
+    "inputRowsPerSecond" : 3707.0,
+    "processedRowsPerSecond" : 5435.4838709677415
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:19 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:19.000Z",
+  "batchId" : 6,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 4
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 5
+    },
+    "endOffset" : {
+      "logOffset" : 5
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:27 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/6 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.6.984af9d0-7de2-4f3a-bb4b-2d3ad6124ff3.tmp
+19/08/30 15:06:27 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/.6.984af9d0-7de2-4f3a-bb4b-2d3ad6124ff3.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/sources/0/6
+19/08/30 15:06:27 INFO FileStreamSource: Log offset set to 6 with 1 new files
+19/08/30 15:06:27 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/6 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.6.c4b85936-3da2-4ef6-9c4c-489912026e37.tmp
+19/08/30 15:06:27 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/.6.c4b85936-3da2-4ef6-9c4c-489912026e37.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/offsets/6
+19/08/30 15:06:27 INFO MicroBatchExecution: Committed offsets for batch 6. Metadata OffsetSeqMetadata(0,1567173987145,Map(spark.sql.streaming.stateStore.providerClass -> org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider, spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion -> 2, spark.sql.streaming.multipleWatermarkPolicy -> min, spark.sql.streaming.aggregation.stateFormatVersion -> 2, spark.sql.shuffle.partitions -> 4))
+19/08/30 15:06:27 INFO FileStreamSource: Processing 1 files from 6:6
+19/08/30 15:06:27 INFO FileSourceStrategy: Pruning directories with: 
+19/08/30 15:06:27 INFO FileSourceStrategy: Post-Scan Filters: 
+19/08/30 15:06:27 INFO FileSourceStrategy: Output Data Schema: struct<x: int>
+19/08/30 15:06:27 INFO FileSourceScanExec: Pushed Filters: 
+19/08/30 15:06:27 INFO MemoryStore: Block broadcast_16 stored as values in memory (estimated size 282.6 KB, free 909.4 MB)
+19/08/30 15:06:27 INFO MemoryStore: Block broadcast_16_piece0 stored as bytes in memory (estimated size 24.0 KB, free 909.4 MB)
+19/08/30 15:06:27 INFO BlockManagerInfo: Added broadcast_16_piece0 in memory on localhost:51431 (size: 24.0 KB, free: 911.9 MB)
+19/08/30 15:06:27 INFO SparkContext: Created broadcast 16 from start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:27 INFO FileSourceScanExec: Planning scan with bin packing, max size: 4194304 bytes, open cost is considered as scanning 4194304 bytes.
+19/08/30 15:06:27 INFO SparkContext: Starting job: start at NativeMethodAccessorImpl.java:0
+19/08/30 15:06:27 INFO DAGScheduler: Got job 8 (start at NativeMethodAccessorImpl.java:0) with 1 output partitions
+19/08/30 15:06:27 INFO DAGScheduler: Final stage: ResultStage 8 (start at NativeMethodAccessorImpl.java:0)
+19/08/30 15:06:27 INFO DAGScheduler: Parents of final stage: List()
+19/08/30 15:06:27 INFO DAGScheduler: Missing parents: List()
+19/08/30 15:06:27 INFO DAGScheduler: Submitting ResultStage 8 (MapPartitionsRDD[23] at start at NativeMethodAccessorImpl.java:0), which has no missing parents
+19/08/30 15:06:27 INFO MemoryStore: Block broadcast_17 stored as values in memory (estimated size 148.1 KB, free 909.2 MB)
+19/08/30 15:06:27 INFO MemoryStore: Block broadcast_17_piece0 stored as bytes in memory (estimated size 53.9 KB, free 909.2 MB)
+19/08/30 15:06:27 INFO BlockManagerInfo: Added broadcast_17_piece0 in memory on localhost:51431 (size: 53.9 KB, free: 911.9 MB)
+19/08/30 15:06:27 INFO SparkContext: Created broadcast 17 from broadcast at DAGScheduler.scala:1161
+19/08/30 15:06:27 INFO DAGScheduler: Submitting 1 missing tasks from ResultStage 8 (MapPartitionsRDD[23] at start at NativeMethodAccessorImpl.java:0) (first 15 tasks are for partitions Vector(0))
+19/08/30 15:06:27 INFO TaskSchedulerImpl: Adding task set 8.0 with 1 tasks
+19/08/30 15:06:27 INFO TaskSetManager: Starting task 0.0 in stage 8.0 (TID 8, localhost, executor driver, partition 0, PROCESS_LOCAL, 8351 bytes)
+19/08/30 15:06:27 INFO Executor: Running task 0.0 in stage 8.0 (TID 8)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 244
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 157
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 173
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 136
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 162
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_9_piece0 on localhost:51431 in memory (size: 51.2 KB, free: 911.9 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 262
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 182
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 201
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 260
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 171
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 137
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 194
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 175
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 190
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 172
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 205
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 146
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 186
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 256
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 165
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 226
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 198
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 159
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 170
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 206
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 181
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 208
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 257
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 185
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 158
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_13_piece0 on localhost:51431 in memory (size: 53.9 KB, free: 912.0 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 219
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 236
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 209
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 230
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 156
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 242
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 251
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_10_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.0 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 212
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 207
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 228
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 227
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 191
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 150
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 220
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 243
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 152
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 178
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 246
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 245
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 223
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 143
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 166
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 161
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 154
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 199
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_14_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.0 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 144
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 145
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 164
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 160
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 142
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 247
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 229
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_15_piece0 on localhost:51431 in memory (size: 53.8 KB, free: 912.1 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 130
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 216
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 241
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 225
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 140
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 151
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 222
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 253
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 189
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 239
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 234
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 135
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 252
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 264
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 148
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 204
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 163
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 155
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 203
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_8_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:06:27 INFO FileScanRDD: Reading File path: file:///Volumes/DATA/learn_by_example/Stream_Sparklyr/source/stream_7.csv, range: 0-28760, partition values: [empty row]
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 174
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 214
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 177
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 215
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 258
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 237
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 193
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 183
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 134
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 217
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 254
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 259
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_12_piece0 on localhost:51431 in memory (size: 24.0 KB, free: 912.1 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 129
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 139
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 167
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 138
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 180
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 168
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 238
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 218
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 192
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 249
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 200
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 141
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 255
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 248
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 149
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 261
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 197
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 188
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 202
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 133
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 179
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 131
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 211
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 196
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 232
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 147
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 132
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 184
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 224
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 176
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 240
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 231
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 250
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 187
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 213
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 210
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 233
+19/08/30 15:06:27 INFO BlockManagerInfo: Removed broadcast_11_piece0 on localhost:51431 in memory (size: 53.8 KB, free: 912.2 MB)
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 195
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 263
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 153
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 169
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 221
+19/08/30 15:06:27 INFO ContextCleaner: Cleaned accumulator 235
+19/08/30 15:06:27 INFO Executor: Finished task 0.0 in stage 8.0 (TID 8). 2587 bytes result sent to driver
+19/08/30 15:06:27 INFO TaskSetManager: Finished task 0.0 in stage 8.0 (TID 8) in 198 ms on localhost (executor driver) (1/1)
+19/08/30 15:06:27 INFO TaskSchedulerImpl: Removed TaskSet 8.0, whose tasks have all completed, from pool 
+19/08/30 15:06:27 INFO DAGScheduler: ResultStage 8 (start at NativeMethodAccessorImpl.java:0) finished in 0.296 s
+19/08/30 15:06:27 INFO DAGScheduler: Job 8 finished: start at NativeMethodAccessorImpl.java:0, took 0.300615 s
+19/08/30 15:06:27 INFO CheckpointFileManager: Writing atomically to source-out/_spark_metadata/6 using temp file source-out/_spark_metadata/.6.d8501b7e-7fe0-413d-b6a6-cc674b7dceda.tmp
+19/08/30 15:06:27 INFO CheckpointFileManager: Renamed temp file source-out/_spark_metadata/.6.d8501b7e-7fe0-413d-b6a6-cc674b7dceda.tmp to source-out/_spark_metadata/6
+19/08/30 15:06:27 INFO ManifestFileCommitProtocol: Committed batch 6
+19/08/30 15:06:27 INFO FileFormatWriter: Write Job 6c575e33-78c3-440f-a824-595f57e498b3 committed.
+19/08/30 15:06:27 INFO FileFormatWriter: Finished processing stats for write job 6c575e33-78c3-440f-a824-595f57e498b3.
+19/08/30 15:06:27 INFO CheckpointFileManager: Writing atomically to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/6 using temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.6.821abfe7-e138-42b0-b501-fbc7813d45fa.tmp
+19/08/30 15:06:27 INFO CheckpointFileManager: Renamed temp file file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/.6.821abfe7-e138-42b0-b501-fbc7813d45fa.tmp to file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source-out/checkpoint/commits/6
+19/08/30 15:06:27 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:27.003Z",
+  "batchId" : 6,
+  "numInputRows" : 7403,
+  "inputRowsPerSecond" : 7388.223552894212,
+  "processedRowsPerSecond" : 9265.331664580726,
+  "durationMs" : {
+    "addBatch" : 456,
+    "getBatch" : 10,
+    "getOffset" : 141,
+    "queryPlanning" : 19,
+    "triggerExecution" : 799,
+    "walCommit" : 87
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 5
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 7403,
+    "inputRowsPerSecond" : 7388.223552894212,
+    "processedRowsPerSecond" : 9265.331664580726
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:28 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:28.000Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 8,
+    "triggerExecution" : 11
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:39 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:39.003Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 3
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:06:50 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:06:50.001Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 2,
+    "triggerExecution" : 3
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:07:00 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:07:00.001Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 2,
+    "triggerExecution" : 2
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:07:11 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:07:11.006Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 2,
+    "triggerExecution" : 3
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}
+19/08/30 15:07:21 INFO MicroBatchExecution: Streaming query made progress: {
+  "id" : "ba4fbf1d-b97c-4ea7-8c9a-1c965f8817bc",
+  "runId" : "8d6e11a7-e94b-4164-920b-dc87ae113a1a",
+  "name" : "stream_2ec69d42981",
+  "timestamp" : "2019-08-30T14:07:21.005Z",
+  "batchId" : 7,
+  "numInputRows" : 0,
+  "inputRowsPerSecond" : 0.0,
+  "processedRowsPerSecond" : 0.0,
+  "durationMs" : {
+    "getOffset" : 3,
+    "triggerExecution" : 4
+  },
+  "stateOperators" : [ ],
+  "sources" : [ {
+    "description" : "FileStreamSource[file:/Volumes/DATA/learn_by_example/Stream_Sparklyr/source]",
+    "startOffset" : {
+      "logOffset" : 6
+    },
+    "endOffset" : {
+      "logOffset" : 6
+    },
+    "numInputRows" : 0,
+    "inputRowsPerSecond" : 0.0,
+    "processedRowsPerSecond" : 0.0
+  } ],
+  "sink" : {
+    "description" : "FileSink[source-out]"
+  }
+}

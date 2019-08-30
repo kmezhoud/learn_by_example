@@ -1,0 +1,33 @@
+---
+title: "Streaming with Sparklyr"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+---
+
+```{r}
+library(future)
+library(sparklyr)
+
+sc <- spark_connect(master = "local", spark_version = "2.3.0")
+
+if(file.exists("source")) unlink("source", TRUE)
+if(file.exists("source-out")) unlink("source-out", TRUE)
+
+stream_generate_test(iterations = 1)
+read_folder <- stream_read_csv(sc, "source") 
+write_output <- stream_write_csv(read_folder, "source-out")
+invisible(future(stream_generate_test(interval = 0.5)))
+
+stream_view(write_output)
+```
+
+
