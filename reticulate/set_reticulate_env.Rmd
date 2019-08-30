@@ -1,0 +1,184 @@
+---
+title: "Reticulate: Set Python environment"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=TRUE, warning =TRUE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+
+
+# Load packages
+```{r}
+library(reticulate)
+```
+
+# Locating python, anaconda and environments
+
+## bash Chunk
+```{bash}
+# which last installed version from bash
+python3 --version
+python2 --version
+```
+
+```{bash}
+# where is executable python
+python -c "import sys; print(sys.executable)"
+python2.7 -c "import sys; print(sys.executable)"
+python3.7 -c "import sys; print(sys.executable)"
+
+```
+
+```{bash}
+# where is installed each python version
+which -a python2.7 python3 python
+```
+
+## `R` Chunk
+
+```{r}
+# which version used by R
+scrobbler::py_version()
+```
+
+To figure out where your python 3 is installed type the following into the R console
+
+### Where python is installed
+```{r}
+# where python is installed
+base::Sys.which("python")
+
+# where python2 is installed
+base::Sys.which("python2")
+
+# where python3 is installed
+base::Sys.which("python3")
+```
+
+
+
+
+# Setting python version
+
+If your version has a 2 as its major number then you’ll need to tell R the path of the version 3. This requires editing your `.Rprofile` file to set python 3 as your default.
+
+### Edit r profile
+```{r}
+usethis::edit_r_profile()
+```
+and add something like this
+
+```{r}
+Sys.setenv(RETICULATE_PYTHON = "/usr/local/bin/python2")
+```
+
+# `Reticulate` setting
+Each version of Python on the system has it’s own set of packages. Reticulate will automatically find a version of Python that contains the first package that you import from R.
+
+`reticulate` uses default setting of r-session or r-profile. The default path for the first installation is `/usr/bin/python`. 
+It is commun that multiple versions of python are installed in the same machine. The second and next version will be installed to `/usr/local/bin/python3`. for example:
+
+
+* `Anaconda` distribution uses self environment where install all needed packages. We can found also python into anaconda environment path `/Users/Mezhoud/miniconda3/envs/Ana_Env/bin/python`.
+
+
+* `r-tensorflow` uses also self environment and uses self python and package version `/Users/Mezhoud/.virtualenvs/r-tensorflow/bin/python`. 
+
+
+## check configuration
+
+```{r}
+reticulate::py_config()
+```
+The first part shows what R session is using:
+* wich version: python2.7.10
+* Path of libraries
+* Path of the home
+* numpy version and path
+
+The second part shows the others installed version. we can see `python3, python, miniconda` distribution and python used by `R-tensorflow`.
+This command is usefull. It screen existing setting and installed versions of python.
+
+A second function that display the which used and available python verisons.
+```{r}
+reticulate::py_discover_config()
+```
+
+We can look for anaconda distribution.
+
+```{r}
+# where Anaconda is installed
+reticulate::conda_list()
+
+```
+
+We can look for packages in used python 
+
+```{r}
+reticulate::py_module_available("pandas")
+```
+
+## change python version
+The default setting remain the best configuration for reticulate. This [link](https://github.com/rstudio/reticulate/issues/368#issuecomment-487648765) shows some non-concordance between versions, installation ways (pip, conda, ), and environments ([Pipenv vs virtualenv vs conda environment](https://medium.com/@krishnaregmi/pipenv-vs-virtualenv-vs-conda-environment-3dde3f6869ed)).
+
+
+```{r}
+## we have to refresh R session before to set a new python version
+.rs.restartR()
+reticulate::use_python("/Users/Mezhoud/miniconda3/envs/Ana_Env/bin/python", required = TRUE)
+
+## not necessary if we set use_python to Ana_Env
+#reticulate::use_condaenv( condaenv = "/Users/Mezhoud/miniconda3/envs/Ana_Env/bin/python", conda = "auto", required = TRUE)
+```
+
+
+```{r}
+reticulate::py_config()
+```
+
+```{r}
+reticulate::py_module_available("matplotlib")
+```
+
+```{r}
+# which version used by R
+scrobbler::py_version()
+```
+
+
+# python code
+
+```{r}
+# refresh session and use the default python path
+.rs.restartR()
+```
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+t = np.arange(0.0, 2.0, 0.01 )
+s = 1 + np.sin(2*np.pi*t)
+plt.plot(t,s)
+```
+
+
+
+
+
+

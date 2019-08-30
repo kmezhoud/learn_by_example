@@ -1,0 +1,190 @@
+---
+title: "Reticulate: Run python model (SVM)"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+[source](https://www.statworx.com/ch/blog/r-and-python-using-reticulate-to-get-the-best-of-both-worlds/) of this tutorial.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=TRUE, warning =TRUE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+# Interacting R and python dataset
+
+## set python version and anaconda environment
+```{r}
+reticulate::use_python("/Users/Mezhoud/miniconda3/envs/Ana_Env/bin/python", required = TRUE)
+reticulate::py_config()
+```
+
+## Load datset with R
+```{r}
+auto <- cars
+head(auto)
+reticulate::py_module_available("pandas")
+```
+
+## Read R dataset with python
+```{python}
+import pandas as pd
+auto_py = r.auto
+#pd.DataFrame.describe(auto_py)
+r.auto.head()
+auto_py.head()
+```
+
+```{r}
+head(py$auto_py)
+```
+
+
+# Load Packages
+```{r}
+library(tidyverse)
+library(recipes)
+library(reticulate)
+```
+
+## Load world sleep day dataset
+
+```{r}
+data <- readxl::read_xls("wordSleepDay.xls")
+dplyr::glimpse(data)
+```
+
+## Select and Clean the Dataset
+```{r}
+sleep <- data %>%
+  select(
+      Diagnosed_Sleep_disorder, Age_Group, Sex, Total_years_dispatcher,
+      Total_years_present_job, Marital_Status, Childrendependents,
+      Children_under_2_yrs, Caff_Beverages, Sick_Days_in_last_year,
+      Health_status, Avg_Work_Hrs_Week, FRA_report, Phys_Drained,
+      Mentally_Drained, Alert_at_Work, Job_Security
+  ) %>%
+  rename_all(tolower) %>%
+  mutate_if(is.character, as.numeric) %>%
+  mutate_at(vars(diagnosed_sleep_disorder, sex, caff_beverages, fra_report),
+            ~ -(. - 2)) %>%
+  mutate_at(vars(marital_status), ~ (. - 1)) %>%
+  drop_na()
+
+dplyr::glimpse(sleep)
+```
+
+## Prepare the Data
+```{r}
+numeric_variables <- c(
+  "total_years_dispatcher", "total_years_present_job",
+  "childrendependents", "children_under_2_yrs", 
+  "sick_days_in_last_year", "avg_work_hrs_week"
+)
+
+factor_variables <- setdiff(colnames(sleep), numeric_variables)
+
+sleep <- mutate_at(sleep, vars(factor_variables), as.factor)
+
+set.seed(2019)
+index <- sample(1:nrow(sleep), floor(nrow(sleep) * .75))
+
+sleep_train <- sleep[index, ]
+sleep_test <- sleep[-index, ]
+
+recipe_formula <- recipes::recipe(diagnosed_sleep_disorder ~ ., sleep_train)
+
+
+recipe_steps <- recipe_formula %>%
+  recipes::step_dummy(factor_variables, -all_outcomes(), one_hot = TRUE) %>%
+  recipes::step_downsample(diagnosed_sleep_disorder) %>%
+  recipes::step_center(numeric_variables) %>%
+  recipes::step_scale(numeric_variables)
+
+recipe_prep <- recipes::prep(recipe_steps, sleep_train, retain = TRUE)
+
+training_data <- juice(recipe_prep)
+testing_data <- bake(recipe_prep, sleep_test)
+
+str(training_data)
+```
+
+## Train the model with SVM
+
+```{python}
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn import svm
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+y_train = r.training_data['diagnosed_sleep_disorder']
+X_train = r.training_data.drop('diagnosed_sleep_disorder', axis = 1)
+
+y_test = r.testing_data['diagnosed_sleep_disorder']
+X_test = r.testing_data.drop('diagnosed_sleep_disorder', axis = 1)
+
+
+clf = svm.SVC(kernel = 'linear')
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+clf = svm.SVC(kernel = 'rbf', gamma='auto')
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+```
+
+
+## Tune the model
+
+```{python}
+param_grid = [{'C': [0.01, 0.1, 1, 10, 100],
+               'gamma': [0.001, 0.01, 0.1, 1, 10],
+               'kernel': ['rbf', 'linear']}]
+
+grid = GridSearchCV(svm.SVC(), param_grid, cv = 5, scoring = 'balanced_accuracy')
+
+grid.fit(X_train, y_train)
+
+print(grid.best_params_)
+```
+
+## Evaluate the accuracy of the model
+```{python}
+clf = grid.best_estimator_
+y_pred = clf.predict(X_test)
+
+print('Confusion Matrix:\n\n', confusion_matrix(y_test, y_pred))
+print('\nClassification Report:\n\n', classification_report(y_test, y_pred))
+print('\nTraining Set Accuracy: {:.2f}%'.format(clf.score(X_train, y_train)))
+print('\nTest Set Accuracy: {:.2f}%'.format(clf.score(X_test, y_test)))
+
+conf_mat = confusion_matrix(y_test, y_pred)
+
+sns.heatmap(conf_mat, square = True, annot = True, fmt = 'g',
+            cbar = False, cmap = 'viridis')
+plt.xlabel('predicted')
+plt.ylabel('observed')
+plt.show()
+
+```
+
