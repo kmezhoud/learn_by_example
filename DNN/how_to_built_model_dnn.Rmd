@@ -1,0 +1,85 @@
+---
+title: "How to built model of Deep Neuronal Network"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+# Simulate some data to use for creating the neural networks.
+```{r }
+library(clusterGeneration)
+ 
+seed.val<-2
+set.seed(seed.val)
+ 
+num.vars <- 8
+num.obs <- 1000
+ 
+#input variables
+cov.mat <- genPositiveDefMat(num.vars, covMethod=c("unifcorrmat"))$Sigma
+
+rand.vars <- mvrnorm(num.obs, rep(0, num.vars), Sigma = cov.mat)
+ 
+#output variables
+parms <- runif(num.vars, -10, 10)
+y1 <- rand.vars %*% matrix(parms) + rnorm(num.obs, sd = 20)
+
+parms2 <- runif(num.vars, -10, 10)
+y2 <- rand.vars %*% matrix(parms2) + rnorm(num.obs, sd = 20)
+ 
+#final datasets
+rand.vars <- data.frame(rand.vars)
+resp <- data.frame(y1, y2)
+names(resp) <- c('Y1', 'Y2')
+
+
+dat.in <- data.frame(resp,rand.vars)
+head(dat.in)
+```
+
+# Built Model with nnet, neuralnet, RSNNA packages
+```{r}
+#nnet function from nnet package
+library(nnet)
+set.seed(seed.val)
+mod1 <- nnet(rand.vars, resp, data= dat.in, size = 10, linout = TRUE)
+ 
+#neuralnet function from neuralnet package, notice use of only one response
+library(neuralnet)
+form.in <- as.formula('Y1~.')
+set.seed(seed.val)
+mod2 <- neuralnet(form.in, data = dat.in, hidden = 10)
+ 
+#mlp function from RSNNS package
+library(RSNNS)
+set.seed(seed.val)
+mod3 <- mlp(rand.vars, resp, size=10, linOut=T)
+```
+
+# PLot models
+```{r}
+#import the function from Github
+library(devtools)
+source_url('https://gist.githubusercontent.com/fawda123/7471137/raw/466c1474d0a505ff044412703516c34f1a4684a5/nnet_plot_update.r')
+ 
+#plot each model
+plot.nnet(mod1)
+#plot.nnet(mod2)
+plot.nnet(mod3)
+```
+
