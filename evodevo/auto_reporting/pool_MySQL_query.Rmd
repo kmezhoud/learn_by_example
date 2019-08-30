@@ -1,0 +1,70 @@
+---
+title: "Pool MySQL Query"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+This notebook aims to autogenerate specific format of report. We will start by using example of data from sql data base, do some processing and computing and that return a report.
+
+
+# A simple example of reading dataset from sql database
+
+
+
+
+# Install and manange local MySQL Database.
+
+I found this [blog](https://programminghistorian.org/en/lessons/getting-started-with-mysql-using-r#installation-tips-for-a-mac) well exaplined to install and manage MySQL database.
+
+[pool](https://db.rstudio.com/pool/) package makes easier to query SQL database.
+
+# Example of amazon MySQL connection
+```{r}
+library(DBI)
+library(dplyr)
+library(RMySQL)
+library(pool)
+
+my_db <- dbPool(
+  RMySQL::MySQL(), 
+  dbname = "shinydemo",
+  host = "shiny-demo.csa7qlmguqrf.us-east-1.rds.amazonaws.com",
+  username = "guest",
+  password = "guest"
+)
+
+dbListTables(my_db)
+```
+
+
+## Glimpse the Tables
+```{r}
+
+my_db %>% dplyr::tbl("City") %>% head(5)
+```
+
+```{r}
+my_db %>% dplyr::tbl("Country") %>% head(5)
+```
+
+
+```{r}
+my_db %>% dplyr::tbl("CountryLanguage") %>% head(5)
+```
+

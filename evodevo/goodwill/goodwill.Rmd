@@ -1,0 +1,123 @@
+---
+title: "Access server and Data Exploration, Auto reporting to doc, html, pdf, markdown format"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+```{r}
+library(odbc)
+library(pool)
+```
+
+
+```{r}
+start <- Sys.time()
+
+con <- odbc::dbConnect(odbc::odbc(),
+                      Driver   = "SQL Server",
+                      Server   = "vps660951.ovh.net",
+                      Database = "EVODEVO",
+                      UID      = rstudioapi::askForPassword("User ID"),
+                      PWD      = rstudioapi::askForPassword("Password"),
+                      Port     = 1433)
+end <- Sys.time()
+
+
+
+print(end - start)
+
+dbListTables(con)
+```
+
+
+```{r}
+my_db <- dbPool(
+  odbc::odbc(), 
+  dbname = "EVODEVO",
+  host = "vps660951.ovh.net",
+  username = "evodevo",
+  password = "Goodwill2019*&"
+)
+
+```
+
+```{r}
+library("RODBC")
+
+# create a connection
+bcp <- odbcConnect("EVODEVO", uid="evodevo", pwd="Goodwill2019*&")
+bcp
+
+```
+
+
+```{r}
+library(rJava)
+devtools::install_github('imanuelcostigan/RSQLServer', force = TRUE)
+library(RSQLServer)
+
+conn <- RSQLServer::dbConnect("evodevo", database = "EVODEVO")
+
+
+library(dplyr)
+conn <- RSQLServer:::src_sqlserver("evodevo", database = "EVODEVO")
+
+
+
+library(DBI)
+conn <- dbConnect(RSQLServer::SQLServer(), 'EVODEVO')
+```
+
+
+
+```{r}
+library(RJDBC)
+
+drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver" , "/Users/Mezhoud/Applications/sqljdbc_6.0/enu/jre8/sqljdbc42.jar" ,identifier.quote="`")
+conn <- RJDBC::dbConnect(drv,
+                  "jdbc:sqlserver:vps660951.ovh.net;
+                  databaseName = EVODEVO",
+                  "evodevo",
+                  "Goodwill2019*&")
+d <- dbGetQuery(conn, "select * from sys.databases where database_id <= 4 ")
+summary(d)
+```
+```{r}
+drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver", #    "net.sourceforge.jtds.jdbc.Driver"
+            "/Users/Mezhoud/Applications/sqljdbc_6.0/enu/jre8/sqljdbc42.jar") # "/Users/Mezhoud/Applications/sqljdbc_6.0/enu/jre7/sqljdbc41.jar"
+
+
+mssql_addr <- "vps660951.ovh.net" #51.75.251.142
+mssql_port <- "1433"
+domain <- "EVODEVO"
+connection_string <- paste0("jdbc:jtds:sqlserver://",
+                            mssql_addr, ":",
+                            mssql_port) # "; domain=", domain
+conn <- dbConnect(drv, 
+                  connection_string, 
+                  user = 'evodevo', 
+                  password = "Goodwill2019*&")
+
+query <- "select count(*) from your_db.dbo.your_table"
+cnt <- dbGetQuery(conn = conn, statement = query)
+```
+
+
+
+

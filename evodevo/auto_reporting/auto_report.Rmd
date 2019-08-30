@@ -1,0 +1,138 @@
+---
+title: "Data Exploration and Auto reporting to doc, html, pdf, markdown format"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE, warning = FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+
+
+**The goal of this note is to report automatically  some clinical data of selected study from a public server**
+
+# Load packages
+```{r, message=FALSE}
+library(cgdsr)
+library(flextable)
+library(dplyr)
+```
+
+## Connect to the public sever and load studies
+
+```{r}
+cgds <- cgdsr::CGDS("http://www.cbioportal.org/")
+Studies<- cgdsr::getCancerStudies(cgds)
+# look for Prostate studies
+Prostate_studies <-
+  Studies %>%
+  filter(stringr::str_detect(name, "Prostate"))
+
+#DT::datatable(Prostate_studies) %>%
+ # DT::formatStyle( colnames(Prostate_studies), color = 'black')
+knitr::kable(head(Prostate_studies), format = "html")
+```
+
+# Load clinical data of prostate studies
+```{r}
+clinicalData <- cgdsr::getClinicalData(cgds, "prad_tcga_all")
+glimpse(clinicalData[1:20])
+```
+
+# Performe some exploration
+
+## Median Age of `Reccured` and `DiseaseFree` for `Living` and `Deceased` patient
+
+```{r}
+clinicalData %>%
+  group_by(DFS_STATUS, OS_STATUS, RACE) %>%
+  summarise(Age = median(AGE))
+```
+
+## Which is the killer stage
+```{r}
+data <-
+clinicalData %>%
+  group_by(PATH_T_STAGE, OS_STATUS, DFS_STATUS) %>%
+  summarise(Months = median(DFS_MONTHS))
+data
+```
+
+
+```{r}
+killer_stage <- 
+clinicalData %>%
+ group_by(CLIN_T_STAGE, PATH_T_STAGE, OS_STATUS, DFS_STATUS) %>%
+  filter(OS_STATUS == 'DECEASED') %>%
+  ungroup() %>%
+  mutate(PATH_T_STAGE = as.factor(PATH_T_STAGE)) %>%
+  count(PATH_T_STAGE) %>%
+  top_n(1, PATH_T_STAGE)
+ 
+killer_stage
+```
+
+# Built report
+## Function to Built report
+
+```{r}
+
+flex_tbl <- 
+  function( body ,  heads, colwidths, title){
+    
+    # define the body 
+    ft <- flextable(body)
+    # loop to add headers
+    for( i in 1:length(heads)){
+      ft <- add_header_row(ft, 
+                           values = heads[[i]], 
+                           colwidths = colwidth[[i]])
+    }
+    # Add Title
+    ft <- add_header_lines(ft, title )
+    
+    # Set specific layout
+    ft <- flextable::align(ft, i = 1, j = 1, part = c("header"), align = "center") 
+    ft <- hline(ft, i = c(1, length(heads) + 1, length(heads) + 2),
+                border = officer::fp_border(), part = "header")
+    ft <- flextable::bold(ft, i = c(1, length(heads) + 2), bold = TRUE, part = "header")
+     ft <- flextable::bold(ft, i = c(2, 3), j = c(1,4) , bold = TRUE, part = "header")
+     ft <- flextable::color(ft, i = 3, j = c(3,4), color = 'red', part = "header")
+    ft <- flextable::align(ft, part = "body", align = "left")
+    ft <- fontsize(ft, size = 16, part = "all")
+    ft <- padding(ft, padding = 10, part = "all")
+    
+    return(ft)
+  }
+
+```
+
+## Formating data
+```{r}
+data <- clinicalData %>%
+  group_by( PATH_T_STAGE, OS_STATUS, DFS_STATUS) %>%
+  summarise(Months = median(DFS_MONTHS))
+
+heads <- list(c("The killet stage", killer_stage[1], paste0("n = ", killer_stage[2])),
+              c("Study", Prostate_studies[1,2])
+                )
+
+colwidth <- list(c(2,1,1), c(1,3))
+
+flex_tbl(data, heads, colwidth, title = " Summary of the killer stage of Prostate Cancer")
+```
+
+

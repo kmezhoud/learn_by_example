@@ -1,0 +1,168 @@
+---
+title: "Huxtable"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+
+## getting start with a simple huxtable
+```{r}
+library(huxtable)
+ht <- hux(
+        Employee     = c('John Smith', 'Jane Doe', 'David Hugh-Jones'), 
+        Salary       = c(50000L, 50000L, 40000L),
+        add_colnames = TRUE
+      )
+## print as htlm
+#print_html(ht)
+## print as Latex
+#print_latex(ht)
+
+## print as markdown
+ht
+```
+
+That is look like a datafarme but colnames is included in the first row of the dataframe.
+
+
+## Changing the style of the hustable
+```{r}
+bold(ht)[1, ]          <- TRUE
+bottom_border(ht)[1, ] <- 1
+ht
+```
+
+
+## Tidyverse Syntaxe
+
+```{r}
+library(dplyr)
+hux(
+        Employee     = c('John Smith', 'Jane Doe', 'David Hugh-Jones'), 
+        Salary       = c(50000, 50000, 40000),
+        add_colnames = TRUE
+      )                               %>%
+      set_bold(1, 1:2, TRUE)          %>% 
+      set_bottom_border(1, 1:2, 1)    %>%
+      set_align(1:4, 2, 'right')      %>%
+      set_number_format(2)            %>% 
+      set_caption('Employee table')
+
+```
+
+## Changing content
+```{r}
+ht[3, 1] <- 'Jane Jones'
+ht
+```
+
+## Adding content
+```{r}
+ht %>%
+  cbind(c("Role", "Admin", "CEO", "Dogsbody")) %>%
+  rbind( c("Yihui Xie", 100000, "CEO"))
+```
+
+## Editing content with `dplyr` way
+
+```{r}
+as_hux(mtcars) %>%
+  add_colnames() %>%
+  head
+
+```
+
+```{r}
+as_hux(mtcars) %>%
+      huxtable::add_rownames("Car")                       %>%
+      slice(1:5)                                          %>% 
+      select(Car, mpg, cyl, hp)                           %>% 
+      arrange(hp)                                         %>% 
+      filter(cyl > 4)                                     %>% 
+      rename(MPG = mpg, Cylinders = cyl, Horsepower = hp) %>% 
+      mutate(kml = MPG/2.82) %>%
+      huxtable::add_colnames()  %>%
+      theme_plain()
+```
+
+
+## Change widths
+```{r}
+width(ht) <- 0.4
+col_width(ht) <- c(.7, .3)
+ht
+```
+
+## Wrap  / stretched long content over multiple lines:
+```{r}
+ht_wrapped <- ht
+ht_wrapped[5, 1] <- "David Arthur Shrimpton Hugh-Jones ejnskdkdjb  jnsdkdk,d jndjnd"
+wrap(ht_wrapped) <- TRUE
+ht_wrapped
+```
+
+
+## Merging cells
+```{r}
+#cars_ht <- as_huxtable(mtcars) %>% arrange(cyl)
+  mtcars %>%
+  as_huxtable() %>%
+  huxtable::add_rownames("Car") %>%
+  arrange(cyl) %>%
+  select(1:4) %>%
+ # mutate(cylinders = cars_ht$cyl) %>%
+  mutate(cylinders = case_when(
+    cyl == 4 ~ paste0("Four Cylinders"),
+    cyl == 6 ~ paste0("Six Cylinders"),
+    cyl == 8 ~ paste0("Eight Cylinders")
+  )) %>%
+  select(cylinders, everything()) %>%
+  huxtable::add_colnames() %>%
+  merge_cells(2:12, 1) %>% 
+  merge_cells(13:19, 1) %>% 
+  merge_cells(20:33, 1)
+
+
+```
+
+## Initiate empty hustable
+
+### Head table
+The Head tbale content the Title, and others informations about the report.
+We set the head table with 4 columns and 4 rows.
+
+```{r}
+# header <- huxtable()
+# head_description <- c("Title", "Description1", "Description2")
+# head_value <- c(NA,NA, "Value2")
+# header[seq_along(head_description), 1] <- head_description
+# header[seq_along(head_value), 2] <- head_value
+# 
+# col_width(header[1,2]) <- 150
+# bottom_border(header)[1, ] <- 1
+# align(header)[1, 1] <- "center"
+# bold(header)[1, ]    <- TRUE
+# head <- merge_cells(header,1, 1:2)
+# 
+# theme_basic(header)
+```
+
+
+

@@ -1,0 +1,141 @@
+---
+title: "flextable"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+
+
+```{r}
+library(huxtable)
+library(dplyr)
+headr <- data.frame(Title = c("subTitle1", "subTitle2"), 
+                     NULL = c("", "numeric2")) 
+
+body <- data.frame( Description = c("Desc1", "Desc2", "Desc3"),
+                    Value = c("vale1", "", "value3"))
+                    
+merged_hux <- rbind(as_huxtable(headr) %>% add_colnames(),
+               as_huxtable(body) %>% add_colnames())
+
+huxtable::align(merged_hux)[1, 1]         <- "center"
+merged_hux <- merge_cells(merged_hux,1, 1:2)
+bottom_border(merged_hux[c(1,3,4), ])     <- 1
+huxtable::bold(merged_hux)[c(1, 4), ]    <- TRUE
+
+merged_hux
+```
+
+
+```{r}
+library(flextable)
+body <- data.frame( col_keys = c("Description", "Value", "Interpretation"),
+                    col1 = c("Desc1", "Desc2", "Desc3"),
+                    col2 = c("value1", "", "value3"), 
+                    col3 = c("Inter1", "", "Inter3"),
+                    stringsAsFactors = FALSE)
+
+headr <- data.frame(col_keys = c("foo","too"),
+                    line1 = c("subTitle1", ""), 
+                    line2 = c("subTitle2", "numeric2"), 
+                    #line3 = c("Description", "Value"),
+                    stringsAsFactors = FALSE)
+
+your_theme <- function(ft, title){
+  ft <- add_header_lines(ft, title, top = TRUE)
+  ft <- flextable::align(ft, part = "all", align = "center")
+  ft <- flextable::align(ft, i = 1, j = 1, part = "header", align = "center")
+  #ft <- flextable::bold(ft, i = c(1, 4), bold = TRUE, part = "header")
+  ft <- fontsize(ft, size = 16, part = "all")
+  ft <- padding(ft, padding = 10, part = "all")
+  #ft <- flextable::width(ft, width = 2)
+  ft
+}
+
+ft <- flextable(data = body)
+ft <- set_header_df(x = ft, mapping = headr, key = "col_keys")
+ft <- your_theme(ft, title = "Title")
+#ft <- hline(ft, i = c(1, 3, 4), border = officer::fp_border(), part = "header")
+ft
+
+```
+```{r}
+library(flextable)
+body <- data.frame( Description = c("Desc1", "Desc2", "Desc3"),
+                    Value = c("vale1", "", "value3"),
+                    Interpretation = c("Inter1", "Inter2", ""),
+                    stringsAsFactors = FALSE)
+
+
+template <- flextable(data = body) %>% 
+  add_header_row(values = c("subTitle2", "numeric2"), colwidths = c(1,2), top = FALSE) %>% 
+  add_header_row(values = c("subTitle1"), colwidths = c(3), top = TRUE) %>% 
+  add_header_row(values = c("Title"), colwidths = 3, top = TRUE) %>% 
+  fontsize(size = 16, part = "all") %>% padding(padding = 10, part = "all")
+
+template %>% 
+  flextable::align( part = "header", align = "center") %>% 
+  flextable::align(part = "body", align = "left") %>%
+  #flextable::align( i = 1, j = 1, part = "body", align = "center") %>% 
+  hline(i = c(1, 3, 4), border = officer::fp_border(), part = "header") %>% 
+  flextable::bold(i = c(1, 4), bold = TRUE, part = "header") %>% 
+  flextable::width(width = 2)
+
+
+```
+
+## Funtion to built a template of flextable
+```{r}
+
+flex_tbl <- 
+  function( body ,  heads, colwidths, title){
+    
+    # define the body 
+    ft <- flextable(body)
+    # loop to add headers
+    for( i in 1:length(heads)){
+      ft <- add_header_row(ft, 
+                           values = heads[[i]], 
+                           colwidths = colwidth[[i]])
+    }
+    # Add Title
+    ft <- add_header_lines(ft, title )
+    
+    # Set specific layout
+    ft <- flextable::align(ft, i = 1, j = 1, part = c("header"), align = "center") 
+    ft <- hline(ft, i = c(1, length(heads) + 1, length(heads) + 2),
+                border = officer::fp_border(), part = "header")
+    ft <- flextable::bold(ft, i = c(1, length(heads) + 2), bold = TRUE, part = "header")
+    ft <- flextable::align(ft, part = "body", align = "left")
+    ft <- fontsize(ft, size = 16, part = "all")
+    ft <- padding(ft, padding = 10, part = "all")
+    
+    return(ft)
+  }
+
+data <- data.frame( Description = c("Desc1", "Desc2", "Desc3"),
+                    Value = c("vale1", "", "value3"),
+                    Interpretation = c("Inter1", "Inter2", ""),
+                    stringsAsFactors = FALSE)
+
+heads <- list(c("subTitle2", "numeric2"), "subTitle1")
+colwidth <- list(c(2,1), 3)
+
+flex_tbl(data, heads, colwidth, title = "Title")
+```
+

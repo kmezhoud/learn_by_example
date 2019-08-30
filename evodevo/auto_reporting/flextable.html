@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-05-14" />
+
+<title>flextable</title>
+
+<script src="flextable_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="flextable_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="flextable_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="flextable_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="flextable_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="flextable_files/navigation-1.1/tabsets.js"></script>
+<script src="flextable_files/navigation-1.1/codefolding.js"></script>
+<link href="flextable_files/tabwid-1.0.0/tabwid.css" rel="stylesheet" />
+<script src="flextable_files/tabwid-1.0.0/tabwid.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code > span.dt { color: #204a87; } /* DataType */
+code > span.dv { color: #0000cf; } /* DecVal */
+code > span.bn { color: #0000cf; } /* BaseN */
+code > span.fl { color: #0000cf; } /* Float */
+code > span.ch { color: #4e9a06; } /* Char */
+code > span.st { color: #4e9a06; } /* String */
+code > span.co { color: #8f5902; font-style: italic; } /* Comment */
+code > span.ot { color: #8f5902; } /* Other */
+code > span.al { color: #ef2929; } /* Alert */
+code > span.fu { color: #000000; } /* Function */
+code > span.er { color: #a40000; font-weight: bold; } /* Error */
+code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #000000; } /* Constant */
+code > span.sc { color: #000000; } /* SpecialChar */
+code > span.vs { color: #4e9a06; } /* VerbatimString */
+code > span.ss { color: #4e9a06; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #000000; } /* Variable */
+code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code > span.ex { } /* Extension */
+code > span.at { color: #c4a000; } /* Attribute */
+code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">flextable</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-05-14</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#funtion-to-built-a-template-of-flextable"><span class="toc-section-number">0.1</span> Funtion to built a template of flextable</a></li>
+</ul>
+</div>
+
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(huxtable)
+<span class="kw">library</span>(dplyr)</code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:huxtable&#39;:
+## 
+##     add_rownames</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">headr &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">Title =</span> <span class="kw">c</span>(<span class="st">&quot;subTitle1&quot;</span>, <span class="st">&quot;subTitle2&quot;</span>), 
+                     <span class="dt">NULL =</span> <span class="kw">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;numeric2&quot;</span>)) 
+
+body &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">Description =</span> <span class="kw">c</span>(<span class="st">&quot;Desc1&quot;</span>, <span class="st">&quot;Desc2&quot;</span>, <span class="st">&quot;Desc3&quot;</span>),
+                    <span class="dt">Value =</span> <span class="kw">c</span>(<span class="st">&quot;vale1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;value3&quot;</span>))
+                    
+merged_hux &lt;-<span class="st"> </span><span class="kw">rbind</span>(<span class="kw">as_huxtable</span>(headr) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">add_colnames</span>(),
+               <span class="kw">as_huxtable</span>(body) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">add_colnames</span>())
+
+huxtable<span class="op">::</span><span class="kw">align</span>(merged_hux)[<span class="dv">1</span>, <span class="dv">1</span>]         &lt;-<span class="st"> &quot;center&quot;</span>
+merged_hux &lt;-<span class="st"> </span><span class="kw">merge_cells</span>(merged_hux,<span class="dv">1</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>)
+<span class="kw">bottom_border</span>(merged_hux[<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">4</span>), ])     &lt;-<span class="st"> </span><span class="dv">1</span>
+huxtable<span class="op">::</span><span class="kw">bold</span>(merged_hux)[<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">4</span>), ]    &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+
+merged_hux</code></pre></div>
+<table class="huxtable" style="border-collapse: collapse; margin-bottom: 2em; margin-top: 2em; width: 50%; margin-left: auto; margin-right: auto;  ">
+<col><col><tr>
+<td colspan="2" style="vertical-align: top; text-align: center; white-space: nowrap; border-style: solid solid solid solid; border-width: 0pt 0pt 1pt 0pt; padding: 4pt 4pt 4pt 4pt; font-weight: bold;">Title</td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">subTitle1</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;"></td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; border-style: solid solid solid solid; border-width: 0pt 0pt 1pt 0pt; padding: 4pt 4pt 4pt 4pt;">subTitle2</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; border-style: solid solid solid solid; border-width: 0pt 0pt 1pt 0pt; padding: 4pt 4pt 4pt 4pt;">numeric2</td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; border-style: solid solid solid solid; border-width: 0pt 0pt 1pt 0pt; padding: 4pt 4pt 4pt 4pt; font-weight: bold;">Description</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; border-style: solid solid solid solid; border-width: 0pt 0pt 1pt 0pt; padding: 4pt 4pt 4pt 4pt; font-weight: bold;">Value</td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">Desc1</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">vale1</td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">Desc2</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;"></td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">Desc3</td>
+<td style="vertical-align: top; text-align: left; white-space: nowrap; padding: 4pt 4pt 4pt 4pt;">value3</td>
+</tr>
+</table>
+
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(flextable)</code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;flextable&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:huxtable&#39;:
+## 
+##     align, as_flextable, bold, font, height, italic, set_caption,
+##     valign, width</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">body &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">col_keys =</span> <span class="kw">c</span>(<span class="st">&quot;Description&quot;</span>, <span class="st">&quot;Value&quot;</span>, <span class="st">&quot;Interpretation&quot;</span>),
+                    <span class="dt">col1 =</span> <span class="kw">c</span>(<span class="st">&quot;Desc1&quot;</span>, <span class="st">&quot;Desc2&quot;</span>, <span class="st">&quot;Desc3&quot;</span>),
+                    <span class="dt">col2 =</span> <span class="kw">c</span>(<span class="st">&quot;value1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;value3&quot;</span>), 
+                    <span class="dt">col3 =</span> <span class="kw">c</span>(<span class="st">&quot;Inter1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;Inter3&quot;</span>),
+                    <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+headr &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">col_keys =</span> <span class="kw">c</span>(<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;too&quot;</span>),
+                    <span class="dt">line1 =</span> <span class="kw">c</span>(<span class="st">&quot;subTitle1&quot;</span>, <span class="st">&quot;&quot;</span>), 
+                    <span class="dt">line2 =</span> <span class="kw">c</span>(<span class="st">&quot;subTitle2&quot;</span>, <span class="st">&quot;numeric2&quot;</span>), 
+                    <span class="co">#line3 = c(&quot;Description&quot;, &quot;Value&quot;),</span>
+                    <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+your_theme &lt;-<span class="st"> </span><span class="cf">function</span>(ft, title){
+  ft &lt;-<span class="st"> </span><span class="kw">add_header_lines</span>(ft, title, <span class="dt">top =</span> <span class="ot">TRUE</span>)
+  ft &lt;-<span class="st"> </span>flextable<span class="op">::</span><span class="kw">align</span>(ft, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;center&quot;</span>)
+  ft &lt;-<span class="st"> </span>flextable<span class="op">::</span><span class="kw">align</span>(ft, <span class="dt">i =</span> <span class="dv">1</span>, <span class="dt">j =</span> <span class="dv">1</span>, <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;center&quot;</span>)
+  <span class="co">#ft &lt;- flextable::bold(ft, i = c(1, 4), bold = TRUE, part = &quot;header&quot;)</span>
+  ft &lt;-<span class="st"> </span><span class="kw">fontsize</span>(ft, <span class="dt">size =</span> <span class="dv">16</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>)
+  ft &lt;-<span class="st"> </span><span class="kw">padding</span>(ft, <span class="dt">padding =</span> <span class="dv">10</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>)
+  <span class="co">#ft &lt;- flextable::width(ft, width = 2)</span>
+  ft
+}
+
+ft &lt;-<span class="st"> </span><span class="kw">flextable</span>(<span class="dt">data =</span> body)
+ft &lt;-<span class="st"> </span><span class="kw">set_header_df</span>(<span class="dt">x =</span> ft, <span class="dt">mapping =</span> headr, <span class="dt">key =</span> <span class="st">&quot;col_keys&quot;</span>)
+ft &lt;-<span class="st"> </span><span class="kw">your_theme</span>(ft, <span class="dt">title =</span> <span class="st">&quot;Title&quot;</span>)
+<span class="co">#ft &lt;- hline(ft, i = c(1, 3, 4), border = officer::fp_border(), part = &quot;header&quot;)</span>
+ft</code></pre></div>
+<div class="tabwid"><table style='border-collapse:collapse;'><thead><tr><td colspan="4" style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">Title</span></p></td></tr><tr><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td></tr><tr><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:0;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;"></span></p></td></tr></thead><tbody><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Description</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc1</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">value1</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter1</span></p></td></tr><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Value</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc2</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td></tr><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Interpretation</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc3</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">value3</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter3</span></p></td></tr></tbody></table></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(flextable)
+body &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">Description =</span> <span class="kw">c</span>(<span class="st">&quot;Desc1&quot;</span>, <span class="st">&quot;Desc2&quot;</span>, <span class="st">&quot;Desc3&quot;</span>),
+                    <span class="dt">Value =</span> <span class="kw">c</span>(<span class="st">&quot;vale1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;value3&quot;</span>),
+                    <span class="dt">Interpretation =</span> <span class="kw">c</span>(<span class="st">&quot;Inter1&quot;</span>, <span class="st">&quot;Inter2&quot;</span>, <span class="st">&quot;&quot;</span>),
+                    <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+
+template &lt;-<span class="st"> </span><span class="kw">flextable</span>(<span class="dt">data =</span> body) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">add_header_row</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;subTitle2&quot;</span>, <span class="st">&quot;numeric2&quot;</span>), <span class="dt">colwidths =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="dt">top =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">add_header_row</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;subTitle1&quot;</span>), <span class="dt">colwidths =</span> <span class="kw">c</span>(<span class="dv">3</span>), <span class="dt">top =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">add_header_row</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;Title&quot;</span>), <span class="dt">colwidths =</span> <span class="dv">3</span>, <span class="dt">top =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">fontsize</span>(<span class="dt">size =</span> <span class="dv">16</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">padding</span>(<span class="dt">padding =</span> <span class="dv">10</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>)
+
+template <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>flextable<span class="op">::</span><span class="kw">align</span>( <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;center&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>flextable<span class="op">::</span><span class="kw">align</span>(<span class="dt">part =</span> <span class="st">&quot;body&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;left&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co">#flextable::align( i = 1, j = 1, part = &quot;body&quot;, align = &quot;center&quot;) %&gt;% </span>
+<span class="st">  </span><span class="kw">hline</span>(<span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">4</span>), <span class="dt">border =</span> officer<span class="op">::</span><span class="kw">fp_border</span>(), <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>flextable<span class="op">::</span><span class="kw">bold</span>(<span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">4</span>), <span class="dt">bold =</span> <span class="ot">TRUE</span>, <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>flextable<span class="op">::</span><span class="kw">width</span>(<span class="dt">width =</span> <span class="dv">2</span>)</code></pre></div>
+<div class="tabwid"><table style='border-collapse:collapse;'><thead><tr><td colspan="3" style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">Title</span></p></td></tr><tr><td colspan="3" style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">subTitle1</span></p></td></tr><tr><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 2px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Description</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 2px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Value</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 2px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Interpretation</span></p></td></tr><tr><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">subTitle2</span></p></td><td colspan="2" style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">numeric2</span></p></td></tr></thead><tbody><tr><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc1</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">vale1</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter1</span></p></td></tr><tr><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc2</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter2</span></p></td></tr><tr><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc3</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">value3</span></p></td><td style="width:144px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td></tr></tbody></table></div>
+<div id="funtion-to-built-a-template-of-flextable" class="section level2">
+<h2><span class="header-section-number">0.1</span> Funtion to built a template of flextable</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">flex_tbl &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="cf">function</span>( body ,  heads, colwidths, title){
+    
+    <span class="co"># define the body </span>
+    ft &lt;-<span class="st"> </span><span class="kw">flextable</span>(body)
+    <span class="co"># loop to add headers</span>
+    <span class="cf">for</span>( i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(heads)){
+      ft &lt;-<span class="st"> </span><span class="kw">add_header_row</span>(ft, 
+                           <span class="dt">values =</span> heads[[i]], 
+                           <span class="dt">colwidths =</span> colwidth[[i]])
+    }
+    <span class="co"># Add Title</span>
+    ft &lt;-<span class="st"> </span><span class="kw">add_header_lines</span>(ft, title )
+    
+    <span class="co"># Set specific layout</span>
+    ft &lt;-<span class="st"> </span>flextable<span class="op">::</span><span class="kw">align</span>(ft, <span class="dt">i =</span> <span class="dv">1</span>, <span class="dt">j =</span> <span class="dv">1</span>, <span class="dt">part =</span> <span class="kw">c</span>(<span class="st">&quot;header&quot;</span>), <span class="dt">align =</span> <span class="st">&quot;center&quot;</span>) 
+    ft &lt;-<span class="st"> </span><span class="kw">hline</span>(ft, <span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="kw">length</span>(heads) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>, <span class="kw">length</span>(heads) <span class="op">+</span><span class="st"> </span><span class="dv">2</span>),
+                <span class="dt">border =</span> officer<span class="op">::</span><span class="kw">fp_border</span>(), <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>)
+    ft &lt;-<span class="st"> </span>flextable<span class="op">::</span><span class="kw">bold</span>(ft, <span class="dt">i =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="kw">length</span>(heads) <span class="op">+</span><span class="st"> </span><span class="dv">2</span>), <span class="dt">bold =</span> <span class="ot">TRUE</span>, <span class="dt">part =</span> <span class="st">&quot;header&quot;</span>)
+    ft &lt;-<span class="st"> </span>flextable<span class="op">::</span><span class="kw">align</span>(ft, <span class="dt">part =</span> <span class="st">&quot;body&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;left&quot;</span>)
+    ft &lt;-<span class="st"> </span><span class="kw">fontsize</span>(ft, <span class="dt">size =</span> <span class="dv">16</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>)
+    ft &lt;-<span class="st"> </span><span class="kw">padding</span>(ft, <span class="dt">padding =</span> <span class="dv">10</span>, <span class="dt">part =</span> <span class="st">&quot;all&quot;</span>)
+    
+    <span class="kw">return</span>(ft)
+  }
+
+data &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">Description =</span> <span class="kw">c</span>(<span class="st">&quot;Desc1&quot;</span>, <span class="st">&quot;Desc2&quot;</span>, <span class="st">&quot;Desc3&quot;</span>),
+                    <span class="dt">Value =</span> <span class="kw">c</span>(<span class="st">&quot;vale1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;value3&quot;</span>),
+                    <span class="dt">Interpretation =</span> <span class="kw">c</span>(<span class="st">&quot;Inter1&quot;</span>, <span class="st">&quot;Inter2&quot;</span>, <span class="st">&quot;&quot;</span>),
+                    <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+heads &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="kw">c</span>(<span class="st">&quot;subTitle2&quot;</span>, <span class="st">&quot;numeric2&quot;</span>), <span class="st">&quot;subTitle1&quot;</span>)
+colwidth &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">1</span>), <span class="dv">3</span>)
+
+<span class="kw">flex_tbl</span>(data, heads, colwidth, <span class="dt">title =</span> <span class="st">&quot;Title&quot;</span>)</code></pre></div>
+<div class="tabwid"><table style='border-collapse:collapse;'><thead><tr><td colspan="3" style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">Title</span></p></td></tr><tr><td colspan="3" style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(255, 255, 255, 0.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">subTitle1</span></p></td></tr><tr><td colspan="2" style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">subTitle2</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(255, 255, 255, 0.00);border-left: 1px solid rgba(255, 255, 255, 0.00);border-right: 1px solid rgba(255, 255, 255, 0.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;">numeric2</span></p></td></tr><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Description</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Value</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 1px solid rgba(0, 0, 0, 1.00);border-top: 1px solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Interpretation</span></p></td></tr></thead><tbody><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc1</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">vale1</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter1</span></p></td></tr><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc2</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Inter2</span></p></td></tr><tr><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">Desc3</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;">value3</span></p></td><td style="width:54px;height:18px;background-color:transparent;vertical-align: middle;transform: rotate(0deg);border-bottom: 2px solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;"><p style="margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:10px;padding-top:10px;padding-left:10px;padding-right:10px;background-color:transparent;"><span style="font-family:'Arial';font-size:16px;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(17, 17, 17, 1.00);background-color:transparent;"></span></p></td></tr></tbody></table></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
