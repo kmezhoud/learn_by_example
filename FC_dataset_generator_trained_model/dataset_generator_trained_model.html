@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-09-17" />
+
+<title>Face recognition - Dataset Generator</title>
+
+<script src="dataset_generator_trained_model_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="dataset_generator_trained_model_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="dataset_generator_trained_model_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="dataset_generator_trained_model_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="dataset_generator_trained_model_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="dataset_generator_trained_model_files/navigation-1.1/tabsets.js"></script>
+<script src="dataset_generator_trained_model_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Face recognition - Dataset Generator</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-09-17</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#structure-of-the-folder"><span class="toc-section-number">0.1</span> Structure of the folder</a></li>
+<li><a href="#output-example"><span class="toc-section-number">0.2</span> Output example</a></li>
+<li><a href="#set-python-version-and-anaconda-environment"><span class="toc-section-number">0.3</span> set python version and anaconda environment</a></li>
+<li><a href="#detect-and-shut-images-by-webcam"><span class="toc-section-number">1</span> Detect and shut images by webcam</a></li>
+<li><a href="#train-model-for-dataset"><span class="toc-section-number">2</span> Train model for dataset</a></li>
+<li><a href="#detect-recognised-faces-using-trained-model"><span class="toc-section-number">3</span> Detect recognised faces using trained model</a></li>
+</ul>
+</div>
+
+<div id="structure-of-the-folder" class="section level2">
+<h2><span class="header-section-number">0.1</span> Structure of the folder</h2>
+<pre><code>├── detect_face_get_X_Images.py*
+├── haarcascade_frontalface_default.xml*
+├── images_known_faces.Rmd*
+├── images_known_faces.html*
+├── recognise_faces_by_trained_model.py*
+├── screenshot.png*
+└── train_model_from_dataSet.py*</code></pre>
+</div>
+<div id="output-example" class="section level2">
+<h2><span class="header-section-number">0.2</span> Output example</h2>
+<p><img src="screenshot.png" /></p>
+</div>
+<div id="set-python-version-and-anaconda-environment" class="section level2">
+<h2><span class="header-section-number">0.3</span> set python version and anaconda environment</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/venv/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">setwd</span>(<span class="st">&quot;/Volumes/DATA/learn_by_example/face_recognition/dataset_generator_trained_model/&quot;</span>)</a></code></pre></div>
+<pre><code>## Error in setwd(&quot;/Volumes/DATA/learn_by_example/face_recognition/dataset_generator_trained_model/&quot;): cannot change working directory</code></pre>
+</div>
+<div id="detect-and-shut-images-by-webcam" class="section level1">
+<h1><span class="header-section-number">1</span> Detect and shut images by webcam</h1>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">####################################################</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co"># Modified by Nazmi Asri                           #</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="co"># Original code: http://thecodacus.com/            #</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co"># All right reserved to the respective owner       #</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">####################################################</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co"># Import OpenCV2 for image processing</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="im">import</span> os</a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="im">import</span> glob</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="kw">def</span> assure_path_exists(path):</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">    <span class="bu">dir</span> <span class="op">=</span> os.path.dirname(path)</a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">    <span class="cf">if</span> <span class="kw">not</span> os.path.exists(<span class="bu">dir</span>):</a>
+<a class="sourceLine" id="cb5-15" data-line-number="15">        os.makedirs(<span class="bu">dir</span>)</a>
+<a class="sourceLine" id="cb5-16" data-line-number="16">        </a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"><span class="kw">def</span> detectAndDisplay(frame):</a>
+<a class="sourceLine" id="cb5-18" data-line-number="18">    frame_gray <span class="op">=</span> cv.cvtColor(frame, cv.COLOR_BGR2GRAY)</a>
+<a class="sourceLine" id="cb5-19" data-line-number="19">    frame_gray <span class="op">=</span> cv.equalizeHist(frame_gray)</a>
+<a class="sourceLine" id="cb5-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21"><span class="co"># Start capturing video</span></a>
+<a class="sourceLine" id="cb5-22" data-line-number="22">vid_cam <span class="op">=</span> cv2.VideoCapture(<span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb5-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb5-24" data-line-number="24"><span class="co"># Detect object in video stream using Haarcascade Frontal Face</span></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25">face_detector <span class="op">=</span> cv2.CascadeClassifier(<span class="st">&#39;haarcascade_frontalface_default.xml&#39;</span>)</a>
+<a class="sourceLine" id="cb5-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb5-27" data-line-number="27"><span class="co"># For each person, one face id</span></a>
+<a class="sourceLine" id="cb5-28" data-line-number="28">face_id <span class="op">=</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb5-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb5-30" data-line-number="30"><span class="co"># Initialize sample face image</span></a>
+<a class="sourceLine" id="cb5-31" data-line-number="31">count <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb5-33" data-line-number="33">assure_path_exists(<span class="st">&quot;dataSet/&quot;</span>)</a>
+<a class="sourceLine" id="cb5-34" data-line-number="34"></a>
+<a class="sourceLine" id="cb5-35" data-line-number="35"><span class="co"># Start looping</span></a>
+<a class="sourceLine" id="cb5-36" data-line-number="36"><span class="cf">while</span>(<span class="va">True</span>):</a>
+<a class="sourceLine" id="cb5-37" data-line-number="37"></a>
+<a class="sourceLine" id="cb5-38" data-line-number="38">    <span class="co"># Capture video frame</span></a>
+<a class="sourceLine" id="cb5-39" data-line-number="39">    _, image_frame <span class="op">=</span> vid_cam.read()</a>
+<a class="sourceLine" id="cb5-40" data-line-number="40"></a>
+<a class="sourceLine" id="cb5-41" data-line-number="41">    <span class="co"># Convert frame to grayscale</span></a>
+<a class="sourceLine" id="cb5-42" data-line-number="42">    gray <span class="op">=</span> cv2.cvtColor(image_frame, cv2.COLOR_BGR2GRAY)</a>
+<a class="sourceLine" id="cb5-43" data-line-number="43">            </a>
+<a class="sourceLine" id="cb5-44" data-line-number="44">    <span class="co"># Detect frames of different sizes, list of faces rectangles</span></a>
+<a class="sourceLine" id="cb5-45" data-line-number="45">    faces <span class="op">=</span> face_detector.detectMultiScale(gray, <span class="fl">1.3</span>, <span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb5-46" data-line-number="46"></a>
+<a class="sourceLine" id="cb5-47" data-line-number="47">    <span class="co"># Loops for each faces</span></a>
+<a class="sourceLine" id="cb5-48" data-line-number="48">    <span class="cf">for</span> (x,y,w,h) <span class="kw">in</span> faces:</a>
+<a class="sourceLine" id="cb5-49" data-line-number="49"></a>
+<a class="sourceLine" id="cb5-50" data-line-number="50">        <span class="co"># Crop the image frame into rectangle</span></a>
+<a class="sourceLine" id="cb5-51" data-line-number="51">        cv2.rectangle(image_frame, (x,y), (x<span class="op">+</span>w,y<span class="op">+</span>h), (<span class="dv">255</span>,<span class="dv">0</span>,<span class="dv">0</span>), <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb5-52" data-line-number="52"></a>
+<a class="sourceLine" id="cb5-53" data-line-number="53">        <span class="co"># Increment sample face image</span></a>
+<a class="sourceLine" id="cb5-54" data-line-number="54">        count <span class="op">+=</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb5-55" data-line-number="55"></a>
+<a class="sourceLine" id="cb5-56" data-line-number="56">        <span class="co"># Save the captured image into the datasets folder</span></a>
+<a class="sourceLine" id="cb5-57" data-line-number="57">        cv2.imwrite(<span class="st">&quot;dataSet/User.&quot;</span> <span class="op">+</span> <span class="bu">str</span>(face_id) <span class="op">+</span> <span class="st">&#39;.&#39;</span> <span class="op">+</span> <span class="bu">str</span>(count) <span class="op">+</span> <span class="st">&quot;.jpg&quot;</span>, gray[y:y<span class="op">+</span>h,x:x<span class="op">+</span>w])</a>
+<a class="sourceLine" id="cb5-58" data-line-number="58"></a>
+<a class="sourceLine" id="cb5-59" data-line-number="59">        <span class="co"># Display the video frame, with bounded rectangle on the person&#39;s face</span></a>
+<a class="sourceLine" id="cb5-60" data-line-number="60">        cv2.imshow(<span class="st">&#39;frame&#39;</span>, image_frame)</a>
+<a class="sourceLine" id="cb5-61" data-line-number="61">        <span class="co"># Wait 5 seconds to take the next capture</span></a>
+<a class="sourceLine" id="cb5-62" data-line-number="62">        cv2.waitKey(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb5-63" data-line-number="63">  </a>
+<a class="sourceLine" id="cb5-64" data-line-number="64">    <span class="co"># To stop taking video, press &#39;q&#39; for at least 100ms</span></a>
+<a class="sourceLine" id="cb5-65" data-line-number="65">    <span class="cf">if</span>   <span class="bn">0xFF</span> <span class="op">==</span> <span class="bu">ord</span>(<span class="st">&#39;q&#39;</span>):</a>
+<a class="sourceLine" id="cb5-66" data-line-number="66">        <span class="cf">break</span></a>
+<a class="sourceLine" id="cb5-67" data-line-number="67">    <span class="co"># If image taken reach 100, stop taking video</span></a>
+<a class="sourceLine" id="cb5-68" data-line-number="68">    <span class="cf">elif</span> count<span class="op">&gt;</span><span class="dv">20</span>:</a>
+<a class="sourceLine" id="cb5-69" data-line-number="69">        <span class="co"># Stop video</span></a>
+<a class="sourceLine" id="cb5-70" data-line-number="70">        vid_cam.release()</a>
+<a class="sourceLine" id="cb5-71" data-line-number="71">        <span class="co"># Close all started windows</span></a>
+<a class="sourceLine" id="cb5-72" data-line-number="72">        cv2.destroyAllWindows()</a>
+<a class="sourceLine" id="cb5-73" data-line-number="73">        <span class="cf">break</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co">#pip install pillow</span></a></code></pre></div>
+</div>
+<div id="train-model-for-dataset" class="section level1">
+<h1><span class="header-section-number">2</span> Train model for dataset</h1>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="im">import</span> os</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="im">from</span> PIL <span class="im">import</span> Image</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="co"># Create Local Binary Patterns Histograms for face recognization</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">recognizer <span class="op">=</span> cv2.face.LBPHFaceRecognizer_create()</a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="co"># Using prebuilt frontal face training model, for face detection</span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">detector <span class="op">=</span> cv2.CascadeClassifier(<span class="st">&quot;haarcascade_frontalface_default.xml&quot;</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12"><span class="kw">def</span> getImagesAndLabels(path):</a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">    <span class="co">#get the path of all the files in the folder</span></a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">    imagePaths<span class="op">=</span>[os.path.join(path,f) <span class="cf">for</span> f <span class="kw">in</span> os.listdir(path)] </a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">    <span class="co">#create empth face list</span></a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">    faceSamples<span class="op">=</span>[]</a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">    <span class="co">#create empty ID list</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">    Ids<span class="op">=</span>[]</a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">    <span class="co">#now looping through all the image paths and loading the Ids and the images</span></a>
+<a class="sourceLine" id="cb7-20" data-line-number="20">    <span class="cf">for</span> imagePath <span class="kw">in</span> imagePaths:</a>
+<a class="sourceLine" id="cb7-21" data-line-number="21">        <span class="co">#loading the image and converting it to gray scale</span></a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">        pilImage<span class="op">=</span>Image.<span class="bu">open</span>(imagePath).convert(<span class="st">&#39;L&#39;</span>)</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">        <span class="co">#Now we are converting the PIL image into numpy array</span></a>
+<a class="sourceLine" id="cb7-24" data-line-number="24">        imageNp<span class="op">=</span>np.array(pilImage,<span class="st">&#39;uint8&#39;</span>)</a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">        <span class="co">#getting the Id from the image</span></a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">        <span class="co">#Id=int(os.path.split(imagePath)[-1].split(&quot;.&quot;)[0])</span></a>
+<a class="sourceLine" id="cb7-27" data-line-number="27">        Id <span class="op">=</span> <span class="bu">int</span>(imagePath.split(<span class="st">&#39;.&#39;</span>)[<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb7-28" data-line-number="28">        <span class="co"># extract the face from the training image sample</span></a>
+<a class="sourceLine" id="cb7-29" data-line-number="29">        faces<span class="op">=</span>detector.detectMultiScale(imageNp)</a>
+<a class="sourceLine" id="cb7-30" data-line-number="30">        <span class="co">#If a face is there then append that in the list as well as Id of it</span></a>
+<a class="sourceLine" id="cb7-31" data-line-number="31">        <span class="cf">for</span> (x,y,w,h) <span class="kw">in</span> faces:</a>
+<a class="sourceLine" id="cb7-32" data-line-number="32">            faceSamples.append(imageNp[y:y<span class="op">+</span>h,x:x<span class="op">+</span>w])</a>
+<a class="sourceLine" id="cb7-33" data-line-number="33">            Ids.append(Id)</a>
+<a class="sourceLine" id="cb7-34" data-line-number="34">    <span class="cf">return</span> faceSamples,Ids</a>
+<a class="sourceLine" id="cb7-35" data-line-number="35"></a>
+<a class="sourceLine" id="cb7-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb7-37" data-line-number="37">faces,Ids <span class="op">=</span> getImagesAndLabels(<span class="st">&#39;dataSet&#39;</span>)</a>
+<a class="sourceLine" id="cb7-38" data-line-number="38">recognizer.train(faces, np.array(Ids))</a>
+<a class="sourceLine" id="cb7-39" data-line-number="39">recognizer.save(<span class="st">&#39;models/trained_model.yml&#39;</span>)</a></code></pre></div>
+</div>
+<div id="detect-recognised-faces-using-trained-model" class="section level1">
+<h1><span class="header-section-number">3</span> Detect recognised faces using trained model</h1>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co">####################################################</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co"># Modified by Nazmi Asri                           #</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co"># Original code: http://thecodacus.com/            #</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="co"># All right reserved to the respective owner       #</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"><span class="co">####################################################</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="co"># Import OpenCV2 for image processing</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb8-9" data-line-number="9"><span class="im">import</span> glob</a>
+<a class="sourceLine" id="cb8-10" data-line-number="10"><span class="co"># Import numpy for matrices calculations</span></a>
+<a class="sourceLine" id="cb8-11" data-line-number="11"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="im">import</span> os </a>
+<a class="sourceLine" id="cb8-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb8-15" data-line-number="15"><span class="kw">def</span> assure_path_exists(path):</a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">    <span class="bu">dir</span> <span class="op">=</span> os.path.dirname(path)</a>
+<a class="sourceLine" id="cb8-17" data-line-number="17">    <span class="cf">if</span> <span class="kw">not</span> os.path.exists(<span class="bu">dir</span>):</a>
+<a class="sourceLine" id="cb8-18" data-line-number="18">        os.makedirs(<span class="bu">dir</span>)</a>
+<a class="sourceLine" id="cb8-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb8-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb8-21" data-line-number="21"><span class="kw">def</span> getNames_Ids(path):</a>
+<a class="sourceLine" id="cb8-22" data-line-number="22">    <span class="co">#get the path of all the files in the folder</span></a>
+<a class="sourceLine" id="cb8-23" data-line-number="23">    imagePaths<span class="op">=</span>[os.path.join(path,f) <span class="cf">for</span> f <span class="kw">in</span> os.listdir(path)] </a>
+<a class="sourceLine" id="cb8-24" data-line-number="24">    <span class="co">#create empth face list</span></a>
+<a class="sourceLine" id="cb8-25" data-line-number="25">    names<span class="op">=</span>[]</a>
+<a class="sourceLine" id="cb8-26" data-line-number="26">    <span class="co">#create empty ID list</span></a>
+<a class="sourceLine" id="cb8-27" data-line-number="27">    Ids<span class="op">=</span>[]</a>
+<a class="sourceLine" id="cb8-28" data-line-number="28">    </a>
+<a class="sourceLine" id="cb8-29" data-line-number="29">    <span class="co">#now looping through all the image paths and loading the Ids and the images</span></a>
+<a class="sourceLine" id="cb8-30" data-line-number="30">    <span class="cf">for</span> imagePath <span class="kw">in</span> imagePaths:</a>
+<a class="sourceLine" id="cb8-31" data-line-number="31">        <span class="co">#loading the image and converting it to gray scale</span></a>
+<a class="sourceLine" id="cb8-32" data-line-number="32">        <span class="co">#pilImage=Image.open(imagePath).convert(&#39;L&#39;)</span></a>
+<a class="sourceLine" id="cb8-33" data-line-number="33">        <span class="co">#Now we are converting the PIL image into numpy array</span></a>
+<a class="sourceLine" id="cb8-34" data-line-number="34">        <span class="co">#imageNp=np.array(pilImage,&#39;uint8&#39;)</span></a>
+<a class="sourceLine" id="cb8-35" data-line-number="35">        <span class="co">#getting the Id from the image</span></a>
+<a class="sourceLine" id="cb8-36" data-line-number="36">        <span class="co">#Id=int(os.path.split(imagePath)[-1].split(&quot;.&quot;)[0])</span></a>
+<a class="sourceLine" id="cb8-37" data-line-number="37">        Id <span class="op">=</span> <span class="bu">int</span>(imagePath.split(<span class="st">&#39;.&#39;</span>)[<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb8-38" data-line-number="38">        <span class="co"># get the name</span></a>
+<a class="sourceLine" id="cb8-39" data-line-number="39">        name <span class="op">=</span> <span class="bu">str</span>(os.path.basename(imagePath).split(<span class="st">&#39;.&#39;</span>)[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb8-40" data-line-number="40">        <span class="co"># extract the face from the training image sample</span></a>
+<a class="sourceLine" id="cb8-41" data-line-number="41">        <span class="co">#faces=detector.detectMultiScale(imageNp)</span></a>
+<a class="sourceLine" id="cb8-42" data-line-number="42">        <span class="co">#If a face is there then append that in the list as well as Id of it</span></a>
+<a class="sourceLine" id="cb8-43" data-line-number="43">        Ids.append(Id)</a>
+<a class="sourceLine" id="cb8-44" data-line-number="44">        names.append(name)</a>
+<a class="sourceLine" id="cb8-45" data-line-number="45">        </a>
+<a class="sourceLine" id="cb8-46" data-line-number="46">    <span class="cf">return</span> names,Ids</a>
+<a class="sourceLine" id="cb8-47" data-line-number="47"></a>
+<a class="sourceLine" id="cb8-48" data-line-number="48"></a>
+<a class="sourceLine" id="cb8-49" data-line-number="49"><span class="co"># Create Local Binary Patterns Histograms for face recognization</span></a>
+<a class="sourceLine" id="cb8-50" data-line-number="50">recognizer <span class="op">=</span> cv2.face.LBPHFaceRecognizer_create()</a>
+<a class="sourceLine" id="cb8-51" data-line-number="51"></a>
+<a class="sourceLine" id="cb8-52" data-line-number="52">assure_path_exists(<span class="st">&quot;models/&quot;</span>)</a>
+<a class="sourceLine" id="cb8-53" data-line-number="53"></a>
+<a class="sourceLine" id="cb8-54" data-line-number="54"><span class="co"># Load the trained mode</span></a>
+<a class="sourceLine" id="cb8-55" data-line-number="55">recognizer.read(<span class="st">&#39;models/trained_model.yml&#39;</span>)</a>
+<a class="sourceLine" id="cb8-56" data-line-number="56"></a>
+<a class="sourceLine" id="cb8-57" data-line-number="57"><span class="co"># Load prebuilt model for Frontal Face</span></a>
+<a class="sourceLine" id="cb8-58" data-line-number="58">cascadePath <span class="op">=</span> <span class="st">&quot;haarcascade_frontalface_default.xml&quot;</span></a>
+<a class="sourceLine" id="cb8-59" data-line-number="59"></a>
+<a class="sourceLine" id="cb8-60" data-line-number="60"><span class="co"># Create classifier from prebuilt model</span></a>
+<a class="sourceLine" id="cb8-61" data-line-number="61">faceCascade <span class="op">=</span> cv2.CascadeClassifier(cascadePath)<span class="op">;</span></a>
+<a class="sourceLine" id="cb8-62" data-line-number="62"></a>
+<a class="sourceLine" id="cb8-63" data-line-number="63"><span class="co"># Set the font style</span></a>
+<a class="sourceLine" id="cb8-64" data-line-number="64">font <span class="op">=</span> cv2.FONT_HERSHEY_SIMPLEX</a>
+<a class="sourceLine" id="cb8-65" data-line-number="65"></a>
+<a class="sourceLine" id="cb8-66" data-line-number="66"><span class="co"># get names for  Ids</span></a>
+<a class="sourceLine" id="cb8-67" data-line-number="67">names, Ids <span class="op">=</span> getNames_Ids(<span class="st">&#39;dataSet&#39;</span>)</a>
+<a class="sourceLine" id="cb8-68" data-line-number="68"></a>
+<a class="sourceLine" id="cb8-69" data-line-number="69"><span class="co"># Initialize and start the video frame capture</span></a>
+<a class="sourceLine" id="cb8-70" data-line-number="70">cam <span class="op">=</span> cv2.VideoCapture(<span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb8-71" data-line-number="71"></a>
+<a class="sourceLine" id="cb8-72" data-line-number="72"><span class="co"># Loop</span></a>
+<a class="sourceLine" id="cb8-73" data-line-number="73"><span class="cf">while</span> <span class="va">True</span>:</a>
+<a class="sourceLine" id="cb8-74" data-line-number="74">    <span class="co"># Read the video frame</span></a>
+<a class="sourceLine" id="cb8-75" data-line-number="75">    ret, im <span class="op">=</span>cam.read()</a>
+<a class="sourceLine" id="cb8-76" data-line-number="76"></a>
+<a class="sourceLine" id="cb8-77" data-line-number="77">    <span class="co"># Convert the captured frame into grayscale</span></a>
+<a class="sourceLine" id="cb8-78" data-line-number="78">    gray <span class="op">=</span> cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)</a>
+<a class="sourceLine" id="cb8-79" data-line-number="79"></a>
+<a class="sourceLine" id="cb8-80" data-line-number="80">    <span class="co"># Get all face from the video frame</span></a>
+<a class="sourceLine" id="cb8-81" data-line-number="81">    faces <span class="op">=</span> faceCascade.detectMultiScale(gray, <span class="fl">1.2</span>,<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb8-82" data-line-number="82">    </a>
+<a class="sourceLine" id="cb8-83" data-line-number="83">    <span class="co"># For each face in faces</span></a>
+<a class="sourceLine" id="cb8-84" data-line-number="84">    <span class="cf">for</span>(x,y,w,h) <span class="kw">in</span> faces:</a>
+<a class="sourceLine" id="cb8-85" data-line-number="85"></a>
+<a class="sourceLine" id="cb8-86" data-line-number="86">        <span class="co"># Create rectangle around the face</span></a>
+<a class="sourceLine" id="cb8-87" data-line-number="87">        cv2.rectangle(im, (x<span class="dv">-20</span>,y<span class="dv">-20</span>), (x<span class="op">+</span>w<span class="op">+</span><span class="dv">20</span>,y<span class="op">+</span>h<span class="op">+</span><span class="dv">20</span>), (<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>), <span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb8-88" data-line-number="88">         </a>
+<a class="sourceLine" id="cb8-89" data-line-number="89">        <span class="co"># Recognize the face belongs to which ID</span></a>
+<a class="sourceLine" id="cb8-90" data-line-number="90">        Id, confidence <span class="op">=</span> recognizer.predict(gray[y:y<span class="op">+</span>h,x:x<span class="op">+</span>w])</a>
+<a class="sourceLine" id="cb8-91" data-line-number="91">        </a>
+<a class="sourceLine" id="cb8-92" data-line-number="92">        <span class="co"># get Name</span></a>
+<a class="sourceLine" id="cb8-93" data-line-number="93">        name <span class="op">=</span> names[Ids.index(Id)]</a>
+<a class="sourceLine" id="cb8-94" data-line-number="94">        </a>
+<a class="sourceLine" id="cb8-95" data-line-number="95">        <span class="co"># Check the ID if exist </span></a>
+<a class="sourceLine" id="cb8-96" data-line-number="96">        text <span class="op">=</span> <span class="bu">str</span>(name <span class="op">+</span> <span class="st">&quot;  </span><span class="sc">{0:.2f}</span><span class="st">%&quot;</span>).<span class="bu">format</span>(<span class="bu">round</span>(<span class="dv">100</span> <span class="op">-</span> confidence, <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb8-97" data-line-number="97"></a>
+<a class="sourceLine" id="cb8-98" data-line-number="98">        <span class="co"># Put text describe who is in the picture</span></a>
+<a class="sourceLine" id="cb8-99" data-line-number="99">        cv2.rectangle(im, (x<span class="dv">-22</span>,y<span class="dv">-90</span>), (x<span class="op">+</span>w<span class="op">+</span><span class="dv">22</span>, y<span class="dv">-22</span>), (<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>), <span class="dv">-1</span>)</a>
+<a class="sourceLine" id="cb8-100" data-line-number="100">        cv2.putText(im, text,  (x,y<span class="dv">-40</span>), font, <span class="dv">1</span>, (<span class="dv">255</span>,<span class="dv">255</span>,<span class="dv">255</span>), <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb8-101" data-line-number="101"></a>
+<a class="sourceLine" id="cb8-102" data-line-number="102">    <span class="co"># Display the video frame with the bounded rectangle</span></a>
+<a class="sourceLine" id="cb8-103" data-line-number="103">    cv2.imshow(<span class="st">&#39;Capture&#39;</span>,im) </a>
+<a class="sourceLine" id="cb8-104" data-line-number="104"></a>
+<a class="sourceLine" id="cb8-105" data-line-number="105">    <span class="co"># If &#39;q&#39; is pressed, close program</span></a>
+<a class="sourceLine" id="cb8-106" data-line-number="106">    <span class="cf">if</span> cv2.waitKey(<span class="dv">1</span>) <span class="op">&amp;</span> <span class="bn">0xFF</span> <span class="op">==</span> <span class="bu">ord</span>(<span class="st">&#39;q&#39;</span>):</a>
+<a class="sourceLine" id="cb8-107" data-line-number="107">        <span class="cf">break</span></a>
+<a class="sourceLine" id="cb8-108" data-line-number="108"><span class="co"># Stop the camera</span></a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" data-line-number="1">cam.release()</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="co"># Close all windows</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">cv2.destroyAllWindows()</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">        </a></code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -18,3 +18,5 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Santander customer transaction prediction with xgb.cv & xgb.train](santander_customer_transaction_prediction/santanser_trans_pred_xgboost_cleanup.html)
 - [Facial & Smile recognisation](Smile_kinships/parental_facial_recogn.html)
 - [Smile Kinships detection](Smile_kinships/Smile_related_keras.html)
+- [Face Recognition using face_recognition library](FC_images_known_faces/images_known_faces.html)
+- [Generate dataset from webcam - train model using openCV and detect faces](FC_dataset_generator_trained_model/dataset_generator_trained_model.html)
