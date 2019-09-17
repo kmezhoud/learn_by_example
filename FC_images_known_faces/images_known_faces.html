@@ -1,0 +1,4455 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-09-17" />
+
+<title>Face recognition in Real-Time (Webcam) using images</title>
+
+<script src="images_known_faces_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="images_known_faces_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="images_known_faces_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="images_known_faces_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="images_known_faces_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="images_known_faces_files/navigation-1.1/tabsets.js"></script>
+<script src="images_known_faces_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Face recognition in Real-Time (Webcam) using images</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-09-17</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#output-example"><span class="toc-section-number">0.1</span> Output example</a></li>
+<li><a href="#set-python-version-and-anaconda-environment"><span class="toc-section-number">0.2</span> set python version and anaconda environment</a></li>
+<li><a href="#check-tensorflow-and-keras-libraries"><span class="toc-section-number">0.3</span> check ‘tensorflow’ and ‘keras’ libraries</a></li>
+<li><a href="#face_recognition-library"><span class="toc-section-number">0.4</span> <code>face_recognition</code> library</a></li>
+</ul>
+</div>
+
+<div id="output-example" class="section level2">
+<h2><span class="header-section-number">0.1</span> Output example</h2>
+<p><img src="known_images.png" /></p>
+</div>
+<div id="set-python-version-and-anaconda-environment" class="section level2">
+<h2><span class="header-section-number">0.2</span> set python version and anaconda environment</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># refresh session and use the default python path</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">#.rs.restartR()</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co">#reticulate::use_python(&quot;/Users/Mezhoud/miniconda3/envs/Ana_Env/bin/python&quot;, required = TRUE)</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co">#reticulate::use_python(&quot;/Users/Mezhoud/miniconda3/bin/python&quot;, required = TRUE)</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/venv/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+<pre><code>## python:         /Users/Mezhoud/venv/bin/python3
+## libpython:      /Users/Mezhoud/miniconda3/lib/libpython3.7m.dylib
+## pythonhome:     /Users/Mezhoud/miniconda3:/Users/Mezhoud/miniconda3
+## virtualenv:     /Users/Mezhoud/venv/bin/activate_this.py
+## version:        3.7.1 (default, Dec 14 2018, 13:28:58)  [Clang 4.0.1 (tags/RELEASE_401/final)]
+## numpy:          /Users/Mezhoud/miniconda3/lib/python3.7/site-packages/numpy
+## numpy_version:  1.16.4
+## 
+## NOTE: Python version was forced by use_python function</code></pre>
+</div>
+<div id="check-tensorflow-and-keras-libraries" class="section level2">
+<h2><span class="header-section-number">0.3</span> check ‘tensorflow’ and ‘keras’ libraries</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">py_module_available</span>(<span class="st">&quot;tensorflow&quot;</span>)</a></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="face_recognition-library" class="section level2">
+<h2><span class="header-section-number">0.4</span> <code>face_recognition</code> library</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="im">import</span> face_recognition</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co"># This is a demo of running face recognition on live video from your webcam. It&#39;s a little more complicated than the</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co"># other example, but it includes some basic performance tweaks to make things run a lot faster:</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co">#   1. Process each video frame at 1/4 resolution (though still display it at full resolution)</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="co">#   2. Only detect faces in every other frame of video.</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="co"># PLEASE </span><span class="al">NOTE</span><span class="co">: This example requires OpenCV (the `cv2` library) to be installed only to read from your webcam.</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co"># OpenCV is *not* required to use the face_recognition library. It&#39;s only required if you want to run this</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="co"># specific demo. If you have trouble installing it, try any of the other demos that don&#39;t require it instead.</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="co"># Get a reference to webcam #0 (the default one)</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15">video_capture <span class="op">=</span> cv2.VideoCapture(<span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"><span class="co"># Load a second sample picture and learn how to recognize it.</span></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18">karim_image <span class="op">=</span> face_recognition.load_image_file(<span class="st">&quot;images/karim.jpg&quot;</span>)</a>
+<a class="sourceLine" id="cb5-19" data-line-number="19">karim_face_encoding <span class="op">=</span> face_recognition.face_encodings(karim_image)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb5-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21"><span class="co"># Load a second sample picture and learn how to recognize it.</span></a>
+<a class="sourceLine" id="cb5-22" data-line-number="22">ahmed_bouk_image <span class="op">=</span> face_recognition.load_image_file(<span class="st">&quot;images/ahmed_boukadi.jpg&quot;</span>)</a>
+<a class="sourceLine" id="cb5-23" data-line-number="23">ahmed_bouk_face_encoding <span class="op">=</span> face_recognition.face_encodings(ahmed_bouk_image)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb5-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25"></a>
+<a class="sourceLine" id="cb5-26" data-line-number="26"><span class="co"># Load a second sample picture and learn how to recognize it.</span></a>
+<a class="sourceLine" id="cb5-27" data-line-number="27">ahmed_ben_ismail_image <span class="op">=</span> face_recognition.load_image_file(<span class="st">&quot;images/Ahmed_ben_ismail.jpg&quot;</span>)</a>
+<a class="sourceLine" id="cb5-28" data-line-number="28">ahmed_ben_ismail_face_encoding <span class="op">=</span> face_recognition.face_encodings(ahmed_ben_ismail_image)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb5-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb5-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb5-31" data-line-number="31"><span class="co"># Load a second sample picture and learn how to recognize it.</span></a>
+<a class="sourceLine" id="cb5-32" data-line-number="32">nafaa_image <span class="op">=</span> face_recognition.load_image_file(<span class="st">&quot;images/nafaa.jpg&quot;</span>)</a>
+<a class="sourceLine" id="cb5-33" data-line-number="33">nafaa_face_encoding <span class="op">=</span> face_recognition.face_encodings(nafaa_image)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb5-34" data-line-number="34"></a>
+<a class="sourceLine" id="cb5-35" data-line-number="35"></a>
+<a class="sourceLine" id="cb5-36" data-line-number="36"><span class="co"># Create arrays of known face encodings and their names</span></a>
+<a class="sourceLine" id="cb5-37" data-line-number="37">known_face_encodings <span class="op">=</span> [</a>
+<a class="sourceLine" id="cb5-38" data-line-number="38">    karim_face_encoding,</a>
+<a class="sourceLine" id="cb5-39" data-line-number="39">    ahmed_bouk_face_encoding,</a>
+<a class="sourceLine" id="cb5-40" data-line-number="40">    ahmed_ben_ismail_face_encoding,</a>
+<a class="sourceLine" id="cb5-41" data-line-number="41">    nafaa_face_encoding</a>
+<a class="sourceLine" id="cb5-42" data-line-number="42">]</a>
+<a class="sourceLine" id="cb5-43" data-line-number="43">known_face_names <span class="op">=</span> [</a>
+<a class="sourceLine" id="cb5-44" data-line-number="44">    <span class="st">&quot;Karim Mezhoud&quot;</span>,</a>
+<a class="sourceLine" id="cb5-45" data-line-number="45">    <span class="st">&quot;Ahmed Boukadi&quot;</span>,</a>
+<a class="sourceLine" id="cb5-46" data-line-number="46">    <span class="st">&quot;Ahmed Ben Ismail&quot;</span>,</a>
+<a class="sourceLine" id="cb5-47" data-line-number="47">    <span class="st">&quot;Nafaa Reguigui&quot;</span></a>
+<a class="sourceLine" id="cb5-48" data-line-number="48">]</a>
+<a class="sourceLine" id="cb5-49" data-line-number="49"></a>
+<a class="sourceLine" id="cb5-50" data-line-number="50"><span class="co"># Initialize some variables</span></a>
+<a class="sourceLine" id="cb5-51" data-line-number="51">face_locations <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb5-52" data-line-number="52">face_encodings <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb5-53" data-line-number="53">face_names <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb5-54" data-line-number="54">process_this_frame <span class="op">=</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb5-55" data-line-number="55"></a>
+<a class="sourceLine" id="cb5-56" data-line-number="56"><span class="cf">while</span> <span class="va">True</span>:</a>
+<a class="sourceLine" id="cb5-57" data-line-number="57">    <span class="co"># Grab a single frame of video</span></a>
+<a class="sourceLine" id="cb5-58" data-line-number="58">    ret, frame <span class="op">=</span> video_capture.read()</a>
+<a class="sourceLine" id="cb5-59" data-line-number="59"></a>
+<a class="sourceLine" id="cb5-60" data-line-number="60">    <span class="co"># Resize frame of video to 1/4 size for faster face recognition processing</span></a>
+<a class="sourceLine" id="cb5-61" data-line-number="61">    small_frame <span class="op">=</span> cv2.resize(frame, (<span class="dv">0</span>, <span class="dv">0</span>), fx<span class="op">=</span><span class="fl">0.25</span>, fy<span class="op">=</span><span class="fl">0.25</span>)</a>
+<a class="sourceLine" id="cb5-62" data-line-number="62"></a>
+<a class="sourceLine" id="cb5-63" data-line-number="63">    <span class="co"># Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)</span></a>
+<a class="sourceLine" id="cb5-64" data-line-number="64">    rgb_small_frame <span class="op">=</span> small_frame[:, :, ::<span class="op">-</span><span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb5-65" data-line-number="65"></a>
+<a class="sourceLine" id="cb5-66" data-line-number="66">    <span class="co"># Only process every other frame of video to save time</span></a>
+<a class="sourceLine" id="cb5-67" data-line-number="67">    <span class="cf">if</span> process_this_frame:</a>
+<a class="sourceLine" id="cb5-68" data-line-number="68">        <span class="co"># Find all the faces and face encodings in the current frame of video</span></a>
+<a class="sourceLine" id="cb5-69" data-line-number="69">        face_locations <span class="op">=</span> face_recognition.face_locations(rgb_small_frame)</a>
+<a class="sourceLine" id="cb5-70" data-line-number="70">        face_encodings <span class="op">=</span> face_recognition.face_encodings(rgb_small_frame, face_locations)</a>
+<a class="sourceLine" id="cb5-71" data-line-number="71"></a>
+<a class="sourceLine" id="cb5-72" data-line-number="72">        face_names <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb5-73" data-line-number="73">        <span class="cf">for</span> face_encoding <span class="kw">in</span> face_encodings:</a>
+<a class="sourceLine" id="cb5-74" data-line-number="74">            <span class="co"># See if the face is a match for the known face(s)</span></a>
+<a class="sourceLine" id="cb5-75" data-line-number="75">            matches <span class="op">=</span> face_recognition.compare_faces(known_face_encodings, face_encoding)</a>
+<a class="sourceLine" id="cb5-76" data-line-number="76">            name <span class="op">=</span> <span class="st">&quot;Unknown&quot;</span></a>
+<a class="sourceLine" id="cb5-77" data-line-number="77"></a>
+<a class="sourceLine" id="cb5-78" data-line-number="78">            <span class="co"># # If a match was found in known_face_encodings, just use the first one.</span></a>
+<a class="sourceLine" id="cb5-79" data-line-number="79">            <span class="co"># if True in matches:</span></a>
+<a class="sourceLine" id="cb5-80" data-line-number="80">            <span class="co">#     first_match_index = matches.index(True)</span></a>
+<a class="sourceLine" id="cb5-81" data-line-number="81">            <span class="co">#     name = known_face_names[first_match_index]</span></a>
+<a class="sourceLine" id="cb5-82" data-line-number="82"></a>
+<a class="sourceLine" id="cb5-83" data-line-number="83">            <span class="co"># Or instead, use the known face with the smallest distance to the new face</span></a>
+<a class="sourceLine" id="cb5-84" data-line-number="84">            face_distances <span class="op">=</span> face_recognition.face_distance(known_face_encodings, face_encoding)</a>
+<a class="sourceLine" id="cb5-85" data-line-number="85">            best_match_index <span class="op">=</span> np.argmin(face_distances)</a>
+<a class="sourceLine" id="cb5-86" data-line-number="86">            <span class="cf">if</span> matches[best_match_index]:</a>
+<a class="sourceLine" id="cb5-87" data-line-number="87">                name <span class="op">=</span> known_face_names[best_match_index]</a>
+<a class="sourceLine" id="cb5-88" data-line-number="88"></a>
+<a class="sourceLine" id="cb5-89" data-line-number="89">            face_names.append(name)</a>
+<a class="sourceLine" id="cb5-90" data-line-number="90"></a>
+<a class="sourceLine" id="cb5-91" data-line-number="91">    process_this_frame <span class="op">=</span> <span class="kw">not</span> process_this_frame</a>
+<a class="sourceLine" id="cb5-92" data-line-number="92"></a>
+<a class="sourceLine" id="cb5-93" data-line-number="93">    <span class="co"># Display the results</span></a>
+<a class="sourceLine" id="cb5-94" data-line-number="94">    <span class="cf">for</span> (top, right, bottom, left), name <span class="kw">in</span> <span class="bu">zip</span>(face_locations, face_names):</a>
+<a class="sourceLine" id="cb5-95" data-line-number="95">        <span class="co"># Scale back up face locations since the frame we detected in was scaled to 1/4 size</span></a>
+<a class="sourceLine" id="cb5-96" data-line-number="96">        top <span class="op">*=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-97" data-line-number="97">        right <span class="op">*=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-98" data-line-number="98">        bottom <span class="op">*=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-99" data-line-number="99">        left <span class="op">*=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb5-100" data-line-number="100"></a>
+<a class="sourceLine" id="cb5-101" data-line-number="101">        <span class="co"># Draw a box around the face</span></a>
+<a class="sourceLine" id="cb5-102" data-line-number="102">        cv2.rectangle(frame, (left, top), (right, bottom), (<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">255</span>), <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb5-103" data-line-number="103"></a>
+<a class="sourceLine" id="cb5-104" data-line-number="104">        <span class="co"># Draw a label with a name below the face</span></a>
+<a class="sourceLine" id="cb5-105" data-line-number="105">        cv2.rectangle(frame, (left, bottom <span class="op">-</span> <span class="dv">35</span>), (right, bottom), (<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">255</span>), cv2.FILLED)</a>
+<a class="sourceLine" id="cb5-106" data-line-number="106">        font <span class="op">=</span> cv2.FONT_HERSHEY_DUPLEX</a>
+<a class="sourceLine" id="cb5-107" data-line-number="107">        cv2.putText(frame, name, (left <span class="op">+</span> <span class="dv">6</span>, bottom <span class="op">-</span> <span class="dv">6</span>), font, <span class="fl">1.0</span>, (<span class="dv">255</span>, <span class="dv">255</span>, <span class="dv">255</span>), <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb5-108" data-line-number="108">    <span class="co"># Display the resulting image</span></a>
+<a class="sourceLine" id="cb5-109" data-line-number="109">    cv2.imshow(<span class="st">&#39;Video&#39;</span>, frame)</a>
+<a class="sourceLine" id="cb5-110" data-line-number="110">    </a>
+<a class="sourceLine" id="cb5-111" data-line-number="111">    </a>
+<a class="sourceLine" id="cb5-112" data-line-number="112">    <span class="co"># Hit &#39;q&#39; on the keyboard to quit!</span></a>
+<a class="sourceLine" id="cb5-113" data-line-number="113">    <span class="cf">if</span> cv2.waitKey(<span class="dv">1</span>) <span class="op">&amp;</span> <span class="bn">0xFF</span> <span class="op">==</span> <span class="bu">ord</span>(<span class="st">&#39;q&#39;</span>):</a>
+<a class="sourceLine" id="cb5-114" data-line-number="114">        <span class="cf">break</span></a>
+<a class="sourceLine" id="cb5-115" data-line-number="115"></a>
+<a class="sourceLine" id="cb5-116" data-line-number="116"></a>
+<a class="sourceLine" id="cb5-117" data-line-number="117"><span class="co"># Release handle to the webcam</span></a></code></pre></div>
+<pre><code>## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 156, 166],
+##         [129, 145, 155],
+##         [139, 155, 165]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 160, 170],
+##         [134, 150, 160],
+##         [138, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 166],
+##         [155, 164, 174],
+##         [140, 149, 159]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [153, 161, 167],
+##         [151, 162, 165],
+##         ...,
+##         [206, 222, 230],
+##         [206, 222, 230],
+##         [206, 222, 230]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [203, 225, 237],
+##         [204, 224, 236],
+##         [204, 224, 236]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [202, 224, 236],
+##         [205, 225, 237],
+##         [207, 227, 239]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 156, 166],
+##         [129, 145, 155],
+##         [139, 155, 165]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 160, 170],
+##         [134, 150, 160],
+##         [138, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 166],
+##         [155, 164, 174],
+##         [140, 149, 159]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [153, 161, 167],
+##         [151, 162, 165],
+##         ...,
+##         [206, 222, 230],
+##         [206, 222, 230],
+##         [206, 222, 230]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [203, 225, 237],
+##         [204, 224, 236],
+##         [204, 224, 236]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [202, 224, 236],
+##         [205, 225, 237],
+##         [207, 227, 239]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 156, 166],
+##         [129, 145, 155],
+##         [139, 155, 165]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 160, 170],
+##         [134, 150, 160],
+##         [138, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 166],
+##         [155, 164, 174],
+##         [140, 149, 159]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [153, 161, 167],
+##         [151, 162, 165],
+##         ...,
+##         [206, 222, 230],
+##         [206, 222, 230],
+##         [206, 222, 230]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [203, 225, 237],
+##         [204, 224, 236],
+##         [204, 224, 236]],
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [154, 163, 171],
+##         ...,
+##         [202, 224, 236],
+##         [205, 225, 237],
+##         [207, 227, 239]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 147, 150],
+##         [141, 154, 157],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 155],
+##         [142, 155, 158],
+##         [142, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 157, 158],
+##         [142, 158, 161],
+##         [145, 160, 163]],
+## 
+##        ...,
+## 
+##        [[152, 163, 171],
+##         [149, 161, 169],
+##         [153, 165, 173],
+##         ...,
+##         [205, 220, 225],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[155, 164, 173],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [212, 226, 234],
+##         [213, 225, 235],
+##         [213, 225, 235]],
+## 
+##        [[156, 165, 174],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [213, 228, 235],
+##         [214, 226, 236],
+##         [214, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 147, 150],
+##         [141, 154, 157],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 155],
+##         [142, 155, 158],
+##         [142, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 157, 158],
+##         [142, 158, 161],
+##         [145, 160, 163]],
+## 
+##        ...,
+## 
+##        [[152, 163, 171],
+##         [149, 161, 169],
+##         [153, 165, 173],
+##         ...,
+##         [205, 220, 225],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[155, 164, 173],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [212, 226, 234],
+##         [213, 225, 235],
+##         [213, 225, 235]],
+## 
+##        [[156, 165, 174],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [213, 228, 235],
+##         [214, 226, 236],
+##         [214, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 147, 150],
+##         [141, 154, 157],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 155],
+##         [142, 155, 158],
+##         [142, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 157, 158],
+##         [142, 158, 161],
+##         [145, 160, 163]],
+## 
+##        ...,
+## 
+##        [[152, 163, 171],
+##         [149, 161, 169],
+##         [153, 165, 173],
+##         ...,
+##         [205, 220, 225],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[155, 164, 173],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [212, 226, 234],
+##         [213, 225, 235],
+##         [213, 225, 235]],
+## 
+##        [[156, 165, 174],
+##         [156, 165, 174],
+##         [157, 164, 173],
+##         ...,
+##         [213, 228, 235],
+##         [214, 226, 236],
+##         [214, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [146, 154, 160],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [144, 152, 158],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [159, 160, 162],
+##         [159, 162, 167],
+##         ...,
+##         [204, 220, 221],
+##         [211, 222, 221],
+##         [213, 225, 224]],
+## 
+##        [[160, 164, 177],
+##         [160, 164, 177],
+##         [160, 164, 175],
+##         ...,
+##         [206, 222, 225],
+##         [211, 225, 224],
+##         [218, 232, 231]],
+## 
+##        [[161, 165, 178],
+##         [163, 166, 180],
+##         [160, 164, 175],
+##         ...,
+##         [210, 225, 228],
+##         [213, 227, 226],
+##         [216, 230, 228]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [146, 154, 160],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [144, 152, 158],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [159, 160, 162],
+##         [159, 162, 167],
+##         ...,
+##         [204, 220, 221],
+##         [211, 222, 221],
+##         [213, 225, 224]],
+## 
+##        [[160, 164, 177],
+##         [160, 164, 177],
+##         [160, 164, 175],
+##         ...,
+##         [206, 222, 225],
+##         [211, 225, 224],
+##         [218, 232, 231]],
+## 
+##        [[161, 165, 178],
+##         [163, 166, 180],
+##         [160, 164, 175],
+##         ...,
+##         [210, 225, 228],
+##         [213, 227, 226],
+##         [216, 230, 228]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [146, 154, 160],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [144, 152, 158],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 152, 156],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [159, 160, 162],
+##         [159, 162, 167],
+##         ...,
+##         [204, 220, 221],
+##         [211, 222, 221],
+##         [213, 225, 224]],
+## 
+##        [[160, 164, 177],
+##         [160, 164, 177],
+##         [160, 164, 175],
+##         ...,
+##         [206, 222, 225],
+##         [211, 225, 224],
+##         [218, 232, 231]],
+## 
+##        [[161, 165, 178],
+##         [163, 166, 180],
+##         [160, 164, 175],
+##         ...,
+##         [210, 225, 228],
+##         [213, 227, 226],
+##         [216, 230, 228]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 157],
+##         [145, 151, 155],
+##         [149, 154, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 158],
+##         [145, 151, 155],
+##         [146, 152, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 155],
+##         [148, 152, 154],
+##         [148, 152, 154]],
+## 
+##        ...,
+## 
+##        [[160, 160, 167],
+##         [160, 160, 167],
+##         [158, 161, 167],
+##         ...,
+##         [211, 223, 231],
+##         [210, 222, 230],
+##         [209, 220, 228]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [213, 227, 237],
+##         [211, 222, 234],
+##         [211, 222, 234]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [216, 229, 240],
+##         [211, 222, 234],
+##         [210, 221, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 157],
+##         [145, 151, 155],
+##         [149, 154, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 158],
+##         [145, 151, 155],
+##         [146, 152, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 155],
+##         [148, 152, 154],
+##         [148, 152, 154]],
+## 
+##        ...,
+## 
+##        [[160, 160, 167],
+##         [160, 160, 167],
+##         [158, 161, 167],
+##         ...,
+##         [211, 223, 231],
+##         [210, 222, 230],
+##         [209, 220, 228]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [213, 227, 237],
+##         [211, 222, 234],
+##         [211, 222, 234]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [216, 229, 240],
+##         [211, 222, 234],
+##         [210, 221, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 157],
+##         [145, 151, 155],
+##         [149, 154, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 158],
+##         [145, 151, 155],
+##         [146, 152, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 155],
+##         [148, 152, 154],
+##         [148, 152, 154]],
+## 
+##        ...,
+## 
+##        [[160, 160, 167],
+##         [160, 160, 167],
+##         [158, 161, 167],
+##         ...,
+##         [211, 223, 231],
+##         [210, 222, 230],
+##         [209, 220, 228]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [213, 227, 237],
+##         [211, 222, 234],
+##         [211, 222, 234]],
+## 
+##        [[159, 159, 166],
+##         [159, 159, 166],
+##         [158, 161, 167],
+##         ...,
+##         [216, 229, 240],
+##         [211, 222, 234],
+##         [210, 221, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 160],
+##         [140, 157, 163],
+##         [137, 154, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 154, 162],
+##         [138, 155, 160],
+##         [139, 156, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [139, 153, 161],
+##         [142, 157, 164]],
+## 
+##        ...,
+## 
+##        [[155, 163, 165],
+##         [155, 163, 165],
+##         [153, 162, 164],
+##         ...,
+##         [211, 221, 227],
+##         [212, 222, 228],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [155, 163, 165],
+##         ...,
+##         [210, 222, 230],
+##         [211, 221, 227],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [156, 165, 166],
+##         ...,
+##         [212, 224, 232],
+##         [212, 222, 228],
+##         [208, 218, 224]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 160],
+##         [140, 157, 163],
+##         [137, 154, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 154, 162],
+##         [138, 155, 160],
+##         [139, 156, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [139, 153, 161],
+##         [142, 157, 164]],
+## 
+##        ...,
+## 
+##        [[155, 163, 165],
+##         [155, 163, 165],
+##         [153, 162, 164],
+##         ...,
+##         [211, 221, 227],
+##         [212, 222, 228],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [155, 163, 165],
+##         ...,
+##         [210, 222, 230],
+##         [211, 221, 227],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [156, 165, 166],
+##         ...,
+##         [212, 224, 232],
+##         [212, 222, 228],
+##         [208, 218, 224]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 160],
+##         [140, 157, 163],
+##         [137, 154, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 154, 162],
+##         [138, 155, 160],
+##         [139, 156, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [139, 153, 161],
+##         [142, 157, 164]],
+## 
+##        ...,
+## 
+##        [[155, 163, 165],
+##         [155, 163, 165],
+##         [153, 162, 164],
+##         ...,
+##         [211, 221, 227],
+##         [212, 222, 228],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [155, 163, 165],
+##         ...,
+##         [210, 222, 230],
+##         [211, 221, 227],
+##         [213, 223, 229]],
+## 
+##        [[151, 162, 165],
+##         [151, 162, 165],
+##         [156, 165, 166],
+##         ...,
+##         [212, 224, 232],
+##         [212, 222, 228],
+##         [208, 218, 224]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [141, 148, 154],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 153, 159],
+##         [143, 151, 157],
+##         [142, 149, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 154, 160],
+##         [145, 153, 159],
+##         [144, 152, 158]],
+## 
+##        ...,
+## 
+##        [[152, 161, 162],
+##         [152, 161, 162],
+##         [155, 163, 165],
+##         ...,
+##         [204, 220, 232],
+##         [207, 222, 236],
+##         [208, 223, 237]],
+## 
+##        [[149, 160, 161],
+##         [149, 160, 161],
+##         [154, 165, 164],
+##         ...,
+##         [214, 228, 245],
+##         [211, 224, 248],
+##         [210, 223, 247]],
+## 
+##        [[150, 161, 162],
+##         [151, 162, 164],
+##         [154, 165, 164],
+##         ...,
+##         [211, 226, 243],
+##         [211, 224, 248],
+##         [214, 226, 250]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [141, 148, 154],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 153, 159],
+##         [143, 151, 157],
+##         [142, 149, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 154, 160],
+##         [145, 153, 159],
+##         [144, 152, 158]],
+## 
+##        ...,
+## 
+##        [[152, 161, 162],
+##         [152, 161, 162],
+##         [155, 163, 165],
+##         ...,
+##         [204, 220, 232],
+##         [207, 222, 236],
+##         [208, 223, 237]],
+## 
+##        [[149, 160, 161],
+##         [149, 160, 161],
+##         [154, 165, 164],
+##         ...,
+##         [214, 228, 245],
+##         [211, 224, 248],
+##         [210, 223, 247]],
+## 
+##        [[150, 161, 162],
+##         [151, 162, 164],
+##         [154, 165, 164],
+##         ...,
+##         [211, 226, 243],
+##         [211, 224, 248],
+##         [214, 226, 250]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [141, 148, 154],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 153, 159],
+##         [143, 151, 157],
+##         [142, 149, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 154, 160],
+##         [145, 153, 159],
+##         [144, 152, 158]],
+## 
+##        ...,
+## 
+##        [[152, 161, 162],
+##         [152, 161, 162],
+##         [155, 163, 165],
+##         ...,
+##         [204, 220, 232],
+##         [207, 222, 236],
+##         [208, 223, 237]],
+## 
+##        [[149, 160, 161],
+##         [149, 160, 161],
+##         [154, 165, 164],
+##         ...,
+##         [214, 228, 245],
+##         [211, 224, 248],
+##         [210, 223, 247]],
+## 
+##        [[150, 161, 162],
+##         [151, 162, 164],
+##         [154, 165, 164],
+##         ...,
+##         [211, 226, 243],
+##         [211, 224, 248],
+##         [214, 226, 250]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 152, 163],
+##         [139, 147, 158],
+##         [141, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 153, 164],
+##         [144, 153, 164],
+##         [143, 152, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 166],
+##         [145, 155, 163],
+##         [144, 154, 162]],
+## 
+##        ...,
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [155, 162, 168],
+##         ...,
+##         [206, 221, 233],
+##         [207, 218, 231],
+##         [206, 217, 230]],
+## 
+##        [[153, 161, 169],
+##         [152, 159, 168],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [211, 220, 230],
+##         [210, 218, 229]],
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [213, 222, 233],
+##         [211, 220, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 152, 163],
+##         [139, 147, 158],
+##         [141, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 153, 164],
+##         [144, 153, 164],
+##         [143, 152, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 166],
+##         [145, 155, 163],
+##         [144, 154, 162]],
+## 
+##        ...,
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [155, 162, 168],
+##         ...,
+##         [206, 221, 233],
+##         [207, 218, 231],
+##         [206, 217, 230]],
+## 
+##        [[153, 161, 169],
+##         [152, 159, 168],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [211, 220, 230],
+##         [210, 218, 229]],
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [213, 222, 233],
+##         [211, 220, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 152, 163],
+##         [139, 147, 158],
+##         [141, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 153, 164],
+##         [144, 153, 164],
+##         [143, 152, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 166],
+##         [145, 155, 163],
+##         [144, 154, 162]],
+## 
+##        ...,
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [155, 162, 168],
+##         ...,
+##         [206, 221, 233],
+##         [207, 218, 231],
+##         [206, 217, 230]],
+## 
+##        [[153, 161, 169],
+##         [152, 159, 168],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [211, 220, 230],
+##         [210, 218, 229]],
+## 
+##        [[153, 161, 169],
+##         [153, 161, 169],
+##         [154, 160, 166],
+##         ...,
+##         [211, 227, 237],
+##         [213, 222, 233],
+##         [211, 220, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [146, 153, 154],
+##         [149, 155, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [145, 151, 153],
+##         [146, 153, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 155],
+##         [145, 151, 153],
+##         [142, 148, 150]],
+## 
+##        ...,
+## 
+##        [[154, 159, 168],
+##         [154, 159, 168],
+##         [153, 161, 167],
+##         ...,
+##         [204, 221, 227],
+##         [208, 222, 230],
+##         [209, 223, 231]],
+## 
+##        [[154, 160, 166],
+##         [154, 160, 166],
+##         [155, 162, 168],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [210, 222, 230]],
+## 
+##        [[154, 160, 166],
+##         [156, 161, 167],
+##         [156, 163, 170],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [211, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [146, 153, 154],
+##         [149, 155, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [145, 151, 153],
+##         [146, 153, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 155],
+##         [145, 151, 153],
+##         [142, 148, 150]],
+## 
+##        ...,
+## 
+##        [[154, 159, 168],
+##         [154, 159, 168],
+##         [153, 161, 167],
+##         ...,
+##         [204, 221, 227],
+##         [208, 222, 230],
+##         [209, 223, 231]],
+## 
+##        [[154, 160, 166],
+##         [154, 160, 166],
+##         [155, 162, 168],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [210, 222, 230]],
+## 
+##        [[154, 160, 166],
+##         [156, 161, 167],
+##         [156, 163, 170],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [211, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [146, 153, 154],
+##         [149, 155, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [145, 151, 153],
+##         [146, 153, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 155],
+##         [145, 151, 153],
+##         [142, 148, 150]],
+## 
+##        ...,
+## 
+##        [[154, 159, 168],
+##         [154, 159, 168],
+##         [153, 161, 167],
+##         ...,
+##         [204, 221, 227],
+##         [208, 222, 230],
+##         [209, 223, 231]],
+## 
+##        [[154, 160, 166],
+##         [154, 160, 166],
+##         [155, 162, 168],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [210, 222, 230]],
+## 
+##        [[154, 160, 166],
+##         [156, 161, 167],
+##         [156, 163, 170],
+##         ...,
+##         [209, 223, 229],
+##         [211, 223, 231],
+##         [211, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [143, 150, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [145, 151, 155],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[150, 157, 166],
+##         [150, 157, 166],
+##         [156, 160, 169],
+##         ...,
+##         [206, 222, 230],
+##         [208, 222, 230],
+##         [208, 222, 230]],
+## 
+##        [[150, 158, 164],
+##         [152, 160, 166],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[152, 160, 166],
+##         [153, 161, 167],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [209, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [143, 150, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [145, 151, 155],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[150, 157, 166],
+##         [150, 157, 166],
+##         [156, 160, 169],
+##         ...,
+##         [206, 222, 230],
+##         [208, 222, 230],
+##         [208, 222, 230]],
+## 
+##        [[150, 158, 164],
+##         [152, 160, 166],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[152, 160, 166],
+##         [153, 161, 167],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [209, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 151, 157],
+##         [143, 150, 159],
+##         [143, 150, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [145, 151, 155],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[150, 157, 166],
+##         [150, 157, 166],
+##         [156, 160, 169],
+##         ...,
+##         [206, 222, 230],
+##         [208, 222, 230],
+##         [208, 222, 230]],
+## 
+##        [[150, 158, 164],
+##         [152, 160, 166],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[152, 160, 166],
+##         [153, 161, 167],
+##         [159, 161, 170],
+##         ...,
+##         [207, 224, 229],
+##         [209, 223, 231],
+##         [209, 223, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 152, 158],
+##         [142, 155, 158],
+##         [146, 159, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [142, 155, 158],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 158],
+##         [141, 154, 157],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[155, 157, 170],
+##         [154, 156, 169],
+##         [157, 161, 172],
+##         ...,
+##         [210, 224, 234],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[156, 158, 171],
+##         [158, 159, 173],
+##         [159, 160, 174],
+##         ...,
+##         [211, 225, 235],
+##         [211, 225, 235],
+##         [210, 224, 234]],
+## 
+##        [[158, 159, 173],
+##         [159, 160, 174],
+##         [159, 160, 174],
+##         ...,
+##         [213, 227, 237],
+##         [212, 226, 236],
+##         [212, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 152, 158],
+##         [142, 155, 158],
+##         [146, 159, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [142, 155, 158],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 158],
+##         [141, 154, 157],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[155, 157, 170],
+##         [154, 156, 169],
+##         [157, 161, 172],
+##         ...,
+##         [210, 224, 234],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[156, 158, 171],
+##         [158, 159, 173],
+##         [159, 160, 174],
+##         ...,
+##         [211, 225, 235],
+##         [211, 225, 235],
+##         [210, 224, 234]],
+## 
+##        [[158, 159, 173],
+##         [159, 160, 174],
+##         [159, 160, 174],
+##         ...,
+##         [213, 227, 237],
+##         [212, 226, 236],
+##         [212, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 152, 158],
+##         [142, 155, 158],
+##         [146, 159, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 156, 161],
+##         [142, 155, 158],
+##         [143, 156, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 158],
+##         [141, 154, 157],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[155, 157, 170],
+##         [154, 156, 169],
+##         [157, 161, 172],
+##         ...,
+##         [210, 224, 234],
+##         [209, 223, 231],
+##         [208, 222, 230]],
+## 
+##        [[156, 158, 171],
+##         [158, 159, 173],
+##         [159, 160, 174],
+##         ...,
+##         [211, 225, 235],
+##         [211, 225, 235],
+##         [210, 224, 234]],
+## 
+##        [[158, 159, 173],
+##         [159, 160, 174],
+##         [159, 160, 174],
+##         ...,
+##         [213, 227, 237],
+##         [212, 226, 236],
+##         [212, 226, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 149],
+##         [149, 155, 157],
+##         [147, 154, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 151],
+##         [147, 154, 156],
+##         [150, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 154, 156],
+##         [149, 155, 157]],
+## 
+##        ...,
+## 
+##        [[159, 161, 172],
+##         [159, 161, 172],
+##         [157, 162, 170],
+##         ...,
+##         [204, 221, 228],
+##         [204, 220, 230],
+##         [204, 220, 230]],
+## 
+##        [[156, 158, 170],
+##         [159, 161, 172],
+##         [157, 161, 172],
+##         ...,
+##         [208, 226, 236],
+##         [207, 222, 234],
+##         [207, 222, 234]],
+## 
+##        [[156, 158, 170],
+##         [156, 158, 170],
+##         [158, 162, 173],
+##         ...,
+##         [212, 230, 240],
+##         [208, 223, 236],
+##         [208, 223, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 149],
+##         [149, 155, 157],
+##         [147, 154, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 151],
+##         [147, 154, 156],
+##         [150, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 154, 156],
+##         [149, 155, 157]],
+## 
+##        ...,
+## 
+##        [[159, 161, 172],
+##         [159, 161, 172],
+##         [157, 162, 170],
+##         ...,
+##         [204, 221, 228],
+##         [204, 220, 230],
+##         [204, 220, 230]],
+## 
+##        [[156, 158, 170],
+##         [159, 161, 172],
+##         [157, 161, 172],
+##         ...,
+##         [208, 226, 236],
+##         [207, 222, 234],
+##         [207, 222, 234]],
+## 
+##        [[156, 158, 170],
+##         [156, 158, 170],
+##         [158, 162, 173],
+##         ...,
+##         [212, 230, 240],
+##         [208, 223, 236],
+##         [208, 223, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 149],
+##         [149, 155, 157],
+##         [147, 154, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 151],
+##         [147, 154, 156],
+##         [150, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 154, 156],
+##         [149, 155, 157]],
+## 
+##        ...,
+## 
+##        [[159, 161, 172],
+##         [159, 161, 172],
+##         [157, 162, 170],
+##         ...,
+##         [204, 221, 228],
+##         [204, 220, 230],
+##         [204, 220, 230]],
+## 
+##        [[156, 158, 170],
+##         [159, 161, 172],
+##         [157, 161, 172],
+##         ...,
+##         [208, 226, 236],
+##         [207, 222, 234],
+##         [207, 222, 234]],
+## 
+##        [[156, 158, 170],
+##         [156, 158, 170],
+##         [158, 162, 173],
+##         ...,
+##         [212, 230, 240],
+##         [208, 223, 236],
+##         [208, 223, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 151],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 154, 156],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [142, 151, 152],
+##         [143, 152, 153]],
+## 
+##        ...,
+## 
+##        [[157, 165, 180],
+##         [156, 164, 179],
+##         [155, 163, 178],
+##         ...,
+##         [205, 224, 227],
+##         [204, 226, 228],
+##         [204, 226, 228]],
+## 
+##        [[154, 162, 177],
+##         [155, 163, 178],
+##         [154, 162, 177],
+##         ...,
+##         [206, 225, 232],
+##         [203, 223, 226],
+##         [210, 230, 233]],
+## 
+##        [[152, 160, 176],
+##         [150, 158, 173],
+##         [154, 162, 177],
+##         ...,
+##         [208, 227, 234],
+##         [203, 223, 226],
+##         [208, 228, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 151],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 154, 156],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [142, 151, 152],
+##         [143, 152, 153]],
+## 
+##        ...,
+## 
+##        [[157, 165, 180],
+##         [156, 164, 179],
+##         [155, 163, 178],
+##         ...,
+##         [205, 224, 227],
+##         [204, 226, 228],
+##         [204, 226, 228]],
+## 
+##        [[154, 162, 177],
+##         [155, 163, 178],
+##         [154, 162, 177],
+##         ...,
+##         [206, 225, 232],
+##         [203, 223, 226],
+##         [210, 230, 233]],
+## 
+##        [[152, 160, 176],
+##         [150, 158, 173],
+##         [154, 162, 177],
+##         ...,
+##         [208, 227, 234],
+##         [203, 223, 226],
+##         [208, 228, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 150, 151],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 154, 156],
+##         [142, 152, 148],
+##         [141, 150, 147]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [142, 151, 152],
+##         [143, 152, 153]],
+## 
+##        ...,
+## 
+##        [[157, 165, 180],
+##         [156, 164, 179],
+##         [155, 163, 178],
+##         ...,
+##         [205, 224, 227],
+##         [204, 226, 228],
+##         [204, 226, 228]],
+## 
+##        [[154, 162, 177],
+##         [155, 163, 178],
+##         [154, 162, 177],
+##         ...,
+##         [206, 225, 232],
+##         [203, 223, 226],
+##         [210, 230, 233]],
+## 
+##        [[152, 160, 176],
+##         [150, 158, 173],
+##         [154, 162, 177],
+##         ...,
+##         [208, 227, 234],
+##         [203, 223, 226],
+##         [208, 228, 231]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 148, 156],
+##         [139, 153, 161],
+##         [140, 154, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 153, 161],
+##         [139, 153, 161],
+##         [139, 153, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 158, 166],
+##         [142, 157, 164],
+##         [135, 150, 157]],
+## 
+##        ...,
+## 
+##        [[160, 162, 173],
+##         [160, 162, 173],
+##         [161, 164, 173],
+##         ...,
+##         [209, 226, 233],
+##         [208, 224, 232],
+##         [206, 222, 230]],
+## 
+##        [[157, 164, 174],
+##         [157, 164, 174],
+##         [161, 166, 175],
+##         ...,
+##         [213, 228, 238],
+##         [210, 226, 236],
+##         [208, 224, 234]],
+## 
+##        [[157, 164, 174],
+##         [158, 165, 175],
+##         [163, 167, 176],
+##         ...,
+##         [213, 228, 238],
+##         [211, 227, 237],
+##         [213, 228, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 148, 156],
+##         [139, 153, 161],
+##         [140, 154, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 153, 161],
+##         [139, 153, 161],
+##         [139, 153, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 158, 166],
+##         [142, 157, 164],
+##         [135, 150, 157]],
+## 
+##        ...,
+## 
+##        [[160, 162, 173],
+##         [160, 162, 173],
+##         [161, 164, 173],
+##         ...,
+##         [209, 226, 233],
+##         [208, 224, 232],
+##         [206, 222, 230]],
+## 
+##        [[157, 164, 174],
+##         [157, 164, 174],
+##         [161, 166, 175],
+##         ...,
+##         [213, 228, 238],
+##         [210, 226, 236],
+##         [208, 224, 234]],
+## 
+##        [[157, 164, 174],
+##         [158, 165, 175],
+##         [163, 167, 176],
+##         ...,
+##         [213, 228, 238],
+##         [211, 227, 237],
+##         [213, 228, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 148, 156],
+##         [139, 153, 161],
+##         [140, 154, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 153, 161],
+##         [139, 153, 161],
+##         [139, 153, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 158, 166],
+##         [142, 157, 164],
+##         [135, 150, 157]],
+## 
+##        ...,
+## 
+##        [[160, 162, 173],
+##         [160, 162, 173],
+##         [161, 164, 173],
+##         ...,
+##         [209, 226, 233],
+##         [208, 224, 232],
+##         [206, 222, 230]],
+## 
+##        [[157, 164, 174],
+##         [157, 164, 174],
+##         [161, 166, 175],
+##         ...,
+##         [213, 228, 238],
+##         [210, 226, 236],
+##         [208, 224, 234]],
+## 
+##        [[157, 164, 174],
+##         [158, 165, 175],
+##         [163, 167, 176],
+##         ...,
+##         [213, 228, 238],
+##         [211, 227, 237],
+##         [213, 228, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 151, 162],
+##         [138, 151, 162],
+##         [137, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 163],
+##         [138, 151, 162],
+##         [140, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 159, 167],
+##         [142, 151, 160],
+##         [141, 150, 159]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [163, 165, 167],
+##         [160, 164, 168],
+##         ...,
+##         [210, 224, 222],
+##         [206, 223, 221],
+##         [206, 223, 221]],
+## 
+##        [[165, 170, 178],
+##         [167, 172, 181],
+##         [159, 164, 171],
+##         ...,
+##         [211, 223, 218],
+##         [209, 224, 218],
+##         [209, 224, 218]],
+## 
+##        [[164, 169, 177],
+##         [166, 171, 180],
+##         [160, 166, 172],
+##         ...,
+##         [212, 225, 219],
+##         [210, 225, 219],
+##         [209, 224, 218]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 151, 162],
+##         [138, 151, 162],
+##         [137, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 163],
+##         [138, 151, 162],
+##         [140, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 159, 167],
+##         [142, 151, 160],
+##         [141, 150, 159]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [163, 165, 167],
+##         [160, 164, 168],
+##         ...,
+##         [210, 224, 222],
+##         [206, 223, 221],
+##         [206, 223, 221]],
+## 
+##        [[165, 170, 178],
+##         [167, 172, 181],
+##         [159, 164, 171],
+##         ...,
+##         [211, 223, 218],
+##         [209, 224, 218],
+##         [209, 224, 218]],
+## 
+##        [[164, 169, 177],
+##         [166, 171, 180],
+##         [160, 166, 172],
+##         ...,
+##         [212, 225, 219],
+##         [210, 225, 219],
+##         [209, 224, 218]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 151, 162],
+##         [138, 151, 162],
+##         [137, 150, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 152, 163],
+##         [138, 151, 162],
+##         [140, 154, 164]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 159, 167],
+##         [142, 151, 160],
+##         [141, 150, 159]],
+## 
+##        ...,
+## 
+##        [[160, 162, 164],
+##         [163, 165, 167],
+##         [160, 164, 168],
+##         ...,
+##         [210, 224, 222],
+##         [206, 223, 221],
+##         [206, 223, 221]],
+## 
+##        [[165, 170, 178],
+##         [167, 172, 181],
+##         [159, 164, 171],
+##         ...,
+##         [211, 223, 218],
+##         [209, 224, 218],
+##         [209, 224, 218]],
+## 
+##        [[164, 169, 177],
+##         [166, 171, 180],
+##         [160, 166, 172],
+##         ...,
+##         [212, 225, 219],
+##         [210, 225, 219],
+##         [209, 224, 218]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [139, 147, 153],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 156],
+##         [145, 153, 159],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 153],
+##         [146, 161, 164],
+##         [147, 162, 165]],
+## 
+##        ...,
+## 
+##        [[163, 161, 168],
+##         [161, 159, 166],
+##         [160, 161, 165],
+##         ...,
+##         [208, 222, 230],
+##         [209, 223, 229],
+##         [209, 223, 229]],
+## 
+##        [[162, 161, 165],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]],
+## 
+##        [[163, 162, 167],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [139, 147, 153],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 156],
+##         [145, 153, 159],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 153],
+##         [146, 161, 164],
+##         [147, 162, 165]],
+## 
+##        ...,
+## 
+##        [[163, 161, 168],
+##         [161, 159, 166],
+##         [160, 161, 165],
+##         ...,
+##         [208, 222, 230],
+##         [209, 223, 229],
+##         [209, 223, 229]],
+## 
+##        [[162, 161, 165],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]],
+## 
+##        [[163, 162, 167],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [147, 153, 157],
+##         [139, 147, 153],
+##         [145, 153, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 152, 156],
+##         [145, 153, 159],
+##         [143, 151, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [139, 152, 153],
+##         [146, 161, 164],
+##         [147, 162, 165]],
+## 
+##        ...,
+## 
+##        [[163, 161, 168],
+##         [161, 159, 166],
+##         [160, 161, 165],
+##         ...,
+##         [208, 222, 230],
+##         [209, 223, 229],
+##         [209, 223, 229]],
+## 
+##        [[162, 161, 165],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]],
+## 
+##        [[163, 162, 167],
+##         [163, 162, 167],
+##         [156, 160, 164],
+##         ...,
+##         [210, 224, 232],
+##         [210, 225, 230],
+##         [210, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 150],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 156, 155],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 155, 154],
+##         [144, 156, 155],
+##         [150, 162, 161]],
+## 
+##        ...,
+## 
+##        [[158, 163, 171],
+##         [156, 160, 169],
+##         [156, 160, 169],
+##         ...,
+##         [208, 222, 230],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[156, 167, 180],
+##         [157, 168, 181],
+##         [156, 165, 175],
+##         ...,
+##         [210, 225, 230],
+##         [212, 224, 230],
+##         [212, 224, 230]],
+## 
+##        [[157, 168, 181],
+##         [158, 169, 182],
+##         [156, 165, 175],
+##         ...,
+##         [212, 227, 232],
+##         [212, 224, 230],
+##         [211, 223, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 150],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 156, 155],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 155, 154],
+##         [144, 156, 155],
+##         [150, 162, 161]],
+## 
+##        ...,
+## 
+##        [[158, 163, 171],
+##         [156, 160, 169],
+##         [156, 160, 169],
+##         ...,
+##         [208, 222, 230],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[156, 167, 180],
+##         [157, 168, 181],
+##         [156, 165, 175],
+##         ...,
+##         [210, 225, 230],
+##         [212, 224, 230],
+##         [212, 224, 230]],
+## 
+##        [[157, 168, 181],
+##         [158, 169, 182],
+##         [156, 165, 175],
+##         ...,
+##         [212, 227, 232],
+##         [212, 224, 230],
+##         [211, 223, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [138, 152, 150],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 156, 155],
+##         [141, 155, 154],
+##         [139, 153, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 155, 154],
+##         [144, 156, 155],
+##         [150, 162, 161]],
+## 
+##        ...,
+## 
+##        [[158, 163, 171],
+##         [156, 160, 169],
+##         [156, 160, 169],
+##         ...,
+##         [208, 222, 230],
+##         [211, 223, 231],
+##         [212, 224, 232]],
+## 
+##        [[156, 167, 180],
+##         [157, 168, 181],
+##         [156, 165, 175],
+##         ...,
+##         [210, 225, 230],
+##         [212, 224, 230],
+##         [212, 224, 230]],
+## 
+##        [[157, 168, 181],
+##         [158, 169, 182],
+##         [156, 165, 175],
+##         ...,
+##         [212, 227, 232],
+##         [212, 224, 230],
+##         [211, 223, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [145, 157, 161],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 154, 157],
+##         [142, 155, 158],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 153, 156],
+##         [145, 156, 160],
+##         [144, 155, 158]],
+## 
+##        ...,
+## 
+##        [[152, 164, 168],
+##         [152, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [206, 222, 230],
+##         [207, 223, 231],
+##         [208, 224, 232]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [150, 163, 168],
+##         ...,
+##         [214, 230, 238],
+##         [208, 224, 234],
+##         [206, 221, 231]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [152, 164, 170],
+##         ...,
+##         [214, 230, 238],
+##         [209, 225, 235],
+##         [207, 223, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [145, 157, 161],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 154, 157],
+##         [142, 155, 158],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 153, 156],
+##         [145, 156, 160],
+##         [144, 155, 158]],
+## 
+##        ...,
+## 
+##        [[152, 164, 168],
+##         [152, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [206, 222, 230],
+##         [207, 223, 231],
+##         [208, 224, 232]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [150, 163, 168],
+##         ...,
+##         [214, 230, 238],
+##         [208, 224, 234],
+##         [206, 221, 231]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [152, 164, 170],
+##         ...,
+##         [214, 230, 238],
+##         [209, 225, 235],
+##         [207, 223, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [145, 157, 161],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 154, 157],
+##         [142, 155, 158],
+##         [145, 157, 161]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 153, 156],
+##         [145, 156, 160],
+##         [144, 155, 158]],
+## 
+##        ...,
+## 
+##        [[152, 164, 168],
+##         [152, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [206, 222, 230],
+##         [207, 223, 231],
+##         [208, 224, 232]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [150, 163, 168],
+##         ...,
+##         [214, 230, 238],
+##         [208, 224, 234],
+##         [206, 221, 231]],
+## 
+##        [[153, 165, 171],
+##         [152, 164, 170],
+##         [152, 164, 170],
+##         ...,
+##         [214, 230, 238],
+##         [209, 225, 235],
+##         [207, 223, 233]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 160],
+##         [140, 156, 157],
+##         [140, 156, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 158],
+##         [141, 157, 158],
+##         [142, 158, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 158, 159],
+##         [144, 155, 157]],
+## 
+##        ...,
+## 
+##        [[153, 158, 167],
+##         [153, 158, 167],
+##         [153, 161, 169],
+##         ...,
+##         [210, 222, 228],
+##         [210, 222, 228],
+##         [207, 220, 225]],
+## 
+##        [[157, 160, 174],
+##         [157, 160, 174],
+##         [155, 161, 174],
+##         ...,
+##         [206, 221, 228],
+##         [213, 225, 235],
+##         [221, 233, 243]],
+## 
+##        [[158, 162, 175],
+##         [158, 162, 175],
+##         [155, 161, 174],
+##         ...,
+##         [211, 225, 233],
+##         [216, 227, 237],
+##         [219, 230, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 160],
+##         [140, 156, 157],
+##         [140, 156, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 158],
+##         [141, 157, 158],
+##         [142, 158, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 158, 159],
+##         [144, 155, 157]],
+## 
+##        ...,
+## 
+##        [[153, 158, 167],
+##         [153, 158, 167],
+##         [153, 161, 169],
+##         ...,
+##         [210, 222, 228],
+##         [210, 222, 228],
+##         [207, 220, 225]],
+## 
+##        [[157, 160, 174],
+##         [157, 160, 174],
+##         [155, 161, 174],
+##         ...,
+##         [206, 221, 228],
+##         [213, 225, 235],
+##         [221, 233, 243]],
+## 
+##        [[158, 162, 175],
+##         [158, 162, 175],
+##         [155, 161, 174],
+##         ...,
+##         [211, 225, 233],
+##         [216, 227, 237],
+##         [219, 230, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 156, 160],
+##         [140, 156, 157],
+##         [140, 156, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 158],
+##         [141, 157, 158],
+##         [142, 158, 159]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 155, 157],
+##         [147, 158, 159],
+##         [144, 155, 157]],
+## 
+##        ...,
+## 
+##        [[153, 158, 167],
+##         [153, 158, 167],
+##         [153, 161, 169],
+##         ...,
+##         [210, 222, 228],
+##         [210, 222, 228],
+##         [207, 220, 225]],
+## 
+##        [[157, 160, 174],
+##         [157, 160, 174],
+##         [155, 161, 174],
+##         ...,
+##         [206, 221, 228],
+##         [213, 225, 235],
+##         [221, 233, 243]],
+## 
+##        [[158, 162, 175],
+##         [158, 162, 175],
+##         [155, 161, 174],
+##         ...,
+##         [211, 225, 233],
+##         [216, 227, 237],
+##         [219, 230, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [151, 157, 159],
+##         [146, 150, 152],
+##         [148, 152, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [148, 152, 154],
+##         [145, 149, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 156],
+##         [147, 154, 154],
+##         [139, 146, 146]],
+## 
+##        ...,
+## 
+##        [[153, 159, 163],
+##         [154, 160, 164],
+##         [158, 164, 168],
+##         ...,
+##         [207, 223, 233],
+##         [209, 222, 234],
+##         [209, 222, 234]],
+## 
+##        [[161, 167, 173],
+##         [159, 164, 171],
+##         [158, 163, 170],
+##         ...,
+##         [211, 226, 241],
+##         [208, 222, 241],
+##         [208, 222, 241]],
+## 
+##        [[160, 166, 172],
+##         [160, 166, 172],
+##         [159, 164, 171],
+##         ...,
+##         [210, 225, 240],
+##         [209, 223, 242],
+##         [208, 222, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [151, 157, 159],
+##         [146, 150, 152],
+##         [148, 152, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [148, 152, 154],
+##         [145, 149, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 156],
+##         [147, 154, 154],
+##         [139, 146, 146]],
+## 
+##        ...,
+## 
+##        [[153, 159, 163],
+##         [154, 160, 164],
+##         [158, 164, 168],
+##         ...,
+##         [207, 223, 233],
+##         [209, 222, 234],
+##         [209, 222, 234]],
+## 
+##        [[161, 167, 173],
+##         [159, 164, 171],
+##         [158, 163, 170],
+##         ...,
+##         [211, 226, 241],
+##         [208, 222, 241],
+##         [208, 222, 241]],
+## 
+##        [[160, 166, 172],
+##         [160, 166, 172],
+##         [159, 164, 171],
+##         ...,
+##         [210, 225, 240],
+##         [209, 223, 242],
+##         [208, 222, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [151, 157, 159],
+##         [146, 150, 152],
+##         [148, 152, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 151, 153],
+##         [148, 152, 154],
+##         [145, 149, 151]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [148, 157, 156],
+##         [147, 154, 154],
+##         [139, 146, 146]],
+## 
+##        ...,
+## 
+##        [[153, 159, 163],
+##         [154, 160, 164],
+##         [158, 164, 168],
+##         ...,
+##         [207, 223, 233],
+##         [209, 222, 234],
+##         [209, 222, 234]],
+## 
+##        [[161, 167, 173],
+##         [159, 164, 171],
+##         [158, 163, 170],
+##         ...,
+##         [211, 226, 241],
+##         [208, 222, 241],
+##         [208, 222, 241]],
+## 
+##        [[160, 166, 172],
+##         [160, 166, 172],
+##         [159, 164, 171],
+##         ...,
+##         [210, 225, 240],
+##         [209, 223, 242],
+##         [208, 222, 241]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [149, 155, 166],
+##         [144, 151, 160],
+##         [138, 145, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 153, 164],
+##         [144, 151, 160],
+##         [141, 148, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 155, 163],
+##         [142, 152, 158],
+##         [140, 150, 156]],
+## 
+##        ...,
+## 
+##        [[151, 162, 164],
+##         [151, 162, 164],
+##         [156, 164, 168],
+##         ...,
+##         [210, 222, 230],
+##         [210, 221, 233],
+##         [210, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [209, 222, 234],
+##         [208, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [210, 223, 236],
+##         [209, 222, 234]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [149, 155, 166],
+##         [144, 151, 160],
+##         [138, 145, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 153, 164],
+##         [144, 151, 160],
+##         [141, 148, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 155, 163],
+##         [142, 152, 158],
+##         [140, 150, 156]],
+## 
+##        ...,
+## 
+##        [[151, 162, 164],
+##         [151, 162, 164],
+##         [156, 164, 168],
+##         ...,
+##         [210, 222, 230],
+##         [210, 221, 233],
+##         [210, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [209, 222, 234],
+##         [208, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [210, 223, 236],
+##         [209, 222, 234]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [149, 155, 166],
+##         [144, 151, 160],
+##         [138, 145, 154]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [146, 153, 164],
+##         [144, 151, 160],
+##         [141, 148, 156]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 155, 163],
+##         [142, 152, 158],
+##         [140, 150, 156]],
+## 
+##        ...,
+## 
+##        [[151, 162, 164],
+##         [151, 162, 164],
+##         [156, 164, 168],
+##         ...,
+##         [210, 222, 230],
+##         [210, 221, 233],
+##         [210, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [209, 222, 234],
+##         [208, 221, 233]],
+## 
+##        [[152, 165, 166],
+##         [152, 165, 166],
+##         [154, 164, 168],
+##         ...,
+##         [215, 229, 237],
+##         [210, 223, 236],
+##         [209, 222, 234]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [136, 153, 156],
+##         [134, 152, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [137, 154, 157],
+##         [138, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [143, 156, 160],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[161, 164, 171],
+##         [161, 164, 171],
+##         [160, 164, 168],
+##         ...,
+##         [210, 226, 227],
+##         [208, 225, 228],
+##         [208, 225, 228]],
+## 
+##        [[163, 164, 171],
+##         [163, 164, 171],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [210, 228, 231]],
+## 
+##        [[162, 163, 170],
+##         [162, 163, 170],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [209, 227, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [136, 153, 156],
+##         [134, 152, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [137, 154, 157],
+##         [138, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [143, 156, 160],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[161, 164, 171],
+##         [161, 164, 171],
+##         [160, 164, 168],
+##         ...,
+##         [210, 226, 227],
+##         [208, 225, 228],
+##         [208, 225, 228]],
+## 
+##        [[163, 164, 171],
+##         [163, 164, 171],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [210, 228, 231]],
+## 
+##        [[162, 163, 170],
+##         [162, 163, 170],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [209, 227, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [136, 153, 156],
+##         [134, 152, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [140, 153, 154],
+##         [137, 154, 157],
+##         [138, 156, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 157, 161],
+##         [143, 156, 160],
+##         [141, 154, 157]],
+## 
+##        ...,
+## 
+##        [[161, 164, 171],
+##         [161, 164, 171],
+##         [160, 164, 168],
+##         ...,
+##         [210, 226, 227],
+##         [208, 225, 228],
+##         [208, 225, 228]],
+## 
+##        [[163, 164, 171],
+##         [163, 164, 171],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [210, 228, 231]],
+## 
+##        [[162, 163, 170],
+##         [162, 163, 170],
+##         [160, 163, 170],
+##         ...,
+##         [208, 226, 227],
+##         [209, 227, 230],
+##         [209, 227, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [143, 151, 155],
+##         [146, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 150, 153],
+##         [142, 150, 154],
+##         [143, 151, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [141, 149, 153],
+##         [142, 150, 154]],
+## 
+##        ...,
+## 
+##        [[155, 161, 172],
+##         [153, 160, 171],
+##         [157, 164, 173],
+##         ...,
+##         [205, 224, 227],
+##         [206, 223, 228],
+##         [204, 221, 227]],
+## 
+##        [[156, 165, 175],
+##         [156, 165, 175],
+##         [156, 165, 174],
+##         ...,
+##         [208, 225, 230],
+##         [207, 224, 229],
+##         [209, 226, 231]],
+## 
+##        [[157, 166, 177],
+##         [158, 167, 178],
+##         [157, 167, 175],
+##         ...,
+##         [209, 226, 231],
+##         [208, 225, 230],
+##         [207, 224, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [143, 151, 155],
+##         [146, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 150, 153],
+##         [142, 150, 154],
+##         [143, 151, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [141, 149, 153],
+##         [142, 150, 154]],
+## 
+##        ...,
+## 
+##        [[155, 161, 172],
+##         [153, 160, 171],
+##         [157, 164, 173],
+##         ...,
+##         [205, 224, 227],
+##         [206, 223, 228],
+##         [204, 221, 227]],
+## 
+##        [[156, 165, 175],
+##         [156, 165, 175],
+##         [156, 165, 174],
+##         ...,
+##         [208, 225, 230],
+##         [207, 224, 229],
+##         [209, 226, 231]],
+## 
+##        [[157, 166, 177],
+##         [158, 167, 178],
+##         [157, 167, 175],
+##         ...,
+##         [209, 226, 231],
+##         [208, 225, 230],
+##         [207, 224, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [143, 151, 155],
+##         [146, 155, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [134, 150, 153],
+##         [142, 150, 154],
+##         [143, 151, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [133, 148, 151],
+##         [141, 149, 153],
+##         [142, 150, 154]],
+## 
+##        ...,
+## 
+##        [[155, 161, 172],
+##         [153, 160, 171],
+##         [157, 164, 173],
+##         ...,
+##         [205, 224, 227],
+##         [206, 223, 228],
+##         [204, 221, 227]],
+## 
+##        [[156, 165, 175],
+##         [156, 165, 175],
+##         [156, 165, 174],
+##         ...,
+##         [208, 225, 230],
+##         [207, 224, 229],
+##         [209, 226, 231]],
+## 
+##        [[157, 166, 177],
+##         [158, 167, 178],
+##         [157, 167, 175],
+##         ...,
+##         [209, 226, 231],
+##         [208, 225, 230],
+##         [207, 224, 229]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 150, 149],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 150],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 149, 153],
+##         [144, 150, 154],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[156, 160, 171],
+##         [154, 159, 170],
+##         [157, 162, 170],
+##         ...,
+##         [207, 223, 231],
+##         [206, 222, 230],
+##         [203, 220, 227]],
+## 
+##        [[152, 163, 173],
+##         [153, 164, 174],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [210, 224, 234],
+##         [209, 222, 233]],
+## 
+##        [[153, 164, 174],
+##         [154, 165, 175],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [211, 225, 235],
+##         [211, 225, 235]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 150, 149],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 150],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 149, 153],
+##         [144, 150, 154],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[156, 160, 171],
+##         [154, 159, 170],
+##         [157, 162, 170],
+##         ...,
+##         [207, 223, 231],
+##         [206, 222, 230],
+##         [203, 220, 227]],
+## 
+##        [[152, 163, 173],
+##         [153, 164, 174],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [210, 224, 234],
+##         [209, 222, 233]],
+## 
+##        [[153, 164, 174],
+##         [154, 165, 175],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [211, 225, 235],
+##         [211, 225, 235]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [143, 150, 149],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 150],
+##         [144, 150, 152],
+##         [144, 150, 152]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 149, 153],
+##         [144, 150, 154],
+##         [144, 150, 154]],
+## 
+##        ...,
+## 
+##        [[156, 160, 171],
+##         [154, 159, 170],
+##         [157, 162, 170],
+##         ...,
+##         [207, 223, 231],
+##         [206, 222, 230],
+##         [203, 220, 227]],
+## 
+##        [[152, 163, 173],
+##         [153, 164, 174],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [210, 224, 234],
+##         [209, 222, 233]],
+## 
+##        [[153, 164, 174],
+##         [154, 165, 175],
+##         [155, 164, 173],
+##         ...,
+##         [211, 225, 233],
+##         [211, 225, 235],
+##         [211, 225, 235]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 150, 159],
+##         [140, 149, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [140, 149, 157],
+##         [137, 147, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [139, 149, 154],
+##         [143, 153, 159]],
+## 
+##        ...,
+## 
+##        [[153, 161, 167],
+##         [153, 161, 167],
+##         [155, 162, 168],
+##         ...,
+##         [208, 225, 228],
+##         [207, 224, 227],
+##         [207, 224, 227]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [152, 163, 168],
+##         ...,
+##         [205, 224, 229],
+##         [206, 223, 228],
+##         [209, 226, 231]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [154, 164, 170],
+##         ...,
+##         [202, 222, 227],
+##         [207, 224, 229],
+##         [208, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 150, 159],
+##         [140, 149, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [140, 149, 157],
+##         [137, 147, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [139, 149, 154],
+##         [143, 153, 159]],
+## 
+##        ...,
+## 
+##        [[153, 161, 167],
+##         [153, 161, 167],
+##         [155, 162, 168],
+##         ...,
+##         [208, 225, 228],
+##         [207, 224, 227],
+##         [207, 224, 227]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [152, 163, 168],
+##         ...,
+##         [205, 224, 229],
+##         [206, 223, 228],
+##         [209, 226, 231]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [154, 164, 170],
+##         ...,
+##         [202, 222, 227],
+##         [207, 224, 229],
+##         [208, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 150, 159],
+##         [140, 149, 157]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [142, 152, 158],
+##         [140, 149, 157],
+##         [137, 147, 155]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [139, 149, 154],
+##         [143, 153, 159]],
+## 
+##        ...,
+## 
+##        [[153, 161, 167],
+##         [153, 161, 167],
+##         [155, 162, 168],
+##         ...,
+##         [208, 225, 228],
+##         [207, 224, 227],
+##         [207, 224, 227]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [152, 163, 168],
+##         ...,
+##         [205, 224, 229],
+##         [206, 223, 228],
+##         [209, 226, 231]],
+## 
+##        [[152, 163, 168],
+##         [151, 161, 167],
+##         [154, 164, 170],
+##         ...,
+##         [202, 222, 227],
+##         [207, 224, 229],
+##         [208, 225, 230]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [145, 149, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [146, 151, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 152, 161],
+##         [143, 148, 156],
+##         [143, 148, 156]],
+## 
+##        ...,
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [157, 164, 174],
+##         ...,
+##         [203, 220, 225],
+##         [204, 221, 228],
+##         [206, 222, 230]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [153, 165, 173],
+##         ...,
+##         [209, 225, 235],
+##         [208, 223, 236],
+##         [208, 223, 236]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [152, 163, 171],
+##         ...,
+##         [211, 227, 237],
+##         [209, 224, 237],
+##         [210, 226, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [145, 149, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [146, 151, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 152, 161],
+##         [143, 148, 156],
+##         [143, 148, 156]],
+## 
+##        ...,
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [157, 164, 174],
+##         ...,
+##         [203, 220, 225],
+##         [204, 221, 228],
+##         [206, 222, 230]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [153, 165, 173],
+##         ...,
+##         [209, 225, 235],
+##         [208, 223, 236],
+##         [208, 223, 236]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [152, 163, 171],
+##         ...,
+##         [211, 227, 237],
+##         [209, 224, 237],
+##         [210, 226, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [145, 149, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [136, 143, 152],
+##         [143, 147, 158],
+##         [146, 151, 162]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 152, 161],
+##         [143, 148, 156],
+##         [143, 148, 156]],
+## 
+##        ...,
+## 
+##        [[156, 162, 173],
+##         [156, 162, 173],
+##         [157, 164, 174],
+##         ...,
+##         [203, 220, 225],
+##         [204, 221, 228],
+##         [206, 222, 230]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [153, 165, 173],
+##         ...,
+##         [209, 225, 235],
+##         [208, 223, 236],
+##         [208, 223, 236]],
+## 
+##        [[152, 163, 173],
+##         [152, 163, 173],
+##         [152, 163, 171],
+##         ...,
+##         [211, 227, 237],
+##         [209, 224, 237],
+##         [210, 226, 238]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 151, 157],
+##         [147, 157, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 153, 159],
+##         [141, 154, 157],
+##         [136, 149, 153]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [155, 162, 168],
+##         [156, 164, 168],
+##         ...,
+##         [205, 223, 233],
+##         [203, 221, 233],
+##         [203, 221, 233]],
+## 
+##        [[152, 160, 164],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [208, 223, 236],
+##         [208, 223, 237],
+##         [208, 223, 237]],
+## 
+##        [[155, 163, 167],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [209, 224, 237],
+##         [209, 224, 238],
+##         [210, 225, 240]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 151, 157],
+##         [147, 157, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 153, 159],
+##         [141, 154, 157],
+##         [136, 149, 153]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [155, 162, 168],
+##         [156, 164, 168],
+##         ...,
+##         [205, 223, 233],
+##         [203, 221, 233],
+##         [203, 221, 233]],
+## 
+##        [[152, 160, 164],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [208, 223, 236],
+##         [208, 223, 237],
+##         [208, 223, 237]],
+## 
+##        [[155, 163, 167],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [209, 224, 237],
+##         [209, 224, 238],
+##         [210, 225, 240]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [137, 147, 153],
+##         [141, 151, 157],
+##         [147, 157, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 151, 157],
+##         [141, 151, 157],
+##         [142, 152, 158]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [141, 153, 159],
+##         [141, 154, 157],
+##         [136, 149, 153]],
+## 
+##        ...,
+## 
+##        [[155, 162, 168],
+##         [155, 162, 168],
+##         [156, 164, 168],
+##         ...,
+##         [205, 223, 233],
+##         [203, 221, 233],
+##         [203, 221, 233]],
+## 
+##        [[152, 160, 164],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [208, 223, 236],
+##         [208, 223, 237],
+##         [208, 223, 237]],
+## 
+##        [[155, 163, 167],
+##         [156, 164, 168],
+##         [156, 164, 168],
+##         ...,
+##         [209, 224, 237],
+##         [209, 224, 238],
+##         [210, 225, 240]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [146, 154, 162],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [145, 152, 161],
+##         [148, 155, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 159],
+##         [147, 153, 157],
+##         [151, 157, 161]],
+## 
+##        ...,
+## 
+##        [[157, 163, 167],
+##         [157, 163, 167],
+##         [158, 164, 168],
+##         ...,
+##         [206, 221, 231],
+##         [203, 222, 230],
+##         [206, 225, 232]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [215, 231, 241],
+##         [206, 223, 236],
+##         [205, 222, 234]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [216, 232, 242],
+##         [208, 226, 238],
+##         [206, 223, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [146, 154, 162],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [145, 152, 161],
+##         [148, 155, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 159],
+##         [147, 153, 157],
+##         [151, 157, 161]],
+## 
+##        ...,
+## 
+##        [[157, 163, 167],
+##         [157, 163, 167],
+##         [158, 164, 168],
+##         ...,
+##         [206, 221, 231],
+##         [203, 222, 230],
+##         [206, 225, 232]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [215, 231, 241],
+##         [206, 223, 236],
+##         [205, 222, 234]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [216, 232, 242],
+##         [208, 226, 238],
+##         [206, 223, 236]]], dtype=uint8)
+## array([[[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [146, 154, 162],
+##         [144, 151, 160]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [144, 151, 160],
+##         [145, 152, 161],
+##         [148, 155, 163]],
+## 
+##        [[255, 255, 255],
+##         [255, 255, 255],
+##         [255, 255, 255],
+##         ...,
+##         [145, 150, 159],
+##         [147, 153, 157],
+##         [151, 157, 161]],
+## 
+##        ...,
+## 
+##        [[157, 163, 167],
+##         [157, 163, 167],
+##         [158, 164, 168],
+##         ...,
+##         [206, 221, 231],
+##         [203, 222, 230],
+##         [206, 225, 232]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [215, 231, 241],
+##         [206, 223, 236],
+##         [205, 222, 234]],
+## 
+##        [[156, 164, 168],
+##         [156, 164, 168],
+##         [152, 163, 167],
+##         ...,
+##         [216, 232, 242],
+##         [208, 226, 238],
+##         [206, 223, 236]]], dtype=uint8)</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1">video_capture.release()</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">cv2.destroyAllWindows()</a></code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
