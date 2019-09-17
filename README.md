@@ -58,3 +58,7 @@
 <a href="https://kmezhoud.github.io/learn_by_example/Smile_kinships/Smile_related_keras.html" target = "_blank">
 <img src="images/Smile_kinships.png" align="left" height="150" width="250" title="Smile related with keras">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/FC_images_known_faces/images_known_faces.html" target = "_blank">
+<img src="images/known_images.png" align="left" height="150" width="250" title="face_recognition library and folders with unique images of people">
+</a>
