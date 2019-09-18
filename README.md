@@ -68,5 +68,5 @@
 </a>
 
 <a href="https://kmezhoud.github.io/learn_by_example/FC_name_Id_generator_image_sqlite_train_model/name_Id_dataset_generator_sqlite_train_model.html" target = "_blank">
-<img src="images/sql_Detector.png" align="left" height="150" width="250" title="Generate and save dataset to sqlite db, train model using openCV,  detect and reconize faces from webcam">
+<img src="images/sqlite_Detector.png" align="left" height="150" width="250" title="Generate and save dataset to sqlite db, train model using openCV,  detect and reconize faces from webcam">
 </a>
