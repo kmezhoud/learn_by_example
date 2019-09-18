@@ -20,3 +20,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Smile Kinships detection](Smile_kinships/Smile_related_keras.html)
 - [Face Recognition using face_recognition library](FC_images_known_faces/images_known_faces.html)
 - [Generate dataset from webcam - train model using openCV and detect faces](FC_dataset_generator_trained_model/dataset_generator_trained_model.html)
+- [Generate and save dataset to sqlite db, train model using openCV,  detect and reconize faces from webcam](FC_name_Id_generator_image_sqlite_train_model/name_Id_dataset_generator_sqlite_train_model.html)
