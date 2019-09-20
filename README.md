@@ -74,3 +74,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/FC_weights_image_compare_speak/compare_images_speak.html" target = "_blank">
 <img src="images/compare_weights_speak.png" align="left" height="150" width="250" title="Face recognition by comapring distance (weigth) between image arrays">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/FC_eye_blink_detection/eye_blink_detector.html" target = "_blank">
+<img src="images/blink.gif" align="left" height="150" width="250" title="Face recognition eyes blink destector">
+</a>
+

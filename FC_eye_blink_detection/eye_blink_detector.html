@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-09-20" />
+
+<title>Face recognition eyes blink destector</title>
+
+<script src="eye_blink_detector_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="eye_blink_detector_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="eye_blink_detector_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="eye_blink_detector_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="eye_blink_detector_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="eye_blink_detector_files/navigation-1.1/tabsets.js"></script>
+<script src="eye_blink_detector_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Face recognition eyes blink destector</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-09-20</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#example-of-output"><span class="toc-section-number">0.1</span> Example of output</a></li>
+<li><a href="#train-the-model"><span class="toc-section-number">0.2</span> train the model</a></li>
+<li><a href="#detect-blink-eyes"><span class="toc-section-number">0.3</span> Detect blink eyes</a></li>
+</ul>
+</div>
+
+<div id="example-of-output" class="section level2">
+<h2><span class="header-section-number">0.1</span> Example of output</h2>
+<p>The script detect blink eye (left and right) separately. If the number of blinks does not rich a threshold (10), the name of the person will be displayed. Each blink is noted by yellow sqaure. If the eyes are open the eyes sqaures remain in red color. The script would be optimized. The demo we show that the image from my phone is recognized as liveness person (display the name of the person in green!) when the screen of the phone goes out (black screen).</p>
+<p><img src="blink.gif" /> ## set python version and anaconda environment</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/venv/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+</div>
+<div id="train-the-model" class="section level2">
+<h2><span class="header-section-number">0.2</span> train the model</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="im">import</span> os</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="im">from</span> PIL <span class="im">import</span> Image</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="im">from</span> skimage.transform <span class="im">import</span> resize</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="im">from</span> keras.models <span class="im">import</span> Sequential</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="im">from</span> keras.layers <span class="im">import</span> Conv2D</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="im">from</span> keras.layers <span class="im">import</span> AveragePooling2D</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="im">from</span> keras.layers <span class="im">import</span> Flatten</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="im">from</span> keras.layers <span class="im">import</span> Dense</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="im">from</span> keras.models <span class="im">import</span> model_from_json</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="im">from</span> keras.preprocessing.image <span class="im">import</span> ImageDataGenerator</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">os.environ[<span class="st">&#39;KMP_DUPLICATE_LIB_OK&#39;</span>]<span class="op">=</span><span class="st">&#39;True&#39;</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="co">#from scipy.ndimage import imread</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="co">#from scipy.misc import imresize, imsave</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="co">#from imageio import imread</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">IMG_SIZE <span class="op">=</span> <span class="dv">24</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15"><span class="kw">def</span> collect():</a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">    train_datagen <span class="op">=</span> ImageDataGenerator(</a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">            rescale<span class="op">=</span><span class="fl">1.</span><span class="op">/</span><span class="dv">255</span>,</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">            shear_range<span class="op">=</span><span class="fl">0.2</span>,</a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">            horizontal_flip<span class="op">=</span><span class="va">True</span>, </a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">        )</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">    val_datagen <span class="op">=</span> ImageDataGenerator(</a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">            rescale<span class="op">=</span><span class="fl">1.</span><span class="op">/</span><span class="dv">255</span>,</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">            shear_range<span class="op">=</span><span class="fl">0.2</span>,</a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">            horizontal_flip<span class="op">=</span><span class="va">True</span>,       )</a>
+<a class="sourceLine" id="cb3-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb3-27" data-line-number="27">    train_generator <span class="op">=</span> train_datagen.flow_from_directory(</a>
+<a class="sourceLine" id="cb3-28" data-line-number="28">        directory<span class="op">=</span><span class="st">&quot;dataset/train&quot;</span>,</a>
+<a class="sourceLine" id="cb3-29" data-line-number="29">        target_size<span class="op">=</span>(IMG_SIZE, IMG_SIZE),</a>
+<a class="sourceLine" id="cb3-30" data-line-number="30">        color_mode<span class="op">=</span><span class="st">&quot;grayscale&quot;</span>,</a>
+<a class="sourceLine" id="cb3-31" data-line-number="31">        batch_size<span class="op">=</span><span class="dv">32</span>,</a>
+<a class="sourceLine" id="cb3-32" data-line-number="32">        class_mode<span class="op">=</span><span class="st">&quot;binary&quot;</span>,</a>
+<a class="sourceLine" id="cb3-33" data-line-number="33">        shuffle<span class="op">=</span><span class="va">True</span>,</a>
+<a class="sourceLine" id="cb3-34" data-line-number="34">        seed<span class="op">=</span><span class="dv">42</span></a>
+<a class="sourceLine" id="cb3-35" data-line-number="35">    )</a>
+<a class="sourceLine" id="cb3-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb3-37" data-line-number="37">    val_generator <span class="op">=</span> val_datagen.flow_from_directory(</a>
+<a class="sourceLine" id="cb3-38" data-line-number="38">        directory<span class="op">=</span><span class="st">&quot;dataset/val&quot;</span>,</a>
+<a class="sourceLine" id="cb3-39" data-line-number="39">        target_size<span class="op">=</span>(IMG_SIZE, IMG_SIZE),</a>
+<a class="sourceLine" id="cb3-40" data-line-number="40">        color_mode<span class="op">=</span><span class="st">&quot;grayscale&quot;</span>,</a>
+<a class="sourceLine" id="cb3-41" data-line-number="41">        batch_size<span class="op">=</span><span class="dv">32</span>,</a>
+<a class="sourceLine" id="cb3-42" data-line-number="42">        class_mode<span class="op">=</span><span class="st">&quot;binary&quot;</span>,</a>
+<a class="sourceLine" id="cb3-43" data-line-number="43">        shuffle<span class="op">=</span><span class="va">True</span>,</a>
+<a class="sourceLine" id="cb3-44" data-line-number="44">        seed<span class="op">=</span><span class="dv">42</span></a>
+<a class="sourceLine" id="cb3-45" data-line-number="45">    )</a>
+<a class="sourceLine" id="cb3-46" data-line-number="46">    <span class="cf">return</span> train_generator, val_generator</a>
+<a class="sourceLine" id="cb3-47" data-line-number="47"></a>
+<a class="sourceLine" id="cb3-48" data-line-number="48"><span class="kw">def</span> save_model(model):</a>
+<a class="sourceLine" id="cb3-49" data-line-number="49">    model_json <span class="op">=</span> model.to_json()</a>
+<a class="sourceLine" id="cb3-50" data-line-number="50">    <span class="cf">with</span> <span class="bu">open</span>(<span class="st">&quot;model.json&quot;</span>, <span class="st">&quot;w&quot;</span>) <span class="im">as</span> json_file:</a>
+<a class="sourceLine" id="cb3-51" data-line-number="51">        json_file.write(model_json)</a>
+<a class="sourceLine" id="cb3-52" data-line-number="52">    <span class="co"># serialize weights to HDF5</span></a>
+<a class="sourceLine" id="cb3-53" data-line-number="53">    model.save_weights(<span class="st">&quot;model.h5&quot;</span>)</a>
+<a class="sourceLine" id="cb3-54" data-line-number="54">    </a>
+<a class="sourceLine" id="cb3-55" data-line-number="55"><span class="kw">def</span> train(train_generator, val_generator):</a>
+<a class="sourceLine" id="cb3-56" data-line-number="56">    STEP_SIZE_TRAIN<span class="op">=</span>train_generator.n<span class="op">//</span>train_generator.batch_size</a>
+<a class="sourceLine" id="cb3-57" data-line-number="57">    STEP_SIZE_VALID<span class="op">=</span>val_generator.n<span class="op">//</span>val_generator.batch_size</a>
+<a class="sourceLine" id="cb3-58" data-line-number="58"></a>
+<a class="sourceLine" id="cb3-59" data-line-number="59">    <span class="bu">print</span>(<span class="st">&#39;[LOG] Intialize Neural Network&#39;</span>)</a>
+<a class="sourceLine" id="cb3-60" data-line-number="60">    </a>
+<a class="sourceLine" id="cb3-61" data-line-number="61">    model <span class="op">=</span> Sequential()</a>
+<a class="sourceLine" id="cb3-62" data-line-number="62"></a>
+<a class="sourceLine" id="cb3-63" data-line-number="63">    model.add(Conv2D(filters<span class="op">=</span><span class="dv">6</span>, kernel_size<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>), activation<span class="op">=</span><span class="st">&#39;relu&#39;</span>, input_shape<span class="op">=</span>(IMG_SIZE,IMG_SIZE,<span class="dv">1</span>)))</a>
+<a class="sourceLine" id="cb3-64" data-line-number="64">    model.add(AveragePooling2D())</a>
+<a class="sourceLine" id="cb3-65" data-line-number="65"></a>
+<a class="sourceLine" id="cb3-66" data-line-number="66">    model.add(Conv2D(filters<span class="op">=</span><span class="dv">16</span>, kernel_size<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>), activation<span class="op">=</span><span class="st">&#39;relu&#39;</span>))</a>
+<a class="sourceLine" id="cb3-67" data-line-number="67">    model.add(AveragePooling2D())</a>
+<a class="sourceLine" id="cb3-68" data-line-number="68"></a>
+<a class="sourceLine" id="cb3-69" data-line-number="69">    model.add(Flatten())</a>
+<a class="sourceLine" id="cb3-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb3-71" data-line-number="71">    model.add(Dense(units<span class="op">=</span><span class="dv">120</span>, activation<span class="op">=</span><span class="st">&#39;relu&#39;</span>))</a>
+<a class="sourceLine" id="cb3-72" data-line-number="72"></a>
+<a class="sourceLine" id="cb3-73" data-line-number="73">    model.add(Dense(units<span class="op">=</span><span class="dv">84</span>, activation<span class="op">=</span><span class="st">&#39;relu&#39;</span>))</a>
+<a class="sourceLine" id="cb3-74" data-line-number="74"></a>
+<a class="sourceLine" id="cb3-75" data-line-number="75">    model.add(Dense(units<span class="op">=</span><span class="dv">1</span>, activation <span class="op">=</span> <span class="st">&#39;sigmoid&#39;</span>))</a>
+<a class="sourceLine" id="cb3-76" data-line-number="76"></a>
+<a class="sourceLine" id="cb3-77" data-line-number="77"></a>
+<a class="sourceLine" id="cb3-78" data-line-number="78">    model.<span class="bu">compile</span>(loss<span class="op">=</span><span class="st">&#39;binary_crossentropy&#39;</span>, optimizer<span class="op">=</span><span class="st">&#39;adam&#39;</span>, metrics<span class="op">=</span>[<span class="st">&#39;accuracy&#39;</span>])</a>
+<a class="sourceLine" id="cb3-79" data-line-number="79"></a>
+<a class="sourceLine" id="cb3-80" data-line-number="80">    model.fit_generator(generator<span class="op">=</span>train_generator,</a>
+<a class="sourceLine" id="cb3-81" data-line-number="81">                        steps_per_epoch<span class="op">=</span>STEP_SIZE_TRAIN,</a>
+<a class="sourceLine" id="cb3-82" data-line-number="82">                        validation_data<span class="op">=</span>val_generator,</a>
+<a class="sourceLine" id="cb3-83" data-line-number="83">                        validation_steps<span class="op">=</span>STEP_SIZE_VALID,</a>
+<a class="sourceLine" id="cb3-84" data-line-number="84">                        epochs<span class="op">=</span><span class="dv">20</span></a>
+<a class="sourceLine" id="cb3-85" data-line-number="85">    )</a>
+<a class="sourceLine" id="cb3-86" data-line-number="86">    save_model(model)</a>
+<a class="sourceLine" id="cb3-87" data-line-number="87"></a>
+<a class="sourceLine" id="cb3-88" data-line-number="88"><span class="co">#dataset = collect()</span></a>
+<a class="sourceLine" id="cb3-89" data-line-number="89"><span class="co">#train(dataset[0], dataset[1])</span></a></code></pre></div>
+</div>
+<div id="detect-blink-eyes" class="section level2">
+<h2><span class="header-section-number">0.3</span> Detect blink eyes</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="im">import</span> os</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="im">import</span> cv2</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="im">import</span> face_recognition</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="im">from</span> tqdm <span class="im">import</span> tqdm</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="im">from</span> collections <span class="im">import</span> defaultdict</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="im">from</span> imutils.video <span class="im">import</span> VideoStream</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="im">from</span> eye_status <span class="im">import</span> <span class="op">*</span> </a>
+<a class="sourceLine" id="cb4-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb4-10" data-line-number="10"><span class="kw">def</span> init():</a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">    face_cascPath <span class="op">=</span> <span class="st">&#39;haarcascade_frontalface_alt.xml&#39;</span></a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">    <span class="co"># face_cascPath = &#39;lbpcascade_frontalface.xml&#39;</span></a>
+<a class="sourceLine" id="cb4-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">    open_eye_cascPath <span class="op">=</span> <span class="st">&#39;haarcascade_eye_tree_eyeglasses.xml&#39;</span></a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">    left_eye_cascPath <span class="op">=</span> <span class="st">&#39;haarcascade_lefteye_2splits.xml&#39;</span></a>
+<a class="sourceLine" id="cb4-16" data-line-number="16">    right_eye_cascPath <span class="op">=</span><span class="st">&#39;haarcascade_righteye_2splits.xml&#39;</span></a>
+<a class="sourceLine" id="cb4-17" data-line-number="17">    dataset <span class="op">=</span> <span class="st">&#39;faces&#39;</span></a>
+<a class="sourceLine" id="cb4-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb4-19" data-line-number="19">    face_detector <span class="op">=</span> cv2.CascadeClassifier(face_cascPath)</a>
+<a class="sourceLine" id="cb4-20" data-line-number="20">    open_eyes_detector <span class="op">=</span> cv2.CascadeClassifier(open_eye_cascPath)</a>
+<a class="sourceLine" id="cb4-21" data-line-number="21">    left_eye_detector <span class="op">=</span> cv2.CascadeClassifier(left_eye_cascPath)</a>
+<a class="sourceLine" id="cb4-22" data-line-number="22">    right_eye_detector <span class="op">=</span> cv2.CascadeClassifier(right_eye_cascPath)</a>
+<a class="sourceLine" id="cb4-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb4-24" data-line-number="24">    <span class="bu">print</span>(<span class="st">&quot;[LOG] Opening webcam ...&quot;</span>)</a>
+<a class="sourceLine" id="cb4-25" data-line-number="25">    video_capture <span class="op">=</span> VideoStream(src<span class="op">=</span><span class="dv">0</span>).start()</a>
+<a class="sourceLine" id="cb4-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb4-27" data-line-number="27">    model <span class="op">=</span> load_model()</a>
+<a class="sourceLine" id="cb4-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb4-29" data-line-number="29">    <span class="bu">print</span>(<span class="st">&quot;[LOG] Collecting images ...&quot;</span>)</a>
+<a class="sourceLine" id="cb4-30" data-line-number="30">    images <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb4-31" data-line-number="31">    <span class="cf">for</span> direc, _, files <span class="kw">in</span> tqdm(os.walk(dataset)):</a>
+<a class="sourceLine" id="cb4-32" data-line-number="32">        <span class="cf">for</span> <span class="bu">file</span> <span class="kw">in</span> files:</a>
+<a class="sourceLine" id="cb4-33" data-line-number="33">            <span class="cf">if</span> <span class="bu">file</span>.endswith(<span class="st">&quot;jpg&quot;</span>):</a>
+<a class="sourceLine" id="cb4-34" data-line-number="34">                images.append(os.path.join(direc,<span class="bu">file</span>))</a>
+<a class="sourceLine" id="cb4-35" data-line-number="35">    <span class="cf">return</span> (model,face_detector, open_eyes_detector, left_eye_detector,right_eye_detector, video_capture, images) </a>
+<a class="sourceLine" id="cb4-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb4-37" data-line-number="37"><span class="kw">def</span> process_and_encode(images):</a>
+<a class="sourceLine" id="cb4-38" data-line-number="38">    <span class="co"># initialize the list of known encodings and known names</span></a>
+<a class="sourceLine" id="cb4-39" data-line-number="39">    known_encodings <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb4-40" data-line-number="40">    known_names <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb4-41" data-line-number="41">    <span class="bu">print</span>(<span class="st">&quot;[LOG] Encoding faces ...&quot;</span>)</a>
+<a class="sourceLine" id="cb4-42" data-line-number="42"></a>
+<a class="sourceLine" id="cb4-43" data-line-number="43">    <span class="cf">for</span> image_path <span class="kw">in</span> tqdm(images):</a>
+<a class="sourceLine" id="cb4-44" data-line-number="44">        <span class="co"># Load image</span></a>
+<a class="sourceLine" id="cb4-45" data-line-number="45">        image <span class="op">=</span> cv2.imread(image_path)</a>
+<a class="sourceLine" id="cb4-46" data-line-number="46">        <span class="co"># Convert it from BGR to RGB</span></a>
+<a class="sourceLine" id="cb4-47" data-line-number="47">        image <span class="op">=</span> cv2.cvtColor(image, cv2.COLOR_BGR2RGB)</a>
+<a class="sourceLine" id="cb4-48" data-line-number="48">     </a>
+<a class="sourceLine" id="cb4-49" data-line-number="49">        <span class="co"># detect face in the image and get its location (square boxes coordinates)</span></a>
+<a class="sourceLine" id="cb4-50" data-line-number="50">        boxes <span class="op">=</span> face_recognition.face_locations(image, model<span class="op">=</span><span class="st">&#39;hog&#39;</span>)</a>
+<a class="sourceLine" id="cb4-51" data-line-number="51"></a>
+<a class="sourceLine" id="cb4-52" data-line-number="52">        <span class="co"># Encode the face into a 128-d embeddings vector</span></a>
+<a class="sourceLine" id="cb4-53" data-line-number="53">        encoding <span class="op">=</span> face_recognition.face_encodings(image, boxes)</a>
+<a class="sourceLine" id="cb4-54" data-line-number="54"></a>
+<a class="sourceLine" id="cb4-55" data-line-number="55">        <span class="co"># the person&#39;s name is the name of the folder where the image comes from</span></a>
+<a class="sourceLine" id="cb4-56" data-line-number="56">        name <span class="op">=</span> image_path.split(os.path.sep)[<span class="op">-</span><span class="dv">2</span>]</a>
+<a class="sourceLine" id="cb4-57" data-line-number="57"></a>
+<a class="sourceLine" id="cb4-58" data-line-number="58">        <span class="cf">if</span> <span class="bu">len</span>(encoding) <span class="op">&gt;</span> <span class="dv">0</span> : </a>
+<a class="sourceLine" id="cb4-59" data-line-number="59">            known_encodings.append(encoding[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb4-60" data-line-number="60">            known_names.append(name)</a>
+<a class="sourceLine" id="cb4-61" data-line-number="61"></a>
+<a class="sourceLine" id="cb4-62" data-line-number="62">    <span class="cf">return</span> {<span class="st">&quot;encodings&quot;</span>: known_encodings, <span class="st">&quot;names&quot;</span>: known_names}</a>
+<a class="sourceLine" id="cb4-63" data-line-number="63"></a>
+<a class="sourceLine" id="cb4-64" data-line-number="64"><span class="kw">def</span> isBlinking(history, maxFrames):</a>
+<a class="sourceLine" id="cb4-65" data-line-number="65">    <span class="co">&quot;&quot;&quot; @history: A string containing the history of eyes status </span></a>
+<a class="sourceLine" id="cb4-66" data-line-number="66"><span class="co">         where a &#39;1&#39; means that the eyes were closed and &#39;0&#39; open.</span></a>
+<a class="sourceLine" id="cb4-67" data-line-number="67"><span class="co">        @maxFrames: The maximal number of successive frames where an eye is closed &quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb4-68" data-line-number="68">    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(maxFrames):</a>
+<a class="sourceLine" id="cb4-69" data-line-number="69">        pattern <span class="op">=</span> <span class="st">&#39;1&#39;</span> <span class="op">+</span> <span class="st">&#39;0&#39;</span><span class="op">*</span>(i<span class="op">+</span><span class="dv">1</span>) <span class="op">+</span> <span class="st">&#39;1&#39;</span></a>
+<a class="sourceLine" id="cb4-70" data-line-number="70">        <span class="cf">if</span> pattern <span class="kw">in</span> history:</a>
+<a class="sourceLine" id="cb4-71" data-line-number="71">            <span class="cf">return</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb4-72" data-line-number="72">    <span class="cf">return</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb4-73" data-line-number="73"></a>
+<a class="sourceLine" id="cb4-74" data-line-number="74"><span class="kw">def</span> detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected):</a>
+<a class="sourceLine" id="cb4-75" data-line-number="75">        frame <span class="op">=</span> video_capture.read()</a>
+<a class="sourceLine" id="cb4-76" data-line-number="76">        <span class="co"># resize the frame</span></a>
+<a class="sourceLine" id="cb4-77" data-line-number="77">        frame <span class="op">=</span> cv2.resize(frame, (<span class="dv">0</span>, <span class="dv">0</span>), fx<span class="op">=</span><span class="dv">1</span>, fy<span class="op">=</span><span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb4-78" data-line-number="78"></a>
+<a class="sourceLine" id="cb4-79" data-line-number="79">        gray <span class="op">=</span> cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)</a>
+<a class="sourceLine" id="cb4-80" data-line-number="80">        rgb <span class="op">=</span> cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)</a>
+<a class="sourceLine" id="cb4-81" data-line-number="81">        </a>
+<a class="sourceLine" id="cb4-82" data-line-number="82">        <span class="co"># Detect faces</span></a>
+<a class="sourceLine" id="cb4-83" data-line-number="83">        faces <span class="op">=</span> face_detector.detectMultiScale(</a>
+<a class="sourceLine" id="cb4-84" data-line-number="84">            gray,</a>
+<a class="sourceLine" id="cb4-85" data-line-number="85">            scaleFactor<span class="op">=</span><span class="fl">1.2</span>,</a>
+<a class="sourceLine" id="cb4-86" data-line-number="86">            minNeighbors<span class="op">=</span><span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb4-87" data-line-number="87">            minSize<span class="op">=</span>(<span class="dv">50</span>, <span class="dv">50</span>),</a>
+<a class="sourceLine" id="cb4-88" data-line-number="88">            flags<span class="op">=</span>cv2.CASCADE_SCALE_IMAGE</a>
+<a class="sourceLine" id="cb4-89" data-line-number="89">        )</a>
+<a class="sourceLine" id="cb4-90" data-line-number="90"></a>
+<a class="sourceLine" id="cb4-91" data-line-number="91">        <span class="co"># for each detected face</span></a>
+<a class="sourceLine" id="cb4-92" data-line-number="92">        <span class="cf">for</span> (x,y,w,h) <span class="kw">in</span> faces:</a>
+<a class="sourceLine" id="cb4-93" data-line-number="93">            <span class="co"># Encode the face into a 128-d embeddings vector</span></a>
+<a class="sourceLine" id="cb4-94" data-line-number="94">            encoding <span class="op">=</span> face_recognition.face_encodings(rgb, [(y, x<span class="op">+</span>w, y<span class="op">+</span>h, x)])[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb4-95" data-line-number="95"></a>
+<a class="sourceLine" id="cb4-96" data-line-number="96">            <span class="co"># Compare the vector with all known faces encodings</span></a>
+<a class="sourceLine" id="cb4-97" data-line-number="97">            matches <span class="op">=</span> face_recognition.compare_faces(data[<span class="st">&quot;encodings&quot;</span>], encoding)</a>
+<a class="sourceLine" id="cb4-98" data-line-number="98"></a>
+<a class="sourceLine" id="cb4-99" data-line-number="99">            <span class="co"># For now we don&#39;t know the person name</span></a>
+<a class="sourceLine" id="cb4-100" data-line-number="100">            name <span class="op">=</span> <span class="st">&quot;Unknown&quot;</span></a>
+<a class="sourceLine" id="cb4-101" data-line-number="101"></a>
+<a class="sourceLine" id="cb4-102" data-line-number="102">            <span class="co"># If there is at least one match:</span></a>
+<a class="sourceLine" id="cb4-103" data-line-number="103">            <span class="cf">if</span> <span class="va">True</span> <span class="kw">in</span> matches:</a>
+<a class="sourceLine" id="cb4-104" data-line-number="104">                matchedIdxs <span class="op">=</span> [i <span class="cf">for</span> (i, b) <span class="kw">in</span> <span class="bu">enumerate</span>(matches) <span class="cf">if</span> b]</a>
+<a class="sourceLine" id="cb4-105" data-line-number="105">                counts <span class="op">=</span> {}</a>
+<a class="sourceLine" id="cb4-106" data-line-number="106">                <span class="cf">for</span> i <span class="kw">in</span> matchedIdxs:</a>
+<a class="sourceLine" id="cb4-107" data-line-number="107">                    name <span class="op">=</span> data[<span class="st">&quot;names&quot;</span>][i]</a>
+<a class="sourceLine" id="cb4-108" data-line-number="108">                    counts[name] <span class="op">=</span> counts.get(name, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb4-109" data-line-number="109"></a>
+<a class="sourceLine" id="cb4-110" data-line-number="110">                <span class="co"># determine the recognized face with the largest number of votes</span></a>
+<a class="sourceLine" id="cb4-111" data-line-number="111">                name <span class="op">=</span> <span class="bu">max</span>(counts, key<span class="op">=</span>counts.get)</a>
+<a class="sourceLine" id="cb4-112" data-line-number="112"></a>
+<a class="sourceLine" id="cb4-113" data-line-number="113">            face <span class="op">=</span> frame[y:y<span class="op">+</span>h,x:x<span class="op">+</span>w]</a>
+<a class="sourceLine" id="cb4-114" data-line-number="114">            gray_face <span class="op">=</span> gray[y:y<span class="op">+</span>h,x:x<span class="op">+</span>w]</a>
+<a class="sourceLine" id="cb4-115" data-line-number="115"></a>
+<a class="sourceLine" id="cb4-116" data-line-number="116">            eyes <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb4-117" data-line-number="117">            </a>
+<a class="sourceLine" id="cb4-118" data-line-number="118">            <span class="co"># Eyes detection</span></a>
+<a class="sourceLine" id="cb4-119" data-line-number="119">            <span class="co"># check first if eyes are open (with glasses taking into account)</span></a>
+<a class="sourceLine" id="cb4-120" data-line-number="120">            open_eyes_glasses <span class="op">=</span> open_eyes_detector.detectMultiScale(</a>
+<a class="sourceLine" id="cb4-121" data-line-number="121">                gray_face,</a>
+<a class="sourceLine" id="cb4-122" data-line-number="122">                scaleFactor<span class="op">=</span><span class="fl">1.1</span>,</a>
+<a class="sourceLine" id="cb4-123" data-line-number="123">                minNeighbors<span class="op">=</span><span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb4-124" data-line-number="124">                minSize<span class="op">=</span>(<span class="dv">30</span>, <span class="dv">30</span>),</a>
+<a class="sourceLine" id="cb4-125" data-line-number="125">                flags <span class="op">=</span> cv2.CASCADE_SCALE_IMAGE</a>
+<a class="sourceLine" id="cb4-126" data-line-number="126">            )</a>
+<a class="sourceLine" id="cb4-127" data-line-number="127">            <span class="co"># if open_eyes_glasses detect eyes then they are open </span></a>
+<a class="sourceLine" id="cb4-128" data-line-number="128">            <span class="cf">if</span> <span class="bu">len</span>(open_eyes_glasses) <span class="op">==</span> <span class="dv">2</span>:</a>
+<a class="sourceLine" id="cb4-129" data-line-number="129">                eyes_detected[name]<span class="op">+=</span><span class="st">&#39;1&#39;</span></a>
+<a class="sourceLine" id="cb4-130" data-line-number="130">                <span class="cf">for</span> (ex,ey,ew,eh) <span class="kw">in</span> open_eyes_glasses:</a>
+<a class="sourceLine" id="cb4-131" data-line-number="131">                    cv2.rectangle(face,(ex,ey),(ex<span class="op">+</span>ew,ey<span class="op">+</span>eh),(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>),<span class="dv">2</span>) <span class="co"># blue if eye + glasses + open</span></a>
+<a class="sourceLine" id="cb4-132" data-line-number="132">            </a>
+<a class="sourceLine" id="cb4-133" data-line-number="133">            <span class="co"># otherwise try detecting eyes using left and right_eye_detector</span></a>
+<a class="sourceLine" id="cb4-134" data-line-number="134">            <span class="co"># which can detect open and closed eyes                </span></a>
+<a class="sourceLine" id="cb4-135" data-line-number="135">            <span class="cf">else</span>:</a>
+<a class="sourceLine" id="cb4-136" data-line-number="136">                <span class="co"># separate the face into left and right sides</span></a>
+<a class="sourceLine" id="cb4-137" data-line-number="137">                left_face <span class="op">=</span> frame[y:y<span class="op">+</span>h, x<span class="op">+</span><span class="bu">int</span>(w<span class="op">/</span><span class="dv">2</span>):x<span class="op">+</span>w]</a>
+<a class="sourceLine" id="cb4-138" data-line-number="138">                left_face_gray <span class="op">=</span> gray[y:y<span class="op">+</span>h, x<span class="op">+</span><span class="bu">int</span>(w<span class="op">/</span><span class="dv">2</span>):x<span class="op">+</span>w]</a>
+<a class="sourceLine" id="cb4-139" data-line-number="139"></a>
+<a class="sourceLine" id="cb4-140" data-line-number="140">                right_face <span class="op">=</span> frame[y:y<span class="op">+</span>h, x:x<span class="op">+</span><span class="bu">int</span>(w<span class="op">/</span><span class="dv">2</span>)]</a>
+<a class="sourceLine" id="cb4-141" data-line-number="141">                right_face_gray <span class="op">=</span> gray[y:y<span class="op">+</span>h, x:x<span class="op">+</span><span class="bu">int</span>(w<span class="op">/</span><span class="dv">2</span>)]</a>
+<a class="sourceLine" id="cb4-142" data-line-number="142"></a>
+<a class="sourceLine" id="cb4-143" data-line-number="143">                <span class="co"># Detect the left eye</span></a>
+<a class="sourceLine" id="cb4-144" data-line-number="144">                left_eye <span class="op">=</span> left_eye_detector.detectMultiScale(</a>
+<a class="sourceLine" id="cb4-145" data-line-number="145">                    left_face_gray,</a>
+<a class="sourceLine" id="cb4-146" data-line-number="146">                    scaleFactor<span class="op">=</span><span class="fl">1.1</span>,</a>
+<a class="sourceLine" id="cb4-147" data-line-number="147">                    minNeighbors<span class="op">=</span><span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb4-148" data-line-number="148">                    minSize<span class="op">=</span>(<span class="dv">30</span>, <span class="dv">30</span>),</a>
+<a class="sourceLine" id="cb4-149" data-line-number="149">                    flags <span class="op">=</span> cv2.CASCADE_SCALE_IMAGE</a>
+<a class="sourceLine" id="cb4-150" data-line-number="150">                )</a>
+<a class="sourceLine" id="cb4-151" data-line-number="151"></a>
+<a class="sourceLine" id="cb4-152" data-line-number="152">                <span class="co"># Detect the right eye</span></a>
+<a class="sourceLine" id="cb4-153" data-line-number="153">                right_eye <span class="op">=</span> right_eye_detector.detectMultiScale(</a>
+<a class="sourceLine" id="cb4-154" data-line-number="154">                    right_face_gray,</a>
+<a class="sourceLine" id="cb4-155" data-line-number="155">                    scaleFactor<span class="op">=</span><span class="fl">1.1</span>,</a>
+<a class="sourceLine" id="cb4-156" data-line-number="156">                    minNeighbors<span class="op">=</span><span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb4-157" data-line-number="157">                    minSize<span class="op">=</span>(<span class="dv">30</span>, <span class="dv">30</span>),</a>
+<a class="sourceLine" id="cb4-158" data-line-number="158">                    flags <span class="op">=</span> cv2.CASCADE_SCALE_IMAGE</a>
+<a class="sourceLine" id="cb4-159" data-line-number="159">                )</a>
+<a class="sourceLine" id="cb4-160" data-line-number="160"></a>
+<a class="sourceLine" id="cb4-161" data-line-number="161">                eye_status <span class="op">=</span> <span class="st">&#39;1&#39;</span> <span class="co"># we suppose the eyes are open</span></a>
+<a class="sourceLine" id="cb4-162" data-line-number="162"></a>
+<a class="sourceLine" id="cb4-163" data-line-number="163">                <span class="co"># For each eye check wether the eye is closed.</span></a>
+<a class="sourceLine" id="cb4-164" data-line-number="164">                <span class="co"># If one is closed we conclude the eyes are closed</span></a>
+<a class="sourceLine" id="cb4-165" data-line-number="165">                <span class="cf">for</span> (ex,ey,ew,eh) <span class="kw">in</span> right_eye:</a>
+<a class="sourceLine" id="cb4-166" data-line-number="166">                    color <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>) <span class="co"># lime color</span></a>
+<a class="sourceLine" id="cb4-167" data-line-number="167">                    pred <span class="op">=</span> predict(right_face[ey:ey<span class="op">+</span>eh,ex:ex<span class="op">+</span>ew],model)</a>
+<a class="sourceLine" id="cb4-168" data-line-number="168">                    <span class="cf">if</span> pred <span class="op">==</span> <span class="st">&#39;closed&#39;</span>:</a>
+<a class="sourceLine" id="cb4-169" data-line-number="169">                        eye_status<span class="op">=</span><span class="st">&#39;0&#39;</span></a>
+<a class="sourceLine" id="cb4-170" data-line-number="170">                        color <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">225</span>,<span class="dv">255</span>) <span class="co"># yellow color</span></a>
+<a class="sourceLine" id="cb4-171" data-line-number="171">                    cv2.rectangle(right_face,(ex,ey),(ex<span class="op">+</span>ew,ey<span class="op">+</span>eh),color,<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb4-172" data-line-number="172">                <span class="cf">for</span> (ex,ey,ew,eh) <span class="kw">in</span> left_eye:</a>
+<a class="sourceLine" id="cb4-173" data-line-number="173">                    color <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>) <span class="co"># lime color</span></a>
+<a class="sourceLine" id="cb4-174" data-line-number="174">                    pred <span class="op">=</span> predict(left_face[ey:ey<span class="op">+</span>eh,ex:ex<span class="op">+</span>ew],model)</a>
+<a class="sourceLine" id="cb4-175" data-line-number="175">                    <span class="cf">if</span> pred <span class="op">==</span> <span class="st">&#39;closed&#39;</span>:</a>
+<a class="sourceLine" id="cb4-176" data-line-number="176">                        eye_status<span class="op">=</span><span class="st">&#39;0&#39;</span></a>
+<a class="sourceLine" id="cb4-177" data-line-number="177">                        color <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">225</span>,<span class="dv">255</span>) <span class="co"># yellow color</span></a>
+<a class="sourceLine" id="cb4-178" data-line-number="178">                    cv2.rectangle(left_face,(ex,ey),(ex<span class="op">+</span>ew,ey<span class="op">+</span>eh),color,<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb4-179" data-line-number="179">                eyes_detected[name] <span class="op">+=</span> eye_status</a>
+<a class="sourceLine" id="cb4-180" data-line-number="180"></a>
+<a class="sourceLine" id="cb4-181" data-line-number="181">            <span class="co"># Each time, we check if the person has blinked</span></a>
+<a class="sourceLine" id="cb4-182" data-line-number="182">            <span class="co"># If yes (10 blink), we display its name</span></a>
+<a class="sourceLine" id="cb4-183" data-line-number="183">            <span class="cf">if</span> isBlinking(eyes_detected[name],<span class="dv">200</span>):</a>
+<a class="sourceLine" id="cb4-184" data-line-number="184">                cv2.rectangle(frame, (x, y), (x<span class="op">+</span>w, y<span class="op">+</span>h), (<span class="dv">0</span>, <span class="dv">255</span>, <span class="dv">0</span>), <span class="dv">2</span>) <span class="co"># lime color</span></a>
+<a class="sourceLine" id="cb4-185" data-line-number="185">                <span class="co"># Display name</span></a>
+<a class="sourceLine" id="cb4-186" data-line-number="186">                y <span class="op">=</span> y <span class="op">-</span> <span class="dv">15</span> <span class="cf">if</span> y <span class="op">-</span> <span class="dv">15</span> <span class="op">&gt;</span> <span class="dv">15</span> <span class="cf">else</span> y <span class="op">+</span> <span class="dv">15</span></a>
+<a class="sourceLine" id="cb4-187" data-line-number="187">                cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX,<span class="fl">0.75</span>, (<span class="dv">0</span>,<span class="dv">255</span>, <span class="dv">0</span>), <span class="dv">2</span>) <span class="co"># lime color</span></a>
+<a class="sourceLine" id="cb4-188" data-line-number="188">        <span class="cf">return</span> frame</a>
+<a class="sourceLine" id="cb4-189" data-line-number="189"></a>
+<a class="sourceLine" id="cb4-190" data-line-number="190"></a>
+<a class="sourceLine" id="cb4-191" data-line-number="191"><span class="co"># if __name__ == &quot;__main__&quot;:</span></a>
+<a class="sourceLine" id="cb4-192" data-line-number="192"><span class="co">#     (model, face_detector, open_eyes_detector,left_eye_detector,right_eye_detector, video_capture, images) = init()</span></a>
+<a class="sourceLine" id="cb4-193" data-line-number="193"><span class="co">#     data = process_and_encode(images)</span></a>
+<a class="sourceLine" id="cb4-194" data-line-number="194"><span class="co"># </span></a>
+<a class="sourceLine" id="cb4-195" data-line-number="195"><span class="co">#     eyes_detected = defaultdict(str)</span></a>
+<a class="sourceLine" id="cb4-196" data-line-number="196"><span class="co">#     while True:</span></a>
+<a class="sourceLine" id="cb4-197" data-line-number="197"><span class="co">#         frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector,left_eye_detector,right_eye_detector, data, eyes_detected)</span></a>
+<a class="sourceLine" id="cb4-198" data-line-number="198"><span class="co">#         cv2.imshow(&quot;Face Liveness Detector&quot;, frame)</span></a>
+<a class="sourceLine" id="cb4-199" data-line-number="199"><span class="co">#         if cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;):</span></a>
+<a class="sourceLine" id="cb4-200" data-line-number="200"><span class="co">#             break</span></a>
+<a class="sourceLine" id="cb4-201" data-line-number="201"><span class="co">#     cv2.destroyAllWindows()</span></a>
+<a class="sourceLine" id="cb4-202" data-line-number="202"><span class="co">#     video_capture.stop()</span></a></code></pre></div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
