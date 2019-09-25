@@ -15,7 +15,7 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Santander customer transaction prediction with rpart](santander_customer_transaction_prediction/santander_costumer_trans_pred.html)
 - [Santander customer transaction prediction with keras (MLP)](santander_customer_transaction_prediction/santandar_costumer_trans_pred_keras.html)
 - [Santander customer transaction prediction with xgboost](santander_customer_transaction_prediction/santander_trans_pred_xgboost.html)
-- [Santander customer transaction prediction with xgb.cv & xgb.train](santander_customer_transaction_prediction/santander_trans_pred_xgboost_cleanup.html)
+- [Santander customer transaction prediction with xgb.cv & xgb.train](santander_customer_transaction_prediction/Santander_trans_pred_xgboost_cleanup.html)
 - [Facial & Smile recognisation](Smile_kinships/parental_facial_recogn.html)
 - [Smile Kinships detection](Smile_kinships/Smile_related_keras.html)
 - [Face Recognition using face_recognition library](FC_images_known_faces/images_known_faces.html)
