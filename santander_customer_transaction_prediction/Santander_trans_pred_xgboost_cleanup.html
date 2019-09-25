@@ -11,57 +11,82 @@
 
 <meta name="author" content="Karim Mezhoud" />
 
-<meta name="date" content="2019-04-30" />
+<meta name="date" content="2019-09-25" />
 
 <title>Santandar Costumer Transaction Prediction with xgboost (cleanup)</title>
 
-<script src="Santanser_trans_pred_xgboost_cleanup_files/jquery-1.11.3/jquery.min.js"></script>
+<script src="Santander_trans_pred_xgboost_cleanup_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
-<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
-<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
-<script src="Santanser_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/respond.min.js"></script>
-<script src="Santanser_trans_pred_xgboost_cleanup_files/navigation-1.1/tabsets.js"></script>
-<script src="Santanser_trans_pred_xgboost_cleanup_files/navigation-1.1/codefolding.js"></script>
+<link href="Santander_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="Santander_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="Santander_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="Santander_trans_pred_xgboost_cleanup_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="Santander_trans_pred_xgboost_cleanup_files/navigation-1.1/tabsets.js"></script>
+<script src="Santander_trans_pred_xgboost_cleanup_files/navigation-1.1/codefolding.js"></script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-pre, code { background-color: #f8f8f8; }
-code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
-code > span.dt { color: #204a87; } /* DataType */
-code > span.dv { color: #0000cf; } /* DecVal */
-code > span.bn { color: #0000cf; } /* BaseN */
-code > span.fl { color: #0000cf; } /* Float */
-code > span.ch { color: #4e9a06; } /* Char */
-code > span.st { color: #4e9a06; } /* String */
-code > span.co { color: #8f5902; font-style: italic; } /* Comment */
-code > span.ot { color: #8f5902; } /* Other */
-code > span.al { color: #ef2929; } /* Alert */
-code > span.fu { color: #000000; } /* Function */
-code > span.er { color: #a40000; font-weight: bold; } /* Error */
-code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #000000; } /* Constant */
-code > span.sc { color: #000000; } /* SpecialChar */
-code > span.vs { color: #4e9a06; } /* VerbatimString */
-code > span.ss { color: #4e9a06; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #000000; } /* Variable */
-code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
-code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
-code > span.ex { } /* Extension */
-code > span.at { color: #c4a000; } /* Attribute */
-code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
-code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
 
 .sourceCode .row {
   width: 100%;
@@ -129,9 +154,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type = "text/css">
 .main-container {
@@ -162,8 +185,6 @@ summary {
 </style>
 
 
-
-<div class="container-fluid main-container">
 
 <!-- tabsets -->
 
@@ -246,6 +267,15 @@ $(document).ready(function () {
 
 
 
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
 
 <div class="fluid-row" id="header">
 
@@ -260,8 +290,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Santandar Costumer Transaction Prediction with xgboost (cleanup)</h1>
-<h4 class="author"><em>Karim Mezhoud</em></h4>
-<h4 class="date"><em>2019-04-30</em></h4>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-09-25</h4>
 
 </div>
 
@@ -286,20 +316,20 @@ $(document).ready(function () {
 
 <div id="load-packages" class="section level1">
 <h1><span class="header-section-number">1</span> Load packages</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(data.table)
-<span class="kw">library</span>(dplyr)
-<span class="kw">library</span>(rsample)
-<span class="kw">library</span>(xgboost)
-<span class="kw">require</span>(Ckmeans.1d.dp)
-<span class="kw">library</span>(ggplot2)
-<span class="kw">library</span>(Matrix)
-<span class="kw">library</span>(parallel)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(data.table)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(rsample)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">library</span>(xgboost)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="kw">require</span>(Ckmeans<span class="fl">.1</span>d.dp)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="kw">library</span>(ggplot2)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="kw">library</span>(Matrix)</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="kw">library</span>(parallel)</a></code></pre></div>
 </div>
 <div id="load-train-data-and-format-to-dmatrix" class="section level1">
 <h1><span class="header-section-number">2</span> Load train Data and format to DMatrix</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;train.csv&quot;</span>, <span class="dt">showProgress =</span> <span class="ot">TRUE</span>)
-test &lt;-<span class="st"> </span>data.table<span class="op">::</span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>)
-train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">train &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;train.csv&quot;</span>, <span class="dt">showProgress =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">test &lt;-<span class="st"> </span>data.table<span class="op">::</span><span class="kw">fread</span>(<span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</a></code></pre></div>
 <pre><code>##     ID_code target   var_0   var_1   var_2  var_3   var_4    var_5  var_6
 ##  1: train_0      0  8.9255 -6.7863 11.9081 5.0930 11.4607  -9.2834 5.1187
 ##  2: train_1      0 11.5006 -4.1473 13.8588 5.3890 12.3622   7.0433 5.6208
@@ -325,27 +355,27 @@ train[<span class="dv">1</span><span class="op">:</span><span class="dv">10</spa
 </div>
 <div id="scaling" class="section level1">
 <h1><span class="header-section-number">3</span> Scaling</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trainremoveCols &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;target&#39;</span>,<span class="st">&#39;ID_code&#39;</span>)
-testremoveCols &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;ID_code&#39;</span>)
-
-target &lt;-<span class="st"> </span>train<span class="op">$</span>target
-ID_code &lt;-<span class="st"> </span>test<span class="op">$</span>ID_code
-
-train[,(trainremoveCols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="ot">NULL</span>]
-test[,(testremoveCols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="ot">NULL</span>]
-
-<span class="co"># Do scaling</span>
-dt &lt;-<span class="st"> </span><span class="kw">rbind</span>(train, test)
-scale.cols &lt;-<span class="st"> </span><span class="kw">colnames</span>(dt)
-dt[, (scale.cols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">lapply</span>(.SD, scale), .SDcols =<span class="st"> </span>scale.cols]
-train &lt;-<span class="st"> </span><span class="kw">cbind</span>(target, <span class="kw">head</span>(dt,<span class="kw">nrow</span>(train)))
-test  &lt;-<span class="st"> </span><span class="kw">cbind</span>(ID_code, <span class="kw">tail</span>(dt, <span class="kw">nrow</span>(test)))
-<span class="kw">rm</span>(dt)
-<span class="kw">gc</span>() <span class="co"># It can be useful to call gc after a large object has been removed, as this may prompt R to return memory to the operating system.</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">trainremoveCols &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;target&#39;</span>,<span class="st">&#39;ID_code&#39;</span>)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">testremoveCols &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;ID_code&#39;</span>)</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">target &lt;-<span class="st"> </span>train<span class="op">$</span>target</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">ID_code &lt;-<span class="st"> </span>test<span class="op">$</span>ID_code</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">train[,(trainremoveCols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="ot">NULL</span>]</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">test[,(testremoveCols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="ot">NULL</span>]</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb4-10" data-line-number="10"><span class="co"># Do scaling</span></a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">dt &lt;-<span class="st"> </span><span class="kw">rbind</span>(train, test)</a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">scale.cols &lt;-<span class="st"> </span><span class="kw">colnames</span>(dt)</a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">dt[, (scale.cols) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">lapply</span>(.SD, scale), .SDcols =<span class="st"> </span>scale.cols]</a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">train &lt;-<span class="st"> </span><span class="kw">cbind</span>(target, <span class="kw">head</span>(dt,<span class="kw">nrow</span>(train)))</a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">test  &lt;-<span class="st"> </span><span class="kw">cbind</span>(ID_code, <span class="kw">tail</span>(dt, <span class="kw">nrow</span>(test)))</a>
+<a class="sourceLine" id="cb4-16" data-line-number="16"><span class="kw">rm</span>(dt)</a>
+<a class="sourceLine" id="cb4-17" data-line-number="17"><span class="kw">gc</span>() <span class="co"># It can be useful to call gc after a large object has been removed, as this may prompt R to return memory to the operating system.</span></a></code></pre></div>
 <pre><code>##            used  (Mb) gc trigger   (Mb) limit (Mb)  max used   (Mb)
-## Ncells  1935677 103.4    3200138  171.0         NA   3097141  165.5
-## Vcells 92615865 706.7  326110178 2488.1      16384 339619099 2591.1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+## Ncells  1938007 103.6    3204075  171.2         NA   3097054  165.5
+## Vcells 92619550 706.7  326116329 2488.1     102400 339622435 2591.2</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">test[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</a></code></pre></div>
 <pre><code>##     ID_code       var_0       var_1      var_2      var_3         var_4
 ##  1:  test_0  0.13042211  2.32511591  0.8501873  1.2874960  0.2193683211
 ##  2:  test_1 -0.70396487  0.71199928  0.2249866 -0.7844479 -1.1606129525
@@ -382,15 +412,15 @@ test  &lt;-<span class="st"> </span><span class="kw">cbind</span>(ID_code, <span
 </div>
 <div id="split-into-traintest-sets" class="section level1">
 <h1><span class="header-section-number">4</span> Split Into Train/Test Sets</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">100</span>)
-train_test_split &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">initial_split</span>(train, <span class="dt">prop =</span> <span class="fl">0.8</span>)
-train_test_split</code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">train_test_split &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">initial_split</span>(train, <span class="dt">prop =</span> <span class="fl">0.8</span>)</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">train_test_split</a></code></pre></div>
 <pre><code>## &lt;160001/39999/200000&gt;</code></pre>
 <p>We can retrieve our training and testing sets using training() and testing() functions.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Retrieve train and test sets</span>
-train_<span class="dv">8</span> &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">training</span>(train_test_split)
-test_<span class="dv">2</span>  &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">testing</span>(train_test_split)
-train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="co"># Retrieve train and test sets</span></a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">train_<span class="dv">8</span> &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">training</span>(train_test_split)</a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">test_<span class="dv">2</span>  &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">testing</span>(train_test_split)</a>
+<a class="sourceLine" id="cb10-4" data-line-number="4">train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">14</span>]</a></code></pre></div>
 <pre><code>##     target      var_0      var_1      var_2      var_3       var_4
 ##  1:      0  0.2735896 -0.6232870  1.1934049 -0.6852305  0.79320297
 ##  2:      0 -0.6779972 -0.2768087  0.5191407  0.5373111 -0.30550981
@@ -426,40 +456,40 @@ train_<span class="dv">8</span>[<span class="dv">1</span><span class="op">:</spa
 ## 10: -1.3550159 -1.175485968</code></pre>
 <div id="format-train-and-test-to-dmatrix" class="section level2">
 <h2><span class="header-section-number">4.1</span> format train and test to DMatrix</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#train_8$ID_code &lt;- NULL</span>
-train_8_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>train_<span class="dv">8</span>)
-dtrain_<span class="dv">8</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>train_8_sparse, <span class="dt">label =</span> train_<span class="dv">8</span><span class="op">$</span>target)
-
-<span class="co">#test_2$ID_code &lt;- NULL</span>
-test_2_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>test_<span class="dv">2</span>)
-dtest_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_2_sparse, <span class="dt">label =</span> test_<span class="dv">2</span><span class="op">$</span>target)</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="co">#train_8$ID_code &lt;- NULL</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">train_<span class="dv">8</span>_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>train_<span class="dv">8</span>)</a>
+<a class="sourceLine" id="cb12-3" data-line-number="3">dtrain_<span class="dv">8</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>train_<span class="dv">8</span>_sparse, <span class="dt">label =</span> train_<span class="dv">8</span><span class="op">$</span>target)</a>
+<a class="sourceLine" id="cb12-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="co">#test_2$ID_code &lt;- NULL</span></a>
+<a class="sourceLine" id="cb12-6" data-line-number="6">test_<span class="dv">2</span>_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(target <span class="op">~</span>., <span class="dt">data=</span>test_<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb12-7" data-line-number="7">dtest_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_<span class="dv">2</span>_sparse, <span class="dt">label =</span> test_<span class="dv">2</span><span class="op">$</span>target)</a></code></pre></div>
 </div>
 </div>
 <div id="optimize-features-with-cross-validation" class="section level1">
 <h1><span class="header-section-number">5</span> Optimize features with Cross validation</h1>
 <p>Here, we can see after how many rounds, we achieved the smallest test error.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">params &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">booster =</span> <span class="st">&quot;gbtree&quot;</span>,
-              <span class="dt">tree_method =</span> <span class="st">&quot;auto&quot;</span>,
-              <span class="dt">objective =</span> <span class="st">&quot;binary:logistic&quot;</span>,
-              <span class="dt">eval_metric =</span> <span class="st">&quot;auc&quot;</span>,         <span class="co">#  for Binary classification error rate</span>
-              <span class="dt">max_depth =</span> <span class="dv">2</span>,                 <span class="co"># default 6, it makes training heavy, there is no correlation between features nor complex data/classification (binary)</span>
-              <span class="dt">eta =</span> <span class="fl">0.01</span>,                     <span class="co"># learning rate</span>
-              <span class="dt">subsample =</span> <span class="fl">0.5</span>,              <span class="co">#  (1) prevent overfitting. O.5 means xgboost samples half of the training data prior to growing trees.</span>
-              <span class="dt">colsample_bytree =</span> <span class="fl">0.1</span>,         <span class="co"># specify the fraction of columns to be subsampled.</span>
-              <span class="dt">nthread =</span> parallel<span class="op">::</span><span class="kw">detectCores</span>(<span class="dt">all.tests =</span> <span class="ot">FALSE</span>, <span class="dt">logical =</span> <span class="ot">TRUE</span>)  <span class="co"># detect and use all cpu in any OS.</span>
-             )
-
-
-tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
-cv_model &lt;-<span class="st"> </span><span class="kw">xgb.cv</span>(<span class="dt">params =</span> params,
-                   <span class="dt">data =</span> dtrain_<span class="dv">8</span>,
-                   <span class="dt">nrounds =</span> <span class="dv">30</span>,
-                   <span class="dt">verbose =</span> <span class="ot">TRUE</span>,     <span class="co"># print AUC</span>
-                   <span class="dt">print_every_n =</span> <span class="dv">5</span>,  <span class="co"># print </span>
-                   <span class="dt">nfold =</span> <span class="dv">5</span>,          <span class="co"># default = 3</span>
-                   <span class="dt">early_stopping_rounds =</span> <span class="dv">5</span>,      <span class="co"># CV error needs to decrease at least every &lt;early_stopping_rounds&gt;</span>
-                   <span class="dt">maximize =</span> <span class="ot">TRUE</span>,   <span class="co"># When it is TRUE, it means the larger evaluation score of &lt;early_stopping_rounds&gt;.</span>
-                   <span class="dt">prediction =</span> <span class="ot">TRUE</span>) <span class="co"># prediction of cv folds</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">params &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">booster =</span> <span class="st">&quot;gbtree&quot;</span>,</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">              <span class="dt">tree_method =</span> <span class="st">&quot;auto&quot;</span>,</a>
+<a class="sourceLine" id="cb13-3" data-line-number="3">              <span class="dt">objective =</span> <span class="st">&quot;binary:logistic&quot;</span>,</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4">              <span class="dt">eval_metric =</span> <span class="st">&quot;auc&quot;</span>,         <span class="co">#  for Binary classification error rate</span></a>
+<a class="sourceLine" id="cb13-5" data-line-number="5">              <span class="dt">max_depth =</span> <span class="dv">2</span>,                 <span class="co"># default 6, it makes training heavy, there is no correlation between features nor complex data/classification (binary)</span></a>
+<a class="sourceLine" id="cb13-6" data-line-number="6">              <span class="dt">eta =</span> <span class="fl">0.01</span>,                     <span class="co"># learning rate</span></a>
+<a class="sourceLine" id="cb13-7" data-line-number="7">              <span class="dt">subsample =</span> <span class="fl">0.5</span>,              <span class="co">#  (1) prevent overfitting. O.5 means xgboost samples half of the training data prior to growing trees.</span></a>
+<a class="sourceLine" id="cb13-8" data-line-number="8">              <span class="dt">colsample_bytree =</span> <span class="fl">0.1</span>,         <span class="co"># specify the fraction of columns to be subsampled.</span></a>
+<a class="sourceLine" id="cb13-9" data-line-number="9">              <span class="dt">nthread =</span> parallel<span class="op">::</span><span class="kw">detectCores</span>(<span class="dt">all.tests =</span> <span class="ot">FALSE</span>, <span class="dt">logical =</span> <span class="ot">TRUE</span>)  <span class="co"># detect and use all cpu in any OS.</span></a>
+<a class="sourceLine" id="cb13-10" data-line-number="10">             )</a>
+<a class="sourceLine" id="cb13-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb13-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb13-13" data-line-number="13">tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()</a>
+<a class="sourceLine" id="cb13-14" data-line-number="14">cv_model &lt;-<span class="st"> </span><span class="kw">xgb.cv</span>(<span class="dt">params =</span> params,</a>
+<a class="sourceLine" id="cb13-15" data-line-number="15">                   <span class="dt">data =</span> dtrain_<span class="dv">8</span>,</a>
+<a class="sourceLine" id="cb13-16" data-line-number="16">                   <span class="dt">nrounds =</span> <span class="dv">30</span>,</a>
+<a class="sourceLine" id="cb13-17" data-line-number="17">                   <span class="dt">verbose =</span> <span class="ot">TRUE</span>,     <span class="co"># print AUC</span></a>
+<a class="sourceLine" id="cb13-18" data-line-number="18">                   <span class="dt">print_every_n =</span> <span class="dv">5</span>,  <span class="co"># print </span></a>
+<a class="sourceLine" id="cb13-19" data-line-number="19">                   <span class="dt">nfold =</span> <span class="dv">5</span>,          <span class="co"># default = 3</span></a>
+<a class="sourceLine" id="cb13-20" data-line-number="20">                   <span class="dt">early_stopping_rounds =</span> <span class="dv">5</span>,      <span class="co"># CV error needs to decrease at least every &lt;early_stopping_rounds&gt;</span></a>
+<a class="sourceLine" id="cb13-21" data-line-number="21">                   <span class="dt">maximize =</span> <span class="ot">TRUE</span>,   <span class="co"># When it is TRUE, it means the larger evaluation score of &lt;early_stopping_rounds&gt;.</span></a>
+<a class="sourceLine" id="cb13-22" data-line-number="22">                   <span class="dt">prediction =</span> <span class="ot">TRUE</span>) <span class="co"># prediction of cv folds</span></a></code></pre></div>
 <pre><code>## [1]  train-auc:0.554845+0.020936 test-auc:0.547460+0.021108 
 ## Multiple eval metrics are present. Will use test_auc for early stopping.
 ## Will train until test_auc hasn&#39;t improved in 5 rounds.
@@ -470,19 +500,19 @@ cv_model &lt;-<span class="st"> </span><span class="kw">xgb.cv</span>(<span clas
 ## [21] train-auc:0.740644+0.006604 test-auc:0.731419+0.007655 
 ## [26] train-auc:0.746494+0.004003 test-auc:0.737233+0.006636 
 ## [30] train-auc:0.752478+0.005963 test-auc:0.743094+0.008043</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</code></pre></div>
-<pre><code>## Time difference of 3.076773 mins</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</a></code></pre></div>
+<pre><code>## Time difference of 2.665371 mins</code></pre>
 </div>
 <div id="train-the-model" class="section level1">
 <h1><span class="header-section-number">6</span> Train the model</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">watchlist &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">train =</span> dtrain_<span class="dv">8</span>, <span class="dt">eval =</span> dtest_<span class="dv">2</span>)
-tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()
-xgboost_tree &lt;-<span class="st"> </span><span class="kw">xgb.train</span>(<span class="dt">data =</span> dtrain_<span class="dv">8</span>, 
-                         <span class="dt">params =</span> params,
-                         <span class="dt">watchlist =</span> watchlist,
-                         <span class="dt">nrounds =</span> cv_model<span class="op">$</span>best_iteration,
-                         <span class="dt">print_every_n =</span> <span class="dv">1</span>,
-                         <span class="dt">verbose =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1">watchlist &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">train =</span> dtrain_<span class="dv">8</span>, <span class="dt">eval =</span> dtest_<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2">tme &lt;-<span class="st"> </span><span class="kw">Sys.time</span>()</a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">xgboost_tree &lt;-<span class="st"> </span><span class="kw">xgb.train</span>(<span class="dt">data =</span> dtrain_<span class="dv">8</span>, </a>
+<a class="sourceLine" id="cb17-4" data-line-number="4">                         <span class="dt">params =</span> params,</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">                         <span class="dt">watchlist =</span> watchlist,</a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">                         <span class="dt">nrounds =</span> cv_model<span class="op">$</span>best_iteration,</a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">                         <span class="dt">print_every_n =</span> <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">                         <span class="dt">verbose =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
 <pre><code>## [1]  train-auc:0.558381  eval-auc:0.553793 
 ## [2]  train-auc:0.608049  eval-auc:0.598934 
 ## [3]  train-auc:0.634050  eval-auc:0.629809 
@@ -513,41 +543,41 @@ xgboost_tree &lt;-<span class="st"> </span><span class="kw">xgb.train</span>(<sp
 ## [28] train-auc:0.744458  eval-auc:0.731217 
 ## [29] train-auc:0.743945  eval-auc:0.730663 
 ## [30] train-auc:0.746816  eval-auc:0.732649</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</code></pre></div>
-<pre><code>## Time difference of 44.13247 secs</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">Sys.time</span>() <span class="op">-</span><span class="st"> </span>tme</a></code></pre></div>
+<pre><code>## Time difference of 36.41271 secs</code></pre>
 </div>
 <div id="prediction" class="section level1">
 <h1><span class="header-section-number">7</span> Prediction</h1>
 <div id="format-test-dataset-to-dmatrix" class="section level2">
 <h2><span class="header-section-number">7.1</span> Format test dataset to DMatrix</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#test &lt;- data.table::fread(file = &quot;test.csv&quot;)</span>
-<span class="co">#ID_code &lt;- test$ID_code</span>
-<span class="co">#test$ID_code &lt;- NULL</span>
-test_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(ID_code <span class="op">~</span>., <span class="dt">data=</span>test)
-dtest &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_sparse, <span class="dt">label =</span> test<span class="op">$</span>ID_code)</code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="co">#test &lt;- data.table::fread(file = &quot;test.csv&quot;)</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="co">#ID_code &lt;- test$ID_code</span></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="co">#test$ID_code &lt;- NULL</span></a>
+<a class="sourceLine" id="cb21-4" data-line-number="4">test_sparse &lt;-<span class="st"> </span><span class="kw">sparse.model.matrix</span>(ID_code <span class="op">~</span>., <span class="dt">data=</span>test)</a>
+<a class="sourceLine" id="cb21-5" data-line-number="5">dtest &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span class="dt">data=</span>test_sparse, <span class="dt">label =</span> test<span class="op">$</span>ID_code)</a></code></pre></div>
 <pre><code>## Warning in setinfo.xgb.DMatrix(dmat, names(p), p[[1]]): NAs introduced by
 ## coercion</code></pre>
 </div>
 <div id="prediction-with-tree-xgboost-model" class="section level2">
 <h2><span class="header-section-number">7.2</span> Prediction with Tree xgboost model</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pred_tree &lt;-<span class="st"> </span><span class="kw">predict</span>(xgboost_tree, dtest)
-<span class="kw">head</span>(pred_tree)</code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1">pred_tree &lt;-<span class="st"> </span><span class="kw">predict</span>(xgboost_tree, dtest)</a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="kw">head</span>(pred_tree)</a></code></pre></div>
 <pre><code>## [1] 0.4019109 0.3954378 0.4001880 0.3940031 0.3980342 0.3940164</code></pre>
 </div>
 <div id="summarize-probabilities-of-targets" class="section level2">
 <h2><span class="header-section-number">7.3</span> summarize probabilities of targets</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(pred_tree)</code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="kw">summary</span>(pred_tree)</a></code></pre></div>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  0.3928  0.3943  0.3957  0.3963  0.3977  0.4176</code></pre>
 </div>
 </div>
 <div id="submission" class="section level1">
 <h1><span class="header-section-number">8</span> submission</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dt_submission &lt;-<span class="st"> </span><span class="kw">data.frame</span>(
-  <span class="dt">ID_code =</span> ID_code,
-  <span class="dt">target =</span> pred_tree
-)
-<span class="kw">summary</span>(dt_submission)</code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">dt_submission &lt;-<span class="st"> </span><span class="kw">data.frame</span>(</a>
+<a class="sourceLine" id="cb27-2" data-line-number="2">  <span class="dt">ID_code =</span> ID_code,</a>
+<a class="sourceLine" id="cb27-3" data-line-number="3">  <span class="dt">target =</span> pred_tree</a>
+<a class="sourceLine" id="cb27-4" data-line-number="4">)</a>
+<a class="sourceLine" id="cb27-5" data-line-number="5"><span class="kw">summary</span>(dt_submission)</a></code></pre></div>
 <pre><code>##        ID_code           target      
 ##  test_0    :     1   Min.   :0.3928  
 ##  test_1    :     1   1st Qu.:0.3943  
@@ -556,19 +586,19 @@ dtest &lt;-<span class="st"> </span><span class="kw">xgb.DMatrix</span>(<span cl
 ##  test_1000 :     1   3rd Qu.:0.3977  
 ##  test_10000:     1   Max.   :0.4176  
 ##  (Other)   :199994</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fwrite</span>(dt_submission, <span class="st">&quot;dt_submission.csv&quot;</span>)</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># r &lt;- 8</span>
-<span class="co"># c &lt;- 10</span>
-<span class="co"># m0 &lt;- matrix(0, r, c)</span>
-<span class="co"># features&lt;-apply(m0, c(1,2), function(x) sample(c(0,1),1))</span>
-<span class="co"># folds&lt;-CreateFolds(features,4)</span>
-<span class="co"># </span>
-<span class="co"># Subtrain &lt;- train[1:10, 1:10]</span>
-<span class="co"># Subtrain[,ID_code := NULL]</span>
-<span class="co"># Subtrain[2, `:=`(target =3)]</span>
-<span class="co"># Subtrain_bkp &lt;- Subtrain</span>
-<span class="co"># scale.cols &lt;- colnames(Subtrain)</span>
-<span class="co"># Subtrain[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="kw">fwrite</span>(dt_submission, <span class="st">&quot;dt_submission.csv&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1"><span class="co"># r &lt;- 8</span></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"><span class="co"># c &lt;- 10</span></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3"><span class="co"># m0 &lt;- matrix(0, r, c)</span></a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="co"># features&lt;-apply(m0, c(1,2), function(x) sample(c(0,1),1))</span></a>
+<a class="sourceLine" id="cb30-5" data-line-number="5"><span class="co"># folds&lt;-CreateFolds(features,4)</span></a>
+<a class="sourceLine" id="cb30-6" data-line-number="6"><span class="co"># </span></a>
+<a class="sourceLine" id="cb30-7" data-line-number="7"><span class="co"># Subtrain &lt;- train[1:10, 1:10]</span></a>
+<a class="sourceLine" id="cb30-8" data-line-number="8"><span class="co"># Subtrain[,ID_code := NULL]</span></a>
+<a class="sourceLine" id="cb30-9" data-line-number="9"><span class="co"># Subtrain[2, `:=`(target =3)]</span></a>
+<a class="sourceLine" id="cb30-10" data-line-number="10"><span class="co"># Subtrain_bkp &lt;- Subtrain</span></a>
+<a class="sourceLine" id="cb30-11" data-line-number="11"><span class="co"># scale.cols &lt;- colnames(Subtrain)</span></a>
+<a class="sourceLine" id="cb30-12" data-line-number="12"><span class="co"># Subtrain[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]</span></a></code></pre></div>
 </div>
 
 

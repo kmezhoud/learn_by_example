@@ -1,5 +1,5 @@
 ---
-title: "Santandar Costumer Transaction Prediction with xgboost (cleanup)"
+title: "Santander Costumer Transaction Prediction with xgboost (cleanup)"
 author: "Karim Mezhoud"
 date: '`r Sys.Date()`'
 output:
