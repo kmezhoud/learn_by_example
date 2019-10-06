@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Karim Mrezhoud" />
+
+<meta name="date" content="2019-10-06" />
+
+<title>Abnormal transaction detection</title>
+
+<script src="IEEE-CIS_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="IEEE-CIS_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="IEEE-CIS_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="IEEE-CIS_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="IEEE-CIS_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="IEEE-CIS_files/navigation-1.1/tabsets.js"></script>
+<script src="IEEE-CIS_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Abnormal transaction detection</h1>
+<h4 class="author">Karim Mrezhoud</h4>
+<h4 class="date">2019-10-06</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-packages"><span class="toc-section-number">0.0.1</span> Load packages</a></li>
+<li><a href="#read-data"><span class="toc-section-number">0.0.2</span> read data</a></li>
+<li><a href="#glimpse-for-data-quality"><span class="toc-section-number">0.0.3</span> Glimpse for data quality</a></li>
+<li><a href="#join-transactions-and-identities-dataframes"><span class="toc-section-number">0.0.4</span> Join transactions and identities dataframes</a></li>
+<li><a href="#eda"><span class="toc-section-number">1</span> EDA</a><ul>
+<li><a href="#explore-missing-variables"><span class="toc-section-number">1.1</span> Explore missing variables</a><ul>
+<li><a href="#ratio-of-missing-variables"><span class="toc-section-number">1.1.1</span> Ratio of missing variables</a></li>
+<li><a href="#set-missing-rate-to-drop-the-same-variables-in-train-and-test-datasets"><span class="toc-section-number">1.1.2</span> Set missing rate to drop the same variables in train and test datasets</a></li>
+</ul></li>
+<li><a href="#potential-variables-to-drop"><span class="toc-section-number">1.2</span> Potential variables to drop</a></li>
+<li><a href="#merge-train-and-test-dataset"><span class="toc-section-number">1.3</span> Merge train and test dataset</a></li>
+<li><a href="#inspect-the-type-of-variables"><span class="toc-section-number">1.4</span> Inspect the type of variables</a><ul>
+<li><a href="#convert-numeric-variables-to-integer-reduce-computing-memory"><span class="toc-section-number">1.4.1</span> Convert numeric variables to integer (reduce computing memory)</a></li>
+<li><a href="#categorical-variables"><span class="toc-section-number">1.4.2</span> Categorical variables</a></li>
+<li><a href="#transform-categorical-variables-to-factor"><span class="toc-section-number">1.4.3</span> Transform categorical variables to factor</a></li>
+<li><a href="#label-encoding-of-factors"><span class="toc-section-number">1.4.4</span> Label encoding of factors</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#modeling-with-lighgbm"><span class="toc-section-number">2</span> Modeling with LighGBM</a><ul>
+<li><a href="#remove-variables-with-high-rate-of-missing-values-0.7"><span class="toc-section-number">2.1</span> remove variables with high rate of missing values (0.7)</a></li>
+<li><a href="#preprocessing"><span class="toc-section-number">2.2</span> Preprocessing</a></li>
+<li><a href="#relace-na-by-blank"><span class="toc-section-number">2.3</span> relace NA by blank</a></li>
+<li><a href="#light-gbm-parameters"><span class="toc-section-number">2.4</span> Light GBM parameters</a></li>
+<li><a href="#split-train-dataset-for-validation"><span class="toc-section-number">2.5</span> Split train dataset for validation</a></li>
+<li><a href="#train-the-model"><span class="toc-section-number">2.6</span> Train the model</a></li>
+<li><a href="#best-iteration"><span class="toc-section-number">2.7</span> Best Iteration</a></li>
+<li><a href="#training-with-full-train-dataset"><span class="toc-section-number">2.8</span> Training with full train dataset</a></li>
+<li><a href="#save-model"><span class="toc-section-number">2.9</span> ## Save model</a></li>
+</ul></li>
+<li><a href="#prediction-and-submission"><span class="toc-section-number">3</span> Prediction and Submission</a></li>
+<li><a href="#freatures-engineering"><span class="toc-section-number">4</span> Freatures Engineering</a><ul>
+<li><a href="#set-python-version-and-anaconda-environment"><span class="toc-section-number">4.0.1</span> Set python version and anaconda environment</a></li>
+<li><a href="#reload-raw-dataset"><span class="toc-section-number">4.0.2</span> Reload raw dataset</a></li>
+<li><a href="#working-with-sample-dataset"><span class="toc-section-number">4.1</span> Working with sample dataset</a><ul>
+<li><a href="#inspect-missing-value"><span class="toc-section-number">4.1.1</span> Inspect missing value</a></li>
+<li><a href="#replace-na-by-0"><span class="toc-section-number">4.1.2</span> Replace NA by 0</a></li>
+</ul></li>
+<li><a href="#encrypt-cards-and-devices-with-sha-hash-functions"><span class="toc-section-number">4.2</span> Encrypt cards and Devices with sha hash functions</a></li>
+<li><a href="#groupe-by-hashes-card-and-devices-for-isfraud-transaction"><span class="toc-section-number">4.3</span> Groupe by hashes card and devices for <code>isFraud</code> transaction</a><ul>
+<li><a href="#most-device-used-for-frauds-43-transactions"><span class="toc-section-number">4.3.1</span> Most device used for Frauds (43 transactions)</a></li>
+<li><a href="#most-cards-used-for-frauds"><span class="toc-section-number">4.3.2</span> Most cards used for Frauds</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="load-packages" class="section level3">
+<h3><span class="header-section-number">0.0.1</span> Load packages</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(rmarkdown)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(knitr)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">library</span>(readr)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="kw">library</span>(data.table)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="kw">library</span>(MLmetrics)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="kw">library</span>(lightgbm)</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="kw">library</span>(lubridate)</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="kw">library</span>(plyr)</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">library</span>(moments)</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="kw">library</span>(rattle)</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="kw">library</span>(rpart)</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="kw">library</span>(tictoc)</a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="kw">library</span>(inspectdf)</a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="kw">options</span>(<span class="dt">warn=</span><span class="op">-</span><span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="kw">options</span>(<span class="dt">scipen =</span> <span class="dv">99</span>)</a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co">#os.environ[&#39;KMP_DUPLICATE_LIB_OK&#39;]=&#39;True&#39;</span></a></code></pre></div>
+</div>
+<div id="read-data" class="section level3">
+<h3><span class="header-section-number">0.0.2</span> read data</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">setwd</span>(<span class="st">&quot;/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS&quot;</span>)</a></code></pre></div>
+<pre><code>## Error in setwd(&quot;/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS&quot;): cannot change working directory</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">local &lt;-<span class="st"> </span><span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="cf">if</span>(local <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span>){</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">train_iden &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/train_identity.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">train_trans &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/train_transaction.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">test_iden &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/test_identity.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">test_trans &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/test_transaction.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">} <span class="cf">else</span>{</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">train_iden &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;../input/train_identity.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">train_trans &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;../input/train_transaction.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">test_iden &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;../input/test_identity.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">test_trans &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;../input/test_transaction.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">}</a></code></pre></div>
+</div>
+<div id="glimpse-for-data-quality" class="section level3">
+<h3><span class="header-section-number">0.0.3</span> Glimpse for data quality</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">library</span>(DataExplorer)</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co">#introduce(train_trans)</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">plot_intro</span>(train_trans)</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">plot_missing</span>(train_trans)</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">plot_missing</span>(train_iden)</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The training data-set seems to have a lot of missing values.</p>
+</div>
+<div id="join-transactions-and-identities-dataframes" class="section level3">
+<h3><span class="header-section-number">0.0.4</span> Join transactions and identities dataframes</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">y_train &lt;-<span class="st"> </span>train_trans<span class="op">$</span>isFraud </a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">train_trans<span class="op">$</span>isFraud &lt;-<span class="st"> </span><span class="ot">NULL</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">train &lt;-<span class="st"> </span>train_trans <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join</span>(train_iden)</a></code></pre></div>
+<pre><code>## Joining, by = &quot;TransactionID&quot;</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">test &lt;-<span class="st"> </span>test_trans <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join</span>(test_iden)</a></code></pre></div>
+<pre><code>## Joining, by = &quot;TransactionID&quot;</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">rm</span>(train_iden,train_trans,test_iden,test_trans)</a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a></code></pre></div>
+</div>
+<div id="eda" class="section level1">
+<h1><span class="header-section-number">1</span> EDA</h1>
+<div id="explore-missing-variables" class="section level2">
+<h2><span class="header-section-number">1.1</span> Explore missing variables</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">missing_train &lt;-<span class="st"> </span><span class="kw">colSums</span>(<span class="kw">is.na</span>(train))[<span class="kw">colSums</span>(<span class="kw">is.na</span>(train)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sort</span>(<span class="dt">decreasing=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb13-4" data-line-number="4">missing_test &lt;-<span class="st"> </span><span class="kw">colSums</span>(<span class="kw">is.na</span>(test))[<span class="kw">colSums</span>(<span class="kw">is.na</span>(test)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sort</span>(<span class="dt">decreasing=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb13-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb13-6" data-line-number="6"><span class="kw">head</span>(missing_test)</a></code></pre></div>
+<pre><code>##  id_24  id_25  id_26  id_07  id_08  id_21 
+## 501951 501652 501644 501632 501632 501632</code></pre>
+<div id="ratio-of-missing-variables" class="section level3">
+<h3><span class="header-section-number">1.1.1</span> Ratio of missing variables</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co"># Ratio of missing values</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">missing_train_pct &lt;-<span class="st"> </span><span class="kw">round</span>(missing_train<span class="op">/</span><span class="kw">nrow</span>(train), <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">missing_test_pct &lt;-<span class="st"> </span><span class="kw">round</span>(missing_test<span class="op">/</span><span class="kw">nrow</span>(test), <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb15-6" data-line-number="6"><span class="co"># drop variable with more than 0.75 of missing values</span></a>
+<a class="sourceLine" id="cb15-7" data-line-number="7"> drop_col_train &lt;-<span class="st"> </span><span class="kw">names</span>(missing_train_pct[missing_train_pct <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.75</span>])</a>
+<a class="sourceLine" id="cb15-8" data-line-number="8"> drop_col_test &lt;-<span class="st"> </span><span class="kw">names</span>(missing_test_pct[missing_test_pct <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.75</span>])</a>
+<a class="sourceLine" id="cb15-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb15-10" data-line-number="10"><span class="kw">all</span>(drop_col_test <span class="op">%in%</span><span class="st"> </span>drop_col_train)  <span class="co"># TRUE, it means all drop_col_test are in drop_col_train</span></a></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">setdiff</span>(drop_col_train, drop_col_test)</a></code></pre></div>
+<pre><code>##   [1] &quot;D6&quot;         &quot;id_13&quot;      &quot;V217&quot;       &quot;V218&quot;       &quot;V219&quot;      
+##   [6] &quot;V223&quot;       &quot;V224&quot;       &quot;V225&quot;       &quot;V226&quot;       &quot;V228&quot;      
+##  [11] &quot;V229&quot;       &quot;V230&quot;       &quot;V231&quot;       &quot;V232&quot;       &quot;V233&quot;      
+##  [16] &quot;V235&quot;       &quot;V236&quot;       &quot;V237&quot;       &quot;V240&quot;       &quot;V241&quot;      
+##  [21] &quot;V242&quot;       &quot;V243&quot;       &quot;V244&quot;       &quot;V246&quot;       &quot;V247&quot;      
+##  [26] &quot;V248&quot;       &quot;V249&quot;       &quot;V252&quot;       &quot;V253&quot;       &quot;V254&quot;      
+##  [31] &quot;V257&quot;       &quot;V258&quot;       &quot;V260&quot;       &quot;V261&quot;       &quot;V262&quot;      
+##  [36] &quot;V263&quot;       &quot;V264&quot;       &quot;V265&quot;       &quot;V266&quot;       &quot;V267&quot;      
+##  [41] &quot;V268&quot;       &quot;V269&quot;       &quot;V273&quot;       &quot;V274&quot;       &quot;V275&quot;      
+##  [46] &quot;V276&quot;       &quot;V277&quot;       &quot;V278&quot;       &quot;id_05&quot;      &quot;id_06&quot;     
+##  [51] &quot;id_20&quot;      &quot;id_19&quot;      &quot;id_17&quot;      &quot;V167&quot;       &quot;V168&quot;      
+##  [56] &quot;V172&quot;       &quot;V173&quot;       &quot;V176&quot;       &quot;V177&quot;       &quot;V178&quot;      
+##  [61] &quot;V179&quot;       &quot;V181&quot;       &quot;V182&quot;       &quot;V183&quot;       &quot;V186&quot;      
+##  [66] &quot;V187&quot;       &quot;V190&quot;       &quot;V191&quot;       &quot;V192&quot;       &quot;V193&quot;      
+##  [71] &quot;V196&quot;       &quot;V199&quot;       &quot;V202&quot;       &quot;V203&quot;       &quot;V204&quot;      
+##  [76] &quot;V205&quot;       &quot;V206&quot;       &quot;V207&quot;       &quot;V211&quot;       &quot;V212&quot;      
+##  [81] &quot;V213&quot;       &quot;V214&quot;       &quot;V215&quot;       &quot;V216&quot;       &quot;V169&quot;      
+##  [86] &quot;V170&quot;       &quot;V171&quot;       &quot;V174&quot;       &quot;V175&quot;       &quot;V180&quot;      
+##  [91] &quot;V184&quot;       &quot;V185&quot;       &quot;V188&quot;       &quot;V189&quot;       &quot;V194&quot;      
+##  [96] &quot;V195&quot;       &quot;V197&quot;       &quot;V198&quot;       &quot;V200&quot;       &quot;V201&quot;      
+## [101] &quot;V208&quot;       &quot;V209&quot;       &quot;V210&quot;       &quot;id_02&quot;      &quot;id_11&quot;     
+## [106] &quot;V220&quot;       &quot;V221&quot;       &quot;V222&quot;       &quot;V227&quot;       &quot;V234&quot;      
+## [111] &quot;V238&quot;       &quot;V239&quot;       &quot;V245&quot;       &quot;V250&quot;       &quot;V251&quot;      
+## [116] &quot;V255&quot;       &quot;V256&quot;       &quot;V259&quot;       &quot;V270&quot;       &quot;V271&quot;      
+## [121] &quot;V272&quot;       &quot;id_01&quot;      &quot;id_12&quot;      &quot;id_15&quot;      &quot;id_16&quot;     
+## [126] &quot;id_23&quot;      &quot;id_27&quot;      &quot;id_28&quot;      &quot;id_29&quot;      &quot;id_30&quot;     
+## [131] &quot;id_31&quot;      &quot;id_33&quot;      &quot;id_34&quot;      &quot;id_35&quot;      &quot;id_36&quot;     
+## [136] &quot;id_37&quot;      &quot;id_38&quot;      &quot;DeviceType&quot; &quot;DeviceInfo&quot;</code></pre>
+<p>There is more dropped variables in train dataset that test dataset if we use a rate of 0.75 missed values. All theses listed variables do not have more than rates bigger than 0.75 in test dataset.</p>
+</div>
+<div id="set-missing-rate-to-drop-the-same-variables-in-train-and-test-datasets" class="section level3">
+<h3><span class="header-section-number">1.1.2</span> Set missing rate to drop the same variables in train and test datasets</h3>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="co"># drop variable with more than 0.75 of missing values</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"> drop_col_train &lt;-<span class="st"> </span><span class="kw">names</span>(missing_train_pct[missing_train_pct <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.7</span>])</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3"> drop_col_test &lt;-<span class="st"> </span><span class="kw">names</span>(missing_test_pct[missing_test_pct <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.7</span>])</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="kw">all</span>(drop_col_test <span class="op">%in%</span><span class="st"> </span>drop_col_train)  <span class="co"># TRUE, it means all drop_col_test are in drop_col_train</span></a></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="kw">setdiff</span>(drop_col_train, drop_col_test)</a></code></pre></div>
+<pre><code>## character(0)</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="kw">setdiff</span>(drop_col_test, drop_col_train)</a></code></pre></div>
+<pre><code>## character(0)</code></pre>
+<p>When we used a threshold of 0.7, we obtain the same list of variables that we can drop for tarin and test datasets.</p>
+</div>
+</div>
+<div id="potential-variables-to-drop" class="section level2">
+<h2><span class="header-section-number">1.2</span> Potential variables to drop</h2>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="kw">length</span>(drop_col_train)</a></code></pre></div>
+<pre><code>## [1] 207</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">drop_col_train</a></code></pre></div>
+<pre><code>##   [1] &quot;id_24&quot;      &quot;id_25&quot;      &quot;id_07&quot;      &quot;id_08&quot;      &quot;id_21&quot;     
+##   [6] &quot;id_26&quot;      &quot;id_22&quot;      &quot;dist2&quot;      &quot;D7&quot;         &quot;id_18&quot;     
+##  [11] &quot;D13&quot;        &quot;D14&quot;        &quot;D12&quot;        &quot;id_03&quot;      &quot;id_04&quot;     
+##  [16] &quot;D6&quot;         &quot;D8&quot;         &quot;D9&quot;         &quot;id_09&quot;      &quot;id_10&quot;     
+##  [21] &quot;id_32&quot;      &quot;id_14&quot;      &quot;V138&quot;       &quot;V139&quot;       &quot;V140&quot;      
+##  [26] &quot;V141&quot;       &quot;V142&quot;       &quot;V146&quot;       &quot;V147&quot;       &quot;V148&quot;      
+##  [31] &quot;V149&quot;       &quot;V153&quot;       &quot;V154&quot;       &quot;V155&quot;       &quot;V156&quot;      
+##  [36] &quot;V157&quot;       &quot;V158&quot;       &quot;V161&quot;       &quot;V162&quot;       &quot;V163&quot;      
+##  [41] &quot;V143&quot;       &quot;V144&quot;       &quot;V145&quot;       &quot;V150&quot;       &quot;V151&quot;      
+##  [46] &quot;V152&quot;       &quot;V159&quot;       &quot;V160&quot;       &quot;V164&quot;       &quot;V165&quot;      
+##  [51] &quot;V166&quot;       &quot;V322&quot;       &quot;V323&quot;       &quot;V324&quot;       &quot;V325&quot;      
+##  [56] &quot;V326&quot;       &quot;V327&quot;       &quot;V328&quot;       &quot;V329&quot;       &quot;V330&quot;      
+##  [61] &quot;V331&quot;       &quot;V332&quot;       &quot;V333&quot;       &quot;V334&quot;       &quot;V335&quot;      
+##  [66] &quot;V336&quot;       &quot;V337&quot;       &quot;V338&quot;       &quot;V339&quot;       &quot;id_13&quot;     
+##  [71] &quot;V217&quot;       &quot;V218&quot;       &quot;V219&quot;       &quot;V223&quot;       &quot;V224&quot;      
+##  [76] &quot;V225&quot;       &quot;V226&quot;       &quot;V228&quot;       &quot;V229&quot;       &quot;V230&quot;      
+##  [81] &quot;V231&quot;       &quot;V232&quot;       &quot;V233&quot;       &quot;V235&quot;       &quot;V236&quot;      
+##  [86] &quot;V237&quot;       &quot;V240&quot;       &quot;V241&quot;       &quot;V242&quot;       &quot;V243&quot;      
+##  [91] &quot;V244&quot;       &quot;V246&quot;       &quot;V247&quot;       &quot;V248&quot;       &quot;V249&quot;      
+##  [96] &quot;V252&quot;       &quot;V253&quot;       &quot;V254&quot;       &quot;V257&quot;       &quot;V258&quot;      
+## [101] &quot;V260&quot;       &quot;V261&quot;       &quot;V262&quot;       &quot;V263&quot;       &quot;V264&quot;      
+## [106] &quot;V265&quot;       &quot;V266&quot;       &quot;V267&quot;       &quot;V268&quot;       &quot;V269&quot;      
+## [111] &quot;V273&quot;       &quot;V274&quot;       &quot;V275&quot;       &quot;V276&quot;       &quot;V277&quot;      
+## [116] &quot;V278&quot;       &quot;id_05&quot;      &quot;id_06&quot;      &quot;id_20&quot;      &quot;id_19&quot;     
+## [121] &quot;id_17&quot;      &quot;V167&quot;       &quot;V168&quot;       &quot;V172&quot;       &quot;V173&quot;      
+## [126] &quot;V176&quot;       &quot;V177&quot;       &quot;V178&quot;       &quot;V179&quot;       &quot;V181&quot;      
+## [131] &quot;V182&quot;       &quot;V183&quot;       &quot;V186&quot;       &quot;V187&quot;       &quot;V190&quot;      
+## [136] &quot;V191&quot;       &quot;V192&quot;       &quot;V193&quot;       &quot;V196&quot;       &quot;V199&quot;      
+## [141] &quot;V202&quot;       &quot;V203&quot;       &quot;V204&quot;       &quot;V205&quot;       &quot;V206&quot;      
+## [146] &quot;V207&quot;       &quot;V211&quot;       &quot;V212&quot;       &quot;V213&quot;       &quot;V214&quot;      
+## [151] &quot;V215&quot;       &quot;V216&quot;       &quot;V169&quot;       &quot;V170&quot;       &quot;V171&quot;      
+## [156] &quot;V174&quot;       &quot;V175&quot;       &quot;V180&quot;       &quot;V184&quot;       &quot;V185&quot;      
+## [161] &quot;V188&quot;       &quot;V189&quot;       &quot;V194&quot;       &quot;V195&quot;       &quot;V197&quot;      
+## [166] &quot;V198&quot;       &quot;V200&quot;       &quot;V201&quot;       &quot;V208&quot;       &quot;V209&quot;      
+## [171] &quot;V210&quot;       &quot;id_02&quot;      &quot;id_11&quot;      &quot;V220&quot;       &quot;V221&quot;      
+## [176] &quot;V222&quot;       &quot;V227&quot;       &quot;V234&quot;       &quot;V238&quot;       &quot;V239&quot;      
+## [181] &quot;V245&quot;       &quot;V250&quot;       &quot;V251&quot;       &quot;V255&quot;       &quot;V256&quot;      
+## [186] &quot;V259&quot;       &quot;V270&quot;       &quot;V271&quot;       &quot;V272&quot;       &quot;id_01&quot;     
+## [191] &quot;id_12&quot;      &quot;id_15&quot;      &quot;id_16&quot;      &quot;id_23&quot;      &quot;id_27&quot;     
+## [196] &quot;id_28&quot;      &quot;id_29&quot;      &quot;id_30&quot;      &quot;id_31&quot;      &quot;id_33&quot;     
+## [201] &quot;id_34&quot;      &quot;id_35&quot;      &quot;id_36&quot;      &quot;id_37&quot;      &quot;id_38&quot;     
+## [206] &quot;DeviceType&quot; &quot;DeviceInfo&quot;</code></pre>
+<p>We can optimize missing value rate threshold by training and validation scores.</p>
+</div>
+<div id="merge-train-and-test-dataset" class="section level2">
+<h2><span class="header-section-number">1.3</span> Merge train and test dataset</h2>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1">train<span class="op">$</span>key &lt;-<span class="st"> &quot;train&quot;</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2">test<span class="op">$</span>key &lt;-<span class="st"> &quot;test&quot;</span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3">full &lt;-<span class="st"> </span><span class="kw">bind_rows</span>(train, test)</a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="kw">rm</span>(train, test)</a>
+<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a></code></pre></div>
+</div>
+<div id="inspect-the-type-of-variables" class="section level2">
+<h2><span class="header-section-number">1.4</span> Inspect the type of variables</h2>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1"><span class="kw">library</span>(inspectdf)</a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"><span class="kw">show_plot</span>(<span class="kw">inspect_types</span>(full))</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-13-1.png" width="672" /> There are 399 numeric variables, 32 categorical variables and 3 integer variables. We can reduce memory if we convert numeric variables to integer.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="co">#numeric_vars_stat &lt;- inspect_num(full)</span></a>
+<a class="sourceLine" id="cb31-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb31-3" data-line-number="3"><span class="co">#numeric_vars &lt;- numeric_vars_stat$col_name</span></a>
+<a class="sourceLine" id="cb31-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb31-5" data-line-number="5"><span class="co">#numeric_vars_stat</span></a>
+<a class="sourceLine" id="cb31-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb31-7" data-line-number="7">numeric_vars &lt;-<span class="st"> </span><span class="kw">names</span>(full)[<span class="kw">sapply</span>(full, class) <span class="op">==</span><span class="st"> &quot;numeric&quot;</span>]</a></code></pre></div>
+<div id="convert-numeric-variables-to-integer-reduce-computing-memory" class="section level3">
+<h3><span class="header-section-number">1.4.1</span> Convert numeric variables to integer (reduce computing memory)</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1"><span class="kw">library</span>(tictoc)</a>
+<a class="sourceLine" id="cb32-2" data-line-number="2"><span class="co"># If values are integer type, value==floor(value)</span></a>
+<a class="sourceLine" id="cb32-3" data-line-number="3">is_int &lt;-<span class="st"> </span><span class="cf">function</span>(x){</a>
+<a class="sourceLine" id="cb32-4" data-line-number="4">    fnum &lt;-<span class="st"> </span><span class="kw">fivenum</span>(x)</a>
+<a class="sourceLine" id="cb32-5" data-line-number="5">    <span class="kw">return</span>(<span class="kw">identical</span>(fnum, <span class="kw">floor</span>(fnum))) </a>
+<a class="sourceLine" id="cb32-6" data-line-number="6">}</a>
+<a class="sourceLine" id="cb32-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb32-8" data-line-number="8"><span class="kw">tic</span>(<span class="st">&quot;check is integer&quot;</span>)</a>
+<a class="sourceLine" id="cb32-9" data-line-number="9">int_idx &lt;-<span class="st"> </span><span class="kw">sapply</span>(full[numeric_vars], is_int)</a>
+<a class="sourceLine" id="cb32-10" data-line-number="10"><span class="kw">toc</span>()</a></code></pre></div>
+<pre><code>## check is integer: 36.963 sec elapsed</code></pre>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1"><span class="co">#identical(fivenum(full$card2), floor(full$card2))</span></a>
+<a class="sourceLine" id="cb34-2" data-line-number="2"><span class="co">#is_int(full$card2)</span></a>
+<a class="sourceLine" id="cb34-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb34-4" data-line-number="4">int_vars &lt;-<span class="st"> </span><span class="kw">names</span>(int_idx)[int_idx]</a>
+<a class="sourceLine" id="cb34-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb34-6" data-line-number="6"><span class="kw">paste</span>(<span class="st">&quot;Number of numeric variables that we can convert to interger:&quot;</span>, <span class="kw">length</span>(int_vars))</a></code></pre></div>
+<pre><code>## [1] &quot;Number of numeric variables that we can convert to interger: 372&quot;</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1">before &lt;-<span class="st"> </span><span class="kw">object.size</span>(full)</a>
+<a class="sourceLine" id="cb36-2" data-line-number="2"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;Before :&quot;</span>, <span class="kw">format</span>(before, <span class="dt">units =</span> <span class="st">&quot;MB&quot;</span>)))</a></code></pre></div>
+<pre><code>## [1] &quot;Before : 3620.8 Mb&quot;</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" data-line-number="1">full[int_vars] &lt;-<span class="st"> </span><span class="kw">lapply</span>(full[int_vars], as.integer)</a>
+<a class="sourceLine" id="cb38-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb38-3" data-line-number="3">after &lt;-<span class="st"> </span><span class="kw">object.size</span>(full)</a>
+<a class="sourceLine" id="cb38-4" data-line-number="4"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;After :&quot;</span>, <span class="kw">format</span>(after, <span class="dt">units =</span> <span class="st">&quot;MB&quot;</span>) ))   </a></code></pre></div>
+<pre><code>## [1] &quot;After : 2063.8 Mb&quot;</code></pre>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" data-line-number="1"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1"><span class="kw">show_plot</span>(<span class="kw">inspect_types</span>(full))</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="categorical-variables" class="section level3">
+<h3><span class="header-section-number">1.4.2</span> Categorical variables</h3>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" data-line-number="1">categorical_vars_stat &lt;-<span class="st"> </span><span class="kw">inspect_cat</span>(full)</a>
+<a class="sourceLine" id="cb42-2" data-line-number="2">categorical_vars &lt;-<span class="st"> </span>categorical_vars_stat<span class="op">$</span>col_name</a>
+<a class="sourceLine" id="cb42-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb42-4" data-line-number="4">categorical_vars_stat </a></code></pre></div>
+<pre><code>## # A tibble: 32 x 5
+##    col_name     cnt common common_pcnt levels              
+##    &lt;chr&gt;      &lt;int&gt; &lt;chr&gt;        &lt;dbl&gt; &lt;list&gt;              
+##  1 card4          5 visa          65.6 &lt;tibble [5 × 3]&gt;    
+##  2 card6          5 debit         75.2 &lt;tibble [5 × 3]&gt;    
+##  3 DeviceInfo  2801 &lt;NA&gt;          73.9 &lt;tibble [2,801 × 3]&gt;
+##  4 DeviceType     4 &lt;NA&gt;          73.9 &lt;tibble [4 × 3]&gt;    
+##  5 id_12          3 &lt;NA&gt;          73.9 &lt;tibble [3 × 3]&gt;    
+##  6 id_15          5 &lt;NA&gt;          73.9 &lt;tibble [5 × 3]&gt;    
+##  7 id_16          4 &lt;NA&gt;          73.9 &lt;tibble [4 × 3]&gt;    
+##  8 id_23          5 &lt;NA&gt;          73.9 &lt;tibble [5 × 3]&gt;    
+##  9 id_27          4 &lt;NA&gt;          73.9 &lt;tibble [4 × 3]&gt;    
+## 10 id_28          4 &lt;NA&gt;          73.9 &lt;tibble [4 × 3]&gt;    
+## # … with 22 more rows</code></pre>
+</div>
+<div id="transform-categorical-variables-to-factor" class="section level3">
+<h3><span class="header-section-number">1.4.3</span> Transform categorical variables to factor</h3>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" data-line-number="1"><span class="co"># transform categorical variables to factor</span></a>
+<a class="sourceLine" id="cb44-2" data-line-number="2">full[, categorical_vars] &lt;-<span class="st"> </span><span class="kw">lapply</span>(full[, categorical_vars], as.factor)</a></code></pre></div>
+</div>
+<div id="label-encoding-of-factors" class="section level3">
+<h3><span class="header-section-number">1.4.4</span> Label encoding of factors</h3>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" data-line-number="1">full[,categorical_vars] &lt;-<span class="st">  </span><span class="kw">lapply</span>(full[, categorical_vars], as.integer)</a>
+<a class="sourceLine" id="cb45-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb45-3" data-line-number="3"><span class="kw">table</span>(full<span class="op">$</span>key)</a></code></pre></div>
+<pre><code>## 
+##      1      2 
+## 506691 590540</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" data-line-number="1"><span class="kw">show_plot</span>(<span class="kw">inspect_types</span>(full))</a></code></pre></div>
+<p><img src="IEEE-CIS_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="modeling-with-lighgbm" class="section level1">
+<h1><span class="header-section-number">2</span> Modeling with LighGBM</h1>
+<div id="remove-variables-with-high-rate-of-missing-values-0.7" class="section level2">
+<h2><span class="header-section-number">2.1</span> remove variables with high rate of missing values (0.7)</h2>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" data-line-number="1">data.table<span class="op">::</span><span class="kw">fwrite</span>(full,<span class="dt">file =</span> <span class="st">&quot;full.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb48-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb48-3" data-line-number="3"><span class="co">#full &lt;- fread(file = &quot;full.csv&quot;)</span></a>
+<a class="sourceLine" id="cb48-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb48-5" data-line-number="5">full_clean &lt;-<span class="st"> </span>full <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb48-6" data-line-number="6"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>drop_col_train)</a>
+<a class="sourceLine" id="cb48-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb48-8" data-line-number="8"><span class="kw">rm</span>(full)</a>
+<a class="sourceLine" id="cb48-9" data-line-number="9"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a>
+<a class="sourceLine" id="cb48-10" data-line-number="10"><span class="kw">dim</span>(full_clean)</a></code></pre></div>
+<pre><code>## [1] 1097231     227</code></pre>
+</div>
+<div id="preprocessing" class="section level2">
+<h2><span class="header-section-number">2.2</span> Preprocessing</h2>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb50-1" data-line-number="1">X_train &lt;-<span class="st"> </span>full_clean[full_clean<span class="op">$</span>key<span class="op">==</span><span class="st">&#39;2&#39;</span>, ] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>( <span class="op">-</span>TransactionID)</a>
+<a class="sourceLine" id="cb50-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb50-3" data-line-number="3"><span class="kw">length</span>(y_train ) <span class="op">==</span><span class="st"> </span><span class="kw">dim</span>(X_train)[<span class="dv">1</span>]</a></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb52-1" data-line-number="1">X_test &lt;-<span class="st"> </span>full_clean[full_clean<span class="op">$</span>key<span class="op">==</span><span class="st">&#39;1&#39;</span>, ] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>TransactionID)</a>
+<a class="sourceLine" id="cb52-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb52-3" data-line-number="3"><span class="kw">rm</span>(full_clean)</a>
+<a class="sourceLine" id="cb52-4" data-line-number="4"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a></code></pre></div>
+</div>
+<div id="relace-na-by-blank" class="section level2">
+<h2><span class="header-section-number">2.3</span> relace NA by blank</h2>
+<p>LightGBM <a href="https://github.com/microsoft/LightGBM/blob/master/docs/Advanced-Topics.rst">support</a> by default NA’s values. We can desable this option by <code>use_missing=false</code>.</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" data-line-number="1"><span class="co"># Replace NA&#39;s by blank</span></a>
+<a class="sourceLine" id="cb53-2" data-line-number="2">X_train[<span class="kw">is.na</span>(X_train)] &lt;-<span class="st"> &quot;&quot;</span></a>
+<a class="sourceLine" id="cb53-3" data-line-number="3"><span class="kw">colSums</span>(<span class="kw">is.na</span>(X_train))[<span class="kw">colSums</span>(<span class="kw">is.na</span>(X_train)) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sort</span>(<span class="dt">decreasing=</span><span class="ot">TRUE</span>)</a></code></pre></div>
+<pre><code>## named numeric(0)</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb55-1" data-line-number="1">X_test[<span class="kw">is.na</span>(X_test)] &lt;-<span class="st"> &quot;&quot;</span></a></code></pre></div>
+</div>
+<div id="light-gbm-parameters" class="section level2">
+<h2><span class="header-section-number">2.4</span> Light GBM parameters</h2>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1">lgb_param &lt;-<span class="st"> </span><span class="kw">list</span>(</a>
+<a class="sourceLine" id="cb56-2" data-line-number="2">  <span class="dt">boosting_type =</span> <span class="st">&#39;dart&#39;</span>,</a>
+<a class="sourceLine" id="cb56-3" data-line-number="3">  <span class="dt">objective =</span> <span class="st">&quot;binary&quot;</span> ,</a>
+<a class="sourceLine" id="cb56-4" data-line-number="4">  <span class="dt">metric =</span> <span class="st">&quot;AUC&quot;</span>,</a>
+<a class="sourceLine" id="cb56-5" data-line-number="5">  <span class="dt">boost_from_average =</span> <span class="st">&quot;false&quot;</span>,</a>
+<a class="sourceLine" id="cb56-6" data-line-number="6">  <span class="dt">tree_learner  =</span> <span class="st">&quot;serial&quot;</span>,</a>
+<a class="sourceLine" id="cb56-7" data-line-number="7">  <span class="dt">max_depth =</span> <span class="dv">-1</span>,</a>
+<a class="sourceLine" id="cb56-8" data-line-number="8">  <span class="dt">learning_rate =</span> <span class="fl">0.01</span>,</a>
+<a class="sourceLine" id="cb56-9" data-line-number="9">  <span class="dt">num_leaves =</span> <span class="dv">197</span>,</a>
+<a class="sourceLine" id="cb56-10" data-line-number="10">  <span class="dt">feature_fraction =</span> <span class="fl">0.3</span>,          </a>
+<a class="sourceLine" id="cb56-11" data-line-number="11">  <span class="dt">bagging_freq =</span> <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb56-12" data-line-number="12">  <span class="dt">bagging_fraction =</span> <span class="fl">0.7</span>,</a>
+<a class="sourceLine" id="cb56-13" data-line-number="13">  <span class="dt">min_data_in_leaf =</span> <span class="dv">100</span>,</a>
+<a class="sourceLine" id="cb56-14" data-line-number="14">  <span class="dt">bagging_seed =</span> <span class="dv">11</span>,</a>
+<a class="sourceLine" id="cb56-15" data-line-number="15">  <span class="dt">max_bin =</span> <span class="dv">255</span>)</a></code></pre></div>
+</div>
+<div id="split-train-dataset-for-validation" class="section level2">
+<h2><span class="header-section-number">2.5</span> Split train dataset for validation</h2>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb57-1" data-line-number="1"><span class="co">#set.seed(35)</span></a>
+<a class="sourceLine" id="cb57-2" data-line-number="2"><span class="co">#train.idx &lt;- sample(nrow(X_train), 0.75*nrow(X_train))</span></a>
+<a class="sourceLine" id="cb57-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb57-4" data-line-number="4"><span class="co"># dtrain &lt;- lgb.Dataset(data=as.matrix(X_train[train.idx,]), label=y_train[train.idx], free_raw_data=FALSE)</span></a>
+<a class="sourceLine" id="cb57-5" data-line-number="5"><span class="co"># </span></a>
+<a class="sourceLine" id="cb57-6" data-line-number="6"><span class="co"># dvalid &lt;- lgb.Dataset(data=as.matrix(X_train[-train.idx, ]), label=y_train[-train.idx], free_raw_data=FALSE)</span></a>
+<a class="sourceLine" id="cb57-7" data-line-number="7"><span class="co"># </span></a>
+<a class="sourceLine" id="cb57-8" data-line-number="8"><span class="co"># invisible(gc())</span></a></code></pre></div>
+</div>
+<div id="train-the-model" class="section level2">
+<h2><span class="header-section-number">2.6</span> Train the model</h2>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb58-1" data-line-number="1"><span class="co"># tic(&quot;LightGBM train validation&quot;)</span></a>
+<a class="sourceLine" id="cb58-2" data-line-number="2"><span class="co"># tr_lgb &lt;- lgb.train(param = lgb_param,</span></a>
+<a class="sourceLine" id="cb58-3" data-line-number="3"><span class="co">#                     data = dtrain,</span></a>
+<a class="sourceLine" id="cb58-4" data-line-number="4"><span class="co">#                     valids = list(train=dtrain, valid=dvalid), # train=dtrain, </span></a>
+<a class="sourceLine" id="cb58-5" data-line-number="5"><span class="co">#                     nrounds = 1000,</span></a>
+<a class="sourceLine" id="cb58-6" data-line-number="6"><span class="co">#                     early_stopping_rounds = 200,</span></a>
+<a class="sourceLine" id="cb58-7" data-line-number="7"><span class="co">#                     eval_freq = 200,</span></a>
+<a class="sourceLine" id="cb58-8" data-line-number="8"><span class="co">#                     seed = 42,</span></a>
+<a class="sourceLine" id="cb58-9" data-line-number="9"><span class="co">#                     verbose = 1)</span></a>
+<a class="sourceLine" id="cb58-10" data-line-number="10"><span class="co"># toc()</span></a></code></pre></div>
+</div>
+<div id="best-iteration" class="section level2">
+<h2><span class="header-section-number">2.7</span> Best Iteration</h2>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb59-1" data-line-number="1"><span class="co"># pred_tr &lt;- predict(tr_lgb, data.matrix(X_train[-train.idx,]))</span></a>
+<a class="sourceLine" id="cb59-2" data-line-number="2"><span class="co"># cat(&quot;best iteration :&quot; , tr_lgb$best_iter, &quot;best score :&quot;, AUC(pred_tr, y_train[-train_idx]) ,&quot;\n&quot; )</span></a>
+<a class="sourceLine" id="cb59-3" data-line-number="3"><span class="co"># best_iteration &lt;- tr_lgb$best_iter</span></a>
+<a class="sourceLine" id="cb59-4" data-line-number="4"><span class="co">#rm(dtrain, dvalid, tr_lgb)</span></a>
+<a class="sourceLine" id="cb59-5" data-line-number="5"><span class="co">#invisible(gc())</span></a></code></pre></div>
+</div>
+<div id="training-with-full-train-dataset" class="section level2">
+<h2><span class="header-section-number">2.8</span> Training with full train dataset</h2>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb60-1" data-line-number="1"><span class="co">#dtrain &lt;- lgb.Dataset(data=as.matrix(X_train), label=y_train, free_raw_data=FALSE)</span></a>
+<a class="sourceLine" id="cb60-2" data-line-number="2"><span class="co">#rm(X_trains)</span></a>
+<a class="sourceLine" id="cb60-3" data-line-number="3"><span class="co">#invisible(gc())</span></a></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb61-1" data-line-number="1"><span class="co"># tic(&quot;LightGBM&quot;)</span></a>
+<a class="sourceLine" id="cb61-2" data-line-number="2"><span class="co"># fit_lgb &lt;- lgb.train(param = lgb_param,</span></a>
+<a class="sourceLine" id="cb61-3" data-line-number="3"><span class="co">#                      data = dtrain,</span></a>
+<a class="sourceLine" id="cb61-4" data-line-number="4"><span class="co">#                      nrounds = 100 ,  #11901, 11401</span></a>
+<a class="sourceLine" id="cb61-5" data-line-number="5"><span class="co">#                      seed = 42,</span></a>
+<a class="sourceLine" id="cb61-6" data-line-number="6"><span class="co">#                      eval_freq = 200,</span></a>
+<a class="sourceLine" id="cb61-7" data-line-number="7"><span class="co">#                      verbose = 1)</span></a>
+<a class="sourceLine" id="cb61-8" data-line-number="8"><span class="co"># toc()</span></a>
+<a class="sourceLine" id="cb61-9" data-line-number="9"><span class="co">##LightGBM: 5098.494 sec elapsed</span></a></code></pre></div>
+</div>
+<div id="save-model" class="section level2">
+<h2><span class="header-section-number">2.9</span> ## Save model</h2>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb62-1" data-line-number="1"><span class="co">#lgb.save(fit_lgb, &quot;fit_lgb_dart&quot;,num_iteration = NULL)</span></a></code></pre></div>
+</div>
+</div>
+<div id="prediction-and-submission" class="section level1">
+<h1><span class="header-section-number">3</span> Prediction and Submission</h1>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb63-1" data-line-number="1"><span class="co"># pred &lt;- predict(fit_lgb, as.matrix(X_test))</span></a>
+<a class="sourceLine" id="cb63-2" data-line-number="2"><span class="co"># </span></a>
+<a class="sourceLine" id="cb63-3" data-line-number="3"><span class="co"># setwd(&quot;/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS&quot;)</span></a>
+<a class="sourceLine" id="cb63-4" data-line-number="4"><span class="co"># submission &lt;- fread(&#39;dataset/sample_submission.csv&#39;)</span></a>
+<a class="sourceLine" id="cb63-5" data-line-number="5"><span class="co"># submission$isFraud &lt;- pred </span></a>
+<a class="sourceLine" id="cb63-6" data-line-number="6"><span class="co"># head(submission)</span></a>
+<a class="sourceLine" id="cb63-7" data-line-number="7"><span class="co"># </span></a>
+<a class="sourceLine" id="cb63-8" data-line-number="8"><span class="co"># fwrite(submission,&quot;submission_1.csv&quot;)</span></a></code></pre></div>
+</div>
+<div id="freatures-engineering" class="section level1">
+<h1><span class="header-section-number">4</span> Freatures Engineering</h1>
+<div id="set-python-version-and-anaconda-environment" class="section level3">
+<h3><span class="header-section-number">4.0.1</span> Set python version and anaconda environment</h3>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb64-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/venv/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb64-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+<pre><code>## python:         /Users/Mezhoud/venv/bin/python3
+## libpython:      /Users/Mezhoud/miniconda3/lib/libpython3.7m.dylib
+## pythonhome:     /Users/Mezhoud/miniconda3:/Users/Mezhoud/miniconda3
+## virtualenv:     /Users/Mezhoud/venv/bin/activate_this.py
+## version:        3.7.1 (default, Dec 14 2018, 13:28:58)  [Clang 4.0.1 (tags/RELEASE_401/final)]
+## numpy:          /Users/Mezhoud/miniconda3/lib/python3.7/site-packages/numpy
+## numpy_version:  1.16.4
+## 
+## NOTE: Python version was forced by use_python function</code></pre>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb66-1" data-line-number="1"><span class="kw">library</span>(reticulate)</a>
+<a class="sourceLine" id="cb66-2" data-line-number="2"> <span class="kw">setwd</span>(<span class="st">&quot;/Volumes/DATA/learn_by_example/Fraud_detection/IEEE-CIS&quot;</span>)</a></code></pre></div>
+</div>
+<div id="reload-raw-dataset" class="section level3">
+<h3><span class="header-section-number">4.0.2</span> Reload raw dataset</h3>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb67-1" data-line-number="1">train_iden &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/train_identity.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb67-2" data-line-number="2">train_trans &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dataset/train_transaction.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb67-3" data-line-number="3">train &lt;-<span class="st"> </span>train_trans <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join</span>(train_iden)</a></code></pre></div>
+<pre><code>## Joining, by = &quot;TransactionID&quot;</code></pre>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb69-1" data-line-number="1"><span class="kw">rm</span>(train_iden)</a>
+<a class="sourceLine" id="cb69-2" data-line-number="2"><span class="kw">rm</span>(train_trans)</a>
+<a class="sourceLine" id="cb69-3" data-line-number="3"><span class="kw">invisible</span>(<span class="kw">gc</span>())</a></code></pre></div>
+</div>
+<div id="working-with-sample-dataset" class="section level2">
+<h2><span class="header-section-number">4.1</span> Working with sample dataset</h2>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" data-line-number="1">train_<span class="dv">5000</span> &lt;-<span class="st"> </span>train[<span class="dv">1</span><span class="op">:</span><span class="dv">5000</span>,]</a></code></pre></div>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb71-1" data-line-number="1">cards_df &lt;-</a>
+<a class="sourceLine" id="cb71-2" data-line-number="2"><span class="st">  </span>train_<span class="dv">5000</span> <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="st"> </span><span class="kw">select</span>(<span class="kw">starts_with</span>(<span class="st">&quot;card&quot;</span>))</a>
+<a class="sourceLine" id="cb71-3" data-line-number="3"><span class="kw">head</span>(cards_df)</a></code></pre></div>
+<pre><code>##   card1 card2 card3      card4 card5  card6
+## 1 13926    NA   150   discover   142 credit
+## 2  2755   404   150 mastercard   102 credit
+## 3  4663   490   150       visa   166  debit
+## 4 18132   567   150 mastercard   117  debit
+## 5  4497   514   150 mastercard   102 credit
+## 6  5937   555   150       visa   226  debit</code></pre>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb73-1" data-line-number="1">ids_df &lt;-</a>
+<a class="sourceLine" id="cb73-2" data-line-number="2"><span class="st">  </span>train_<span class="dv">5000</span> <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb73-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="st"> </span><span class="kw">select</span>(<span class="kw">starts_with</span>(<span class="st">&quot;id&quot;</span>), <span class="kw">starts_with</span>(<span class="st">&quot;Device&quot;</span>))</a>
+<a class="sourceLine" id="cb73-4" data-line-number="4"><span class="kw">head</span>(ids_df)</a></code></pre></div>
+<pre><code>##   id_01 id_02 id_03 id_04 id_05 id_06 id_07 id_08 id_09 id_10 id_11
+## 1    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+## 2    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+## 3    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+## 4    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+## 5     0 70787    NA    NA    NA    NA    NA    NA    NA    NA   100
+## 6    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+##      id_12 id_13 id_14 id_15    id_16 id_17 id_18 id_19 id_20 id_21 id_22
+## 1     &lt;NA&gt;    NA    NA  &lt;NA&gt;     &lt;NA&gt;    NA    NA    NA    NA    NA    NA
+## 2     &lt;NA&gt;    NA    NA  &lt;NA&gt;     &lt;NA&gt;    NA    NA    NA    NA    NA    NA
+## 3     &lt;NA&gt;    NA    NA  &lt;NA&gt;     &lt;NA&gt;    NA    NA    NA    NA    NA    NA
+## 4     &lt;NA&gt;    NA    NA  &lt;NA&gt;     &lt;NA&gt;    NA    NA    NA    NA    NA    NA
+## 5 NotFound    NA  -480   New NotFound   166    NA   542   144    NA    NA
+## 6     &lt;NA&gt;    NA    NA  &lt;NA&gt;     &lt;NA&gt;    NA    NA    NA    NA    NA    NA
+##   id_23 id_24 id_25 id_26 id_27 id_28    id_29       id_30
+## 1  &lt;NA&gt;    NA    NA    NA  &lt;NA&gt;  &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;
+## 2  &lt;NA&gt;    NA    NA    NA  &lt;NA&gt;  &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;
+## 3  &lt;NA&gt;    NA    NA    NA  &lt;NA&gt;  &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;
+## 4  &lt;NA&gt;    NA    NA    NA  &lt;NA&gt;  &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;
+## 5          NA    NA    NA         New NotFound Android 7.0
+## 6  &lt;NA&gt;    NA    NA    NA  &lt;NA&gt;  &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;
+##                 id_31 id_32     id_33          id_34 id_35 id_36 id_37
+## 1                &lt;NA&gt;    NA      &lt;NA&gt;           &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;
+## 2                &lt;NA&gt;    NA      &lt;NA&gt;           &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;
+## 3                &lt;NA&gt;    NA      &lt;NA&gt;           &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;
+## 4                &lt;NA&gt;    NA      &lt;NA&gt;           &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;
+## 5 samsung browser 6.2    32 2220x1080 match_status:2     T     F     T
+## 6                &lt;NA&gt;    NA      &lt;NA&gt;           &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;
+##   id_38 DeviceType                    DeviceInfo
+## 1  &lt;NA&gt;       &lt;NA&gt;                          &lt;NA&gt;
+## 2  &lt;NA&gt;       &lt;NA&gt;                          &lt;NA&gt;
+## 3  &lt;NA&gt;       &lt;NA&gt;                          &lt;NA&gt;
+## 4  &lt;NA&gt;       &lt;NA&gt;                          &lt;NA&gt;
+## 5     T     mobile SAMSUNG SM-G892A Build/NRD90M
+## 6  &lt;NA&gt;       &lt;NA&gt;                          &lt;NA&gt;</code></pre>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb75-1" data-line-number="1"><span class="kw">glimpse</span>(cards_df)</a></code></pre></div>
+<pre><code>## Observations: 5,000
+## Variables: 6
+## $ card1 &lt;int&gt; 13926, 2755, 4663, 18132, 4497, 5937, 12308, 12695, 2803, …
+## $ card2 &lt;dbl&gt; NA, 404, 490, 567, 514, 555, 360, 490, 100, 111, 352, 375,…
+## $ card3 &lt;dbl&gt; 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 117, 185…
+## $ card4 &lt;chr&gt; &quot;discover&quot;, &quot;mastercard&quot;, &quot;visa&quot;, &quot;mastercard&quot;, &quot;mastercar…
+## $ card5 &lt;dbl&gt; 142, 102, 166, 117, 102, 226, 166, 226, 226, 224, 134, 224…
+## $ card6 &lt;chr&gt; &quot;credit&quot;, &quot;credit&quot;, &quot;debit&quot;, &quot;debit&quot;, &quot;credit&quot;, &quot;debit&quot;, &quot;…</code></pre>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb77-1" data-line-number="1"><span class="kw">glimpse</span>(ids_df)</a></code></pre></div>
+<pre><code>## Observations: 5,000
+## Variables: 40
+## $ id_01      &lt;dbl&gt; NA, NA, NA, NA, 0, NA, NA, NA, -5, NA, -5, -5, NA, NA…
+## $ id_02      &lt;dbl&gt; NA, NA, NA, NA, 70787, NA, NA, NA, 98945, NA, 191631,…
+## $ id_03      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0, NA, NA, NA…
+## $ id_04      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0, NA, NA, NA…
+## $ id_05      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, 0, NA, 0, 0, NA, NA, …
+## $ id_06      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, -5, NA, 0, -6, NA, NA…
+## $ id_07      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_08      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_09      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0, NA, NA, NA…
+## $ id_10      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0, NA, NA, NA…
+## $ id_11      &lt;dbl&gt; NA, NA, NA, NA, 100, NA, NA, NA, 100, NA, 100, 100, N…
+## $ id_12      &lt;chr&gt; NA, NA, NA, NA, &quot;NotFound&quot;, NA, NA, NA, &quot;NotFound&quot;, N…
+## $ id_13      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, 49, NA, 52, 52, NA, N…
+## $ id_14      &lt;dbl&gt; NA, NA, NA, NA, -480, NA, NA, NA, -300, NA, NA, NA, N…
+## $ id_15      &lt;chr&gt; NA, NA, NA, NA, &quot;New&quot;, NA, NA, NA, &quot;New&quot;, NA, &quot;Found&quot;…
+## $ id_16      &lt;chr&gt; NA, NA, NA, NA, &quot;NotFound&quot;, NA, NA, NA, &quot;NotFound&quot;, N…
+## $ id_17      &lt;dbl&gt; NA, NA, NA, NA, 166, NA, NA, NA, 166, NA, 121, 225, N…
+## $ id_18      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_19      &lt;dbl&gt; NA, NA, NA, NA, 542, NA, NA, NA, 621, NA, 410, 176, N…
+## $ id_20      &lt;dbl&gt; NA, NA, NA, NA, 144, NA, NA, NA, 500, NA, 142, 507, N…
+## $ id_21      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_22      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_23      &lt;chr&gt; NA, NA, NA, NA, &quot;&quot;, NA, NA, NA, &quot;&quot;, NA, &quot;&quot;, &quot;&quot;, NA, N…
+## $ id_24      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_25      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_26      &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+## $ id_27      &lt;chr&gt; NA, NA, NA, NA, &quot;&quot;, NA, NA, NA, &quot;&quot;, NA, &quot;&quot;, &quot;&quot;, NA, N…
+## $ id_28      &lt;chr&gt; NA, NA, NA, NA, &quot;New&quot;, NA, NA, NA, &quot;New&quot;, NA, &quot;Found&quot;…
+## $ id_29      &lt;chr&gt; NA, NA, NA, NA, &quot;NotFound&quot;, NA, NA, NA, &quot;NotFound&quot;, N…
+## $ id_30      &lt;chr&gt; NA, NA, NA, NA, &quot;Android 7.0&quot;, NA, NA, NA, &quot;iOS 11.1.…
+## $ id_31      &lt;chr&gt; NA, NA, NA, NA, &quot;samsung browser 6.2&quot;, NA, NA, NA, &quot;m…
+## $ id_32      &lt;dbl&gt; NA, NA, NA, NA, 32, NA, NA, NA, 32, NA, NA, NA, NA, N…
+## $ id_33      &lt;chr&gt; NA, NA, NA, NA, &quot;2220x1080&quot;, NA, NA, NA, &quot;1334x750&quot;, …
+## $ id_34      &lt;chr&gt; NA, NA, NA, NA, &quot;match_status:2&quot;, NA, NA, NA, &quot;match_…
+## $ id_35      &lt;chr&gt; NA, NA, NA, NA, &quot;T&quot;, NA, NA, NA, &quot;T&quot;, NA, &quot;F&quot;, &quot;F&quot;, N…
+## $ id_36      &lt;chr&gt; NA, NA, NA, NA, &quot;F&quot;, NA, NA, NA, &quot;F&quot;, NA, &quot;F&quot;, &quot;F&quot;, N…
+## $ id_37      &lt;chr&gt; NA, NA, NA, NA, &quot;T&quot;, NA, NA, NA, &quot;F&quot;, NA, &quot;T&quot;, &quot;T&quot;, N…
+## $ id_38      &lt;chr&gt; NA, NA, NA, NA, &quot;T&quot;, NA, NA, NA, &quot;T&quot;, NA, &quot;T&quot;, &quot;T&quot;, N…
+## $ DeviceType &lt;chr&gt; NA, NA, NA, NA, &quot;mobile&quot;, NA, NA, NA, &quot;mobile&quot;, NA, &quot;…
+## $ DeviceInfo &lt;chr&gt; NA, NA, NA, NA, &quot;SAMSUNG SM-G892A Build/NRD90M&quot;, NA, …</code></pre>
+<div id="inspect-missing-value" class="section level3">
+<h3><span class="header-section-number">4.1.1</span> Inspect missing value</h3>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb79-1" data-line-number="1"><span class="kw">inspect_na</span>(cards_df)</a></code></pre></div>
+<pre><code>## # A tibble: 6 x 3
+##   col_name   cnt  pcnt
+##   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;
+## 1 card2       75  1.5 
+## 2 card5        9  0.18
+## 3 card1        0  0   
+## 4 card3        0  0   
+## 5 card4        0  0   
+## 6 card6        0  0</code></pre>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb81-1" data-line-number="1"><span class="kw">inspect_na</span>(ids_df)</a></code></pre></div>
+<pre><code>## # A tibble: 40 x 3
+##    col_name   cnt  pcnt
+##    &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;
+##  1 id_24     4968  99.4
+##  2 id_07     4967  99.3
+##  3 id_08     4967  99.3
+##  4 id_21     4967  99.3
+##  5 id_22     4967  99.3
+##  6 id_25     4967  99.3
+##  7 id_26     4967  99.3
+##  8 id_18     4718  94.4
+##  9 id_03     4578  91.6
+## 10 id_04     4578  91.6
+## # … with 30 more rows</code></pre>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb83-1" data-line-number="1"><span class="kw">summary</span>(cards_df)</a></code></pre></div>
+<pre><code>##      card1           card2           card3          card4          
+##  Min.   : 1033   Min.   :100.0   Min.   :100.0   Length:5000       
+##  1st Qu.: 6459   1st Qu.:194.0   1st Qu.:150.0   Class :character  
+##  Median : 9335   Median :321.0   Median :150.0   Mode  :character  
+##  Mean   : 9737   Mean   :346.5   Mean   :152.3                     
+##  3rd Qu.:13481   3rd Qu.:500.0   3rd Qu.:150.0                     
+##  Max.   :18390   Max.   :600.0   Max.   :191.0                     
+##                  NA&#39;s   :75                                        
+##      card5        card6          
+##  Min.   :100   Length:5000       
+##  1st Qu.:166   Class :character  
+##  Median :224   Mode  :character  
+##  Mean   :200                     
+##  3rd Qu.:226                     
+##  Max.   :237                     
+##  NA&#39;s   :9</code></pre>
+<p>Card1, 4 and 6 do not have a missing values. Card 4 and 6 are character and card 1 is numeric.</p>
+</div>
+<div id="replace-na-by-0" class="section level3">
+<h3><span class="header-section-number">4.1.2</span> Replace NA by 0</h3>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb85-1" data-line-number="1">cards_df[<span class="kw">is.na</span>(cards_df)] &lt;-<span class="st"> </span><span class="dv">0</span></a>
+<a class="sourceLine" id="cb85-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb85-3" data-line-number="3"><span class="kw">summary</span>(cards_df)</a></code></pre></div>
+<pre><code>##      card1           card2           card3          card4          
+##  Min.   : 1033   Min.   :  0.0   Min.   :100.0   Length:5000       
+##  1st Qu.: 6459   1st Qu.:194.0   1st Qu.:150.0   Class :character  
+##  Median : 9335   Median :321.0   Median :150.0   Mode  :character  
+##  Mean   : 9737   Mean   :341.3   Mean   :152.3                     
+##  3rd Qu.:13481   3rd Qu.:494.0   3rd Qu.:150.0                     
+##  Max.   :18390   Max.   :600.0   Max.   :191.0                     
+##      card5          card6          
+##  Min.   :  0.0   Length:5000       
+##  1st Qu.:166.0   Class :character  
+##  Median :224.0   Mode  :character  
+##  Mean   :199.7                     
+##  3rd Qu.:226.0                     
+##  Max.   :237.0</code></pre>
+</div>
+</div>
+<div id="encrypt-cards-and-devices-with-sha-hash-functions" class="section level2">
+<h2><span class="header-section-number">4.2</span> Encrypt cards and Devices with sha hash functions</h2>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb87-1" data-line-number="1"><span class="kw">library</span>(openssl)</a>
+<a class="sourceLine" id="cb87-2" data-line-number="2">hash &lt;-<span class="st"> </span><span class="cf">function</span>(df){</a>
+<a class="sourceLine" id="cb87-3" data-line-number="3">   s &lt;-<span class="st"> </span><span class="kw">do.call</span>(paste, <span class="kw">c</span>(df, <span class="dt">sep =</span><span class="st">&quot;&quot;</span>))</a>
+<a class="sourceLine" id="cb87-4" data-line-number="4">   h &lt;-<span class="st"> </span><span class="kw">str_extract</span>(openssl<span class="op">::</span><span class="kw">sha256</span>(s), <span class="st">&quot;^.{15}&quot;</span>)</a>
+<a class="sourceLine" id="cb87-5" data-line-number="5">   <span class="kw">return</span>(h)</a>
+<a class="sourceLine" id="cb87-6" data-line-number="6">}</a></code></pre></div>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb88-1" data-line-number="1">train_<span class="dv">5000</span>[<span class="st">&quot;card_hash&quot;</span>] &lt;-<span class="st"> </span><span class="kw">hash</span>(cards_df)</a>
+<a class="sourceLine" id="cb88-2" data-line-number="2">train_<span class="dv">5000</span>[<span class="st">&quot;device_hash&quot;</span>] &lt;-<span class="st"> </span><span class="kw">hash</span>(ids_df <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb88-3" data-line-number="3"><span class="st">                                    </span><span class="kw">select</span>(<span class="kw">starts_with</span>(<span class="st">&quot;Device&quot;</span>)))</a></code></pre></div>
+</div>
+<div id="groupe-by-hashes-card-and-devices-for-isfraud-transaction" class="section level2">
+<h2><span class="header-section-number">4.3</span> Groupe by hashes card and devices for <code>isFraud</code> transaction</h2>
+<div id="most-device-used-for-frauds-43-transactions" class="section level3">
+<h3><span class="header-section-number">4.3.1</span> Most device used for Frauds (43 transactions)</h3>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb89-1" data-line-number="1">  train_<span class="dv">5000</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(card_hash, device_hash,   isFraud) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-3" data-line-number="3"><span class="st">  </span><span class="kw">group_by</span>( card_hash, device_hash, isFraud) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-4" data-line-number="4"><span class="st">  </span><span class="kw">add_tally</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb89-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(isFraud <span class="op">==</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-6" data-line-number="6"><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-7" data-line-number="7"><span class="st">  </span><span class="kw">count</span>(<span class="st">&quot;device_hash&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb89-8" data-line-number="8"><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(freq))</a></code></pre></div>
+<pre><code>##        device_hash freq
+## 1  b0eec9231ae82c7   43
+## 2  b40c174a01697ba    8
+## 3  1bd5a7c38756eb4    4
+## 4  d524c1a0811da49    4
+## 5  ad0380c681c6f29    3
+## 6  68693d02ab4fbb2    2
+## 7  8645585e38a597c    2
+## 8  d1ed60daba157ae    2
+## 9  a5580d69ef89536    1
+## 10 c3a1e3691b7af20    1
+## 11 d2ad3adab1c84ef    1</code></pre>
+</div>
+<div id="most-cards-used-for-frauds" class="section level3">
+<h3><span class="header-section-number">4.3.2</span> Most cards used for Frauds</h3>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb91-1" data-line-number="1">  train_<span class="dv">5000</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(card_hash, device_hash,   isFraud) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-3" data-line-number="3"><span class="st">  </span><span class="kw">group_by</span>( card_hash, device_hash, isFraud) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-4" data-line-number="4"><span class="st">  </span><span class="kw">add_tally</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb91-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(isFraud <span class="op">==</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-6" data-line-number="6"><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-7" data-line-number="7"><span class="st">  </span><span class="kw">count</span>(<span class="st">&quot;card_hash&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb91-8" data-line-number="8"><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(freq))</a></code></pre></div>
+<pre><code>##          card_hash freq
+## 1  73d559ba355793c    2
+## 2  ba335500048094d    2
+## 3  c8e2247b6b1dd70    2
+## 4  d33188e37e3cbde    2
+## 5  e5218c4a6ba6b0d    2
+## 6  02089e4201c478a    1
+## 7  046089c4e6ece42    1
+## 8  04880baba35b945    1
+## 9  09a90b8bd21f5f0    1
+## 10 0cac5612d2f3305    1
+## 11 12e54d765cf4f88    1
+## 12 179c088a27a4312    1
+## 13 18122e9b2c8a47f    1
+## 14 196fc3b72f0cf45    1
+## 15 270fe39b31404fb    1
+## 16 2911521a2650174    1
+## 17 2963f1130483f86    1
+## 18 2db26f3fccaeb06    1
+## 19 354027dc5af1138    1
+## 20 355b405219be922    1
+## 21 3dcac3668b3812d    1
+## 22 41e70506bdbc666    1
+## 23 448155c2c23e3d2    1
+## 24 48e958b429f3a7c    1
+## 25 4d7e2f6c08a5805    1
+## 26 53be1a94a5a5750    1
+## 27 543212993b885f8    1
+## 28 56210b84c6eeb06    1
+## 29 5ab407639145b99    1
+## 30 697e04bfea34575    1
+## 31 6f473e021469c90    1
+## 32 74a6fdb87df1bf9    1
+## 33 7f6cbfe70bade06    1
+## 34 7f985ed6bafd564    1
+## 35 81e55ba2fb9c7f5    1
+## 36 82da7cb095aad12    1
+## 37 832c88c03f01511    1
+## 38 8c1479ec0bda456    1
+## 39 9a0e5a6e6dd9a21    1
+## 40 9a461887c830051    1
+## 41 9de338acc31c454    1
+## 42 a0b81fd3bc73509    1
+## 43 a2271484fc98d37    1
+## 44 a46fd032bdebece    1
+## 45 a52b14cd71a5329    1
+## 46 a7ef1b6a8a0258e    1
+## 47 b3926b2c86a782f    1
+## 48 b72993e4926ae45    1
+## 49 bbdccfb754b3c0c    1
+## 50 be9b8946d6b309a    1
+## 51 c3a98cc10558651    1
+## 52 c8138c8d90570bf    1
+## 53 ccd711d9a56bbb9    1
+## 54 d2c3243d549807e    1
+## 55 d2ca229767cb03d    1
+## 56 d90a14c4d36ab75    1
+## 57 dbb434897c459e9    1
+## 58 dd6c6e6c88e4d79    1
+## 59 e3bc3cc98381725    1
+## 60 e7cb958bc9fcdbe    1
+## 61 e9c8b964d4806b3    1
+## 62 f137006a8f5170a    1
+## 63 f2c3c2de908a477    1
+## 64 f8360028f0c401d    1
+## 65 f9f318efd5e4511    1
+## 66 fe826cddbef2752    1</code></pre>
+<!-- ```{python} -->
+<!-- import numpy as np # linear algebra -->
+<!-- import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv) -->
+<!-- import os -->
+<!-- trainp = pd.read_csv('dataset/train_transaction.csv') -->
+<!-- train_indp = pd.read_csv('dataset/train_identity.csv') -->
+<!-- trainp = trainp.merge(train_indp, how = 'left', on ='TransactionID' ) -->
+<!-- del train_indp -->
+<!-- trainp.head() -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- trainp_smal = trainp.head(1000) -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- trainp_smal['card1'] = trainp_smal['card1'].fillna(0) -->
+<!-- trainp_smal['card2'] = trainp_smal['card2'].fillna(0) -->
+<!-- trainp_smal['card3'] = trainp_smal['card3'].fillna(0) -->
+<!-- trainp_smal['card5'] = trainp_smal['card5'].fillna(0) -->
+<!-- trainp_smal['card4'] = trainp_smal['card4'].fillna('nan') -->
+<!-- trainp_smal['card6'] = trainp_smal['card6'].fillna('nan') -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- import hashlib -->
+<!-- def card_info_hash(x): -->
+<!--     s = (str(int(x['card1']))+ -->
+<!--          str(int(x['card2']))+ -->
+<!--          str(int(x['card3']))+ -->
+<!--          str(x['card4'])+ -->
+<!--          str(int(x['card5']))+ -->
+<!--          str(x['card6'])) -->
+<!--     h = hashlib.sha256(s.encode('utf-8')).hexdigest()[0:15] -->
+<!--     return h -->
+<!-- def device_hash(x): -->
+<!--     s =  str(x['id_30'])+str(x['id_31'])+str(x['id_32'])+str(x['id_33'])+str( x['DeviceType'])+ str(x['DeviceInfo']) -->
+<!--     h = hashlib.sha256(s.encode('utf-8')).hexdigest()[0:15] -->
+<!--     return h -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- trainp_smal['card_hash'] = trainp_smal.apply(lambda x: card_info_hash(x), axis=1  ) -->
+<!-- trainp_smal['device_hash'] = trainp_smal.apply(lambda x: device_hash(x), axis=1   ) -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- s = trainp_smal.groupby(['card_hash' , 'device_hash'])['isFraud'].agg(['mean', 'count']) -->
+<!-- s[(s['mean']==1) & (s['count']>5) ].head(500) -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- def get_data_by_card_and_device_hash( data, card_hash, device_hash): -->
+<!--     mask = (data['card_hash']==card_hash) &(data['device_hash']==device_hash) -->
+<!--     return data.loc[mask,:].copy() -->
+<!-- very_strange_thing = get_data_by_card_and_device_hash(trainp_smal, 'fcab587fd70f110', 'c7f2e00e03ae096') -->
+<!-- very_strange_thing[[ 'TransactionID', -->
+<!--  'isFraud', -->
+<!--  'TransactionDT', -->
+<!--  'TransactionAmt', -->
+<!--  'ProductCD', -->
+<!--  'device_hash','card_hash', 'V307']] -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- trainp_smal['V307'].head(6) -->
+<!-- ``` -->
+<!-- ```{python} -->
+<!-- trainp_smal['V307'].head(6).diff().shift(-1) -->
+<!-- ``` -->
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

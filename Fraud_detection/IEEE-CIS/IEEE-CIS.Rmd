@@ -1,0 +1,584 @@
+---
+title: "Abnormal transaction detection"
+author: "Karim Mrezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+### Load packages
+```{r , message=FALSE}
+library(rmarkdown)
+library(knitr)
+library(readr)
+library(tidyverse)
+library(data.table)
+library(MLmetrics)
+library(lightgbm)
+library(lubridate)
+library(plyr)
+library(moments)
+library(dplyr)
+library(rattle)
+library(rpart)
+library(tictoc)
+library(inspectdf)
+options(warn=-1)
+options(scipen = 99)
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
+```
+ 
+
+
+### read data
+```{r}
+setwd("/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS")
+local <- TRUE
+if(local == TRUE){
+train_iden <- fread("dataset/train_identity.csv")
+train_trans <- fread("dataset/train_transaction.csv")
+test_iden <- fread("dataset/test_identity.csv")
+test_trans <- fread("dataset/test_transaction.csv")
+} else{
+train_iden <- fread("../input/train_identity.csv")
+train_trans <- fread("../input/train_transaction.csv")
+test_iden <- fread("../input/test_identity.csv")
+test_trans <- fread("../input/test_transaction.csv")
+}
+
+```
+### Glimpse for data quality
+```{r}
+library(DataExplorer)
+#introduce(train_trans)
+plot_intro(train_trans)
+```
+```{r}
+plot_missing(train_trans)
+```
+
+```{r}
+plot_missing(train_iden)
+```
+
+The training data-set seems to have a lot of missing values.
+
+### Join transactions and identities dataframes
+```{r}
+y_train <- train_trans$isFraud 
+train_trans$isFraud <- NULL
+train <- train_trans %>% left_join(train_iden)
+test <- test_trans %>% left_join(test_iden)
+
+rm(train_iden,train_trans,test_iden,test_trans)
+invisible(gc())
+```
+# EDA 
+
+## Explore missing variables
+```{r}
+missing_train <- colSums(is.na(train))[colSums(is.na(train)) > 0] %>% sort(decreasing=TRUE)
+
+
+missing_test <- colSums(is.na(test))[colSums(is.na(test)) > 0] %>% sort(decreasing=TRUE)
+
+head(missing_test)
+```
+### Ratio of missing variables
+```{r}
+# Ratio of missing values
+
+missing_train_pct <- round(missing_train/nrow(train), 2)
+missing_test_pct <- round(missing_test/nrow(test), 2)
+
+# drop variable with more than 0.75 of missing values
+ drop_col_train <- names(missing_train_pct[missing_train_pct > 0.75])
+ drop_col_test <- names(missing_test_pct[missing_test_pct > 0.75])
+
+all(drop_col_test %in% drop_col_train)  # TRUE, it means all drop_col_test are in drop_col_train
+
+setdiff(drop_col_train, drop_col_test)
+
+```
+
+There is more dropped variables in train dataset that test dataset if we use a rate of 0.75 missed values. All theses listed variables do not have more than rates bigger than 0.75 in test dataset.
+
+### Set missing rate to drop the same variables in train and test datasets
+```{r}
+# drop variable with more than 0.75 of missing values
+ drop_col_train <- names(missing_train_pct[missing_train_pct > 0.7])
+ drop_col_test <- names(missing_test_pct[missing_test_pct > 0.7])
+
+all(drop_col_test %in% drop_col_train)  # TRUE, it means all drop_col_test are in drop_col_train
+
+setdiff(drop_col_train, drop_col_test)
+setdiff(drop_col_test, drop_col_train)
+```
+
+When we used a threshold of 0.7, we obtain the same list of variables that we can drop for tarin and test datasets.
+
+## Potential variables to drop
+```{r}
+length(drop_col_train)
+drop_col_train
+```
+We can optimize missing value rate threshold by training and validation scores.
+
+## Merge train and test dataset
+```{r}
+train$key <- "train"
+test$key <- "test"
+full <- bind_rows(train, test)
+rm(train, test)
+invisible(gc())
+```
+
+
+## Inspect the type of variables
+
+```{r}
+library(inspectdf)
+show_plot(inspect_types(full))
+```
+There are 399 numeric variables, 32 categorical variables and 3 integer variables. We can reduce memory if we convert numeric variables to integer.
+
+
+```{r}
+#numeric_vars_stat <- inspect_num(full)
+
+#numeric_vars <- numeric_vars_stat$col_name
+
+#numeric_vars_stat
+
+numeric_vars <- names(full)[sapply(full, class) == "numeric"]
+```
+
+### Convert numeric variables to integer (reduce computing memory)
+```{r}
+library(tictoc)
+# If values are integer type, value==floor(value)
+is_int <- function(x){
+    fnum <- fivenum(x)
+    return(identical(fnum, floor(fnum))) 
+}
+
+tic("check is integer")
+int_idx <- sapply(full[numeric_vars], is_int)
+toc()
+
+
+#identical(fivenum(full$card2), floor(full$card2))
+#is_int(full$card2)
+
+int_vars <- names(int_idx)[int_idx]
+
+paste("Number of numeric variables that we can convert to interger:", length(int_vars))
+```
+
+```{r}
+before <- object.size(full)
+print(paste("Before :", format(before, units = "MB")))
+
+full[int_vars] <- lapply(full[int_vars], as.integer)
+
+after <- object.size(full)
+print(paste("After :", format(after, units = "MB") ))   
+                 
+invisible(gc())
+```
+
+```{r}
+show_plot(inspect_types(full))
+```
+
+### Categorical variables
+
+```{r}
+categorical_vars_stat <- inspect_cat(full)
+categorical_vars <- categorical_vars_stat$col_name
+
+categorical_vars_stat 
+```
+
+### Transform categorical variables to factor
+```{r}
+# transform categorical variables to factor
+full[, categorical_vars] <- lapply(full[, categorical_vars], as.factor)
+```
+
+### Label encoding of factors
+
+```{r}
+full[,categorical_vars] <-  lapply(full[, categorical_vars], as.integer)
+
+table(full$key)
+```
+
+```{r}
+show_plot(inspect_types(full))
+```
+
+
+# Modeling with LighGBM
+
+## remove variables with high rate of missing values (0.7)
+
+```{r}
+
+data.table::fwrite(full,file = "full.csv")
+
+#full <- fread(file = "full.csv")
+
+full_clean <- full %>%
+  select(-drop_col_train)
+
+rm(full)
+invisible(gc())
+dim(full_clean)
+```
+
+
+
+## Preprocessing
+
+```{r}
+X_train <- full_clean[full_clean$key=='2', ] %>% select( -TransactionID)
+
+length(y_train ) == dim(X_train)[1]
+
+X_test <- full_clean[full_clean$key=='1', ] %>% select(-TransactionID)
+
+rm(full_clean)
+invisible(gc())
+```
+
+
+## relace NA by blank
+LightGBM [support](https://github.com/microsoft/LightGBM/blob/master/docs/Advanced-Topics.rst) by default NA's values. We can desable this option by `use_missing=false`.
+
+```{r}
+# Replace NA's by blank
+X_train[is.na(X_train)] <- ""
+colSums(is.na(X_train))[colSums(is.na(X_train)) > 0] %>% sort(decreasing=TRUE)
+
+X_test[is.na(X_test)] <- ""
+
+```
+
+
+
+## Light GBM parameters
+
+```{r}
+lgb_param <- list(
+  boosting_type = 'dart',
+  objective = "binary" ,
+  metric = "AUC",
+  boost_from_average = "false",
+  tree_learner  = "serial",
+  max_depth = -1,
+  learning_rate = 0.01,
+  num_leaves = 197,
+  feature_fraction = 0.3,          
+  bagging_freq = 1,
+  bagging_fraction = 0.7,
+  min_data_in_leaf = 100,
+  bagging_seed = 11,
+  max_bin = 255)
+```
+
+## Split train dataset for validation
+
+
+```{r}
+
+#set.seed(35)
+#train.idx <- sample(nrow(X_train), 0.75*nrow(X_train))
+
+# dtrain <- lgb.Dataset(data=as.matrix(X_train[train.idx,]), label=y_train[train.idx], free_raw_data=FALSE)
+# 
+# dvalid <- lgb.Dataset(data=as.matrix(X_train[-train.idx, ]), label=y_train[-train.idx], free_raw_data=FALSE)
+# 
+# invisible(gc())
+```
+
+## Train the model
+
+
+```{r}
+# tic("LightGBM train validation")
+# tr_lgb <- lgb.train(param = lgb_param,
+#                     data = dtrain,
+#                     valids = list(train=dtrain, valid=dvalid), # train=dtrain, 
+#                     nrounds = 1000,
+#                     early_stopping_rounds = 200,
+#                     eval_freq = 200,
+#                     seed = 42,
+#                     verbose = 1)
+# toc()
+
+
+```
+
+## Best Iteration
+```{r}
+# pred_tr <- predict(tr_lgb, data.matrix(X_train[-train.idx,]))
+# cat("best iteration :" , tr_lgb$best_iter, "best score :", AUC(pred_tr, y_train[-train_idx]) ,"\n" )
+# best_iteration <- tr_lgb$best_iter
+#rm(dtrain, dvalid, tr_lgb)
+#invisible(gc())
+```
+
+
+## Training with full train dataset
+
+```{r}
+#dtrain <- lgb.Dataset(data=as.matrix(X_train), label=y_train, free_raw_data=FALSE)
+#rm(X_trains)
+#invisible(gc())
+```
+
+
+```{r}
+# tic("LightGBM")
+# fit_lgb <- lgb.train(param = lgb_param,
+#                      data = dtrain,
+#                      nrounds = 100 ,  #11901, 11401
+#                      seed = 42,
+#                      eval_freq = 200,
+#                      verbose = 1)
+# toc()
+##LightGBM: 5098.494 sec elapsed
+
+```
+
+## Save model
+-
+
+```{r}
+#lgb.save(fit_lgb, "fit_lgb_dart",num_iteration = NULL)
+```
+
+# Prediction and Submission
+```{r}
+# pred <- predict(fit_lgb, as.matrix(X_test))
+# 
+# setwd("/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS")
+# submission <- fread('dataset/sample_submission.csv')
+# submission$isFraud <- pred 
+# head(submission)
+# 
+# fwrite(submission,"submission_1.csv")
+```
+# Freatures Engineering
+
+### Set python version and anaconda environment
+```{r}
+reticulate::use_python("/Users/Mezhoud/venv/bin/python3", required = TRUE)
+reticulate::py_config()
+library(reticulate)
+ setwd("/Volumes/DATA/learn_by_example/Fraud_detection/IEEE-CIS")
+```
+
+### Reload raw dataset
+
+```{r}
+train_iden <- fread("dataset/train_identity.csv")
+train_trans <- fread("dataset/train_transaction.csv")
+train <- train_trans %>% left_join(train_iden)
+rm(train_iden)
+rm(train_trans)
+invisible(gc())
+```
+
+## Working with sample dataset
+```{r}
+train_5000 <- train[1:5000,]
+```
+
+
+```{r}
+cards_df <-
+  train_5000 %>% dplyr:: select(starts_with("card"))
+head(cards_df)
+```
+
+```{r}
+ids_df <-
+  train_5000 %>% 
+  dplyr:: select(starts_with("id"), starts_with("Device"))
+head(ids_df)
+```
+
+
+```{r}
+glimpse(cards_df)
+glimpse(ids_df)
+```
+
+### Inspect missing value
+```{r}
+inspect_na(cards_df)
+inspect_na(ids_df)
+```
+```{r}
+summary(cards_df)
+```
+Card1, 4 and 6 do not have a missing values. Card 4 and 6 are character and card 1 is numeric.
+
+### Replace NA by 0
+
+```{r}
+cards_df[is.na(cards_df)] <- 0
+
+summary(cards_df)
+```
+
+
+## Encrypt cards and Devices with sha hash functions
+
+```{r}
+library(openssl)
+hash <- function(df){
+   s <- do.call(paste, c(df, sep =""))
+   h <- str_extract(openssl::sha256(s), "^.{15}")
+   return(h)
+}
+
+
+
+```
+
+```{r}
+train_5000["card_hash"] <- hash(cards_df)
+train_5000["device_hash"] <- hash(ids_df %>% 
+                                    select(starts_with("Device")))
+```
+
+## Groupe by hashes card and devices for `isFraud` transaction
+
+###  Most device used for Frauds (43 transactions)
+```{r}
+
+  train_5000 %>%
+  select(card_hash, device_hash,   isFraud) %>%
+  group_by( card_hash, device_hash, isFraud) %>%
+  add_tally() %>% 
+  filter(isFraud == 1) %>%
+  distinct() %>%
+  count("device_hash") %>%
+  arrange(desc(freq))
+
+```
+### Most cards used for Frauds
+```{r}
+
+  train_5000 %>%
+  select(card_hash, device_hash,   isFraud) %>%
+  group_by( card_hash, device_hash, isFraud) %>%
+  add_tally() %>% 
+  filter(isFraud == 1) %>%
+  distinct() %>%
+  count("card_hash") %>%
+  arrange(desc(freq))
+
+```
+
+
+
+
+<!-- ```{python} -->
+<!-- import numpy as np # linear algebra -->
+<!-- import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv) -->
+<!-- import os -->
+
+
+<!-- trainp = pd.read_csv('dataset/train_transaction.csv') -->
+<!-- train_indp = pd.read_csv('dataset/train_identity.csv') -->
+<!-- trainp = trainp.merge(train_indp, how = 'left', on ='TransactionID' ) -->
+<!-- del train_indp -->
+<!-- trainp.head() -->
+<!-- ``` -->
+
+<!-- ```{python} -->
+<!-- trainp_smal = trainp.head(1000) -->
+<!-- ``` -->
+
+
+<!-- ```{python} -->
+<!-- trainp_smal['card1'] = trainp_smal['card1'].fillna(0) -->
+<!-- trainp_smal['card2'] = trainp_smal['card2'].fillna(0) -->
+<!-- trainp_smal['card3'] = trainp_smal['card3'].fillna(0) -->
+<!-- trainp_smal['card5'] = trainp_smal['card5'].fillna(0) -->
+<!-- trainp_smal['card4'] = trainp_smal['card4'].fillna('nan') -->
+<!-- trainp_smal['card6'] = trainp_smal['card6'].fillna('nan') -->
+<!-- ``` -->
+
+<!-- ```{python} -->
+<!-- import hashlib -->
+<!-- def card_info_hash(x): -->
+<!--     s = (str(int(x['card1']))+ -->
+<!--          str(int(x['card2']))+ -->
+<!--          str(int(x['card3']))+ -->
+<!--          str(x['card4'])+ -->
+<!--          str(int(x['card5']))+ -->
+<!--          str(x['card6'])) -->
+<!--     h = hashlib.sha256(s.encode('utf-8')).hexdigest()[0:15] -->
+<!--     return h -->
+
+<!-- def device_hash(x): -->
+<!--     s =  str(x['id_30'])+str(x['id_31'])+str(x['id_32'])+str(x['id_33'])+str( x['DeviceType'])+ str(x['DeviceInfo']) -->
+<!--     h = hashlib.sha256(s.encode('utf-8')).hexdigest()[0:15] -->
+<!--     return h -->
+<!-- ``` -->
+
+
+
+<!-- ```{python} -->
+<!-- trainp_smal['card_hash'] = trainp_smal.apply(lambda x: card_info_hash(x), axis=1  ) -->
+<!-- trainp_smal['device_hash'] = trainp_smal.apply(lambda x: device_hash(x), axis=1   ) -->
+<!-- ``` -->
+
+<!-- ```{python} -->
+<!-- s = trainp_smal.groupby(['card_hash' , 'device_hash'])['isFraud'].agg(['mean', 'count']) -->
+<!-- s[(s['mean']==1) & (s['count']>5) ].head(500) -->
+
+
+<!-- ``` -->
+
+
+
+<!-- ```{python} -->
+<!-- def get_data_by_card_and_device_hash( data, card_hash, device_hash): -->
+<!--     mask = (data['card_hash']==card_hash) &(data['device_hash']==device_hash) -->
+<!--     return data.loc[mask,:].copy() -->
+
+<!-- very_strange_thing = get_data_by_card_and_device_hash(trainp_smal, 'fcab587fd70f110', 'c7f2e00e03ae096') -->
+
+<!-- very_strange_thing[[ 'TransactionID', -->
+<!--  'isFraud', -->
+<!--  'TransactionDT', -->
+<!--  'TransactionAmt', -->
+<!--  'ProductCD', -->
+<!--  'device_hash','card_hash', 'V307']] -->
+<!-- ``` -->
+
+<!-- ```{python} -->
+<!-- trainp_smal['V307'].head(6) -->
+<!-- ``` -->
+
+<!-- ```{python} -->
+<!-- trainp_smal['V307'].head(6).diff().shift(-1) -->
+<!-- ``` -->

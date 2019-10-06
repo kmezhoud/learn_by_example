@@ -79,3 +79,7 @@
 <img src="images/blink.gif" align="left" height="150" width="250" title="Face recognition eyes blink destector">
 </a>
 
+
+<a href="https://kmezhoud.github.io/learn_by_example/Fraud_detection/IEEE-CIS/IEE-CIS.html" target = "_blank">
+<img src="images/IEEE_fraud_detection1.png" align="left" height="150" width="250" title="IEEE-CIS Fraud Detection">
+</a>

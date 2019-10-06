@@ -23,3 +23,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Generate and save dataset to sqlite db, train model using openCV,  detect and reconize faces from webcam](FC_name_Id_generator_image_sqlite_train_model/name_Id_dataset_generator_sqlite_train_model.html)
 - [Face recognition by comapring distance (weigth) between image arrays](FC_weights_image_compare_speak/compare_images_speak.html)
 - [Face recognition eyes blink destector](FC_eye_blink_detection/eye_blink_detector.html)
+- [IEEE-CIS Fraud Detection](Fraud_detection/IEEE-CIS/IEEE-CIS.html)
