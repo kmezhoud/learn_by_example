@@ -47,10 +47,10 @@ options(scipen = 99)
 setwd("/media/kirus/DATA/learn_by_example/Fraud_detection/IEEE-CIS")
 local <- TRUE
 if(local == TRUE){
-train_iden <- fread("dataset/train_identity.csv")
-train_trans <- fread("dataset/train_transaction.csv")
-test_iden <- fread("dataset/test_identity.csv")
-test_trans <- fread("dataset/test_transaction.csv")
+train_iden <- readRDS("dataset/train_identity.rds")
+train_trans <- readRDS("dataset/train_transaction.rds")
+test_iden <- readRDS("dataset/test_identity.rds")
+test_trans <- readRDS("dataset/test_transaction.rds")
 } else{
 train_iden <- fread("../input/train_identity.csv")
 train_trans <- fread("../input/train_transaction.csv")
