@@ -60,7 +60,7 @@ import numpy as np
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 
-# Load a second sample picture and learn how to recognize it.
+# Load a first sample picture and learn how to recognize it.
 karim_image = face_recognition.load_image_file("images/karim.jpg")
 karim_face_encoding = face_recognition.face_encodings(karim_image)[0]
 
@@ -69,12 +69,12 @@ ahmed_bouk_image = face_recognition.load_image_file("images/ahmed_boukadi.jpg")
 ahmed_bouk_face_encoding = face_recognition.face_encodings(ahmed_bouk_image)[0]
 
 
-# Load a second sample picture and learn how to recognize it.
+# Load a third sample picture and learn how to recognize it.
 ahmed_ben_ismail_image = face_recognition.load_image_file("images/Ahmed_ben_ismail.jpg")
 ahmed_ben_ismail_face_encoding = face_recognition.face_encodings(ahmed_ben_ismail_image)[0]
 
 
-# Load a second sample picture and learn how to recognize it.
+# Load a fourth sample picture and learn how to recognize it.
 nafaa_image = face_recognition.load_image_file("images/nafaa.jpg")
 nafaa_face_encoding = face_recognition.face_encodings(nafaa_image)[0]
 
