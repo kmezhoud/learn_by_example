@@ -83,3 +83,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/Fraud_detection/IEEE-CIS/IEEE-CIS.html" target = "_blank">
 <img src="images/IEEE_fraud_detection1.png" align="left" height="150" width="250" title="IEEE-CIS Fraud Detection">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/predict-future-sales/predict_future_sales.html" target = "_blank">
+<img src="images/predict_future_sales.png" align="left" height="150" width="250" title="Predict Future Monthly Sales">
+</a>
