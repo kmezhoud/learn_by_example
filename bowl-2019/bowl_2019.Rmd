@@ -1,0 +1,314 @@
+---
+title: "Predict the number of attempts to get the right answer"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+# Introduction
+- Evaluation: the quadratic weighted kappa 
+- Apps: Bird Measurer, Cart Balancer, Cauldron Filler, Chest Sorter, and Mushroom Sorter.
+- The outcomes in this competition are grouped into 4 groups (labeled accuracy_group in the data): 0, 1, 2, 3.
+
+## Load librairies
+
+```{r include=FALSE, echo=TRUE}
+library(stringr) # string manipulation
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(data.table)
+library(jsonlite)
+library(gridExtra)
+```
+
+# Explore and understand the data
+
+```{r}
+train <- read_rds("datasets/train.rds")
+train_labels <- read_rds("datasets/train_labes.rds")
+test <- read_rds("datasets/test.rds")
+specs <- read_rds("datasets/specs.rds")
+sample_submission <- read_rds("datasets/sample_submission.rds")
+```
+
+## reduce the size by title (game)  and by event_code wich targets only assessement attempts
+
+* The assessment is done only for 5 titles: we filter by these games
+* The attempts are indicated by event_code: 4100 and 4100. We filter by these two event_codes.
+
+```{r}
+get_accuracy <- function(df, game ,code){
+tmp <- df %>%
+  filter(str_detect(title , pattern = game)) %>%
+  filter(event_code ==  code) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                    ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+                           NA))) %>%
+  dplyr::group_by(installation_id, game_session, title) %>%
+  summarise(num_correct = sum(Status %in% 'correct'),
+            num_incorrect = sum(Status %in% 'incorrect')) %>%
+  ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0L,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1L,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2L,
+                  3L
+          )))) 
+  return(tmp)
+}
+
+
+bird_accuracy <- get_accuracy(train ,'Bird Measurer' , '4110')
+cart_accuracy <- get_accuracy(train, "Cart Balancer", '4100')
+caudron_accuracy <- get_accuracy(train, "Cauldron Filler", "4100")
+chest_accuracy <- get_accuracy(train, "Chest Sorter", "4100")
+mushroom_accuracy <- get_accuracy(train, "Mushroom Sorter", "4100")
+
+train_labels_own <- dplyr::bind_rows(bird_accuracy, cart_accuracy, caudron_accuracy, chest_accuracy, mushroom_accuracy) 
+
+head(train_labels_own)
+
+
+paste0("Is dimensions (x,y) of train_labels and trains_labels_own are equal:", dplyr::all_equal(train_labels, train_labels_own))
+```
+
+```{r}
+right_join(train_labels, train_labels_own, by = c("game_session", "installation_id")) %>%
+  mutate(match = ifelse(accuracy_group.x == accuracy_group.y, TRUE, FALSE)) %>% select(match) %>% table
+```
+
+**Good!**
+
+```{r}
+# function to convert datetime and get time fetaures
+convert_timestamp <- function(df){
+  tmp <- df %>%
+  mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+  mutate(Date = as_datetime(format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))) %>%
+  mutate(game_time = format( as.POSIXct(Date)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>%
+  arrange(Date) %>%
+  mutate(timing = ymd_hms(game_time) - ymd_hms(Date)) #%>% 
+  #select(Date, installation_id, game_session, event_id, game_time, event_count, timing,  event_code, title) 
+  
+  return(tmp)
+}
+
+```
+
+
+
+# Compute test_labels
+
+```{r}
+
+
+bird_accuracy_ <- get_accuracy(test ,'Bird Measurer' , '4110')
+cart_accuracy_ <- get_accuracy(test, "Cart Balancer", '4100')
+caudron_accuracy_ <- get_accuracy(test, "Cauldron Filler", "4100")
+chest_accuracy_ <- get_accuracy(test, "Chest Sorter", "4100")
+mushroom_accuracy_ <- get_accuracy(test, "Mushroom Sorter", "4100")
+
+test_labels <- dplyr::bind_rows(bird_accuracy_, cart_accuracy_, caudron_accuracy_, chest_accuracy_, mushroom_accuracy_) 
+
+class(bird_accuracy)
+
+test_labels %>% head(1000) %>% DT::datatable()
+
+```
+
+* There is multiple attempts with assessment for each instllation_id, game_session.
+* We support that the last assessment is the final result.
+* We need to extract le last assessment by the datetime variable
+* We need to merge test_labels with original label to extract datetime.
+
+## Associate test_labels (accuracies) to original test data 
+
+
+```{r}
+# Convert datatime
+test_ <- convert_timestamp(test)
+
+
+## get the last assessment for each game_session
+ sub_test_labels_1 <- test_ %>%
+  left_join(test_labels, by = c("installation_id", "game_session", "title")) %>%
+  filter(!is.na(accuracy_group)) %>% 
+  arrange(desc(timestamp)) %>% 
+  distinct(installation_id, .keep_all = TRUE) 
+ 
+  #group_by(installation_id) %>%  as.data.frame() %>% 
+  #slice(which.max(Date)) %>%
+  #ungroup() %>%
+  #select(installation_id, accuracy_group) %>%
+  #right_join(sample_submission, by = "installation_id") %>%
+  #filter(!is.na(accuracy_group.x))  %>%
+  # select(installation_id, accuracy_group.x) %>%
+   #rename(accuracy_group = accuracy_group.x)
+ 
+ sub_test_labels_1 %>% head(557) %>% DT::datatable()
+ 
+```
+
+# Look for information of missed instllation_id accuracies
+
+## Get accuracy from event data
+
+We will ignore event_code 4100 and 4110 and try to extract if is there string like `correct:true` & `correct:false`.
+
+```{r}
+ missed_install <- test_ %>%
+ anti_join( sub_test_labels_1 , by = c("installation_id")) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                    ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+                           NA)))
+
+ test_last_assessment  <- missed_install  %>% 
+                        filter(type == "Assessment") %>% 
+                       arrange(desc(timestamp)) %>% 
+                       distinct(installation_id, .keep_all = TRUE)
+
+
+sub_test_labels_2 <- test_last_assessment%>%
+  filter(!is.na(Status)) %>%
+    group_by(installation_id, game_session, title) %>%
+  summarise(num_correct = sum(Status %in% 'correct'),
+            num_incorrect = sum(Status %in% 'incorrect'),
+            num_NA = sum(is.na(Status))) %>%
+ # ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect+num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0L,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1L,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2L,
+                  3L
+          )))) %>%
+  left_join(test_, by = c("installation_id", "game_session", "title")) %>%
+  #filter(!is.na(accuracy_group)) %>%
+  group_by(installation_id) %>%
+  slice(which.max(Date)) %>%
+  select(installation_id, accuracy_group) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  filter(!is.na(accuracy_group.x))  %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x)
+
+sub_test_labels_2 %>% head(291) %>% DT::datatable()
+```
+
+
+# Merge  sub_test_labels_1 and sub_test_labels_2
+
+```{r}
+sub_test_labels_848 <- 
+  bind_rows(sub_test_labels_1, sub_test_labels_2) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  filter(!is.na(accuracy_group.x)) %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x)
+
+sub_test_labels_848 %>% head(848) %>% DT::datatable()
+```
+
+## The second rest of installation_id that we did not find any information in event_data
+
+* The remain assessment have a timing 0 secs. 
+* we will try to find installation_id from train data that have the same proprieties, like `game_time`, `title`, `datetime`.
+
+```{r}
+train_useful <- train %>%
+  filter(type == "Assessment") %>%
+  filter(event_code == 4100| event_code == 4110)
+train_useful %>% head
+```
+
+## Here is the proprieties of the second rest of instllation_id without accuracy
+
+There are 163 instllation_id mainly with game_time equal to 0 except `Chest Sorter (Assessment)`.
+
+```{r}
+  bind_rows(sub_test_labels_1, sub_test_labels_2) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  filter(is.na(accuracy_group.x)) %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x) %>%
+  left_join(test, by = c('installation_id')) %>%
+  ungroup() %>%
+  filter(type == "Assessment") #%>%
+  select( "game_time", "title", "world") %>%
+  left_join(train_useful, by= c(  "game_time", "title")) %>%
+    DT::datatable()
+```
+
+* In the next code we focus on   `event_count`, `title`, `world` to find common rows with train_useful data. 
+
+
+```{r}
+bind_rows(sub_test_labels_1, sub_test_labels_2) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  filter(is.na(accuracy_group.x)) %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x) %>%
+  left_join(test, by = c('installation_id')) %>%
+  ungroup() %>%
+  filter(type == "Assessment") %>%
+  select("installation_id", "event_count","game_time", "title", "world") %>%
+  inner_join(train_useful, by= c( "event_count","title", "world")) #%>%  #DT::datatable()
+  
+```
+
+* We find 29 instllation_id from train that have the same `event_count`, `title`, `world`. We will use its accuracies
+
+```{r}
+ sub_test_labels_3 <- bind_rows(sub_test_labels_1, sub_test_labels_2) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  filter(is.na(accuracy_group.x)) %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x) %>%
+  left_join(test, by = c('installation_id')) %>%
+  ungroup() %>%
+  filter(type == "Assessment") %>%
+  select( "installation_id","event_count","game_time", "title", "world") %>%
+  inner_join(train_useful, by= c( "event_count","title", "world")) %>%
+  select(installation_id.x,installation_id.y,  game_session, title) %>% 
+  rename(installation_id = installation_id.y) %>%
+  left_join(train_labels, by = c( "installation_id", "game_session", "title")) %>%
+  group_by(installation_id.x, title) %>%
+  summarise(new_accuracy_group = median(accuracy_group)) %>%
+  rename(accuracy_group = new_accuracy_group,
+         installation_id = installation_id.x) %>%
+  select(installation_id, accuracy_group)
+
+sub_test_labels_3 %>% DT::datatable()
+```
+
+#For the moment we fill NA by 0
+```{r}
+submission <- bind_rows(sub_test_labels_1, sub_test_labels_2, sub_test_labels_3) %>%
+  right_join(sample_submission, by = "installation_id") %>%
+  #filter(is.na(accuracy_group.x)) %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x) %>%
+  mutate(accuracy_group = ifelse(is.na(accuracy_group), 0, accuracy_group))
+
+fwrite(submission, file = "submission.csv")
+
+submission$accuracy_group %>% table() %>% names()
+```
+
+

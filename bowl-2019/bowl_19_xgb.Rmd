@@ -1,0 +1,727 @@
+---
+title: "Predict the number of attempts "
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+
+```{r include=FALSE, echo=TRUE}
+library(stringr) # string manipulation
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(data.table)
+library(gridExtra)
+library(DiagrammeR)
+library(plotly)
+library(xgboost)
+library(tictoc)
+library(lightgbm)
+library(Metrics)
+library(rsample)
+#BINARY_URL <- "https://github.com/catboost/catboost/releases/download/v0.12.1/catboost-R-Darwin-0.12.1.tgz"
+#devtools::install_url(BINARY_URL,args = c("--no-multiarch"))
+#devtools::install_github('catboost/catboost', subdir = 'catboost/R-package')
+#library(catboost)
+library(caret)
+```
+
+```{r}
+train <- read_rds("datasets/train.rds")
+train_labels <- read_rds("datasets/train_labes.rds")
+test <- read_rds("datasets/test.rds")
+#specs <- read_rds("datasets/specs.rds")
+sample_submission <- read_rds("datasets/sample_submission.rds")
+```
+
+## Stack Overview of variables
+
+The description of the data shows some variables are grouped into other variables. for example, instllation_id groups all installed Games in each device. Each game has several game_session. Each game_session has game_time. During Game_time several Events are programmed. Each Event has data collapsed in event_data.
+
+```{r fig.height=3}
+library(DiagrammeR)
+create_graph() %>%
+  add_node(label = "installation_id", type = 'person') %>%
+  add_node(label = "Games") %>%
+  add_node(label = "Title") %>%
+  add_node(label = "Type") %>%
+  add_node(label = "Game_session") %>%
+  add_node(label = "Game_time") %>%
+  add_node(label = "Events") %>%
+  add_node(label = "Events_data") %>%
+  add_node(label = "Event_id") %>%
+  add_node(label = "Event_code") %>%
+  add_node(label = "Event_count") %>%
+  add_node(label = "Assessement") %>%
+  add_edge(from = 1,to = 2) %>%
+  add_edge(from = 2,to = 3) %>%
+    add_edge(from = 3,to = 4) %>%
+  add_edge(from = 4,to = 5) %>%
+    add_edge(from = 5,to = 6) %>%
+  add_edge(from = 6,to = 7) %>%
+    add_edge(from = 7,to = 8) %>%
+  add_edge(from = 8,to = 9) %>%
+    add_edge(from = 9,to = 10) %>%
+    add_edge(from = 9,to = 11) %>%
+  add_edge(from = 9,to = 12) %>%
+render_graph(layout = "kk")
+```
+
+
+# Accuracy group distribution
+We grouped the accuracy using, first only event_code and the second event_code and Assessment type.
+
+```{r, fig.height= 4}
+# p1 <- train %>%
+#   filter(event_code == 4100| event_code == 4110)%>% #select(installation_id) %>% n_distinct()
+#     mutate(event_data = gsub('"', '', event_data)) %>%
+#     mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+#                       ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+#                              NA))) %>%
+#   filter(!is.na(Status)) %>%
+#   group_by(installation_id) %>%
+#   summarise(num_correct = sum(Status %in% 'correct'),
+#             num_incorrect = sum(Status %in% 'incorrect'),
+#             num_NA = sum(is.na(Status))) %>%
+#     ungroup %>%
+#   mutate(accuracy = num_correct/(num_correct+num_incorrect+num_NA)) %>%
+#   mutate(accuracy_group = ifelse(accuracy == 0,  0,
+#           ifelse(accuracy> 0 & accuracy < 0.5,  1,
+#           ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+#                   3
+#           )))) %>%
+#   group_by(accuracy_group) %>%
+#   summarise(Frequencies = n()) %>%
+#   ggplot() +
+#   aes(x = accuracy_group, y = Frequencies) +
+#   geom_col()+
+#   geom_text(aes(label = Frequencies), vjust = -0.5) + 
+#   #theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+#   labs(title = paste0("Accuracy distribution of sub-train data: event_code == 4100|4110"))
+# 
+# 
+#   p2 <- train %>%
+#   filter(type == 'Assessment') %>% 
+#   filter(event_code == 4100| event_code == 4110) %>%
+#     mutate(event_data = gsub('"', '', event_data)) %>%
+#     mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+#                       ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+#                              NA))) %>%
+#   #filter(!is.na(Status)) %>%
+#   group_by(installation_id) %>%
+#   summarise(num_correct = sum(Status %in% 'correct'),
+#             num_incorrect = sum(Status%in% 'incorrect'),
+#             num_NA = sum(is.na(Status))) %>%
+#     ungroup %>%
+#   mutate(accuracy = num_correct/(num_correct+num_incorrect+num_NA)) %>%
+#   mutate(accuracy_group = ifelse(accuracy == 0,  0,
+#           ifelse(accuracy> 0 & accuracy < 0.5,  1,
+#           ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+#                   3
+#           )))) %>%
+#   group_by(accuracy_group) %>%
+#   summarise(Frequencies = n()) %>%
+#   ggplot() +
+#   aes(x = accuracy_group, y = Frequencies) +
+#   geom_col()+
+#   geom_text(aes(label = Frequencies), vjust = -0.5) +
+#   #theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+#   labs(title = paste0("Accuracy distribution of sub-train data: type == Assessment & event_code == 4100|4110"))
+#   
+#   
+# gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+* The plots are not the same, what is the right way to reproduce accuracy group? ([How to reproduce train_labels](https://www.kaggle.com/kmezhoud/how-to-reproduce-train-labels-for-test-labels)).
+
+# Reduce the size of the train data to only installation_id woth accuracy_group
+
+```{r}
+not_req <- setdiff(unique(train$installation_id), unique(train_labels$installation_id))
+
+new_train <- train %>%
+  filter(!installation_id %in% not_req)
+
+
+paste0("Is new_train and train_lables have the same list of installation_id? ", all_equal(unique(new_train$installation_id), unique(train_labels$installation_id)))
+
+```
+
+
+```{r}
+rm(train)
+invisible(gc())
+```
+
+# Convert timestamp
+```{r}
+   new_train <- new_train %>% 
+  mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+  mutate(Date = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")) %>%
+  mutate(Months = lubridate::month(ymd(Date))) %>%
+  mutate(game_time = format( as.POSIXct(timestamp)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>% #
+  #arrange(Date) %>%
+  mutate(timing = ymd_hms(game_time) - ymd_hms(timestamp))
+
+test <-  test %>%
+  mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+  mutate(Date = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")) %>%
+  mutate(Months = lubridate::month(ymd(Date)))%>%
+  mutate(game_time = format( as.POSIXct(timestamp)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>% #
+  #arrange(Date) %>%
+  mutate(timing = ymd_hms(game_time) - ymd_hms(timestamp))
+```
+    
+
+# ggplot EDA
+
+## How many installation_id per title?
+```{r fig.height=4}
+#   
+# p1 <- new_train %>%
+#   group_by(Months, installation_id, title) %>%
+#   summarise(Installation = n()) %>%
+#   ggplot() +
+#   aes(x = Months, y = Installation, fill = title) +
+#   geom_col() +
+#   theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+#   labs(title = "Train data")
+#  
+# 
+# p2 <- test %>%
+#   group_by(Months, installation_id, title) %>%
+#   summarise(Installation = n()) %>%
+#   ggplot() +
+#   aes(x = Months, y = Installation, fill = title) +
+#   geom_col() +
+#   theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+#   labs(title = "Test data")
+# 
+# gridExtra::grid.arrange(p1, p2, nrow = 2)
+
+```
+
+
+```{r}
+# rm(p1, p2)
+# invisible(gc())
+```
+
+
+
+## What id the relationships between Title and World
+```{r, fig.height=8}
+# p <- new_train %>%
+#   mutate(Months = lubridate::month(ymd(Date))) %>%
+#   group_by(Months, title, world) %>%
+#   summarise(frequency = n()) %>%
+#   ggplot()+
+#    facet_grid(world~ .) +
+#   aes(x = Months, y = frequency, color = title) +
+#   geom_point()
+# 
+# ggplotly(p)
+```
+
+```{r, fig.height=8}
+# p <- test %>%
+#   group_by(Months, title, world) %>%
+#   summarise(frequency = n()) %>%
+#   ggplot()+
+#    facet_grid(world~ .) +
+#   aes(x = Months, y = frequency, color = title) +
+#   geom_point()
+# 
+# ggplotly(p)
+```
+
+* Some worlds are specific to a specific title.
+
+
+
+## event_count is the count of event_id?
+
+* event_count is an incremental counter of events within a game session (offset at 1). Extracted from event_data.
+```{r, fig.height= 6, fig.width= 7}
+
+p1 <- new_train %>% 
+group_by(Months, event_id, game_session) %>%
+summarise(Events = sum(event_count)) %>%
+ggplot() +
+  aes(x = Months, y = Events) +
+  geom_col() +
+  labs(title = 'Train Data')
+
+p2 <- test %>% 
+group_by(Months, event_id, game_session) %>%
+summarise(Events = sum(event_count)) %>%
+ggplot() +
+  aes(x = Months, y = Events) +
+  geom_col() +
+  labs(title = 'Test Data')
+
+gridExtra::grid.arrange(p1,p2, nrow = 2)
+
+```
+
+
+
+
+
+# Compute accuracy of test data if exist
+                                                                                                                  
+```{r}
+   get_accuracy <- function(df, game ,code){
+tmp <- df %>%
+  filter(str_detect(title , pattern = game)) %>%
+  filter(event_code == code) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                    ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+                           NA))) %>%
+  group_by(installation_id, game_session, title) %>%
+  summarise(num_correct = sum(Status %in% 'correct'),
+            num_incorrect = sum(Status %in% 'incorrect')) %>%
+  ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0L,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1L,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2L,
+                  3L
+          )))) 
+  return(tmp)
+}
+bird_accuracy_ <- get_accuracy(test ,'Bird Measurer' , '4110')
+cart_accuracy_ <- get_accuracy(test, "Cart Balancer", '4100')
+caudron_accuracy_ <- get_accuracy(test, "Cauldron Filler", "4100")
+chest_accuracy_ <- get_accuracy(test, "Chest Sorter", "4100")
+mushroom_accuracy_ <- get_accuracy(test, "Mushroom Sorter", "4100")
+
+test_labels <- dplyr::bind_rows(bird_accuracy_, cart_accuracy_, caudron_accuracy_, chest_accuracy_, mushroom_accuracy_)
+
+test_labels %>% head()
+```
+## subtest without accuracy
+                                                                                                                  
+```{r}
+                                                                                                                  
+## get the last assessment for each game_session
+ subtest_with_accuracy <- test %>%
+  left_join(test_labels, by = c("installation_id", "game_session", "title")) %>%
+  filter(!is.na(accuracy_group)) %>%
+  #filter(type == "Assessment") %>% 
+  arrange(desc(timestamp)) %>% 
+  distinct(installation_id, .keep_all = TRUE)                                                                                                              
+ 
+ subtest_with_accuracy %>% head()
+```
+ ## subtest without accuracy                                                                                                                 
+```{r}
+## filter only last assessment for each instllation_id in test dataset
+subtest_without_accuracy <- test %>%
+   anti_join( subtest_with_accuracy , by = c("installation_id")) %>%
+   filter(type == "Assessment") %>% 
+   arrange(desc(timestamp)) %>% 
+   distinct(installation_id, .keep_all = TRUE)  
+                                                                                                                  
+subtest_without_accuracy %>% head()
+
+rm(test)
+```
+ 
+                                                                                                                                                                                                                           
+# Feature Engineering
+
+## useful Functions                                                                                                                
+```{r}
+#convert_timestamp <- function(df, game, code){
+#  tmp <- df %>%
+#  filter(str_detect(title , pattern = game)) %>%
+#  filter(event_code %in% code) %>%
+  #mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  #mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+#  mutate(Date = as_datetime(format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))) %>%
+#  mutate(game_time = format( as.POSIXct(Date)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>%
+#  arrange(Date) %>%
+#  mutate(timing = ymd_hms(game_time) - ymd_hms(Date))
+  
+#  return(tmp)
+#}
+
+
+
+featuring <- function(df){
+  tmp <- df
+  #tmp <- convert_timestamp(df, game, code)
+  
+## How long time has the game session to get the correct answer?
+  longtime <- tmp %>%
+    group_by(installation_id, game_session) %>%
+    summarise(longtime = as.numeric(sum(timing))) %>%
+    ungroup()
+    #right_join(tmp, by= c("installation_id", "game_session"))
+  
+## `Mean`, `median` and `sd` and timing
+  timing_feat <- tmp  %>%
+  group_by(installation_id) %>%
+  summarise(mean_timing = as.numeric(mean(timing, na.rm = TRUE)),
+            median_timing = as.numeric(median(timing, na.rm = TRUE)),
+            sd_timing = as.numeric(sd(timing, na.rm = TRUE))) %>%
+    ungroup()
+  
+
+# Event count and attempts featuring
+## How many attempts per instllation_id to get the succes the game_session?
+  attempts <- tmp %>%
+  group_by(installation_id) %>%
+  summarise(attempts =as.numeric(n())) %>%
+    ungroup()
+  #right_join(tmp , by = "installation_id")
+  
+## mean, median, sd of event_count
+  event_count_feat <- tmp %>%
+  group_by(installation_id) %>%
+  summarise(mean_event_count = as.numeric(mean(event_count, na.rm = TRUE)),
+            median_event_count = as.numeric(median(mean_event_count, na.rm = TRUE)),
+            sd_event_count = as.numeric(sd(event_count,na.rm = TRUE))) %>%
+    ungroup()
+  
+  # encode title
+
+  
+  tmp %>%
+    left_join(longtime, by= c("installation_id", "game_session")) %>%
+    left_join(timing_feat, by = "installation_id") %>%
+    left_join(attempts, by = "installation_id") %>%
+    left_join(event_count_feat, by = "installation_id") %>%
+    # Datetime , months, week, day , weekend, features
+    mutate(datetime = as.numeric(log1p(as.numeric(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"))))) %>%
+    mutate(Date = as.Date(Date)) %>%
+    mutate(Months = lubridate::month(ymd(Date))) %>%
+    mutate(Week = lubridate::week(ymd(Date))) %>%
+    mutate(wday = lubridate::wday(ymd(Date))) %>%
+    mutate(weekend = ifelse(wday == 1 | wday == 6, 1, 0)) %>%
+    mutate(title = as.numeric(as.factor(title))) %>%
+    mutate(type = as.numeric(as.factor(type))) %>%
+    mutate(world = as.numeric(as.factor(world))) %>%
+    select( -Date, -game_session, -event_id,  -timing,-game_time, -timestamp, -event_data ) -> tmp
+  
+  
+  
+  return(tmp)
+    
+}
+
+```
+                                                                                                                  
+                                                                                                                 
+# Train & Test Pools
+
+```{r}
+#new_train <- convert_timestamp(new_train, game = paste(c("Bird Measurer","Cart Balancer", "Mushroom Sorter",
+ #                                     "Cauldron Filler", "Chest Sorter"), collapse = "|") ,
+  #                                        code = c("4100", "4110"))                                                                                                                
+
+Train <- train_labels %>%
+  select(installation_id, game_session, title, accuracy_group) %>%
+  right_join(new_train, by = c("installation_id", "game_session", "title")) %>%
+  filter(!is.na(accuracy_group))
+
+Train <- featuring(Train) %>% select(-installation_id)
+#Train <- Train[,colSums(is.na(Train))<nrow(Train)]                                                                                                                  
+#subtest_without_accuracy <- convert_timestamp(subtest_without_accuracy, game = "Assessment", code = "2000")
+Test <- featuring(subtest_without_accuracy)
+
+#Test <- Test[,colSums(is.na(Test))<nrow(Test)]
+
+Test %>% head()
+Train %>% head(1000) %>% head()
+```
+
+## Data processiong
+```{r}
+rm( new_train, train_labels)
+invisible(gc())
+
+tmp <- rsample::initial_split(Train, prop = 3/4)
+
+train <- rsample::training(tmp)
+valid <- rsample::testing(tmp)
+
+#x_train <- sample_frac(Train, 0.75)
+#x_valid <- x_train %>% anti_join(x_train1, by = "installation_id")
+
+y_train <- train$accuracy_group
+x_train <- train %>% select(-accuracy_group)
+y_valid <- valid$accuracy_group
+x_valid <- valid %>% select(-accuracy_group)
+
+
+rm(Train)
+invisible(gc())
+```
+# xgboost modeling
+                                                                                                                  
+## mlogloss Cross validation 
+                                                                                                                  
+```{r}
+dtrain <- xgb.DMatrix(data = as.matrix(x_train), label = y_train)                                                                                                                
+dval <- xgb.DMatrix(data = as.matrix(x_valid), label = y_valid)
+
+
+eval_kappa<-function(preds, dtrain) {
+
+  labels <- y_train #getinfo(dtrain, 'label')
+
+  err <- Metrics::ScoreQuadraticWeightedKappa(rater.a = labels,
+                                              rater.b = as.integer(round(preds)),
+                                              min.rating = 0, 
+                                              max.rating = 3)
+    
+  return(list(name = "kappa", value = err, higher_better = TRUE))
+}
+
+                                                                                                                  
+                                                                                                                  
+xgb_params <- list(objective = "multi:softprob",
+                   eval_metric = "mlogloss",
+                   num_class = 4,
+                   colsample_bytree= 0.5,                 
+                   eta = 0.1,
+                   max_depth= 10,
+                   subsample= 0.5
+                  )
+                
+cv_model <- xgb.cv(params = xgb_params,
+                   data = dtrain,
+                   #eval_metric = list(dtrain, dval),  #eval_kappa,
+                   nrounds = 30,
+                   verbose = TRUE,
+                   maximize = FALSE,
+                   nfold = 5,
+                   early_stopping_round = 10,
+                   print_every_n = 10,
+                   prediction = TRUE)
+                   
+```
+
+                                                                                                                  
+```{r}
+                                                                                                                  #Best Number of iterations
+    num_iterations = cv_model$best_iteration 
+                                                                                                                  
+    xgb_model = xgb.train(params = xgb_params,
+                            data = dtrain,
+                            nrounds= num_iterations,
+                            verbose_eval= FALSE
+                 )                                                                                                             
+``` 
+
+## kappa evaluation
+
+                                                                                                                  
+```{r}
+dvalid = xgb.DMatrix( as.matrix(x_valid))
+
+pred_valid <- predict(xgb_model, dvalid)
+
+Metrics::ScoreQuadraticWeightedKappa(as.integer(round(pred_valid)), 
+                                     y_valid, 
+                                     min.rating = 0, 
+                                     max.rating = 3)
+
+
+
+```
+            
+## Confusion matrix
+```{r}
+#evaluate the default model
+valid_prediction <- matrix(pred_valid, nrow = 4, ncol=length(pred_valid)/4) %>%
+                   t() %>% 
+                  data.frame() %>% 
+                  mutate(label = y_valid , max_prob = max.col(., "last") - 1)
+
+caret::confusionMatrix(factor(valid_prediction$max_prob), factor(valid_prediction$label), mode = "everything")
+```
+                                                                                                                  
+## Variable Importance
+
+```{r}
+# get the feature real names
+names <- colnames(x_train) 
+# compute feature importance matrix
+importance_matrix = xgb.importance(feature_names = names, model = xgb_model)
+
+importance_matrix
+```
+## Plot features importance
+
+```{r}
+# plot
+xgboost::xgb.ggplot.importance(importance_matrix, top_n = 10) +
+ggplot2::theme_minimal()
+```
+
+
+
+# xgboost prediction
+
+```{r}
+
+test_installation_id = Test$installation_id
+x_test <- Test %>% select(-installation_id)
+x_test <- x_test %>% select(colnames(x_train))
+dtest <- xgb.DMatrix(as.matrix(x_test))
+
+rm(Test)
+invisible(gc())
+
+pred_test <- predict(xgb_model, dtest,reshape=TRUE) 
+          
+## reshape dataframe and get which class                                                                                                                  
+pred_test_class <- matrix(pred_test, nrow = 4, ncol = length(pred_test) / 4) %>% 
+               t() %>%
+               data.frame() %>%
+               mutate(max = max.col(., ties.method = "last") - 1, label = test_installation_id) 
+
+
+submission2 <- data.frame(
+  installation_id = as.character(pred_test_class$label),
+  accuracy_group = pred_test_class$max #pred_test_class[, unique(pred_test_class$max)]
+) 
+
+submission3 <- dplyr::bind_rows(submission2, subtest_with_accuracy) %>% select(installation_id, accuracy_group)
+
+submission <-  submission3 %>%                                                                                              
+right_join(sample_submission, by = "installation_id") %>%
+  select(installation_id, accuracy_group.x) %>%
+  rename(accuracy_group = accuracy_group.x)
+                                                                                                                  
+                                                                                                                  
+fwrite(submission, "submission.csv")
+
+submission %>% head()
+```
+
+
+
+<!-- # ligthGBM modeling -->
+
+<!-- ```{r} -->
+<!-- dtrain <- lgb.Dataset(data=as.matrix(x_train), label=y_train) -->
+
+<!-- dvalid <- lgb.Dataset(data=as.matrix(x_valid), label=y_valid) -->
+
+<!-- lgb_param <- list( -->
+<!--   boosting_type = 'gbdt', -->
+<!--   objective = "multiclass" , -->
+<!--   num_class = 4, #length(unique(getinfo(dtrain, "label"))), -->
+<!--   metric = "multi_logloss", -->
+<!--   max_depth = 10, -->
+<!--   learning_rate = 0.5, -->
+<!--   max_bin = 255) -->
+
+<!-- tic("LightGBM train validation") -->
+<!-- tr_lgb <- lgb.train(params = lgb_param, -->
+<!--                    data = dtrain, -->
+<!--                    valids = list(train=dtrain, valid=dvalid), #  -->
+<!--                    nrounds = 50, -->
+<!--                    early_stopping_rounds = 200, -->
+<!--                    eval_freq = 200, -->
+<!--                    seed = 42, -->
+<!--                    verbose = 1) -->
+<!-- toc() -->
+
+<!-- pred_tr <- predict(tr_lgb, data.matrix(x_train)) -->
+<!-- cat("best iteration :" , tr_lgb$best_iter, "best score :", AUC(pred_tr, y_train) ,"\n" ) -->
+<!-- best_iteration <- tr_lgb$best_iter -->
+
+<!-- rm(dtrain, dvalid, tr_lgb) -->
+
+<!-- ``` -->
+<!-- ## Training with full train dataset -->
+<!-- ```{r} -->
+<!-- dtrain <- lgb.Dataset(data=as.matrix(Train[-accuracy_group,]), label=Train$accuracy_group, free_raw_data=FALSE) -->
+<!-- tic("LightGBM") -->
+<!-- fit_lgb <- lgb.train(param = lgb_param, -->
+<!--                      data = dtrain, -->
+<!--                      nrounds = best_iteration, -->
+<!--                      eval_freq = 200, -->
+<!--                      seed = 42, -->
+<!--                      verbose = 1) -->
+<!-- toc() -->
+<!-- ``` -->
+
+<!-- ## lightGBM prediction -->
+
+<!-- ```{r} -->
+<!-- LBM_pred <- predict(fit_lgb, as.matrix(x_test)) -->
+<!-- ``` -->
+
+
+<!-- # Catboost modeling -->
+
+<!-- ```{r} -->
+
+<!-- train_pool <- catboost.load_pool(data = x_train, label = y_train) -->
+<!-- val_pool <- catboost.load_pool(data = x_valid, label = y_valid) -->
+<!-- # build model -->
+<!-- params <- list(iterations=500, -->
+<!--                learning_rate=0.01, -->
+<!--                depth=10, -->
+<!--                loss_function='Kappa', # MultiClassOneVsAll, MultiClass, WKappa -->
+<!--                eval_metric='Kappa',  # WKappa -->
+<!--                random_seed = 55, -->
+<!--                od_type='Iter', -->
+<!--                metric_period = 50, -->
+<!--                od_wait=20, -->
+<!--                use_best_model=TRUE) -->
+
+<!-- catboost_model <- catboost.train(train_pool, val_pool, params) -->
+
+<!-- ``` -->
+
+<!-- ## Visualize feature importance -->
+<!-- ```{r} -->
+
+
+<!-- feat_imp <- as_tibble(catboost.get_feature_importance(catboost_model)) %>%  -->
+<!--     rownames_to_column() %>%  -->
+<!--     select(Feature = rowname, Importance = value ) %>%  -->
+<!--     arrange(desc(Importance)) -->
+
+<!-- ggplot(feat_imp, aes(x = Feature, y = Importance)) + -->
+<!--     geom_bar(stat='identity') + -->
+<!--     theme(axis.text.x= element_text(angle = 45)) + -->
+<!--     scale_x_discrete(limits = feat_imp$Feature) -->
+
+
+<!-- ``` -->
+
+<!-- ## catboost prediction -->
+
+<!-- ```{r} -->
+<!-- y_test <- Test$installation_id -->
+<!-- x_test <- Test[-installation_id,] -->
+
+<!-- test_pool <- catboost.load_pool(x_test) -->
+
+<!-- catboost_prediction <- catboost.predict(catboost_model, test_pool) -->
+<!-- ``` -->
+

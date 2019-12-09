@@ -1,0 +1,800 @@
+---
+title: "testing and EDA"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 7
+    fig_height: 4.5
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+--- 
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+# Introduction
+- Evaluation: the quadratic weighted kappa 
+- Apps: Bird Measurer, Cart Balancer, Cauldron Filler, Chest Sorter, and Mushroom Sorter.
+- The outcomes in this competition are grouped into 4 groups (labeled accuracy_group in the data): 0, 1, 2, 3.
+
+## Load librairies
+
+```{r include=FALSE, echo=TRUE}
+library(stringr) # string manipulation
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(data.table)
+library(jsonlite)
+library(gridExtra)
+```
+
+## Reduce the size of files
+
+```{r}
+## reduce file size from csv to rds format
+csv2rds <- function(path){
+  
+  for(f in seq(list.files(path))){
+    
+    tmp <- fread(list.files(path, full.names = TRUE)[f])
+    fname <-  gsub("\\.csv", "",  list.files(path, pattern="\\.csv$")[f])
+    saveRDS(tmp, paste0(path,"/", fname, ".rds", sep=""))
+    rm(tmp)
+  }
+  
+  
+}
+
+#csv2rds("datasets")
+
+  # train_labels <- fread("datasets/train_labels.csv", stringsAsFactors = FALSE)
+  # train <- fread("datasets/train.csv", stringsAsFactors = TRUE)
+  # test <- fread("datasets/test.csv", stringsAsFactors = FALSE)
+  # sample_submission <- fread("datasets/sample_submission.csv", stringsAsFactors = FALSE)
+  # specs <- fread("datasets/specs.csv", stringsAsFactors = TRUE)
+
+# saveRDS(train_labels, file = "datasets/train_labes.rds")
+#saveRDS(train, file= "datasets/train.rds")
+# saveRDS(test, file = "datasets/test.rds")
+# saveRDS(sample_submission, file = "datasets/sample_submission.rds")
+# saveRDS(specs, file = "datasets/specs.rds")
+# 
+# rm(train, train_labels, test, sample_submission, specs)
+# 
+# gc()
+
+```
+
+## Load files
+
+
+# Where is assessment result per istallation_id?
+
+
+```{r}
+get_accuracy <- function(df, game ,code){
+tmp <- df %>%
+  filter(str_detect(title , pattern = game)) %>%
+  filter(event_code == code) %>%
+  # mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  # mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+  # mutate(Date = as_datetime(format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))) %>%
+  # mutate(game_time = format( as.POSIXct(Date)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>%
+  # arrange(Date) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                    ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+                           NA))) %>%
+ # mutate(timing = ymd_hms(game_time) - ymd_hms(Date)) %>%
+  group_by(installation_id, game_session, title) %>%
+  summarise(num_correct = sum(Status %in% 'correct'),
+            num_incorrect = sum(Status %in% 'incorrect'),
+            num_NA = sum(is.na(Status))) %>%
+  ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect+num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  3
+          )))) 
+  return(tmp)
+}
+
+
+bird_accuracy <- get_accuracy(train ,'Bird Measurer' , '4110')
+cart_accuracy <- get_accuracy(train, "Cart Balancer", '4100')
+caudron_accuracy <- get_accuracy(train, "Cauldron Filler", "4100")
+chest_accuracy <- get_accuracy(train, "Chest Sorter", "4100")
+mushroom_accuracy <- get_accuracy(train, "Mushroom Sorter", "4100")
+
+
+```
+
+## There is non common pairs(`installation_id, game_session`), we can rbind accuracies
+
+```{r}
+train_labels_own <- dplyr::bind_rows(bird_accuracy, cart_accuracy, caudron_accuracy, chest_accuracy, mushroom_accuracy) #%>%
+  #arrange(installation_id) #%>% head(1000) %>% DT::datatable()
+```
+
+* The accuracies were done for each game
+* One we compute accuracies for the 5 games
+
+# 557 accuracies of of instllation_id is in event_data
+```{r}
+dplyr::bind_rows(bird_accuracy, cart_accuracy, caudron_accuracy, chest_accuracy, mushroom_accuracy) %>% #select(installation_id) %>% n_distinct()
+   group_by(installation_id) %>%
+  summarise(num_correct_all = sum(num_correct),
+            num_incorrect_all = sum(num_incorrect),
+            num_NA_all = sum(is.na(num_NA))) %>%
+  ungroup %>%
+  mutate(accuracy_all = num_correct_all/(num_correct_all+num_incorrect_all+num_NA_all)) %>%
+  mutate(accuracy_group_all = ifelse(accuracy_all == 0,  0,
+          ifelse(accuracy_all > 0 & accuracy_all < 0.5,  1,
+          ifelse(accuracy_all >= 0.5 & accuracy_all < 1,  2,
+                  3
+          ))))  
+```
+
+
+# Timing Feature engineer
+
+```{r}
+convert_timestamp <- function(df, game, code){
+  tmp <- df %>%
+  filter(str_detect(title , pattern = game)) %>%
+  filter(event_code %in% code) %>%
+  mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+  mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+  mutate(Date = as_datetime(format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H:%M:%S"))) %>%
+  mutate(game_time = format( as.POSIXct(Date)+game_time/1000, "%Y-%m-%d %H:%M:%S")) %>%
+  arrange(Date) %>%
+    #mutate(event_data = gsub('"', '', event_data)) %>%
+  #mutate(Status =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+   #                 ifelse(str_detect(event_data, pattern = 'correct:false'),  'incorrect',
+    #                       NA))) %>%
+  mutate(timing = ymd_hms(game_time) - ymd_hms(Date)) %>% 
+  select(Date, installation_id, game_session, event_id, game_time, event_count, timing,  event_code, title) #%>% filter(timing > 1000)
+  
+  return(tmp)
+}
+
+  convert_timestamp(train , c("Bird Measurer","Cart Balancer", "Mushroom Sorter") , c("4110", "4100"))
+
+
+```
+
+* The correct attempt is always the last one before to process to the next game_session. Or there is no correct answer.
+
+## How long time has the game session to get the correct answer?
+
+```{r}
+convert_timestamp(train ,'Bird Measurer' , '4110') %>%
+  group_by(installation_id, game_session) %>%
+  summarise(longtime = sum(timing)) %>%
+  right_join(convert_timestamp(train ,'Bird Measurer' , '4110') , by= c("installation_id", "game_session"))
+```
+
+## `Mean`, `median` and `sd` and timing
+```{r}
+convert_timestamp(train ,'Bird Measurer' , '4110') %>%
+  group_by(installation_id) %>%
+  summarise(mean_timing = mean(timing),
+            median_timing = median(timing),
+            sd_timing = sd(timing))
+```
+
+
+# Event count and attempts featuring
+
+## How many attempts per instllation_id to get the succes the game_session?
+we need to group by instllation_id and count `Status` column.
+
+```{r}
+  convert_timestamp(train ,'Bird Measurer' , '4110') %>%
+  group_by(installation_id) %>%
+  summarise(attempts = n()) %>%
+  right_join(convert_timestamp(train ,'Bird Measurer' , '4110') , by = "installation_id")
+```
+
+
+## mean, median, sd of event_count
+```{r}
+convert_timestamp(train ,'Bird Measurer' , '4110') %>%
+  group_by(installation_id) %>%
+  summarise(mean_event_count = mean(event_count),
+            median_event_count = median(mean_event_count),
+            sd_event_count = sd(event_count,na.rm = TRUE))
+```
+
+# Datetime , months, week, day features
+```{r}
+convert_timestamp(train ,'Bird Measurer' , '4110') %>%
+mutate(datetime = as.numeric(as.POSIXct(Date ,format="%Y-%m-%d %H:%M:%S"))) %>%
+mutate(Date = as.Date(Date)) %>%
+mutate(Months = lubridate::month(ymd(Date))) %>%
+mutate(Week = lubridate::week(ymd(Date))) %>%
+mutate(wday = lubridate::wday(ymd(Date)))
+```
+
+
+```{r}
+train %>%
+left_join(train_labels, by = c("game_session", "installation_id", "title")) %>%
+  filter(!is.na(accuracy_group)) %>%
+  group_by(accuracy_group) %>%
+  summarise(Frequencies = n()) %>%
+  ggplot() +
+  aes(x = accuracy_group, y = Frequencies) +
+  geom_col()+
+  #theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(title = paste0("Accuracy distribution of train_labels data"))
+```
+
+```{r}
+train %>%
+left_join(train_labels, by = c("game_session", "installation_id", "title")) %>%
+  filter(accuracy_group == 3) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA))) %>%
+  filter(game_time == 0) %>%
+  select(installation_id, title, type, game_session, game_time,Correct, num_correct, num_incorrect, accuracy, accuracy_group)
+  #filter(!is.na(Correct)) %>%
+  #select(installation_id, title, type, game_session, game_time, event_id, event_count, Correct ,everything()) %>%
+  group_by(installation_id) %>%
+  summarise(Num_correct = sum(Correct %in% 'correct'),
+            Num_incorrect = sum(Correct %in% 'false'),
+            num_NA = sum(is.na(Correct))) %>%
+  ungroup %>%
+  mutate(Accuracy = Num_correct/(Num_correct+Num_incorrect+num_NA)) %>%
+  mutate(Accuracy_group = ifelse(Accuracy == 0,  0,
+          ifelse(Accuracy> 0 & Accuracy < 0.5,  1,
+          ifelse(Accuracy >= 0.5 & Accuracy < 1,  2,
+                  3
+          )))) %>%
+  group_by(Accuracy_group) %>%
+  summarise(Frequencies = n()) %>%
+  ggplot() +
+  aes(x = Accuracy_group, y = Frequencies) +
+  geom_col()+
+  labs(title = paste0("Manual Accuracy distribution train/train_labels data"))
+```
+# Split Date and Time
+
+```{r}
+train <- train %>% 
+mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+mutate(Date = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")) %>%
+mutate(Months = lubridate::month(ymd(Date), label =TRUE)) %>%
+mutate(Time = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%H:%M")) %>%
+mutate(wday = lubridate::wday(ymd(Date), label = TRUE)) %>%
+select(Date, wday, Time, everything(), -timestamp)
+  
+train %>% head
+```
+
+
+```{r, fig.height= 6}
+p1 <- test %>%
+  filter(event_code == 4100| event_code == 4110)%>% 
+    mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA))) %>%
+  #filter(!is.na(Correct)) %>%
+  group_by(installation_id) %>%
+  summarise(num_correct = sum(Correct %in% 'correct'),
+            num_incorrect = sum(Correct %in% 'false'),
+            num_NA = sum(is.na(Correct))) %>%
+    ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect + num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  3
+          )))) %>%
+  group_by(accuracy_group) %>%
+  summarise(Frequencies = n()) %>%
+  ggplot() +
+  aes(x = accuracy_group, y = Frequencies) +
+  geom_col()+
+  #theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(title = paste0("Accuracy distribution of test data: event_code == 4100|4110"))
+
+
+p2 <- test %>%
+  #filter(event_code == 4100| event_code == 4110)%>% 
+    mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA))) %>%
+  filter(!is.na(Correct)) %>%
+  group_by(installation_id) %>%
+  summarise(num_correct = sum(Correct %in% 'correct'),
+            num_incorrect = sum(Correct %in% 'false'),
+            num_NA = sum(is.na(Correct))) %>%
+    ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect+ num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  3
+          )))) %>%
+  group_by(accuracy_group) %>%
+  summarise(Frequencies = n()) %>%
+  ggplot() +
+  aes(x = accuracy_group, y = Frequencies) +
+  geom_col()+
+  #theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(title = paste0("Accuracy distribution of test data from event_data: !is.na(Correct)"))
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+
+```
+
+
+```{r}
+sub_582 <- test %>%
+  filter(event_code == 4100| event_code == 4110)%>% 
+    mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA))) %>%
+  #filter(!is.na(Correct)) %>%
+  group_by(installation_id) %>%
+  summarise(num_correct = sum(Correct %in% 'correct'),
+            num_incorrect = sum(Correct %in% 'false'),
+            num_NA = sum(is.na(Correct))) %>%
+    ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect + num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  3
+          )))) 
+
+
+sub_848 <- test %>%
+  #filter(event_code == 4100| event_code == 4110)%>% #select(installation_id) %>% n_distinct()
+    mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA))) %>%
+  filter(!is.na(Correct)) %>%
+  group_by(installation_id) %>%
+  summarise(num_correct = sum(Correct %in% 'correct'),
+            num_incorrect = sum(Correct %in% 'false'),
+            num_NA = sum(is.na(Correct))) %>%
+  ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect+ num_NA)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  3
+          ))))
+  
+  
+  
+missed_installation_id_for_848 <- sample_submission %>%
+  left_join(sub_848, by= "installation_id") %>%
+  filter(is.na(accuracy_group.y)) %>%
+  select(installation_id)
+ 
+
+missed_installation_id_for_582 <- sample_submission %>%
+  left_join(sub_582, by= "installation_id") %>%
+  filter(is.na(accuracy_group.y)) %>%
+  select(installation_id)
+
+test %>%
+  filter(installation_id %in% missed_installation_id_for_848$installation_id) %>% 
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  #filter(type == "Clip") %>%
+  left_join(specs, by = "event_id") %>%
+  mutate(args = gsub('"', '', args)) %>%
+   mutate(Correct   =  ifelse(str_detect(info, pattern = 'correct'),  'Correct', NA),
+          Incorrect = ifelse(str_detect(info, pattern = 'Incorrect'), 'Incorrect',NA)) %>%
+    select(event_id,Correct, Incorrect, event_data, args, info)
+```
+
+```{r}
+specs %>%
+  #filter(event_id == "3bfd1a65") %>% 
+  mutate(args = gsub('"', '', args)) %>%
+  mutate(info = gsub('"', '', info)) %>%
+  mutate(Correct =  ifelse(str_detect(info, pattern = 'Correct'),  'correct',
+                      ifelse(str_detect(info, pattern = 'false'),  'false',
+                             NA))) 
+```
+```{r}
+train_labels
+```
+
+
+```{r}
+ sample_submission %>%
+left_join(sub_848, by = 'installation_id') %>%
+mutate(accuracy_group.y = ifelse(is.na(accuracy_group.y), 0, accuracy_group.y)) %>%
+select(installation_id, accuracy_group.y) %>%
+rename( accuracy_group = accuracy_group.y)
+```
+
+```{r}
+specs %>%
+  filter(event_id == "27253bdc")
+```
+
+```{r}
+test %>%
+  filter(installation_id == "00abaee7") %>%
+    mutate(event_data = gsub('"', '', event_data)) %>%
+    mutate(Correct =  ifelse(str_detect(event_data, pattern = 'correct:true'),  'correct',
+                      ifelse(str_detect(event_data, pattern = 'correct:false'),  'false',
+                             NA)))
+  
+```
+
+```{r}
+sample_submission %>%
+  filter(installation_id == "00abaee7")
+```
+
+
+```{r}
+train_labels %>%
+  filter(installation_id == "00abaee7")
+```
+
+# How many game_session per installation_id?
+```{r, fig.width= 12}
+train %>% #filter(event_code == 4100) %>% select(installation_id) %>% unique
+  filter(installation_id == "0006a69f") %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Correct = str_detect(event_data, pattern = 'correct:true')) %>%
+  group_by(game_session, Correct ) %>%
+  summarise(`Duration (Min)` = log1p(sum(game_time/60000))) %>%
+  ggplot()+
+  aes(x = game_session, y = `Duration (Min)`, fill = Correct) +
+  geom_col()+
+    theme( axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(title = paste0("installation_id:",  "0001e90f"))
+  
+```
+
+
+```{r}
+glimpse(train_labels)
+```
+
+```{r}
+glimpse(specs)
+```
+
+There are `installation_id` and `event_id` in common columns. We can used them to join the 3 dataframes
+
+```{r}
+str(test)
+```
+
+```{r}
+setequal(colnames(test), colnames(train))
+```
+* test and train have the same variables
+
+```{r}
+glimpse(sample_submission)
+```
+
+# Filter only installation_id in train_labels
+
+```{r}
+
+train_with_assess <- train %>% 
+  filter(installation_id %in% unique(train_labels$installation_id)) 
+
+train_full <- train_with_assess %>%
+             left_join(train_labels, by = c("game_session", "installation_id", "title")) 
+
+train_full %>% 
+  group_by(installation_id, game_session) %>%
+  summarise(s = sum(event_code))
+```
+
+
+
+
+```{r}
+test <- 
+test %>% 
+mutate(timestamp = gsub( "T", " ", timestamp)) %>%
+mutate(timestamp = gsub( "\\..*Z$", "", timestamp)) %>%
+mutate(Date = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")) %>%
+mutate(Months = lubridate::month(ymd(Date), label =TRUE)) %>%
+mutate(Time = format(as.POSIXct(timestamp ,format="%Y-%m-%d %H:%M:%S"),"%H:%M")) %>%
+mutate(wday = lubridate::wday(ymd(Date), label = TRUE)) %>%
+select(Date, wday, Time, everything(), -timestamp)
+
+test %>% head
+```
+
+
+
+
+
+# What is the Goal.
+
+* The goal is to predict the assessement level of each installation_id. The prediction is based of installation_id with history of assessment.
+
+* The file `train_labels.csv` has been provided to show how these groups would be computed on the assessments in the training set. Assessment attempts are captured in `event_code 4100` for all assessments except for `Bird Measurer`, which uses `event_code 4110`. If the attempt was correct, it contains `"correct":true`.
+
+* All installation_id without assessment is not usefull for training.
+
+* `type` column describes if the installation_id are an assessment or other type of App.
+
+```{r}
+train_with_assess %>%
+  select(type) %>%
+  table()
+```
+
+
+```{r}
+# # Select installation_id with Assessment from train data 
+# train_with_assess <- readRDS("datasets/train_with_assess.rds")
+# 
+# train_with_assess <- train %>% 
+#   filter(type == 'Assessment') %>% 
+#   distinct(installation_id) %>% 
+#   left_join(train, by = "installation_id")
+# 
+# saveRDS(train_with_assess, file = "datasets/train_with_assess.rds")
+# #fwrite(train_with_assess, file = "datasets/train_with_assess.csv")
+```
+
+# Where is the assessment result (correct and incorrect)?
+
+
+
+```{r}
+train_with_assess <- 
+train_with_assess %>% filter(event_code == 4100 | event_code == 4110) %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Correct = str_detect(event_data, pattern = 'correct:true')) %>%
+  select(Date,Months, wday, Time, Correct, event_data, everything())
+
+train_with_assess %>% head
+```
+
+
+```{r}
+test <- test %>%
+  #filter(event_code == 4100 | event_code == 4110) %>% 
+  filter(type == 'Assessment') %>%
+  mutate(event_data = gsub('"', '', event_data)) %>%
+  mutate(Correct = str_detect(event_data, pattern = 'correct:true')) %>%
+  select(Date,Months, wday, Time, Correct,event_data, everything()) 
+
+test %>% head 
+```
+
+
+
+
+# Accuracy group range 
+```{r}
+train_labels %>%
+  ggplot()+
+  aes(x = accuracy_group, y = accuracy)+
+  geom_point()
+```
+
+* Accuracy_group equal to 0 if accuracy eaqual to 0
+* Acuuracy_group equal to 1 if 0 < accuracy < 0.5
+* Accuracy_group equal to 2 if 0.5 =< accuracy < 1
+* Accuracy_goup equal to 3 if accuracy == 1
+
+
+# Assessment of tain and Test 
+this code try to build the same datafarme like train_labels for Train and Test data
+
+```{r}
+train_with_assess %>% 
+  group_by(game_session, installation_id, title ) %>%
+summarise(num_correct = sum(Correct == TRUE),
+          num_incorrect = sum(Correct == FALSE)) %>%
+  ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  1
+          )))) -> train_labels_own
+
+train_labels_own %>% head
+
+```
+
+```{r}
+train_labels %>%
+  group_by(title)%>%
+  summarise(accuracy_group = median(accuracy_group, na.rm = T)) 
+```
+
+
+```{r}
+test %>% 
+  group_by(game_session, installation_id, title ) %>%
+summarise(num_correct = sum(Correct == TRUE),
+          num_incorrect = sum(Correct == FALSE)) %>%
+    ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  1
+          )))) -> test_labels
+
+head(test_labels)
+```
+
+# get accuracy group by installation_id
+```{r}
+test %>% 
+  group_by( installation_id) %>%
+summarise(num_correct = sum(Correct == TRUE),
+          num_incorrect = sum(Correct == FALSE)) %>%
+    ungroup %>%
+  mutate(accuracy = num_correct/(num_correct+num_incorrect)) %>%
+  mutate(accuracy_group = ifelse(accuracy == 0,  0,
+          ifelse(accuracy> 0 & accuracy < 0.5,  1,
+          ifelse(accuracy >= 0.5 & accuracy < 1,  2,
+                  1
+          )))) -> submission_test
+
+
+submission_test
+```
+
+
+**Prepare the test by selecting last row of each installation_id ,game_session as we have only 1000 rows in sample_submission.**
+```{r}
+
+test %>%
+  group_by(Date, installation_id, game_session) %>%
+  summarise(n_session = n()) %>%
+  arrange(installation_id)
+```
+
+
+```{r}
+
+
+test %>%
+  filter(str_detect(event_data , pattern = "event_code:4100|event_code:4110")) %>% select(installation_id) %>% n_distinct() 
+
+test %>%
+  filter(event_code == 4100 | event_code == 4110)  %>% select(installation_id) %>% n_distinct() 
+
+test %>%
+  filter(type == 'Assessment')  %>% select(installation_id) %>% n_distinct()
+```
+
+
+```{r}
+sample_submission %>% 
+  left_join(submission_test, by = "installation_id") 
+```
+
+
+## Explore installation_id
+in the descrition we not:
+
+* Each installation corresponds to one child, but in some case there is shared device. It means that 2 children can use the same installation_id.
+
+* The training set contains many installation_ids which never took assessments, whereas every installation_id in the test set made an attempt on at least one assessment.
+
+
+```{r}
+paste("train_with_assess data has: ", train_with_assess$installation_id %>% n_distinct(), "distinct installation_id")
+paste("train_labels data has: ", train_labels$installation_id %>% n_distinct(), "distinct installation_id")
+paste("test data has: ", test$installation_id %>% n_distinct(), " distinct installation_id")
+paste("sample_submission file has : ", sample_submission$installation_id %>% n_distinct(), " distinct installation_id")
+```
+
+## Check if test and sample_submission have the same installation_id
+
+```{r}
+paste0("Matched installation_id - train_with_assess versus train_labels: ",length(which(unique(train$installation_id) %in% unique(train_labels$installation_id))))
+paste0("Matched installation_id - test versus sample_submission: ",length(which(unique(test$installation_id) %in% unique(sample_submission$installation_id))))
+paste0("Matched installation_id - test versus train: ",length(which(unique(test$installation_id) %in% unique(train_with_assess$installation_id))))
+
+```
+
+* train and test do not have common installation_id.
+
+* all train_labels installation_id are in train
+
+## Look for which column has common variables
+
+```{r}
+paste0("Common event_id between test & train_with_assess: ",length(which(unique(test$event_id) %in% unique(train_with_assess$event_id))))
+paste0("Common game_session between test & train_with_assess: ",length(which(unique(test$game_session) %in% unique(train_with_assess$game_session))))
+paste0("Common game_time between test & train_with_assess: ",length(which(unique(test$game_time) %in% unique(train_with_assess$game_time))))
+paste0("Commen timestamp between test & train_with_assess: ",length(which(unique(test$timestamp) %in% unique(train_with_assess$timestamp))))
+
+```
+
+# Explore Events
+
+```{r}
+paste("train_with_assess data has: ", train_with_assess$event_id %>% n_distinct(), "distinct event_id")
+#paste("train_labels data has: ", train_labels$event_id %>% n_distinct(), "distinct event_id")
+paste("test data has: ", test$event_id %>% n_distinct(), " distinct event_id")
+#paste("sample_submission file has : ", sample_submission$event_id %>% n_distinct(), " distinct event_id")
+
+```
+
+
+```{r}
+train_with_assess %>%
+  select(timestamp, contains("event")) %>% head
+```
+
+```{r}
+test %>%
+  select(timestamp, contains("event")) %>% head
+```
+
+```{r}
+specs %>% head
+```
+
+## Extract information from JSON columns
+
+the colmuns `event_data` in Train and Test and the column `args` in specs dataframe contain informations in JSON format.
+
+```{r}
+#train_event_data <- 
+train_with_assess$event_data %>% head(10) %>%
+lapply(function(x) fromJSON(gsub('""', "\"", x))) %>%
+rbindlist( fill =TRUE)
+```
+Some case have unregular JSON format which make error message and stop transfomation. 
+
+```{r}
+#test_event_data <- 
+test$event_data %>% head(10) %>%
+lapply(function(x) fromJSON(gsub('""', "\"", x))) %>%
+rbindlist( fill =TRUE)
+
+```
+
+```{r}
+## Extract value of specific argument
+ 
+```
+
+
+
+
+```{r}
+specs$args[3] %>%
+lapply(function(x) fromJSON(gsub('""', "\"", x))) %>%
+rbindlist( fill =TRUE)
+
+ specs$args %>%
+  lapply(function(x) fromJSON(gsub('""', "\"", x))) %>%
+  rbindlist(fill =TRUE) %>% head(10)
+```
+
+
