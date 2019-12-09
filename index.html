@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -86,7 +87,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -247,18 +247,6 @@ $(document).ready(function () {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -337,6 +325,8 @@ $(document).ready(function () {
 <li><a href="FC_weights_image_compare_speak/compare_images_speak.html">Face recognition by comapring distance (weigth) between image arrays</a></li>
 <li><a href="FC_eye_blink_detection/eye_blink_detector.html">Face recognition eyes blink destector</a></li>
 <li><a href="Fraud_detection/IEEE-CIS/IEEE-CIS.html">IEEE-CIS Fraud Detection</a></li>
+<li><p><a href="predict-future-sales/predict_future_sales.html">Predict Future Monthly Sales</a></p></li>
+<li><p><a href="bowl-2019/bowl_19_xgb.html">Predict the number of attempts by xgboost</a></p></li>
 </ul>
 
 
@@ -356,6 +346,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

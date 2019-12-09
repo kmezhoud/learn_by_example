@@ -88,3 +88,7 @@
 <a href="https://kmezhoud.github.io/learn_by_example/predict-future-sales/predict_future_sales.html" target = "_blank">
 <img src="images/predict_future_sales.png" align="left" height="150" width="250" title="Predict Future Monthly Sales">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/bowl-2019/bowl_19_xgb.html" target = "_blank">
+<img src="images/bowl2019.png" align="left" height="150" width="250" title="Predict the number of attempts by xgboost">
+</a>
