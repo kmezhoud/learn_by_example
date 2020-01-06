@@ -1,0 +1,371 @@
+---
+title: "Caret:Dealing with models in machine learning"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 14
+    fig_height: 7
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+---
+
+```{r}
+library(tidyverse)
+library(caret)
+library(data.table)
+library(ggplot2)
+library(scales)
+```
+
+# Install mxnet
+# install.packages("https://s3.ca-central-1.amazonaws.com/jeremiedb/share/mxnet/CPU/3.6/mxnet.zip", repos = NULL, #   type = "binary")
+
+
+```{r}
+train <- fread("../cern_particle/train.csv")
+test <- fread("../cern_particle/test.csv")
+
+train <- train %>%
+mutate(target = ifelse(target == 11, "electron",
+                  ifelse(target == 13, "muon",
+                  ifelse(target == 211, "pion",
+                  ifelse(target == 321, "kaon", "proton")))))
+
+train %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+```
+
+
+
+# Subsetting from unbalanced distribution
+
+```{r fig.height=4}
+library(caret)
+index <- createDataPartition(train$target, p = 0.7, list = FALSE)
+train_data <- train[index, ]
+valid_data  <- train[-index, ]
+
+p1 <- train_data %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+p2 <- valid_data %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+
+
+```{r, fig.height=4}
+train_test_split <- rsample::initial_split(train, prop = 0.7)
+train_7 <- rsample::training(train_test_split)
+test_3  <- rsample::testing(train_test_split)
+
+p1 <- train_7 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+p2 <- test_3 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+
+
+```{r, fig.height=4}
+library(caTools)
+train <- train %>%
+ mutate(target = ifelse(target == 0, "electron",
+                  ifelse(target == 1, "muon",
+                  ifelse(target == 2, "pion",
+                  ifelse(target == 3, "kaon", "proton")))))
+ 
+split <- caTools::sample.split(train$target, SplitRatio = 0.9)
+train_set <- subset(train, split == TRUE)
+test_set <- subset(train, split == FALSE)
+
+# Featire scaling the fields
+train_set[-1] <- scale(train_set[-1])
+test_set[-1] <- scale(test_set[-1])
+
+
+p1 <- train_set %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+p2 <- test_set %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+gridExtra::grid.arrange(p1, p2, nrow = 2)
+```
+
+## Over under sampling by ROSE
+It is mpossible if there TWO classes not more.
+
+```{r}
+library(ROSE)
+
+#train_under  <- ovun.sample(target ~ ., train, method = "under")
+#train_over <- ovun.sample(target ~ ., train, method = "over")
+#train_both <- ovun.sample(target ~., train, method = "both")
+
+
+
+```
+
+
+## over under sampling by UBL
+
+Problem with memory!
+
+```{r}
+#library(UBL)
+#train_ubl <- UBL::AdasynClassif(target~., test_set, beta = 1)
+
+#sum(is.na(train))
+
+## Does not work
+  
+```
+
+
+## over under sampling by DMwR
+
+```{r fig.height=6, fig.width=7 }
+train$target <- as.factor(train$target)
+
+train_dmwr_1 <- DMwR::SMOTE(target~., train) #, perc.over = 600,perc.under=100
+
+train_dmwr_2 <- DMwR::SMOTE(target~., train, perc.over = c(500),perc.under=100)
+
+p1 <- train %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)  
+
+p2 <- train_dmwr_1 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+p3 <- train_dmwr_2 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 3)
+```
+
+
+## Tunning over under sampling by DMwR
+
+```{r}
+train_muon <- train %>% 
+  mutate(target = as.character(target)) %>%
+  filter(target != "muon") %>% 
+  mutate(target = as.factor(target))
+
+train_pion <-  train %>% 
+  mutate(target = as.character(target)) %>%
+  filter(target != "pion") %>% 
+  mutate(target = as.factor(target))
+
+train_dmwr_muon <- DMwR::SMOTE(target~., train_muon)
+
+train_dmwr_pion <- DMwR::SMOTE(target~., train_pion, perc.over = 5000 ,perc.under = 5000)
+
+train_dmwr_pion_2 <- DMwR::SMOTE(target~., train_dmwr_pion)
+
+
+
+train_dmwr_pion_2 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+```
+
+
+
+## Manual under-sampling
+use size number of smaller class.
+
+```{r}
+classes <- unique(train$target)
+
+fin <- NULL
+min_samp <- table(train$target)[which.min(table(train$target))]
+
+for (i in classes) {
+
+sub <- subset(train, target == i)
+
+sam <- sub[sample(nrow(sub), min_samp), ]
+
+fin <- rbind(fin, sam)
+}
+
+fin %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+table(fin$target)
+```
+
+## Manual sampling using dplyr 
+
+
+```{r}
+table(train$target)
+
+train %>%
+  group_by(target) %>%
+  sample_n(100000, replace = TRUE) %>%
+  ungroup %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+```
+
+
+# Evaluate Some Algorithms
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="cv", number=10)
+metric <- "Accuracy"
+```
+
+Let’s evaluate 5 different algorithms:
+
+* Linear Discriminant Analysis (LDA)
+* Classification and Regression Trees (CART).
+* k-Nearest Neighbors (kNN).
+* Support Vector Machines (SVM) with a linear kernel.
+* Random Forest (RF)
+
+```{r}
+train_manual <- train %>%
+  group_by(target) %>%
+  sample_n(1000, replace = TRUE) %>%
+  ungroup
+
+set.seed(7)
+#fit.lda <- train(target~., data=train_manual, method="lda", metric=metric, trControl=control)
+# b) nonlinear algorithms
+# CART
+set.seed(7)
+fit.cart <- train(target~., data=train_manual, method="rpart", metric=metric, trControl=control)
+# kNN
+set.seed(7)
+fit.knn <- train(target~., data=train_manual, method="knn", metric=metric, trControl=control)
+# c) advanced algorithms
+# SVM
+set.seed(7)
+#fit.svm <- train(target~., data=train_manual, method="svmRadial", metric=metric, trControl=control)
+# Random Forest
+set.seed(7)
+fit.rf <- train(target~., data=train_manual, method="rf", metric=metric, trControl=control)
+
+set.seed(7)
+fit.gbm <- train(target~., data=train_manual, method="gbm", metric=metric, trControl=control)
+
+set.seed(7)
+fit.xgbTree <- train(target~., data=train_manual, method="xgbTree", metric=metric, trControl=control)
+```
+
+
+```{r}
+# summarize accuracy of models
+results <- resamples(list( cart=fit.cart, knn=fit.knn, svm=fit.svm, rf=fit.rf, gbm = fit.gbm, xgbTree = fit.xgbTree)) #lda=fit.lda,
+summary(results)
+```
+
+
+```{r}
+# compare accuracy of models
+dotplot(results)
+```
+
