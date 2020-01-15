@@ -25,5 +25,5 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Face recognition eyes blink destector](FC_eye_blink_detection/eye_blink_detector.html)
 - [IEEE-CIS Fraud Detection](Fraud_detection/IEEE-CIS/IEEE-CIS.html)
 - [Predict Future Monthly Sales](predict-future-sales/predict_future_sales.html)
-
 - [Predict the number of attempts by xgboost](bowl-2019/bowl_19_xgb.html)
+- [Dealing with unbalanced multiclasses with caret](unbalanced_multi_class/unbalanced_multiclass.html)

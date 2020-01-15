@@ -1,0 +1,514 @@
+---
+title: "Dealing with unbalanced data in machine learning"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 14
+    fig_height: 8
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+
+---
+
+```{r}
+library(tidyverse)
+library(caret)
+library(data.table)
+library(randomForest)
+```
+
+[shiring github](https://shiring.github.io/machine_learning/2017/04/02/unbalanced)
+
+```{r}
+bc_data <- read.table("breast-cancer-wisconsin.data.txt", 
+                      header = FALSE, 
+                      sep = ",")
+
+
+colnames(bc_data) <- c("sample_code_number", 
+                       "clump_thickness", 
+                       "uniformity_of_cell_size", 
+                       "uniformity_of_cell_shape", 
+                       "marginal_adhesion", 
+                       "single_epithelial_cell_size", 
+                       "bare_nuclei", 
+                       "bland_chromatin", 
+                       "normal_nucleoli", 
+                       "mitosis", 
+                       "classes")
+
+bc_data$classes <- ifelse(bc_data$classes == "2", "benign",
+                          ifelse(bc_data$classes == "4", "malignant", NA))
+
+
+bc_data$classes <- as.factor(bc_data$classes)
+bc_data[bc_data == "?"] <- NA
+
+# how many benign and malignant cases are there?
+summary(bc_data$classes)
+```
+
+## Missing values are imputed with the mice package.
+
+```{r}
+# impute missing data
+library(mice)
+
+bc_data[,2:10] <- apply(bc_data[, 2:10], 2, function(x) as.numeric(as.character(x)))
+dataset_impute <- mice(bc_data[, 2:10],  print = FALSE)
+bc_data <- cbind(bc_data[, 11, drop = FALSE], mice::complete(dataset_impute, 1))
+
+bc_data$classes <- as.factor(bc_data$classes)
+
+nrow(bc_data[is.na(bc_data), ])
+```
+
+
+# Modeling the original unbalanced data
+
+```{r}
+set.seed(42)
+index <- caret::createDataPartition(bc_data$classes, p = 0.7, list = FALSE)
+
+train_data <- bc_data[index, ]
+test_data  <- bc_data[-index, ]
+
+set.seed(42)
+model_rf <- caret::train(classes ~ .,
+                         data = train_data,
+                         method = "rf",
+                         preProcess = c("scale", "center"),
+                         trControl = trainControl(method = "repeatedcv", 
+                                                  number = 10, 
+                                                  repeats = 10, 
+                                                  verboseIter = FALSE)
+                         )
+
+
+
+
+final <- data.frame(actual = test_data$classes,
+                    predict(model_rf, newdata = test_data, type = "prob"))
+
+final$predict <- as.factor(ifelse(final$benign > 0.5, "benign", "malignant"))
+
+cm_original <- confusionMatrix(final$predict, final$actual)
+
+cm_original
+```
+
+# Under-sampling
+
+
+```{r}
+
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "down")
+
+set.seed(42)
+model_rf_under <- caret::train(classes ~ .,
+                         data = train_data,
+                         method = "rf",
+                         preProcess = c("scale", "center"),
+                         trControl = ctrl)
+
+final_under <- data.frame(actual = test_data$classes,
+                    predict(model_rf_under, newdata = test_data, type = "prob"))
+
+final_under$predict <- as.factor(ifelse(final_under$benign > 0.5, "benign", "malignant"))
+
+cm_under <- confusionMatrix(final_under$predict, final_under$actual)
+
+cm_under
+```
+
+
+# Oversampling
+
+```{r}
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "up")
+
+set.seed(42)
+model_rf_over <- caret::train(classes ~ .,
+                         data = train_data,
+                         method = "rf",
+                         preProcess = c("scale", "center"),
+                         trControl = ctrl)
+
+final_over <- data.frame(actual = test_data$classes,
+                          predict(model_rf_over, newdata = test_data, type = "prob"))
+
+final_over$predict <- as.factor(ifelse(final_over$benign > 0.5, "benign", "malignant"))
+
+cm_over <- confusionMatrix(final_over$predict, final_over$actual)
+
+cm_over
+
+```
+
+
+# ROSE
+Besides over- and under-sampling, there are hybrid methods that combine under-sampling with the generation of additional data. Two of the most popular are ROSE and SMOTE.
+
+```{r}
+library(ROSE)
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "rose")
+
+set.seed(42)
+model_rf_rose <- caret::train(classes ~ .,
+                              data = train_data,
+                              method = "rf",
+                              preProcess = c("scale", "center"),
+                              trControl = ctrl)
+
+final_rose <- data.frame(actual = test_data$classes,
+                         predict(model_rf_rose, newdata = test_data, type = "prob"))
+
+final_rose$predict <- as.factor(ifelse(final_rose$benign > 0.5, "benign", "malignant"))
+
+cm_rose <- confusionMatrix(final_rose$predict, final_rose$actual)
+
+cm_rose
+```
+
+
+# SMOTE
+
+```{r}
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, 
+                     repeats = 10, 
+                     verboseIter = FALSE,
+                     sampling = "smote")
+
+set.seed(42)
+model_rf_smote <- caret::train(classes ~ .,
+                              data = train_data,
+                              method = "rf",
+                              preProcess = c("scale", "center"),
+                              trControl = ctrl)
+
+final_smote <- data.frame(actual = test_data$classes,
+                         predict(model_rf_smote, newdata = test_data, type = "prob"))
+
+final_smote$predict <- as.factor(ifelse(final_smote$benign > 0.5, "benign", "malignant"))
+
+cm_smote <- confusionMatrix(final_smote$predict, final_smote$actual)
+```
+
+
+
+
+## over under sampling by UBL
+
+Problem with memory!
+
+```{r}
+#library(UBL)
+#train_ubl <- UBL::AdasynClassif(target~., test_set, beta = 1)
+
+#sum(is.na(train))
+
+## Does not work
+  
+```
+
+
+## over under sampling by DMwR
+
+```{r fig.height=6, fig.width=7 }
+train <- fread("../cern_particle/train.csv")
+
+train$target <- as.factor(train$targetarget)
+
+train_dmwr_1 <- DMwR::SMOTE(target~., train) #, perc.over = 600,perc.under=100
+
+train_dmwr_2 <- DMwR::SMOTE(target~., train, perc.over = c(500),perc.under=100)
+
+p1 <- train %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)  
+
+p2 <- train_dmwr_1 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+p3 <- train_dmwr_2 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 3)
+```
+
+
+## Tunning over under sampling by DMwR
+
+```{r}
+train_muon <- train %>% 
+  mutate(target = as.character(target)) %>%
+  filter(target != "muon") %>% 
+  mutate(target = as.factor(target))
+
+train_pion <-  train %>% 
+  mutate(target = as.character(target)) %>%
+  filter(target != "pion") %>% 
+  mutate(target = as.factor(target))
+
+train_dmwr_muon <- DMwR::SMOTE(target~., train_muon)
+
+train_dmwr_pion <- DMwR::SMOTE(target~., train_pion, perc.over = 5000 ,perc.under = 5000)
+
+train_dmwr_pion_2 <- DMwR::SMOTE(target~., train_dmwr_pion)
+
+
+
+train_dmwr_pion_2 %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+```
+
+
+
+## Manual under-sampling
+use size number of smaller class.
+
+```{r}
+classes <- unique(train$target)
+
+fin <- NULL
+min_samp <- table(train$target)[which.min(table(train$target))]
+
+for (i in classes) {
+
+sub <- subset(train, target == i)
+
+sam <- sub[sample(nrow(sub), min_samp), ]
+
+fin <- rbind(fin, sam)
+}
+
+fin %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+
+table(fin$target)
+```
+
+## Manual sampling using dplyr 
+
+
+```{r}
+table(train$target)
+
+train %>%
+  group_by(target) %>%
+  sample_n(100000, replace = TRUE) %>%
+  ungroup %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = +1)
+```
+
+# Predictions
+
+Now let’s compare the predictions of all these models:
+
+```{r}
+models <- list(original = model_rf,
+                       under = model_rf_under,
+                       over = model_rf_over,
+                       smote = model_rf_smote,
+                       rose = model_rf_rose)
+
+resampling <- resamples(models)
+bwplot(resampling)
+
+```
+
+
+# Models comparaison
+
+```{r}
+library(dplyr)
+comparison <- data.frame(model = names(models),
+                         Sensitivity = rep(NA, length(models)),
+                         Specificity = rep(NA, length(models)),
+                         Precision = rep(NA, length(models)),
+                         Recall = rep(NA, length(models)),
+                         F1 = rep(NA, length(models)))
+
+for (name in names(models)) {
+  label <- get(paste0("cm_", name))
+  
+  comparison[comparison$model == name, ] <- comparison %>%
+    filter(model == name) %>%
+    mutate(Sensitivity = label$byClass[["Sensitivity"]],
+           Specificity = label$byClass[["Specificity"]],
+           Precision = label$byClass[["Precision"]],
+           Recall = label$byClass[["Recall"]],
+           F1 = label$byClass[["F1"]])
+}
+
+library(tidyr)
+comparison %>%
+  gather(x, y, Sensitivity:F1) %>%
+  ggplot(aes(x = x, y = y, color = model)) +
+    geom_jitter(width = 0.2, alpha = 0.5, size = 3)
+```
+
+# Function to pull all code and return plot to compare models
+
+```{r}
+
+
+get_cms <- function(ctrl_method = "repeatedcv",
+                                 ctrl_sampling,
+                                 target,
+                                 data,
+                                 train_method = "rf",
+                                 preProcess = c("scale", "center"),
+                                 test
+                           ){
+  
+  ctrl <- trainControl(method = ctrl_method, 
+                       number = 10, 
+                       repeats = 10, 
+                       verboseIter = FALSE,
+                       sampling = ctrl_sampling)
+  
+  model <- caret::train(as.formula(paste0(target,"~ .", sep = " ")),
+                        data = data,
+                        method = train_method,
+                        preProcess = preProcess,
+                        trControl = ctrl)
+  
+final <- data.frame(actual = test[[target]],
+                         predict(model, newdata = test, type = "prob"))
+
+final$predict <- as.factor(ifelse(final$benign > 0.5, "benign", "malignant"))
+
+cm <- confusionMatrix(final$predict, final$actual)
+  
+  return(cm)
+  
+}
+
+
+sampling_list <- c( "down", "up") # "none", , "rose", "smote"
+
+cms <- lapply(sampling_list, function(x) x <- get_cms(ctrl_sampling = x,
+                                            target = "classes",
+                                            data = train_data,
+                                            test = test_data))
+
+plot_cms <- function(ctrl_method = "repeatedcv",
+                                 ctrl_sampling,
+                                 target,
+                                 train,
+                                 train_method = "rf",
+                                 preProcess = c("scale", "center"),
+                                 test){
+
+
+
+cms <- lapply(sampling_list, function(x) x <- get_cms(ctrl_sampling = x,
+                                            target = target,
+                                            data = train,
+                                            test = test))
+
+names(cms) <- sampling_list
+  
+comparison <- data.frame(model = names(cms),
+                         Sensitivity = rep(NA, length(cms)),
+                         Specificity = rep(NA, length(cms)),
+                         Precision = rep(NA, length(cms)),
+                         Recall = rep(NA, length(cms)),
+                         F1 = rep(NA, length(cms)))
+
+for (name in names(cms)) {
+  label <- cms[[name]]
+  
+  comparison[comparison$model == name, ] <- comparison %>%
+    filter(model == name) %>%
+    mutate(Sensitivity = label$byClass[["Sensitivity"]],
+           Specificity = label$byClass[["Specificity"]],
+           Precision = label$byClass[["Precision"]],
+           Recall = label$byClass[["Recall"]],
+           F1 = label$byClass[["F1"]])
+}
+
+comparison %>%
+  gather(x, y, Sensitivity:F1) %>%
+  ggplot(aes(x = x, y = y, color = model)) +
+    geom_jitter(width = 0.2, alpha = 0.5, size = 3)
+
+}
+
+set.seed(42)
+index <- createDataPartition(bc_data$classes, p = 0.7, list = FALSE)
+train_data <- bc_data[index, ]
+test_data  <- bc_data[-index, ]
+
+plot_cms(ctrl_sampling = sampling_list,
+         target = "classes", #as.formula("classes~."),
+         train = train_data,
+          test = test_data)
+```
+
