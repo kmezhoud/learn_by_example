@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2020-01-20" />
+
+<title>Particle Classification after collision (from Python env to R)</title>
+
+<script src="particle_class_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="particle_class_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="particle_class_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="particle_class_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="particle_class_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="particle_class_files/navigation-1.1/tabsets.js"></script>
+<script src="particle_class_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Particle Classification after collision (from Python env to R)</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2020-01-20</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#kaggle-kernels"><span class="toc-section-number">1</span> Kaggle kernels</a></li>
+<li><a href="#setting-python-version-and-anaconda-environment-for-r"><span class="toc-section-number">2</span> Setting python version and anaconda environment for R</a></li>
+<li><a href="#python-starter-code-given-by-the-organizer"><span class="toc-section-number">3</span> Python starter code given by the organizer</a><ul>
+<li><a href="#import-modules"><span class="toc-section-number">3.1</span> Import modules</a></li>
+<li><a href="#load-an-example-of-event"><span class="toc-section-number">3.2</span> Load an example of event</a></li>
+<li><a href="#example-of-a-particle"><span class="toc-section-number">3.3</span> Example of a particle</a></li>
+<li><a href="#distribution-of-particles-in-an-event"><span class="toc-section-number">3.4</span> Distribution of particles in an event</a></li>
+</ul></li>
+<li><a href="#r-code"><span class="toc-section-number">4</span> R code</a><ul>
+<li><a href="#function-to-load-.pkl-file-from-python-to-r"><span class="toc-section-number">4.1</span> Function to load .pkl file from python to R</a></li>
+<li><a href="#load-r-packages"><span class="toc-section-number">4.2</span> Load R packages</a></li>
+<li><a href="#explore-event-format"><span class="toc-section-number">4.3</span> Explore event format</a></li>
+<li><a href="#convert-image-matrix-to-vecteur-in-dataframe"><span class="toc-section-number">4.4</span> Convert image matrix to vecteur in dataframe</a></li>
+<li><a href="#classes-distribution"><span class="toc-section-number">4.5</span> Classes distribution</a></li>
+</ul></li>
+<li><a href="#weigths-compute"><span class="toc-section-number">5</span> Weigths compute</a><ul>
+<li><a href="#plot-images-from-event"><span class="toc-section-number">5.1</span> plot images from event</a></li>
+<li><a href="#plot-image-from-train-dataset"><span class="toc-section-number">5.2</span> Plot image from train dataset</a></li>
+<li><a href="#explore-test-data"><span class="toc-section-number">5.3</span> Explore test data</a></li>
+<li><a href="#convert-test-data-to-dataframe"><span class="toc-section-number">5.4</span> Convert test data to dataframe</a></li>
+<li><a href="#explore-submission-file"><span class="toc-section-number">5.5</span> Explore submission file</a></li>
+</ul></li>
+<li><a href="#preprocessing"><span class="toc-section-number">6</span> Preprocessing</a></li>
+<li><a href="#split-train-and-valid-datasets"><span class="toc-section-number">7</span> Split train and valid datasets</a></li>
+</ul>
+</div>
+
+<center>
+<img src="collision.png" />
+</center>
+<p>This <a href="https://zindi.africa/competitions/tic-heap-cirta-particle-classification-challenge">challenge</a> is part of an effort to explore the use of machine learning to assist high energy physicists in discovering and characterizing new particles. Particles are the tiny constituents of matter generated in a collision between proton bunches. Physicists at CERN study particles using particle accelerators. The goal of this challenge is to build a machine learning model to read images of particles and identify their type.</p>
+<div id="kaggle-kernels" class="section level1">
+<h1><span class="header-section-number">1</span> Kaggle kernels</h1>
+<ul>
+<li><a href="https://www.kaggle.com/kmezhoud/particles-classification-after-collision-mxnet">mxnet model</a></li>
+<li><a href="https://www.kaggle.com/kmezhoud/particles-classification-after-collision-nnmxnet">NNmxnet</a></li>
+<li><a href="https://www.kaggle.com/kmezhoud/particles-classification-collision-xgboost-weight">weighted xgboost</a></li>
+</ul>
+</div>
+<div id="setting-python-version-and-anaconda-environment-for-r" class="section level1">
+<h1><span class="header-section-number">2</span> Setting python version and anaconda environment for R</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/anaconda3/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">library</span>(reticulate)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co"># class Palindrome:</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="co">#   @staticmethod</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co">#   def is_palindrome(word):</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="co">#     return len(word) &lt; 2 or word[0] == word[-1] and Palindrome.is_palindrome(word[1:-1])</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="co">#     return None</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="co"># word = input(&#39;Deleveled&#39;)</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="co"># print(Palindrome.is_palindrome(word))</span></a></code></pre></div>
+</div>
+<div id="python-starter-code-given-by-the-organizer" class="section level1">
+<h1><span class="header-section-number">3</span> Python starter code given by the organizer</h1>
+<p><code>cirtaChallenge.ipynb</code> is a starter python notebook. It shows us how to open and view a <code>.pkl</code> file and starts you off with a simple classifier.</p>
+<div id="import-modules" class="section level2">
+<h2><span class="header-section-number">3.1</span> Import modules</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">#Import libraries to load and process data</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="im">import</span> pickle</a></code></pre></div>
+</div>
+<div id="load-an-example-of-event" class="section level2">
+<h2><span class="header-section-number">3.2</span> Load an example of event</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># replace by your own file path</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">pkl_file <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;download/event1.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">event1 <span class="op">=</span> pickle.load(pkl_file)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="bu">print</span>(<span class="st">&quot;shape of event1[0]: &quot;</span>,np.shape(event1)[<span class="dv">0</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="bu">print</span>(<span class="st">&quot;shape of event1[1]: &quot;</span>,np.shape(event1)[<span class="dv">1</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="bu">print</span>(<span class="st">&quot;event1[1] is : </span><span class="ch">\n</span><span class="st">&quot;</span>, event1[<span class="dv">1</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="bu">print</span>(<span class="st">&quot;event1[2] is: </span><span class="ch">\n</span><span class="st">&quot;</span>,event1[<span class="dv">0</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co"># get the data and target</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">data,target<span class="op">=</span>event1[<span class="dv">0</span>],event1[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">target<span class="op">=</span>target.astype(<span class="st">&#39;int&#39;</span>)</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">np.shape(target)</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" data-line-number="1">np.shape(data)</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" data-line-number="1">target[<span class="dv">0</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" data-line-number="1">data[<span class="dv">0</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="co"># code to particle name dictionary -- more here : </span></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">dic_types<span class="op">=</span>{<span class="dv">11</span>: <span class="st">&quot;electron&quot;</span>, <span class="dv">13</span> : <span class="st">&quot;muon&quot;</span>, <span class="dv">211</span>:<span class="st">&quot;pion&quot;</span>, <span class="dv">321</span>:<span class="st">&quot;kaon&quot;</span>,<span class="dv">2212</span> : <span class="st">&quot;proton&quot;</span>}</a></code></pre></div>
+</div>
+<div id="example-of-a-particle" class="section level2">
+<h2><span class="header-section-number">3.3</span> Example of a particle</h2>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">plt.title(dic_types[target[<span class="dv">0</span>]])</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">plt.imshow(data[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">plt.show()</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-8-1.png" width="1152" /></p>
+</div>
+<div id="distribution-of-particles-in-an-event" class="section level2">
+<h2><span class="header-section-number">3.4</span> Distribution of particles in an event</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="im">from</span> collections <span class="im">import</span> Counter</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">plt.bar(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)),<span class="bu">list</span>(Counter(target).values()))</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" data-line-number="1">plt.xticks(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)), [dic_types[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">list</span>(Counter(target).keys())])</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb17-1" data-line-number="1">plt.show()</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-9-1.png" width="1152" /></p>
+</div>
+</div>
+<div id="r-code" class="section level1">
+<h1><span class="header-section-number">4</span> R code</h1>
+<div id="function-to-load-.pkl-file-from-python-to-r" class="section level2">
+<h2><span class="header-section-number">4.1</span> Function to load .pkl file from python to R</h2>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="im">import</span> pandas <span class="im">as</span> pd</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="kw">def</span> read_pickle_file(<span class="bu">file</span>):</a>
+<a class="sourceLine" id="cb18-4" data-line-number="4">    pickle_data <span class="op">=</span> pd.read_pickle(<span class="bu">file</span>)</a>
+<a class="sourceLine" id="cb18-5" data-line-number="5">    <span class="cf">return</span> pickle_data</a>
+<a class="sourceLine" id="cb18-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb18-7" data-line-number="7"><span class="co">## open shell and run this</span></a>
+<a class="sourceLine" id="cb18-8" data-line-number="8"><span class="co"># jupyter nbconvert --to markdown cirtaChallenge.ipynb</span></a></code></pre></div>
+</div>
+<div id="load-r-packages" class="section level2">
+<h2><span class="header-section-number">4.2</span> Load R packages</h2>
+<pre><code>FALSE 
+FALSE Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>FALSE The following objects are masked from &#39;package:stats&#39;:
+FALSE 
+FALSE     filter, lag</code></pre>
+<pre><code>FALSE The following objects are masked from &#39;package:base&#39;:
+FALSE 
+FALSE     intersect, setdiff, setequal, union</code></pre>
+<pre><code>FALSE 
+FALSE Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>FALSE The following objects are masked from &#39;package:dplyr&#39;:
+FALSE 
+FALSE     between, first, last</code></pre>
+<pre><code>FALSE 
+FALSE Attaching package: &#39;EBImage&#39;</code></pre>
+<pre><code>FALSE The following object is masked from &#39;package:data.table&#39;:
+FALSE 
+FALSE     transpose</code></pre>
+<pre><code>FALSE 
+FALSE Attaching package: &#39;xgboost&#39;</code></pre>
+<pre><code>FALSE The following object is masked from &#39;package:dplyr&#39;:
+FALSE 
+FALSE     slice</code></pre>
+</div>
+<div id="explore-event-format" class="section level2">
+<h2><span class="header-section-number">4.3</span> Explore event format</h2>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1">event1 &lt;-<span class="st"> </span>py<span class="op">$</span><span class="kw">read_pickle_file</span>(<span class="st">&quot;download/event1.pkl&quot;</span>)</a>
+<a class="sourceLine" id="cb28-2" data-line-number="2"><span class="kw">class</span>(event1)</a>
+<a class="sourceLine" id="cb28-3" data-line-number="3"><span class="kw">dim</span>(event1)</a>
+<a class="sourceLine" id="cb28-4" data-line-number="4"><span class="kw">paste0</span>(<span class="st">&quot;Matrix N°1: &quot;</span>); event1[[<span class="dv">1</span>,<span class="dv">1</span>]]</a>
+<a class="sourceLine" id="cb28-5" data-line-number="5"><span class="kw">paste0</span>(<span class="st">&quot; Target N°1: &quot;</span>); event1[[<span class="dv">2</span>,<span class="dv">1</span>]]</a></code></pre></div>
+</div>
+<div id="convert-image-matrix-to-vecteur-in-dataframe" class="section level2">
+<h2><span class="header-section-number">4.4</span> Convert image matrix to vecteur in dataframe</h2>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># mat2vec &lt;- function(path, w = 10, h = 10){</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2"><span class="co">#   ## Define empty df</span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="co">#   df &lt;- data.frame(matrix(ncol = 1 + (w * h), nrow = 0))</span></a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="co">#   ## Set names. The first column is the classes, the other columns are the pixels.</span></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="co">#   colnames(df) &lt;-  c(&quot;target&quot;,  paste0(&quot;V&quot;, c(1:(w*h) )))</span></a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="co">#   </span></a>
+<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="co">#   tmp &lt;- py$read_pickle_file(path)</span></a>
+<a class="sourceLine" id="cb29-8" data-line-number="8"><span class="co">#   </span></a>
+<a class="sourceLine" id="cb29-9" data-line-number="9"><span class="co">#   ## fill df by row</span></a>
+<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="co">#   ## increment each 2</span></a>
+<a class="sourceLine" id="cb29-11" data-line-number="11"><span class="co">#   for(i in seq(1,length(tmp), by= 2)){</span></a>
+<a class="sourceLine" id="cb29-12" data-line-number="12"><span class="co">#     </span></a>
+<a class="sourceLine" id="cb29-13" data-line-number="13"><span class="co">#     df[i,] &lt;- c(label = tmp[[i+1]], tmp[[i]] %&gt;% as.vector()) </span></a>
+<a class="sourceLine" id="cb29-14" data-line-number="14"><span class="co">#     </span></a>
+<a class="sourceLine" id="cb29-15" data-line-number="15"><span class="co">#   }</span></a>
+<a class="sourceLine" id="cb29-16" data-line-number="16"><span class="co">#   ## remove all NA rows</span></a>
+<a class="sourceLine" id="cb29-17" data-line-number="17"><span class="co">#   df &lt;- df %&gt;% filter_all(all_vars(!is.na(.)))</span></a>
+<a class="sourceLine" id="cb29-18" data-line-number="18"><span class="co">#   return(df)</span></a>
+<a class="sourceLine" id="cb29-19" data-line-number="19"><span class="co"># }</span></a>
+<a class="sourceLine" id="cb29-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb29-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb29-22" data-line-number="22">met2vec &lt;-<span class="st"> </span><span class="cf">function</span>(path){</a>
+<a class="sourceLine" id="cb29-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb29-24" data-line-number="24">tmp &lt;-<span class="st"> </span>py<span class="op">$</span><span class="kw">read_pickle_file</span>(path)</a>
+<a class="sourceLine" id="cb29-25" data-line-number="25"></a>
+<a class="sourceLine" id="cb29-26" data-line-number="26">lsvec &lt;-<span class="st"> </span><span class="kw">lapply</span>(tmp[<span class="dv">1</span>,], <span class="cf">function</span>(x) <span class="kw">as.vector</span>(x))</a>
+<a class="sourceLine" id="cb29-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb29-28" data-line-number="28">target &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">unlist</span>(tmp[<span class="dv">2</span>,]))</a>
+<a class="sourceLine" id="cb29-29" data-line-number="29"><span class="kw">names</span>(target) &lt;-<span class="st"> &quot;target&quot;</span></a>
+<a class="sourceLine" id="cb29-30" data-line-number="30">var &lt;-<span class="kw">as.data.frame</span>( <span class="kw">do.call</span>(rbind, lsvec)) </a>
+<a class="sourceLine" id="cb29-31" data-line-number="31"></a>
+<a class="sourceLine" id="cb29-32" data-line-number="32"><span class="kw">return</span>(<span class="kw">cbind</span>(target, var))</a>
+<a class="sourceLine" id="cb29-33" data-line-number="33">}</a>
+<a class="sourceLine" id="cb29-34" data-line-number="34"></a>
+<a class="sourceLine" id="cb29-35" data-line-number="35"><span class="kw">system.time</span>(event_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">met2vec</span>(<span class="st">&quot;download/event1.pkl&quot;</span>))</a>
+<a class="sourceLine" id="cb29-36" data-line-number="36"><span class="co">#system.time(event_1bis &lt;- mat2vec(&quot;download/event1.pkl&quot;))</span></a>
+<a class="sourceLine" id="cb29-37" data-line-number="37"><span class="co">#identical(event_1, event_1bis)</span></a>
+<a class="sourceLine" id="cb29-38" data-line-number="38"></a>
+<a class="sourceLine" id="cb29-39" data-line-number="39"><span class="co">#event1_2 &lt;- lapply(list(&quot;download/event1.pkl&quot;, &quot;download/event2.pkl&quot;), function(x) mat2vec(x))</span></a></code></pre></div>
+<p><code>met2vec</code> function is faster!</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1">list_path &lt;-<span class="st"> </span><span class="kw">as.list</span>(<span class="kw">list.files</span>(<span class="st">&quot;download/&quot;</span>,<span class="dt">full.names =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3">events &lt;-<span class="st"> </span><span class="kw">lapply</span>(list_path, <span class="cf">function</span>(x) <span class="kw">met2vec</span>(x))</a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb30-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb30-6" data-line-number="6">train &lt;-<span class="st"> </span><span class="kw">bind_rows</span>(events)  <span class="co"># ,.id = &quot;column_label&quot; add a column indicating from with df come the rows</span></a>
+<a class="sourceLine" id="cb30-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb30-8" data-line-number="8">train   <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">20</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb30-9" data-line-number="9"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.integer</span>(target))</a></code></pre></div>
+</div>
+<div id="classes-distribution" class="section level2">
+<h2><span class="header-section-number">4.5</span> Classes distribution</h2>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="kw">library</span>(scales)</a>
+<a class="sourceLine" id="cb31-2" data-line-number="2">    <span class="co"># 11: &quot;electron&quot;</span></a>
+<a class="sourceLine" id="cb31-3" data-line-number="3">    <span class="co"># 13: &quot;muon&quot;</span></a>
+<a class="sourceLine" id="cb31-4" data-line-number="4">    <span class="co"># 211: &quot;pion&quot;</span></a>
+<a class="sourceLine" id="cb31-5" data-line-number="5">    <span class="co"># 321: &quot;kaon&quot;</span></a>
+<a class="sourceLine" id="cb31-6" data-line-number="6">    <span class="co"># 2212: &quot;proton&quot;</span></a>
+<a class="sourceLine" id="cb31-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb31-8" data-line-number="8">train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb31-9" data-line-number="9"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">as.factor</span>(target)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb31-10" data-line-number="10"><span class="st">  </span><span class="kw">group_by</span>(target) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb31-11" data-line-number="11"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">Count =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb31-12" data-line-number="12"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">11</span>, <span class="st">&quot;electron&quot;</span>,</a>
+<a class="sourceLine" id="cb31-13" data-line-number="13">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">13</span>, <span class="st">&quot;muon&quot;</span>,</a>
+<a class="sourceLine" id="cb31-14" data-line-number="14">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">211</span>, <span class="st">&quot;pion&quot;</span>,</a>
+<a class="sourceLine" id="cb31-15" data-line-number="15">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">321</span>, <span class="st">&quot;kaon&quot;</span>, <span class="st">&quot;proton&quot;</span>))))) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb31-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb31-17" data-line-number="17"><span class="st">  </span><span class="kw">ggplot</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-18" data-line-number="18"><span class="st">  </span><span class="kw">aes</span>(<span class="dt">x =</span> target, <span class="dt">y =</span> Count, <span class="dt">fill=</span> target) <span class="op">+</span></a>
+<a class="sourceLine" id="cb31-19" data-line-number="19"><span class="st">  </span><span class="kw">geom_col</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-20" data-line-number="20"><span class="st">  </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> <span class="kw">percent</span>(Count<span class="op">/</span><span class="kw">sum</span>(Count))), <span class="dt">vjust =</span> <span class="fl">-0.5</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-21" data-line-number="21"><span class="st">  </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> Count), <span class="dt">vjust =</span> <span class="dv">-2</span>)</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-15-1.png" width="768" /></p>
+<ul>
+<li>Here we note umbalanced training classes. We need to weight each class</li>
+</ul>
+</div>
+</div>
+<div id="weigths-compute" class="section level1">
+<h1><span class="header-section-number">5</span> Weigths compute</h1>
+<p><a href="https://datascience.stackexchange.com/questions/16342/unbalanced-multiclass-data-with-xgboost">link</a></p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1">train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(target) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">Count =</span> <span class="kw">sum</span>(target)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-4" data-line-number="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">weight =</span> <span class="kw">min</span>(Count)<span class="op">/</span>Count) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">ratio =</span> Count<span class="op">*</span><span class="dv">100</span><span class="op">/</span><span class="kw">sum</span>(Count)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">percentage =</span> <span class="kw">percent</span>(Count<span class="op">/</span><span class="kw">sum</span>(Count))) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-7" data-line-number="7"><span class="st">      </span><span class="kw">mutate</span>(<span class="dt">label =</span> <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">11</span>, <span class="st">&quot;electron&quot;</span>,</a>
+<a class="sourceLine" id="cb32-8" data-line-number="8">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">13</span>, <span class="st">&quot;muon&quot;</span>,</a>
+<a class="sourceLine" id="cb32-9" data-line-number="9">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">211</span>, <span class="st">&quot;pion&quot;</span>,</a>
+<a class="sourceLine" id="cb32-10" data-line-number="10">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">321</span>, <span class="st">&quot;kaon&quot;</span>, <span class="st">&quot;proton&quot;</span>)))))</a>
+<a class="sourceLine" id="cb32-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb32-12" data-line-number="12">weights &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-13" data-line-number="13"><span class="st">  </span><span class="kw">group_by</span>(target) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-14" data-line-number="14"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">Count =</span> <span class="kw">sum</span>(target)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-15" data-line-number="15"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">weight =</span> <span class="kw">min</span>(Count)<span class="op">/</span>Count) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-16" data-line-number="16"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">weight2 =</span> <span class="dv">1</span> <span class="op">+</span><span class="st"> </span>Count <span class="op">*</span><span class="st"> </span><span class="fl">0.01</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-17" data-line-number="17"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">11</span>, <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb32-18" data-line-number="18">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">13</span>, <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb32-19" data-line-number="19">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">211</span>, <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb32-20" data-line-number="20">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">321</span>, <span class="dv">3</span>, <span class="dv">4</span>))))) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-21" data-line-number="21"><span class="st">    </span><span class="co"># mutate(label = ifelse(target == 0, &quot;electron&quot;,</span></a>
+<a class="sourceLine" id="cb32-22" data-line-number="22"><span class="st">    </span><span class="co">#               ifelse(target == 1, &quot;muon&quot;,</span></a>
+<a class="sourceLine" id="cb32-23" data-line-number="23"><span class="st">    </span><span class="co">#               ifelse(target == 2, &quot;pion&quot;,</span></a>
+<a class="sourceLine" id="cb32-24" data-line-number="24"><span class="st">    </span><span class="co">#               ifelse(target == 3, &quot;kaon&quot;, &quot;proton&quot;)))))%&gt;%</span></a>
+<a class="sourceLine" id="cb32-25" data-line-number="25"><span class="st">  </span><span class="kw">select</span>(target, weight) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb32-26" data-line-number="26"><span class="st">  </span><span class="kw">as.data.frame</span>()</a>
+<a class="sourceLine" id="cb32-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb32-28" data-line-number="28">weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>,<span class="dv">2</span>]</a></code></pre></div>
+<div id="plot-images-from-event" class="section level2">
+<h2><span class="header-section-number">5.1</span> plot images from event</h2>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="co">#display(event1[[1,10]])</span></a>
+<a class="sourceLine" id="cb33-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb33-3" data-line-number="3"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">3</span>))</a>
+<a class="sourceLine" id="cb33-4" data-line-number="4"><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">9</span>){</a>
+<a class="sourceLine" id="cb33-5" data-line-number="5">  graphics<span class="op">::</span><span class="kw">plot</span>(EBImage<span class="op">::</span><span class="kw">as.Image</span>(event1[[<span class="dv">1</span>,i]]))</a>
+<a class="sourceLine" id="cb33-6" data-line-number="6">  <span class="kw">title</span>(<span class="dt">main =</span> event1[[<span class="dv">2</span>,i]], <span class="dt">col.main=</span><span class="st">&quot;white&quot;</span>, <span class="dt">cex.main=</span><span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb33-7" data-line-number="7">}</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-17-1.png" width="1152" /></p>
+</div>
+<div id="plot-image-from-train-dataset" class="section level2">
+<h2><span class="header-section-number">5.2</span> Plot image from train dataset</h2>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1">vec2img &lt;-<span class="st"> </span><span class="cf">function</span>(df, nrow, <span class="dt">w=</span> <span class="dv">10</span>, <span class="dt">h =</span> <span class="dv">10</span>, <span class="dt">main =</span> <span class="st">&quot;if needed&quot;</span>, <span class="dt">xlab =</span> <span class="st">&quot;if needed&quot;</span>){</a>
+<a class="sourceLine" id="cb34-2" data-line-number="2">  </a>
+<a class="sourceLine" id="cb34-3" data-line-number="3">  i &lt;-<span class="st"> </span>EBImage<span class="op">::</span><span class="kw">Image</span>(<span class="kw">as.numeric</span>(df[nrow,]))</a>
+<a class="sourceLine" id="cb34-4" data-line-number="4">  </a>
+<a class="sourceLine" id="cb34-5" data-line-number="5">  <span class="kw">dim</span>(i) &lt;-<span class="st"> </span><span class="kw">c</span>(w, h, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb34-6" data-line-number="6">  <span class="co">#i &lt;- EBImage::resize(i, w= w, h= h)</span></a>
+<a class="sourceLine" id="cb34-7" data-line-number="7">  <span class="kw">plot</span>(i)</a>
+<a class="sourceLine" id="cb34-8" data-line-number="8">  <span class="kw">title</span>(<span class="dt">main =</span> main, <span class="dt">xlab =</span> xlab ,<span class="dt">cex.main =</span> <span class="dv">4</span>, <span class="dt">cex.sub =</span> <span class="fl">0.75</span>, <span class="dt">col.main=</span><span class="st">&quot;white&quot;</span>, <span class="dt">col.lab =</span> <span class="st">&quot;white&quot;</span>, <span class="dt">cex.lab =</span> <span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb34-9" data-line-number="9">}</a>
+<a class="sourceLine" id="cb34-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb34-11" data-line-number="11"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">3</span>))</a>
+<a class="sourceLine" id="cb34-12" data-line-number="12"><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">9</span>){</a>
+<a class="sourceLine" id="cb34-13" data-line-number="13"><span class="kw">vec2img</span>(train[<span class="op">-</span><span class="dv">1</span>], i, <span class="dt">main =</span> train[i,<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb34-14" data-line-number="14">}</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-18-1.png" width="1152" /></p>
+</div>
+<div id="explore-test-data" class="section level2">
+<h2><span class="header-section-number">5.3</span> Explore test data</h2>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1">test &lt;-<span class="st"> </span>py<span class="op">$</span><span class="kw">read_pickle_file</span>(<span class="st">&quot;data_test_file.pkl&quot;</span>)</a>
+<a class="sourceLine" id="cb35-2" data-line-number="2"><span class="kw">paste0</span>(<span class="st">&quot;target:&quot;</span>); test[[<span class="dv">1</span>]][[<span class="dv">1</span>]] </a>
+<a class="sourceLine" id="cb35-3" data-line-number="3"><span class="kw">paste0</span>(<span class="st">&quot;Matrix:&quot;</span>); test[[<span class="dv">1</span>]][[<span class="dv">2</span>]] </a></code></pre></div>
+</div>
+<div id="convert-test-data-to-dataframe" class="section level2">
+<h2><span class="header-section-number">5.4</span> Convert test data to dataframe</h2>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1">convert_test &lt;-<span class="st"> </span><span class="cf">function</span>(df){</a>
+<a class="sourceLine" id="cb36-2" data-line-number="2">  </a>
+<a class="sourceLine" id="cb36-3" data-line-number="3"> test_like_event &lt;-<span class="st"> </span><span class="kw">t</span>(<span class="kw">do.call</span>(rbind, df))</a>
+<a class="sourceLine" id="cb36-4" data-line-number="4">lsvec &lt;-<span class="st"> </span><span class="kw">lapply</span>(test_like_event[<span class="dv">2</span>,], <span class="cf">function</span>(x) <span class="kw">as.vector</span>(x))</a>
+<a class="sourceLine" id="cb36-5" data-line-number="5">target &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">unlist</span>(test_like_event[<span class="dv">1</span>,]))</a>
+<a class="sourceLine" id="cb36-6" data-line-number="6"><span class="kw">names</span>(target) &lt;-<span class="st"> &quot;target&quot;</span></a>
+<a class="sourceLine" id="cb36-7" data-line-number="7">var &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>( <span class="kw">do.call</span>(rbind, lsvec))</a>
+<a class="sourceLine" id="cb36-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb36-9" data-line-number="9">test &lt;-<span class="st"> </span><span class="kw">cbind</span>(target, var)</a>
+<a class="sourceLine" id="cb36-10" data-line-number="10"><span class="kw">return</span>(test)</a>
+<a class="sourceLine" id="cb36-11" data-line-number="11">  </a>
+<a class="sourceLine" id="cb36-12" data-line-number="12">}</a>
+<a class="sourceLine" id="cb36-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb36-14" data-line-number="14">test &lt;-<span class="st"> </span><span class="kw">convert_test</span>(test)</a>
+<a class="sourceLine" id="cb36-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb36-16" data-line-number="16">test <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">20</span>)</a>
+<a class="sourceLine" id="cb36-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb36-18" data-line-number="18"><span class="kw">fwrite</span>(test, <span class="dt">file =</span> <span class="st">&quot;test.csv&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" data-line-number="1"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">3</span>))</a>
+<a class="sourceLine" id="cb37-2" data-line-number="2"><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">9</span>){</a>
+<a class="sourceLine" id="cb37-3" data-line-number="3"><span class="kw">vec2img</span>(test[<span class="op">-</span><span class="dv">1</span>], i, <span class="dt">main =</span> test[i,<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb37-4" data-line-number="4">}</a></code></pre></div>
+<p><img src="particle_class_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
+</div>
+<div id="explore-submission-file" class="section level2">
+<h2><span class="header-section-number">5.5</span> Explore submission file</h2>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" data-line-number="1">sampleSubmission &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;SampleSubmission.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb38-2" data-line-number="2">sampleSubmission <span class="op">%&gt;%</span><span class="st"> </span>head <span class="co">#%&gt;% data.table()</span></a></code></pre></div>
+</div>
+</div>
+<div id="preprocessing" class="section level1">
+<h1><span class="header-section-number">6</span> Preprocessing</h1>
+<p>Convert labels to numeric values</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1"><span class="kw">unique</span>(train<span class="op">$</span>target)</a>
+<a class="sourceLine" id="cb39-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb39-3" data-line-number="3">    <span class="co"># 11: &quot;electron&quot;</span></a>
+<a class="sourceLine" id="cb39-4" data-line-number="4">    <span class="co"># 13: &quot;muon&quot;</span></a>
+<a class="sourceLine" id="cb39-5" data-line-number="5">    <span class="co"># 211: &quot;pion&quot;</span></a>
+<a class="sourceLine" id="cb39-6" data-line-number="6">    <span class="co"># 321: &quot;kaon&quot;</span></a>
+<a class="sourceLine" id="cb39-7" data-line-number="7">    <span class="co"># 2212: &quot;proton&quot;</span></a>
+<a class="sourceLine" id="cb39-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb39-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb39-10" data-line-number="10"><span class="co">## The class must be from 0 to n class. We need to convert target</span></a>
+<a class="sourceLine" id="cb39-11" data-line-number="11">Train &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb39-12" data-line-number="12"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">target =</span> <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">11</span>, <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb39-13" data-line-number="13">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">13</span>, <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb39-14" data-line-number="14">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">211</span>, <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb39-15" data-line-number="15">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">321</span>, <span class="dv">3</span>, <span class="dv">4</span>))))) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb39-16" data-line-number="16"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">weight =</span> <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">0</span>,<span class="dv">2</span>],     <span class="co"># 0.466</span></a>
+<a class="sourceLine" id="cb39-17" data-line-number="17">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">1</span>, weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>,<span class="dv">2</span>],        <span class="co"># 1</span></a>
+<a class="sourceLine" id="cb39-18" data-line-number="18">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">2</span>, weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">2</span>,<span class="dv">2</span>],  <span class="co"># 0.000841</span></a>
+<a class="sourceLine" id="cb39-19" data-line-number="19">                  <span class="kw">ifelse</span>(target <span class="op">==</span><span class="st"> </span><span class="dv">3</span>, weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">3</span>,<span class="dv">2</span>], </a>
+<a class="sourceLine" id="cb39-20" data-line-number="20">                                      weights[weights[<span class="st">&quot;target&quot;</span>] <span class="op">==</span><span class="st"> </span><span class="dv">4</span>,<span class="dv">2</span>]))))) <span class="op">%&gt;%</span><span class="st">    </span><span class="co"># 0.000325, 0.0000651</span></a>
+<a class="sourceLine" id="cb39-21" data-line-number="21"><span class="st">  </span><span class="kw">select</span>(target, weight, <span class="kw">everything</span>())</a>
+<a class="sourceLine" id="cb39-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb39-23" data-line-number="23">Train <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">20</span>)</a></code></pre></div>
+</div>
+<div id="split-train-and-valid-datasets" class="section level1">
+<h1><span class="header-section-number">7</span> Split train and valid datasets</h1>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" data-line-number="1">tmp &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">initial_split</span>(Train, <span class="dt">prop =</span> <span class="dv">3</span><span class="op">/</span><span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb40-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb40-3" data-line-number="3">train_ &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">training</span>(tmp)</a>
+<a class="sourceLine" id="cb40-4" data-line-number="4">valid &lt;-<span class="st"> </span>rsample<span class="op">::</span><span class="kw">testing</span>(tmp)</a>
+<a class="sourceLine" id="cb40-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb40-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb40-7" data-line-number="7">y_train &lt;-<span class="st"> </span><span class="kw">as.integer</span>(train_<span class="op">$</span>target)</a>
+<a class="sourceLine" id="cb40-8" data-line-number="8">w_train &lt;-<span class="st"> </span>train_<span class="op">$</span>weight</a>
+<a class="sourceLine" id="cb40-9" data-line-number="9">x_train &lt;-<span class="st"> </span>train_ <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>target, <span class="op">-</span>weight)</a>
+<a class="sourceLine" id="cb40-10" data-line-number="10">y_valid &lt;-<span class="st"> </span><span class="kw">as.integer</span>(valid<span class="op">$</span>target)</a>
+<a class="sourceLine" id="cb40-11" data-line-number="11">w_valid &lt;-<span class="st"> </span>valid<span class="op">$</span>weight</a>
+<a class="sourceLine" id="cb40-12" data-line-number="12">x_valid &lt;-<span class="st"> </span>valid <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>target, <span class="op">-</span>weight)</a></code></pre></div>
+<!-- # Caret rf -->
+<!-- ```{r} -->
+<!-- library(caret) -->
+<!-- # train %>% -->
+<!-- #     mutate(label = ifelse(target == 11, "electron", -->
+<!-- #                    ifelse(target == 13, "muon", -->
+<!-- #                    ifelse(target == 211, "pion", -->
+<!-- #                    ifelse(target == 321, "kaon", "proton"))))) -->
+<!--       # 11: "electron" -->
+<!--     # 13: "muon" -->
+<!--     # 211: "pion" -->
+<!--     # 321: "kaon" -->
+<!--     # 2212: "proton" -->
+<!-- set.seed(42) -->
+<!-- index <- createDataPartition(train$target, p = 0.7, list = FALSE) -->
+<!-- tr_data <- train[index, ] -->
+<!-- tes_data  <- train[-index, ] -->
+<!-- model_caret_rf <- caret::train(target ~ ., -->
+<!--                          data = tes_data, -->
+<!--                          method = "rf", -->
+<!--                          preProcess = c("scale", "center"), -->
+<!--                          trControl = trainControl(method = "repeatedcv",  -->
+<!--                                                   number = 5,  -->
+<!--                                                   repeats = 5,  -->
+<!--                                                   verboseIter = FALSE)) -->
+<!-- pred_rf <- data.frame(actual = tes_data$target, -->
+<!--                     predict(model_caret_rf, newdata = train[1002:1102,], type = "prob")) -->
+<!-- final$predict <- as.factor(ifelse(pred_rf$benign > 0.5, "benign", "malignant")) -->
+<!-- cm_original <- confusionMatrix(final$predict, final$actual) -->
+<!-- ``` -->
+<!-- # mxnet modeling -->
+<!-- - Particles Classification after collision (mxnet) [kaggle kernet](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-mxnet) -->
+<!-- - Particles Classification after collision (NNmxnet) [kaggle kernel](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-nnmxnet) -->
+<!-- # Xgboost model -->
+<!-- - Particles Classification after collision [kaggle kernel](https://www.kaggle.com/kmezhoud/particles-classification-collision-xgboost-weight) -->
+<!-- ```{r} -->
+<!-- library(xgboost) -->
+<!-- dtrain <- xgb.DMatrix(data = as.matrix(x_train), label = y_train, weight = w_train, missing = -999.0)                                                                                                                 -->
+<!-- dval <- xgb.DMatrix(data = as.matrix(x_valid), label = y_valid, weight = w_valid, missing = -999.0) -->
+<!-- ``` -->
+<!-- ## Set the model -->
+<!-- ```{r} -->
+<!-- nclass <- length(unique(y_train)) -->
+<!-- xgb_params <- list("objective" = "multi:softprob", -->
+<!--                    "eval_metric" = "mlogloss", -->
+<!--                    "num_class" = nclass, -->
+<!--                    "colsample_bytree" = 0.5, -->
+<!--                    "gamma" = 0, -->
+<!--                    "min_child_weight" = 1, -->
+<!--                    "eta" = 1, -->
+<!--                    "max_depth" = 5, -->
+<!--                    "subsample" = 1, -->
+<!--                    "nthread" = parallel::detectCores(all.tests = FALSE, logical = TRUE)  # detect and use all cpu  -->
+<!--                   ) -->
+<!-- cv_model <- xgb.cv(params = xgb_params, -->
+<!--                    data = dtrain, -->
+<!--                    #eval_metric = list(dtrain, dval), -->
+<!--                    watchlist = list(validation = dval), -->
+<!--                    nrounds = 30, -->
+<!--                    verbose = TRUE, -->
+<!--                    maximize = FALSE, -->
+<!--                    nfold = 5, -->
+<!--                    early_stopping_round = 10, -->
+<!--                    print_every_n = 5, -->
+<!--                    prediction = TRUE) -->
+<!-- ``` -->
+<!-- When you observe high training accuracy, but low tests accuracy, it is likely that you encounter overfitting problem. -->
+<!-- There are in general two ways that you can control overfitting in xgboost : -->
+<!-- * The first way is to directly control model complexity: This include max_depth, min_child_weight and gamma -->
+<!-- * The second way is to add randomness to make training robust to noise◦This include subsample, colsample_bytree -->
+<!-- * You can also reduce stepsize eta, but needs to remember to increase num_round when you do so -->
+<!-- ```{r} -->
+<!-- OOF_prediction <- data.frame(cv_model$pred) %>% -->
+<!--   mutate(max_prob = max.col(., ties.method = "last"), -->
+<!--          label = y_train + 1) -->
+<!-- OOF_prediction -->
+<!-- ``` -->
+<!-- ## Confusion matrix of xgb_cv -->
+<!-- ```{r} -->
+<!-- # confusion matrix -->
+<!-- caret::confusionMatrix(factor(OOF_prediction$max_prob), -->
+<!--                 factor(OOF_prediction$label), -->
+<!--                 mode = "everything") -->
+<!-- ``` -->
+<!-- # Training the model by the best iteration -->
+<!-- ```{r} -->
+<!--                                                                                                                   #Best Number of iterations -->
+<!--     num_iterations = cv_model$best_iteration  -->
+<!--     xgb_model = xgb.train(params = xgb_params, -->
+<!--                             data = dtrain, -->
+<!--                             nrounds= num_iterations, -->
+<!--                             verbose_eval= FALSE -->
+<!--                  )                                                                                                              -->
+<!-- ```  -->
+<!-- ## kappa evaluation -->
+<!-- ```{r} -->
+<!-- dvalid = xgb.DMatrix( as.matrix(x_valid)) -->
+<!-- pred_valid <- predict(xgb_model, dvalid) -->
+<!-- Metrics::ScoreQuadraticWeightedKappa(as.integer(round(pred_valid)),  -->
+<!--                                      y_valid,  -->
+<!--                                      min.rating = 0,  -->
+<!--                                      max.rating = 4) -->
+<!-- ``` -->
+<!-- ## Confusion matrix -->
+<!-- ```{r} -->
+<!-- #evaluate the default model -->
+<!-- valid_prediction <- matrix(pred_valid, nrow = 5, ncol=length(pred_valid)/5) %>% -->
+<!--                    t() %>%  -->
+<!--                   data.frame() %>%  -->
+<!--                   mutate(label = y_valid , max_prob = max.col(., "last") - 1) -->
+<!-- caret::confusionMatrix(factor(valid_prediction$max_prob), factor(valid_prediction$label), mode = "everything") -->
+<!-- ``` -->
+<!-- ## Variable Importance -->
+<!-- ```{r} -->
+<!-- # get the feature real names -->
+<!-- names <- colnames(x_train)  -->
+<!-- # compute feature importance matrix -->
+<!-- importance_matrix = xgb.importance(feature_names = names, model = xgb_model) -->
+<!-- importance_matrix -->
+<!-- ``` -->
+<!-- ## Plot features importance -->
+<!-- ```{r} -->
+<!-- # plot -->
+<!-- xgboost::xgb.ggplot.importance(importance_matrix, top_n = 10) + -->
+<!-- ggplot2::theme_minimal() -->
+<!-- ``` -->
+<!-- # xgboost prediction -->
+<!-- ```{r} -->
+<!-- test -->
+<!-- y_test = test$target -->
+<!-- x_test <- test %>% select(-target) -->
+<!-- #x_test <- x_test %>% select(colnames(x_train)) -->
+<!-- dtest <- xgb.DMatrix(as.matrix(x_test)) -->
+<!-- rm(Test) -->
+<!-- invisible(gc()) -->
+<!-- pred_test <- round(predict(xgb_model, dtest,reshape=TRUE), digits = 4)  -->
+<!--     # 0:11: "electron" -->
+<!--     # 1:13: "muon" -->
+<!--     # 2:211: "pion" -->
+<!--     # 3:321: "kaon" -->
+<!--     # 4:2212: "proton" -->
+<!-- ## reshape dataframe and get which class                                                                                                                   -->
+<!-- pred_test_class <- matrix(pred_test, nrow = 5, ncol = length(pred_test) / 10) %>%  -->
+<!--                t() %>% -->
+<!--                data.frame() %>% -->
+<!--                mutate(max = max.col(., ties.method = "last") - 1, image = y_test) %>% -->
+<!--                rename(electron = X1, muon = X2, pion = X3, kaon = X4, proton = X5) %>% -->
+<!--               select(image, everything())  -->
+<!-- pred_test_class %>% head -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- submission <- pred_test_class %>% select(-max) -->
+<!-- fwrite(submission,"submission.csv") -->
+<!-- ``` -->
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

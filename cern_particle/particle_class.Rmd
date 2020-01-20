@@ -1,0 +1,647 @@
+---
+title: "Particle Classification after collision (from Python env to R)"
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 14
+    fig_height: 8
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=TRUE, warning =TRUE, results = "hide")
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+```
+<center>
+![](collision.png)
+</center>
+
+
+This [challenge](https://zindi.africa/competitions/tic-heap-cirta-particle-classification-challenge) is part of an effort to explore the use of machine learning to assist high energy physicists in discovering and characterizing new particles.  Particles are the tiny constituents of matter generated in a collision between proton bunches. Physicists at CERN study particles using particle accelerators.
+The goal of this challenge is to build a machine learning model to read images of particles and identify their type. 
+
+
+# Kaggle kernels
+
+- [mxnet model](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-mxnet)
+- [NNmxnet](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-nnmxnet)
+- [weighted xgboost](https://www.kaggle.com/kmezhoud/particles-classification-collision-xgboost-weight)
+
+# Setting python version and anaconda environment for R
+```{r}
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+```{r}
+library(reticulate)
+```
+
+```{python}
+# class Palindrome:
+#   @staticmethod
+#   def is_palindrome(word):
+#     return len(word) < 2 or word[0] == word[-1] and Palindrome.is_palindrome(word[1:-1])
+#     return None
+# word = input('Deleveled')
+# print(Palindrome.is_palindrome(word))
+```
+
+# Python starter code given by the organizer
+
+`cirtaChallenge.ipynb` is a starter python notebook. It shows us how to open and view a `.pkl` file and starts you off with a simple classifier. 
+
+
+## Import modules
+```{python}
+#Import libraries to load and process data
+import numpy as np
+import pickle
+```
+
+## Load an example of event
+```{python}
+# replace by your own file path
+pkl_file = open("download/event1.pkl", 'rb')
+event1 = pickle.load(pkl_file)
+print("shape of event1[0]: ",np.shape(event1)[0])
+print("shape of event1[1]: ",np.shape(event1)[1])
+print("event1[1] is : \n", event1[1])
+print("event1[2] is: \n",event1[0])
+```
+
+
+```{python}
+# get the data and target
+data,target=event1[0],event1[1]
+target=target.astype('int')
+np.shape(target)
+np.shape(data)
+target[0]
+data[0]
+```
+
+
+```{python}
+# code to particle name dictionary -- more here : 
+dic_types={11: "electron", 13 : "muon", 211:"pion", 321:"kaon",2212 : "proton"}
+```
+
+## Example  of a particle
+
+
+```{python}
+import matplotlib.pyplot as plt
+plt.title(dic_types[target[0]])
+plt.imshow(data[0])
+plt.show()
+```
+
+## Distribution of particles in an event
+
+
+```{python}
+
+from collections import Counter
+
+plt.bar(range(len(dic_types)),list(Counter(target).values()))
+plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(target).keys())])
+plt.show()
+
+```
+
+
+# R code
+
+## Function to load  .pkl file from python  to R
+
+```{python}
+import pandas as pd
+
+def read_pickle_file(file):
+    pickle_data = pd.read_pickle(file)
+    return pickle_data
+
+## open shell and run this
+# jupyter nbconvert --to markdown cirtaChallenge.ipynb
+```
+## Load R packages
+
+```{r, echo=FALSE, comment=FALSE}
+library(dplyr)
+require("reticulate")
+library(data.table)
+library(EBImage)
+library(xgboost)
+library(ggplot2)
+
+```
+
+
+## Explore event format
+```{r}
+
+event1 <- py$read_pickle_file("download/event1.pkl")
+class(event1)
+dim(event1)
+paste0("Matrix N°1: "); event1[[1,1]]
+paste0(" Target N°1: "); event1[[2,1]]
+
+```
+
+
+
+
+## Convert image matrix to vecteur in dataframe
+
+```{r}
+# mat2vec <- function(path, w = 10, h = 10){
+#   ## Define empty df
+#   df <- data.frame(matrix(ncol = 1 + (w * h), nrow = 0))
+#   ## Set names. The first column is the classes, the other columns are the pixels.
+#   colnames(df) <-  c("target",  paste0("V", c(1:(w*h) )))
+#   
+#   tmp <- py$read_pickle_file(path)
+#   
+#   ## fill df by row
+#   ## increment each 2
+#   for(i in seq(1,length(tmp), by= 2)){
+#     
+#     df[i,] <- c(label = tmp[[i+1]], tmp[[i]] %>% as.vector()) 
+#     
+#   }
+#   ## remove all NA rows
+#   df <- df %>% filter_all(all_vars(!is.na(.)))
+#   return(df)
+# }
+
+
+met2vec <- function(path){
+
+tmp <- py$read_pickle_file(path)
+
+lsvec <- lapply(tmp[1,], function(x) as.vector(x))
+
+target <- as.data.frame(unlist(tmp[2,]))
+names(target) <- "target"
+var <-as.data.frame( do.call(rbind, lsvec)) 
+
+return(cbind(target, var))
+}
+
+system.time(event_1 <- met2vec("download/event1.pkl"))
+#system.time(event_1bis <- mat2vec("download/event1.pkl"))
+#identical(event_1, event_1bis)
+
+#event1_2 <- lapply(list("download/event1.pkl", "download/event2.pkl"), function(x) mat2vec(x))
+
+```
+
+`met2vec` function is faster!
+
+```{r}
+list_path <- as.list(list.files("download/",full.names = TRUE))
+
+events <- lapply(list_path, function(x) met2vec(x))
+
+
+train <- bind_rows(events)  # ,.id = "column_label" add a column indicating from with df come the rows
+
+train   %>% head(20) %>%
+  mutate(target = as.integer(target))
+```
+
+## Classes distribution
+
+```{r, fig.height= 4, fig.width= 8}
+library(scales)
+    # 11: "electron"
+    # 13: "muon"
+    # 211: "pion"
+    # 321: "kaon"
+    # 2212: "proton"
+
+train %>%
+  mutate(target = as.factor(target)) %>%
+  group_by(target) %>%
+  summarise(Count = n()) %>%
+  mutate(target = ifelse(target == 11, "electron",
+                  ifelse(target == 13, "muon",
+                  ifelse(target == 211, "pion",
+                  ifelse(target == 321, "kaon", "proton"))))) %>%
+
+  ggplot()+
+  aes(x = target, y = Count, fill= target) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = -2)
+
+```
+
+- Here we note umbalanced training classes. We need to weight each class 
+
+
+
+# Weigths compute
+
+[link](https://datascience.stackexchange.com/questions/16342/unbalanced-multiclass-data-with-xgboost)
+
+```{r}
+train %>%
+  group_by(target) %>%
+  summarise(Count = sum(target)) %>%
+  mutate(weight = min(Count)/Count) %>%
+  mutate(ratio = Count*100/sum(Count)) %>%
+  mutate(percentage = percent(Count/sum(Count))) %>%
+      mutate(label = ifelse(target == 11, "electron",
+                  ifelse(target == 13, "muon",
+                  ifelse(target == 211, "pion",
+                  ifelse(target == 321, "kaon", "proton")))))
+
+weights <- train %>%
+  group_by(target) %>%
+  summarise(Count = sum(target)) %>%
+  mutate(weight = min(Count)/Count) %>%
+  mutate(weight2 = 1 + Count * 0.01) %>%
+  mutate(target = ifelse(target == 11, 0,
+                  ifelse(target == 13, 1,
+                  ifelse(target == 211, 2,
+                  ifelse(target == 321, 3, 4))))) %>%
+    # mutate(label = ifelse(target == 0, "electron",
+    #               ifelse(target == 1, "muon",
+    #               ifelse(target == 2, "pion",
+    #               ifelse(target == 3, "kaon", "proton")))))%>%
+  select(target, weight) %>%
+  as.data.frame()
+
+weights[weights["target"] == 1,2]
+```
+
+## plot images from event
+
+```{r}
+#display(event1[[1,10]])
+
+par(mfrow=c(3,3))
+for(i in 1:9){
+  graphics::plot(EBImage::as.Image(event1[[1,i]]))
+  title(main = event1[[2,i]], col.main="white", cex.main=4)
+}
+
+
+```
+
+## Plot image from train dataset
+
+```{r}
+vec2img <- function(df, nrow, w= 10, h = 10, main = "if needed", xlab = "if needed"){
+  
+  i <- EBImage::Image(as.numeric(df[nrow,]))
+  
+  dim(i) <- c(w, h, 1)
+  #i <- EBImage::resize(i, w= w, h= h)
+  plot(i)
+  title(main = main, xlab = xlab ,cex.main = 4, cex.sub = 0.75, col.main="white", col.lab = "white", cex.lab = 4)
+}
+
+par(mfrow=c(3,3))
+for(i in 1:9){
+vec2img(train[-1], i, main = train[i,1])
+}
+
+```
+
+## Explore test data
+
+```{r}
+test <- py$read_pickle_file("data_test_file.pkl")
+paste0("target:"); test[[1]][[1]] 
+paste0("Matrix:"); test[[1]][[2]] 
+```
+
+
+## Convert test data to dataframe
+```{r}
+
+convert_test <- function(df){
+  
+ test_like_event <- t(do.call(rbind, df))
+lsvec <- lapply(test_like_event[2,], function(x) as.vector(x))
+target <- as.data.frame(unlist(test_like_event[1,]))
+names(target) <- "target"
+var <- as.data.frame( do.call(rbind, lsvec))
+
+test <- cbind(target, var)
+return(test)
+  
+}
+
+test <- convert_test(test)
+
+test %>% head(20)
+
+fwrite(test, file = "test.csv")
+```
+
+```{r}
+par(mfrow=c(3,3))
+for(i in 1:9){
+vec2img(test[-1], i, main = test[i,1])
+}
+```
+
+
+
+
+## Explore submission file
+
+```{r}
+sampleSubmission <- fread("SampleSubmission.csv")
+sampleSubmission %>% head #%>% data.table()
+```
+
+
+# Preprocessing
+
+
+Convert labels to numeric values
+
+```{r}
+unique(train$target)
+
+
+    # 11: "electron"
+    # 13: "muon"
+    # 211: "pion"
+    # 321: "kaon"
+    # 2212: "proton"
+
+
+## The class must be from 0 to n class. We need to convert target
+Train <- train %>%
+  mutate(target = ifelse(target == 11, 0,
+                  ifelse(target == 13, 1,
+                  ifelse(target == 211, 2,
+                  ifelse(target == 321, 3, 4))))) %>%
+  mutate(weight = ifelse(target == 0, weights[weights["target"] == 0,2],     # 0.466
+                  ifelse(target == 1, weights[weights["target"] == 1,2],        # 1
+                  ifelse(target == 2, weights[weights["target"] == 2,2],  # 0.000841
+                  ifelse(target == 3, weights[weights["target"] == 3,2], 
+                                      weights[weights["target"] == 4,2]))))) %>%    # 0.000325, 0.0000651
+  select(target, weight, everything())
+
+Train %>% head(20)
+```
+
+
+# Split train and valid datasets
+
+```{r}
+
+
+tmp <- rsample::initial_split(Train, prop = 3/4)
+
+train_ <- rsample::training(tmp)
+valid <- rsample::testing(tmp)
+
+
+y_train <- as.integer(train_$target)
+w_train <- train_$weight
+x_train <- train_ %>% select(-target, -weight)
+y_valid <- as.integer(valid$target)
+w_valid <- valid$weight
+x_valid <- valid %>% select(-target, -weight)
+
+```
+
+<!-- # Caret rf -->
+<!-- ```{r} -->
+<!-- library(caret) -->
+<!-- # train %>% -->
+<!-- #     mutate(label = ifelse(target == 11, "electron", -->
+<!-- #                    ifelse(target == 13, "muon", -->
+<!-- #                    ifelse(target == 211, "pion", -->
+<!-- #                    ifelse(target == 321, "kaon", "proton"))))) -->
+
+<!--       # 11: "electron" -->
+<!--     # 13: "muon" -->
+<!--     # 211: "pion" -->
+<!--     # 321: "kaon" -->
+<!--     # 2212: "proton" -->
+
+<!-- set.seed(42) -->
+<!-- index <- createDataPartition(train$target, p = 0.7, list = FALSE) -->
+<!-- tr_data <- train[index, ] -->
+<!-- tes_data  <- train[-index, ] -->
+
+
+<!-- model_caret_rf <- caret::train(target ~ ., -->
+<!--                          data = tes_data, -->
+<!--                          method = "rf", -->
+<!--                          preProcess = c("scale", "center"), -->
+<!--                          trControl = trainControl(method = "repeatedcv",  -->
+<!--                                                   number = 5,  -->
+<!--                                                   repeats = 5,  -->
+<!--                                                   verboseIter = FALSE)) -->
+
+
+<!-- pred_rf <- data.frame(actual = tes_data$target, -->
+<!--                     predict(model_caret_rf, newdata = train[1002:1102,], type = "prob")) -->
+
+<!-- final$predict <- as.factor(ifelse(pred_rf$benign > 0.5, "benign", "malignant")) -->
+
+<!-- cm_original <- confusionMatrix(final$predict, final$actual) -->
+
+<!-- ``` -->
+
+
+
+<!-- # mxnet modeling -->
+
+<!-- - Particles Classification after collision (mxnet) [kaggle kernet](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-mxnet) -->
+<!-- - Particles Classification after collision (NNmxnet) [kaggle kernel](https://www.kaggle.com/kmezhoud/particles-classification-after-collision-nnmxnet) -->
+
+
+
+<!-- # Xgboost model -->
+
+<!-- - Particles Classification after collision [kaggle kernel](https://www.kaggle.com/kmezhoud/particles-classification-collision-xgboost-weight) -->
+
+<!-- ```{r} -->
+<!-- library(xgboost) -->
+
+
+<!-- dtrain <- xgb.DMatrix(data = as.matrix(x_train), label = y_train, weight = w_train, missing = -999.0)                                                                                                                 -->
+<!-- dval <- xgb.DMatrix(data = as.matrix(x_valid), label = y_valid, weight = w_valid, missing = -999.0) -->
+
+
+<!-- ``` -->
+
+<!-- ## Set the model -->
+<!-- ```{r} -->
+
+<!-- nclass <- length(unique(y_train)) -->
+
+<!-- xgb_params <- list("objective" = "multi:softprob", -->
+<!--                    "eval_metric" = "mlogloss", -->
+<!--                    "num_class" = nclass, -->
+<!--                    "colsample_bytree" = 0.5, -->
+<!--                    "gamma" = 0, -->
+<!--                    "min_child_weight" = 1, -->
+<!--                    "eta" = 1, -->
+<!--                    "max_depth" = 5, -->
+<!--                    "subsample" = 1, -->
+<!--                    "nthread" = parallel::detectCores(all.tests = FALSE, logical = TRUE)  # detect and use all cpu  -->
+<!--                   ) -->
+
+<!-- cv_model <- xgb.cv(params = xgb_params, -->
+<!--                    data = dtrain, -->
+<!--                    #eval_metric = list(dtrain, dval), -->
+<!--                    watchlist = list(validation = dval), -->
+<!--                    nrounds = 30, -->
+<!--                    verbose = TRUE, -->
+<!--                    maximize = FALSE, -->
+<!--                    nfold = 5, -->
+<!--                    early_stopping_round = 10, -->
+<!--                    print_every_n = 5, -->
+<!--                    prediction = TRUE) -->
+<!-- ``` -->
+
+
+
+
+<!-- When you observe high training accuracy, but low tests accuracy, it is likely that you encounter overfitting problem. -->
+
+<!-- There are in general two ways that you can control overfitting in xgboost : -->
+
+<!-- * The first way is to directly control model complexity: This include max_depth, min_child_weight and gamma -->
+
+<!-- * The second way is to add randomness to make training robust to noise◦This include subsample, colsample_bytree -->
+
+<!-- * You can also reduce stepsize eta, but needs to remember to increase num_round when you do so -->
+
+
+<!-- ```{r} -->
+<!-- OOF_prediction <- data.frame(cv_model$pred) %>% -->
+<!--   mutate(max_prob = max.col(., ties.method = "last"), -->
+<!--          label = y_train + 1) -->
+<!-- OOF_prediction -->
+<!-- ``` -->
+
+<!-- ## Confusion matrix of xgb_cv -->
+
+<!-- ```{r} -->
+<!-- # confusion matrix -->
+<!-- caret::confusionMatrix(factor(OOF_prediction$max_prob), -->
+<!--                 factor(OOF_prediction$label), -->
+<!--                 mode = "everything") -->
+<!-- ``` -->
+
+
+<!-- # Training the model by the best iteration -->
+
+<!-- ```{r} -->
+<!--                                                                                                                   #Best Number of iterations -->
+<!--     num_iterations = cv_model$best_iteration  -->
+
+<!--     xgb_model = xgb.train(params = xgb_params, -->
+<!--                             data = dtrain, -->
+<!--                             nrounds= num_iterations, -->
+<!--                             verbose_eval= FALSE -->
+<!--                  )                                                                                                              -->
+<!-- ```  -->
+
+<!-- ## kappa evaluation -->
+
+<!-- ```{r} -->
+<!-- dvalid = xgb.DMatrix( as.matrix(x_valid)) -->
+
+<!-- pred_valid <- predict(xgb_model, dvalid) -->
+
+<!-- Metrics::ScoreQuadraticWeightedKappa(as.integer(round(pred_valid)),  -->
+<!--                                      y_valid,  -->
+<!--                                      min.rating = 0,  -->
+<!--                                      max.rating = 4) -->
+
+
+
+<!-- ``` -->
+
+<!-- ## Confusion matrix -->
+<!-- ```{r} -->
+<!-- #evaluate the default model -->
+<!-- valid_prediction <- matrix(pred_valid, nrow = 5, ncol=length(pred_valid)/5) %>% -->
+<!--                    t() %>%  -->
+<!--                   data.frame() %>%  -->
+<!--                   mutate(label = y_valid , max_prob = max.col(., "last") - 1) -->
+
+<!-- caret::confusionMatrix(factor(valid_prediction$max_prob), factor(valid_prediction$label), mode = "everything") -->
+<!-- ``` -->
+
+<!-- ## Variable Importance -->
+
+<!-- ```{r} -->
+<!-- # get the feature real names -->
+<!-- names <- colnames(x_train)  -->
+<!-- # compute feature importance matrix -->
+<!-- importance_matrix = xgb.importance(feature_names = names, model = xgb_model) -->
+
+<!-- importance_matrix -->
+<!-- ``` -->
+<!-- ## Plot features importance -->
+
+<!-- ```{r} -->
+<!-- # plot -->
+<!-- xgboost::xgb.ggplot.importance(importance_matrix, top_n = 10) + -->
+<!-- ggplot2::theme_minimal() -->
+<!-- ``` -->
+
+
+<!-- # xgboost prediction -->
+
+<!-- ```{r} -->
+<!-- test -->
+<!-- y_test = test$target -->
+<!-- x_test <- test %>% select(-target) -->
+<!-- #x_test <- x_test %>% select(colnames(x_train)) -->
+<!-- dtest <- xgb.DMatrix(as.matrix(x_test)) -->
+
+<!-- rm(Test) -->
+<!-- invisible(gc()) -->
+
+<!-- pred_test <- round(predict(xgb_model, dtest,reshape=TRUE), digits = 4)  -->
+
+
+<!--     # 0:11: "electron" -->
+<!--     # 1:13: "muon" -->
+<!--     # 2:211: "pion" -->
+<!--     # 3:321: "kaon" -->
+<!--     # 4:2212: "proton" -->
+
+<!-- ## reshape dataframe and get which class                                                                                                                   -->
+<!-- pred_test_class <- matrix(pred_test, nrow = 5, ncol = length(pred_test) / 10) %>%  -->
+<!--                t() %>% -->
+<!--                data.frame() %>% -->
+<!--                mutate(max = max.col(., ties.method = "last") - 1, image = y_test) %>% -->
+<!--                rename(electron = X1, muon = X2, pion = X3, kaon = X4, proton = X5) %>% -->
+<!--               select(image, everything())  -->
+
+
+
+<!-- pred_test_class %>% head -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- submission <- pred_test_class %>% select(-max) -->
+
+<!-- fwrite(submission,"submission.csv") -->
+<!-- ``` -->
+

@@ -96,3 +96,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/unbalanced_multi_class/unbalanced_multiclass.html" target = "_blank">
 <img src="images/unbalanced_multiclass.png" align="left" height="150" width="250" title="Dealing with unbalanced data in machine learning">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/cern_particle/particle_class.html" target = "_blank">
+<img src="images/collision.png" align="left" height="150" width="250" title="Image particle classification after collision">
+</a>

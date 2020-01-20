@@ -27,3 +27,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Predict Future Monthly Sales](predict-future-sales/predict_future_sales.html)
 - [Predict the number of attempts by xgboost](bowl-2019/bowl_19_xgb.html)
 - [Dealing with unbalanced multiclasses with caret](unbalanced_multi_class/unbalanced_multiclass.html)
+- [Image particle classification after collision](cern_particle/particle_class.html)

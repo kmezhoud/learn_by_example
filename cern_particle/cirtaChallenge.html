@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Karim Mezhoud" />
+
+<meta name="date" content="2019-11-25" />
+
+<title>Particle Classification after collision</title>
+
+<script src="cirtaChallenge_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="cirtaChallenge_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="cirtaChallenge_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="cirtaChallenge_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="cirtaChallenge_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="cirtaChallenge_files/navigation-1.1/tabsets.js"></script>
+<script src="cirtaChallenge_files/navigation-1.1/codefolding.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { background-color: #f8f8f8; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Particle Classification after collision</h1>
+<h4 class="author">Karim Mezhoud</h4>
+<h4 class="date">2019-11-25</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#set-python-version-and-anaconda-environment"><span class="toc-section-number">0.1</span> set python version and anaconda environment</a></li>
+<li><a href="#particle-type-classification"><span class="toc-section-number">1</span> Particle type classification</a><ul>
+<li><a href="#example-of-a-particle"><span class="toc-section-number">1.1</span> Example of a particle</a></li>
+<li><a href="#distribution-of-particles-in-an-event"><span class="toc-section-number">1.2</span> Distribution of particles in an event</a></li>
+</ul></li>
+<li><a href="#svm"><span class="toc-section-number">2</span> SVM</a><ul>
+<li><a href="#oups-our-model-is-actually-really-bad-then"><span class="toc-section-number">2.0.1</span> oups !! Our model is actually really bad then…</a></li>
+<li><a href="#it-seems-our-model-is-overfitting-by-predicting-only-pions-can-you-help-improve-it"><span class="toc-section-number">2.1</span> It seems our model is overfitting by predicting only pions! Can you help improve it?</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="set-python-version-and-anaconda-environment" class="section level2">
+<h2><span class="header-section-number">0.1</span> set python version and anaconda environment</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/anaconda3/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+</div>
+<div id="particle-type-classification" class="section level1">
+<h1><span class="header-section-number">1</span> Particle type classification</h1>
+<p>Welcome!</p>
+<p>In this challenge we want to build a machine learning model to help us recognize particles. Particles are the tiny constituant of matter generated in a collision between proton bunches at the Large Hadron Collider at CERN.</p>
+<p>Particles are of course of different types and identifying which particle was produced in an extremly important task for particle physicists.</p>
+<p>Our dataset comprises 350 independent simulated events, where each event contains labelled images of particle trajectories.</p>
+<p>A good model assigns the correct particle type to any particle, even the least frequent ones.</p>
+<p>Read throught this notebook to discover more about the particles.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#Import libraries to load and process data</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="im">import</span> pickle</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co"># replace by your own file path</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">pkl_file <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;download/event1.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">event1 <span class="op">=</span> pickle.load(pkl_file)</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">np.shape(event1)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1">event1</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># get the data and target</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">data,target<span class="op">=</span>event1[<span class="dv">0</span>],event1[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">target<span class="op">=</span>target.astype(<span class="st">&#39;int&#39;</span>)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">target</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co"># code to particle name dictionary -- more here : </span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">dic_types<span class="op">=</span>{<span class="dv">11</span>: <span class="st">&quot;electron&quot;</span>, <span class="dv">13</span> : <span class="st">&quot;muon&quot;</span>, <span class="dv">211</span>:<span class="st">&quot;pion&quot;</span>, <span class="dv">321</span>:<span class="st">&quot;kaon&quot;</span>,<span class="dv">2212</span> : <span class="st">&quot;proton&quot;</span>}</a></code></pre></div>
+<div id="example-of-a-particle" class="section level2">
+<h2><span class="header-section-number">1.1</span> Example of a particle</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">plt.title(dic_types[target[<span class="dv">0</span>]])</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">plt.imshow(data[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">plt.show()</a></code></pre></div>
+<p><img src="cirtaChallenge_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+<div class="figure">
+<img src="cirtaChallenge_files/cirtaChallenge_7_0.png" alt="png" />
+<p class="caption">png</p>
+</div>
+</div>
+<div id="distribution-of-particles-in-an-event" class="section level2">
+<h2><span class="header-section-number">1.2</span> Distribution of particles in an event</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="im">from</span> collections <span class="im">import</span> Counter</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">plt.bar(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)),<span class="bu">list</span>(Counter(target).values()))</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" data-line-number="1">plt.xticks(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)), [dic_types[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">list</span>(Counter(target).keys())])</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" data-line-number="1">plt.show()</a></code></pre></div>
+<p><img src="cirtaChallenge_files/figure-html/unnamed-chunk-7-1.png" width="1152" /></p>
+<div class="figure">
+<img src="cirtaChallenge_files/cirtaChallenge_9_0.png" alt="png" />
+<p class="caption">png</p>
+</div>
+</div>
+</div>
+<div id="svm" class="section level1">
+<h1><span class="header-section-number">2</span> SVM</h1>
+<p>Let us try to predict the particle type with an SVM model from the famous sklearn library. First we split the data into training and test sets.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="co"># we transform the 10x10 images into arrays of 100. You can play with that :) </span></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4">X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</a>
+<a class="sourceLine" id="cb11-5" data-line-number="5">    [np.concatenate((i)) <span class="cf">for</span> i <span class="kw">in</span> data], target, test_size<span class="op">=</span><span class="fl">0.20</span>, random_state<span class="op">=</span><span class="dv">42</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="co">#new shape of our data</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">np.array(X_train).shape, np.array(y_train).shape</a></code></pre></div>
+<pre><code>((2752, 100), (2752,))</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="co"># particle distribution in our training</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">Counter(y_train)</a></code></pre></div>
+<pre><code>Counter({211: 2116, 2212: 248, 321: 379, 11: 8, 13: 1})</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="im">from</span> sklearn.svm <span class="im">import</span> SVC</a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">clf <span class="op">=</span> SVC(gamma<span class="op">=</span><span class="st">&#39;auto&#39;</span>)</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">clf.fit(X_train, y_train)</a></code></pre></div>
+<pre><code>SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+    decision_function_shape=&#39;ovr&#39;, degree=3, gamma=&#39;auto&#39;, kernel=&#39;rbf&#39;,
+    max_iter=-1, probability=False, random_state=None, shrinking=True,
+    tol=0.001, verbose=False)</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="co"># particle distribution in our test</span></a>
+<a class="sourceLine" id="cb18-2" data-line-number="2">Counter(y_test)</a></code></pre></div>
+<pre><code>Counter({321: 93, 211: 516, 2212: 77, 11: 2, 13: 1})</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb20-1" data-line-number="1">clf.score(X_test,y_test)</a></code></pre></div>
+<pre><code>0.7489114658925979</code></pre>
+<p>The score is already pretty good ! Let’s now try to focus on less frequent particle by removing the most redundant one, the “pion”</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="co">#we have now reduced our test sample ! </span></a>
+<a class="sourceLine" id="cb22-2" data-line-number="2">idx_non_pion<span class="op">=</span>np.where(y_test<span class="op">!=</span><span class="dv">211</span>)[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb22-3" data-line-number="3">Counter(y_test[idx_non_pion])</a></code></pre></div>
+<pre><code>Counter({321: 93, 2212: 77, 11: 2, 13: 1})</code></pre>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb24-1" data-line-number="1"><span class="co">#let&#39;s see how our model behaves then</span></a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb24-3" data-line-number="3">clf.score(np.array(X_test)[idx_non_pion],np.array(y_test)[idx_non_pion])</a></code></pre></div>
+<pre><code>0.0</code></pre>
+<div id="oups-our-model-is-actually-really-bad-then" class="section level3">
+<h3><span class="header-section-number">2.0.1</span> oups !! Our model is actually really bad then…</h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="co">#let&#39;s take a closer look at which particle type the model is predicting </span></a>
+<a class="sourceLine" id="cb26-2" data-line-number="2">clf.predict(np.array(X_test)[idx_non_pion])</a></code></pre></div>
+<pre><code>array([211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
+       211, 211, 211, 211])</code></pre>
+</div>
+<div id="it-seems-our-model-is-overfitting-by-predicting-only-pions-can-you-help-improve-it" class="section level2">
+<h2><span class="header-section-number">2.1</span> It seems our model is overfitting by predicting only pions! Can you help improve it?</h2>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
