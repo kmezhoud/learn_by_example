@@ -1,0 +1,896 @@
+---
+title: "Predicting lung cancer survival time by OWKIN"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 12
+    fig_height: 8
+    theme: cosmo
+    highlight: tango
+    code_folding: show #hide
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+# Description
+
+## Clinical  Context
+
+Computed Tomography scanner (CT scan) is a widely spread and popular exam in oncology: it reflects the density of the tissues of the human body. It is, then, adapted to the study of lung cancer because lungs are mostly filled with air (low density) while tumors are made of dense tissues. 
+
+## Clinical context
+Small Cell Lung Cancer can itself be split into four major subtypes based on histology observations: squamous cell carcinoma, large cell carcinoma, adenocarcinoma and a mixture of all
+
+## Goal
+Predict the survival time of a patient (remaining days to live) from one three-dimensional CT scan (grayscale image) and a set of pre-extracted quantitative imaging features, as well as clinical data.
+
+## dataset 
+To each patient corresponds one CT scan, and one binary segmentation mask. The segmentation mask is a binary volume of the same size as the CT scan, except that it is composed of zeroes everywhere there is no tumour, and 1 otherwise. 
+The CT scans and the associated segmentation masks are subsets of two public datasets: 
+
+- NSCLC Radiomics (subset of 285 patients)
+- NSCLC RadioGenomics(subset of 141 patients)
+
+Both training and validation contain for each patient, the time to event (days), as well as the censorship. Censorship indicates whether the event (death) was observed or whether the patient escaped the study: this can happen when the patient’s track was lost, or if the patient died of causes not related to the disease. 
+
+
+# Setting python version and anaconda environment for R :-)
+
+```{r}
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+
+```{r}
+knitr::opts_chunk$set(engine.path = list(
+  python = '/Users/Mezhoud/anaconda3/bin/python3'
+))
+
+```
+
+# Explore scans and masks of Tumor lung cancer
+
+```{python}
+import numpy as np
+from matplotlib import pyplot as plt
+#from matplotlib import pyplot
+from PIL import Image
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+print("the dimension of scan array is: ", str(scan.shape))
+print("the dimension of mask array is: ", str(mask.shape))
+
+print("plot some images from patient 002: ")
+#plt.imshow(scan[:, :, 3])
+
+f, axarr = plt.subplots(2,3)
+axarr[0,0].imshow(scan[1:92, 1:92, 0])
+axarr[1,0].imshow(mask[1:92, 1:92, 0])
+axarr[0,1].imshow(scan[:, :, 3])
+axarr[1,1].imshow(mask[:, :, 3])
+axarr[0,2].imshow(scan[:, :, 80])
+axarr[1,2].imshow(mask[:, :, 80])
+
+```
+
+## Function to plot multiple image from array
+
+```{python}
+
+def plot_figures(figures, nrows = 1, ncols=1):
+  """Plot a dictionary of figures.
+
+  Parameters
+  ----------
+  figures : <title, figure> dictionary
+  ncols : number of columns of subplots wanted in the display
+  nrows : number of rows of subplots wanted in the figure
+  """
+  fig, axeslist = plt.subplots(ncols=ncols, nrows=nrows)
+  for ind,title in zip(range(len(figures)), figures):
+      axeslist.ravel()[ind].imshow(figures[title], cmap=plt.jet())
+      axeslist.ravel()[ind].set_title(title)
+      axeslist.ravel()[ind].set_axis_off()
+  plt.tight_layout() 
+
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+
+# generation of a dictionary of (title, images)
+number_of_im = 6
+scan = {'scan'+str(i): scan[1:92, 1:92, i] for i in range(number_of_im)}
+
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(scan, 2, 3)
+plt.show()
+
+```
+
+The plot shows colored images scan of 6 slides. At this step it is not easy to distinguish the tumor.
+
+The dataset has aslo the masks for each scan slide which locate the position of the tumor in the scan.
+
+```{python}
+mask = {'mask'+str(i): mask[1:92, 1:92, i] for i in range(number_of_im)}
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(mask, 2, 3)
+plt.show()
+```
+
+- The first 3 slides do not have tumor streak, however the next 3 ones indicate the position  of the tumor in red color.
+- If we plot more slides, we can observe the increase of the size of the tumor during plotting slides. 
+- At the end the size the Tumor is decreasing.
+
+- We can note that the crop is adjusted to the size of the tumor
+
+
+```{python}
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+mask = {'mask'+str(i): mask[1:92, 1:92, i] for i in range(90)}
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(mask, 9, 10)
+plt.show()
+```
+
+If we compare with the scan slides, we obtain:
+
+```{python, fig.height = 7}
+scan = {'scan'+str(i): scan[1:92, 1:92, i] for i in range(90)}
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(scan, 9, 10)
+plt.show()
+```
+
+- It is always not easy to delimit the tumor in scan images
+
+- Comparing to masks, we can note that, between scan 34 and scan 65, the slides have more yellow stain or less blue color.
+
+## Superimposing Scan and mask images
+
+```{python}
+import numpy as np
+from matplotlib import pyplot as plt
+from PIL import Image
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+
+background = mask[1:92, 1:92, 56]
+overlay = scan[1:92, 1:92, 56]
+
+plt.title("Scan/Mask: 56")
+plt.imshow(background, cmap='gray')
+plt.imshow(overlay, cmap='jet', alpha=0.9)
+
+
+```
+
+- It isnow clear that masks seems to be more useful that scans because the tumor in not visible in scan slides.
+
+
+# Explore images from test dataset
+
+```{python}
+img_array = np.load('test/images/patient_001.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+
+# generation of a dictionary of (title, images)
+number_of_im = 90
+scan = {'scan'+str(i): scan[1:92, 1:92, i] for i in range(number_of_im)}
+
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(scan, 9, 10)
+plt.show()
+
+```
+
+Plot mask slides from test dataset
+
+```{python}
+mask = {'mask'+str(i): mask[1:92, 1:92, i] for i in range(number_of_im)}
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(mask, 9, 10)
+plt.show()
+```
+
+
+```{python}
+img_array = np.load('test/images/patient_001.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+background = mask[1:92, 1:92, 34]
+overlay = scan[1:92, 1:92, 34]
+
+plt.title("Scan/Mask: 34")
+plt.imshow(background, cmap='gray')
+plt.imshow(overlay, cmap='jet', alpha=0.9)
+```
+
+- In the test images, we can also observe tumor slides like in train dataset.
+
+- For training step, it maybe better to use masks slides than scan. But we need to explore variables in clinical data and radiomics and think how to associate images with numeric variables.
+
+- One think we can do is the convert slides to dataframe (each slide in one row) and then we can obtain one matrix for each patient tumor.
+
+- At this step I will switch from python to R :-)
+
+
+
+# Import image from python environment to R
+
+The goal of this step is to convert image matrices as vector. So, each image can be ranged in one row. Finally, we can obtain one dataframe with 92 rows (images) ofr each sample (patient).
+
+## Import useful R packages
+
+```{r , include=FALSE}
+library(dplyr)
+require("reticulate")
+#library(data.table)
+#library(EBImage)
+#library(xgboost)
+#library(ggplot2)
+```
+
+
+## Useful python function
+
+```{python}
+
+import numpy as np
+
+def load_img_array(file):
+  im_array = np.load(file)
+  scan = im_array['scan']
+  mask = im_array['mask']
+  return scan,mask
+
+
+```
+
+## Understanding the structure of the array of images 
+
+```{r}
+patient_002 <- reticulate::py$load_img_array('train/images/patient_002.npz')
+
+paste0("One image is a: ", class(patient_002[[1]][,,1]))
+paste0("Two images are an: ", class(patient_002[[1]][,,1:2]))
+
+paste0("Print the first 10 pixels of Scan N°1: "); patient_002[[1]][,,1][1:10, 1:10]
+paste0("Print the first 10 pixels of Mask N°1: "); patient_002[[2]][,,1][1:10, 1:10]
+
+```
+
+
+## Convert the array of matrices to a list of matrices
+
+```{r}
+ls_scan_patient_002 <- lapply(seq(dim(patient_002[[1]])[3]), function(x) patient_002[[1]][ , , x])
+ls_mask_patient_002 <- lapply(seq(dim(patient_002[[2]])[3]), function(x) patient_002[[1]][ , , x])
+
+paste0("The dimension of the scan images is: ", length(ls_scan_patient_002))
+paste0("The dimension of the mask images is: ", length(ls_mask_patient_002))
+```
+
+## Convert image matrix to vector
+
+```{r}
+mat2vec <- function(path){
+  
+  # Load patient CT scan
+  patient <- py$load_img_array(path)
+  
+  # list scans
+  scan <- lapply(seq(dim(patient[[1]])[3]), function(x) patient[[1]][ , , x])
+  # list masks
+  mask <- lapply(seq(dim(patient[[2]])[3]), function(x) patient[[1]][ , , x])
+  
+  # vectorize each matrix (image) into vector
+  vec_scan <- lapply(scan, function(x) as.vector(x))
+  
+  # vectorise each mask (image) to vector
+  vec_mask <- lapply(mask, function(x) as.vector(x))
+  
+  
+  # bind vector into dataframe by row
+  df_scan <-as.data.frame( do.call(rbind, vec_scan)) 
+  df_mask <-as.data.frame( do.call(rbind, vec_mask)) 
+  
+  # extract patien_id from path
+  scan_id <- paste0(tools::file_path_sans_ext(basename(path)), "_scan")
+  mask_id <- paste0(tools::file_path_sans_ext(basename(path)), "_mask")
+  
+  # group in list the scan and the mask dataframes
+  ls <- list(df_scan, df_mask)
+  
+  # Rename list
+  names(ls) <- c(scan_id, mask_id)
+  
+  
+  return(ls)
+}
+
+patient2 <- mat2vec('train/images/patient_002.npz')
+
+paste0("The output is a: " ,class(patient2))
+paste0("With length of: ", length(patient2))
+paste0("The names of two elements are: ") ; names(patient2)
+paste0("which are: ", class(patient2$patient_002_scan))
+paste0("The dimension of each dataframe is: ") ; dim(patient2$patient_002_scan)
+
+```
+
+- At this step we stop exploring scan and mask.
+
+- We think to use only masks for modeling
+
+- Potential method: keras, mxnet
+
+# Exploratory Data Analysis of radiomics and clinical data
+
+```{r include=FALSE}
+library(data.table)
+library(tidyverse)
+library(DT)
+library(ggplot2)
+```
+
+
+```{r}
+radiomics <- fread("train/features/radiomics.csv", quote = "")
+clinical <- fread("train/features/clinical_data.csv")
+
+# display only 8 columns and 5 rows
+head(radiomics)[,1:8]
+head(clinical)
+```
+
+The radiomics features can be divided into 4 groups as follows (shown in row 1):
+- Group 1. First order statistics
+- Group 2. Shape and size based features
+- Group 3. Textural features
+- Group 4. Wavelet features
+
+Each group can be subset into several sub-groups shown in row 2 of the radiomics dataset.
+To make the radiomics features numeric dataset we need to remove the two first rows and convert them to colnames.
+
+```{r}
+groups <- radiomics[1:2,-1] %>%
+  t() %>%
+  as.data.frame() %>%
+  rename("Groups" = V1, "Features" = V2) #%>%
+#  remove_rownames()
+
+head(groups)
+
+```
+
+To improve the esthetic of the dataframe, we note:
+
+- `original` is repetitive word. we can omit it.
+
+- The group label is included in Feature label except `textural`
+
+- We can remove `original` from Features and use use the rest as colnames of the radiomics dataset.
+
+## Plot the distribution of Goups and features
+
+```{r}
+groups %>%
+  group_by(Groups, Features) %>%
+  summarise(n_Features = n()) %>%
+  ggplot() +
+  aes(x = Groups, y = n_Features, color = Features ) +
+  geom_col() +
+  theme(legend.position = "none") +
+  ggtitle("Number of Features by Group")
+```
+
+## New Colnames of radiomics
+```{r}
+
+new_colnames_radiomics <- groups %>%
+  mutate(Features = stringr::str_remove(Features,"original_")) %>%
+  pull(Features)
+
+new_colnames_radiomics %>% head()
+```
+
+## Get new radiomics style
+
+```{r}
+old_names <- colnames(radiomics)
+new_names <- c("PatientID", new_colnames_radiomics)
+
+new_radiomics <- radiomics[-1:-3,] %>%
+  rename_at(vars(old_names), ~ new_names) %>%
+  mutate_if(is.character, as.numeric) #%>%
+#as.matrix()
+
+
+head(new_radiomics)[,1:8]
+```
+
+
+## Glimpse correlation between features (default order)
+
+```{r include=FALSE}
+library(corrplot)
+library(gridExtra)
+library(scales)
+library(stringi)
+```
+
+
+```{r, fig.height= 14, fig.width=14}
+
+M <- cor(new_radiomics[-1])
+#corrplot(M,  method = "circle")
+corrplot.mixed(M, tl.col="black", tl.pos = "lt")
+```
+
+##  The first principal component order of the features
+
+```{r, fig.height= 14, fig.width=14}
+
+corrplot.mixed(M, tl.col="black", tl.pos = "lt", order = "FPC")
+
+```
+
+##  The hierarchical clustering order of the features
+
+```{r, fig.height= 14, fig.width=14}
+
+corrplot.mixed(M, tl.col="black", tl.pos = "lt", order = "hclust")
+
+```
+
+
+-  We can return to these heatmap when we predict the most importante features using modeling.
+
+## Explore Clinical data
+
+```{r, fig.height= 8,fig.width=8}
+
+
+p1 <- clinical %>%
+  group_by(Histology = stringi::stri_trans_totitle(Histology)) %>% # case insensitive of adenocarcinoma and Adenocarcinoma
+  group_by(Histology) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = Histology, y = Count, fill= Histology) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = -2) +
+  theme(axis.text.x = element_text(color="black",size=10,hjust=.5,vjust=.5, angle=5))
+
+
+p2 <- ggplot(data=clinical[!is.na(clinical$age),]) +
+  aes(x= age) +
+  geom_histogram(fill="blue", bins = 60)  +
+  geom_vline(xintercept = c(65,70, 72 ), color = "red")
+#coord_flip()
+
+p3 <- clinical %>%
+  mutate(Nstage = as.factor(Nstage)) %>%
+  group_by(Mstage, Nstage, Tstage) %>%
+  summarise(Count = n()) %>%
+  ggplot() +
+  aes(x = Tstage, y = Count, color = Nstage) +
+  facet_grid(Mstage~ .) +
+  geom_point(size=4, alpha = 0.8)
+
+p4 <- clinical %>%
+  group_by(SourceDataset) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = "", y = Count, fill = SourceDataset) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme(legend.position = "top")
+
+grid.arrange(p1,p2,p3,p4, layout_matrix = rbind(c(1),c(2, 3, 4)), nrow = 2)
+
+
+```
+
+- The most frequente cases is `Adenocarcinoma` followed by `Aquamous Cell Carcinoma`.
+
+- NOS: not otherwise specified
+
+- It seems `NOS` and `Nsclc Nos` corespond to the same category
+
+- `Nan` is not available ?
+
+- The density plot shows that the must frequent cases are `65, 70, 72` years old.
+
+_ The most frequent `Nstage` class is also `0`, followed by `2`, `3`, and `1`.
+
+- The third plots shows that the most cases are in `Mstage == 0`. We can focus only in this class.
+
+- There are two sources of dataset.
+
+
+## Explore output_train and output_test
+
+```{r}
+output_train <- fread("output_train.csv")
+output_test <- fread("output_test.csv")
+head(output_train)
+head(output_test)
+```
+
+- The goal is the fill  `Event`  variable in output_test by `0` or `1`.
+
+
+# Train data preparation: Merge clinical, radimoics, and output_train dataset
+
+```{r}
+# Convert character variables to numeric 
+new_clinical <- clinical %>%
+                mutate(Histology = stringi::stri_trans_totitle(Histology)) %>% 
+                mutate_if(is.character, as.factor) %>%
+                mutate_if(is.factor, as.numeric) 
+                #mutate(Histo = as.numeric(as.factor(Histology))) %>%
+                #mutate(Source = as.numeric(as.factor(SourceDataset))) %>%
+                #select(everything(), - Histology, -SourceDataset)
+
+train <- new_clinical %>%
+  mutate_if(is.character, as.factor) %>%
+  left_join(y = output_train, by = "PatientID") %>%
+  left_join(y = new_radiomics, by = "PatientID") %>%
+  select(PatientID, Event, everything()) %>%
+  setDT()
+
+
+
+train[,1:10] %>% head()
+
+```
+
+## Explore missing value in train
+
+```{r, fig.height= 8, fig.width= 10}
+library(DataExplorer)
+DataExplorer::plot_missing(train)
+```
+
+
+- There are 18 missing `age` from 300.
+
+
+
+# Test data preparation: Merge clinical, radimoics, and output_test dataset 
+
+
+```{r}
+radiomics_test <- fread("test/features/radiomics.csv", quote = "")
+clinical_test <- fread("test/features/clinical_data.csv")
+output_test <- fread("output_test.csv")
+
+```
+
+
+## New_radiomics_test
+
+```{r}
+
+groups_test <- radiomics_test[1:2,-1] %>%
+  t() %>%
+  as.data.frame() %>%
+  rename("Groups" = V1, "Features" = V2)
+
+new_colnames_radiomics_test <- groups_test %>%
+  mutate(Features = stringr::str_remove(Features,"original_")) %>%
+  pull(Features)
+
+old_names_test <- colnames(radiomics_test)
+new_names_test <- c("PatientID", new_colnames_radiomics_test)
+
+new_radiomics_test <- radiomics_test[-1:-3,] %>%
+  rename_at(vars(old_names), ~ new_names) %>%
+  mutate_if(is.character, as.numeric) #%>%
+#as.matrix()
+
+
+head(new_radiomics_test)[,1:8]
+
+
+```
+
+## New_clinical_test
+
+```{r}
+new_clinical_test <- clinical_test %>%
+                mutate(Histology = stringi::stri_trans_totitle(Histology)) %>% 
+                mutate_if(is.character, as.factor) %>%
+                mutate_if(is.factor, as.numeric) 
+```
+
+## Merge clinical, radimoics, and output_test dataset
+
+```{r}
+test <- new_clinical_test %>%
+  mutate_if(is.character, as.factor) %>%
+  left_join(y = output_test, by = "PatientID") %>%
+  left_join(y = new_radiomics_test, by = "PatientID") %>%
+  select(PatientID, Event, everything()) %>%
+  setDT() # convert to data.table
+
+
+
+test[,1:10] %>% head()
+```
+
+## Explore missing value in test
+
+```{r, fig.height= 8, fig.width= 10}
+library(DataExplorer)
+DataExplorer::plot_missing(test)
+```
+
+- There are 4 missing `age` from 125.
+
+
+# Scaling Train and Test dataset
+
+```{r}
+trainremoveCols <- c('PatientID','Event')
+testremoveCols <- c('PatientID', 'Event')
+
+Event <- train$Event
+PatientID <- test$PatientID
+
+train[,(trainremoveCols) := NULL]
+test[,(testremoveCols) := NULL]
+
+# Do scaling
+dt <- rbind(train, test)
+scale.cols <- colnames(dt)
+dt[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
+train <- cbind(Event, head(dt,nrow(train)))
+test  <- cbind(PatientID, tail(dt, nrow(test)))
+rm(dt)
+gc()
+```
+
+
+# Preprocessing for modeling 
+
+## Split Train dataset into Train & Valid sets
+
+```{r}
+library(rsample)
+
+set.seed(100)
+train_valid_split <- rsample::initial_split(train, prop = 0.8)
+train_valid_split
+```
+
+- We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
+train_8 <- rsample::training(train_valid_split)
+valid_2  <- rsample::testing(train_valid_split)
+train_8[1:10, 1:10]
+```
+
+
+## Format train and test to DMatrix
+
+```{r}
+library(Matrix)
+library(xgboost)
+
+options(na.action='na.pass')
+train_8_sparse <- sparse.model.matrix(Event ~., data=train_8)
+dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$Event)
+
+options(na.action='na.pass')
+valid_2_sparse <- sparse.model.matrix(Event ~., data=valid_2)
+dvalid_2 <- xgb.DMatrix(data=valid_2_sparse, label = valid_2$Event)
+
+```
+
+## Optimize features with Cross validation
+
+Here, we can see after how many rounds, we achieved the smallest test error.
+
+```{r}
+params <- list(booster = "gbtree",
+              tree_method = "auto",
+              objective = "binary:logistic",
+              #objective = "survival:cox",
+              eval_metric = "auc",         #  for Binary classification error rate
+              max_depth = 2,                 # 6 makes training heavy, there is no correlation between features #1 is not better
+              eta = 0.001,                     # learning rate
+              subsample = 0.5,              # prevent overfitting
+              colsample_bytree = 0.1         # specify the fraction of columns to be subsampled. # 0.5 is not better
+             )
+
+
+tme <- Sys.time()
+cv_model <- xgb.cv(params = params,
+                   data = dtrain_8,
+                   nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE),  #2,
+                   nrounds = 25000,
+                   verbose = TRUE,
+                   nfold = 5,
+                   print_every_n = 1000,
+                   early_stopping_rounds = 1000,
+                   maximize = TRUE,
+                   prediction = TRUE) # prediction of cv folds
+
+
+Sys.time() - tme
+```
+
+# Train the model
+
+```{r}
+watchlist <- list(train = dtrain_8, eval = dvalid_2)
+tme <- Sys.time()
+xgboost_tree <- xgb.train(data = dtrain_8, 
+                         params = params,
+                         watchlist = watchlist,
+                         nrounds = cv_model$best_iteration, # more than 12000 ~0.897
+                         print_every_n = 500,
+                         verbose = TRUE)
+
+Sys.time() - tme
+
+```
+
+## Predict valid_2 dataset
+```{r}
+pred_valid <- predict(xgboost_tree, dvalid_2)
+
+summary(pred_valid)
+
+
+```
+
+- We suppose that if Prob > 0.5 (Median), the Event is 1, else 0
+
+
+## Transform propability to binary classification
+
+```{r}
+pred_bin <- as.numeric(pred_valid >= 0.5)
+table(pred_bin)
+```
+
+
+## Confusion matrix for Tree model
+
+```{r}
+
+data.frame(prediction = as.numeric(pred_bin),
+         label = as.numeric(valid_2$Event)) %>%
+         count(prediction, label)
+
+```
+
+
+# Extract the most important features from tree xgboost model
+
+## List the most important features
+
+```{r}
+features <- colnames(train_8)
+importance_matrix_tree <- xgb.importance(features, model = xgboost_tree)
+importance_matrix_tree
+```
+
+- Survival Time is the most important feature, followed by age, and 8 texture description.
+
+
+## Plot the most important features (Tree model)
+
+```{r}
+library(Ckmeans.1d.dp)
+xgb.ggplot.importance(importance_matrix_tree[1:30,]) +
+ggplot2::theme_minimal()
+```
+
+# Prediction 
+
+## Load test data and format to DMatrix
+
+```{r}
+test_sparse <- sparse.model.matrix(PatientID ~., data=test)
+ dtest <- xgb.DMatrix(data=test_sparse, label = test$PatientID)
+```
+
+## Prediction with Tree xgboost model
+
+```{r}
+pred_tree <- predict(xgboost_tree, dtest)
+head(pred_tree)
+```
+
+## summarize probabilities of Events
+
+```{r}
+summary(pred_tree)
+```
+
+
+## submission
+
+```{r}
+
+pred <- data.frame(
+  PatientID = PatientID,
+  Event = pred_tree
+)
+
+submission <- output_test %>%
+  select(PatientID, SurvivalTime) %>%
+  left_join(pred, by = "PatientID")
+
+fwrite(submission, "submission.csv")
+```
+
+# Xgboost.surv
+
+```{r}
+data('pbc', package = 'survival')
+
+df_analysis <- as_tibble(pbc) %>% 
+  mutate(status = as.numeric(status==2)) %>% 
+  select(-id)
+
+# create vector that contains row numbers
+# that will be used in the training set.
+nobs <- nrow(df_analysis)
+
+set.seed(329)
+
+train_index <- sample(
+  x = 1:nobs,
+  size = as.integer(nobs * 3/4),
+  replace = FALSE
+)
+
+df_train <- df_analysis[train_index, ]
+df_test <- df_analysis[-train_index, ]
+
+df_train
+```
+
+
+```{r}
+df_params <- expand.grid(
+  max_depth = 1:4,
+  eta = 0.025,
+  min_child_weight = seq(1, 6, by = 1)
+)
+```
+
+```{r}
+library(xgboost.sur)
+sgb_params(max_depth = 1)
+```
+
