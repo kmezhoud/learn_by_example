@@ -10,6 +10,7 @@ output:
     highlight: tango
     number_sections: yes
     toc: yes
+  urlcolor: blue
   html_document:
     code_folding: show
     fig_caption: yes
@@ -27,7 +28,7 @@ knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 
 
 
-**NB.In pdf version, some plot are crowded. Please follow this [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html) to html format.**
+- In pdf format, some plots are crowded. Please follow this [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html) to html format.
 
 
 # Description
@@ -1220,7 +1221,8 @@ fwrite(submission_gbm, "submission_gbm.csv")
 ## Blend both models (Survival and Classification) together 
 
 ```{r}
-roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times==period_choice)]))/2, 
+roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[,
+                                                        which(suvival_predictions$unique.death.times==period_choice)]))/2, 
           response = validate_df_classification$ReachedEvent)
 ```
 
