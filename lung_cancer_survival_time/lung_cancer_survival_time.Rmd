@@ -3,16 +3,15 @@ title: "Survival Lung Cancer Modeling: Xgboost, Random Forest, GBM tentatives"
 author: "Karim Mezhoud"
 date: '`r Sys.Date()`'
 output:
-  html_document:
-    code_folding: show
+  pdf_document:
     fig_caption: yes
     fig_height: 8
     fig_width: 14
     highlight: tango
     number_sections: yes
-    theme: cosmo
     toc: yes
-  pdf_document:
+  html_document:
+    code_folding: show
     fig_caption: yes
     fig_height: 8
     fig_width: 14
@@ -26,9 +25,14 @@ output:
 knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 ```
 
+
+
+**NB.In pdf version, some plot are crowded. Please follow this [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html) to html format.**
+
+
 # Description
 
-This report is subset into 2 parts:
+This report is subset into 3 parts:
 
 - Exploratory of tumor arrays slides using python code
 
@@ -791,7 +795,7 @@ summary(pred_valid)
 
 ```
 
-- We suppose that if Prob > 0.5 (Median), the Event is 1, else 0
+- We suppose that if Prob > 0.575 (Median), the Event is 1, else 0
 
 
 ## Transform propability to binary classification
@@ -941,7 +945,8 @@ meth[c("PatientID")]=""
 meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables )
 
 # pmm generate error. it is seems working with cart
-# (https://stackoverflow.com/questions/48355250/do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu)
+# (https://stackoverflow.com/questions/48355250/
+#do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu)
 ```
 
 
@@ -970,6 +975,8 @@ sapply(imputed, function(x) sum(is.na(x)))
 print("train$age") ; summary(train$age)
 print("imputed$age") ; summary(imputed$age)
 ```
+
+- Well done :-)
 
 ### Do the same imputation for test
 
@@ -1020,8 +1027,9 @@ period_choice <- 825
 ```{r}
 # classification data set
 train_df_classificaiton  <- train_df_official 
+
 train_df_classificaiton$ReachedEvent <- ifelse((train_df_classificaiton$Event == 1 & 
-                                                  train_df_classificaiton$SurvivalTime <= period_choice), 1, 0)
+                                     train_df_classificaiton$SurvivalTime <= period_choice), 1, 0)
 
 summary(train_df_classificaiton$ReachedEvent)
 ```
@@ -1029,8 +1037,10 @@ summary(train_df_classificaiton$ReachedEvent)
 
 ```{r}
 validate_df_classification  <- validate_df_official 
+
 validate_df_classification$ReachedEvent <- ifelse((validate_df_classification$Event == 1 & 
-                                                        validate_df_classification$SurvivalTime <= period_choice), 1, 0)
+                                        validate_df_classification$SurvivalTime <= period_choice), 1, 0)
+
 summary(validate_df_classification$ReachedEvent)
 ```
 
@@ -1050,7 +1060,10 @@ library(mice)
 
 ```{r}
 # omit PatientID from variable importance
-var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID", "Event", "SurvivalTime")]], collapse ="+")
+var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID",
+                                                          "Event", 
+                                                          "SurvivalTime")]],
+              collapse ="+")
 
 survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var))
 
@@ -1083,8 +1096,11 @@ print("Blue PatientID: "); imputed[56,c(2,7,8,9)]
 - Once we have our survival_model model object, we can take a look at some probabilities of survival (this is just for illustrative purposes as we haven’t split our data set yet). Let’s look at two patients - row 1 and row 56:
 
 ```{r}
-plot(survival_model$unique.death.times, survival_model$survival[1,], type='l', col='orange', ylim=c(0.2,1))
-lines(survival_model$unique.death.times, survival_model$survival[56,], col='blue')
+plot(survival_model$unique.death.times, survival_model$survival[1,],
+     type='l', col='orange', ylim=c(0.2,1))
+
+lines(survival_model$unique.death.times, 
+      survival_model$survival[56,], col='blue')
 ```
 
 
@@ -1093,12 +1109,17 @@ lines(survival_model$unique.death.times, survival_model$survival[56,], col='blue
 First we get the basic survival prediction using our validation split set and then we flip the probability of the period of choice and get the AUC score:
 
 ```{r}
-feature_names <- setdiff(names(train_df_classificaiton), c('PatientID', 'ReachedEvent', 'SurvivalTime', 'Event'))
+feature_names <- setdiff(names(train_df_classificaiton),
+                         c('PatientID', 'ReachedEvent', 
+                           'SurvivalTime', 'Event'))
 
-suvival_predictions <- predict( survival_model, validate_df_official[, feature_names])
+
+suvival_predictions <- predict( survival_model, 
+                                validate_df_official[, feature_names])
 
 roc(response = validate_df_classification$ReachedEvent,
-    predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times == period_choice)])
+    predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times
+                                                        == period_choice)])
 ```
 
 ### RF survival Prediction
@@ -1107,7 +1128,9 @@ roc(response = validate_df_classification$ReachedEvent,
 
 survival_predictions_test <- predict( survival_model,imputed_test[, feature_names])
 
-predictor <- 1 - survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times==period_choice)]
+predictor <- 1 - 
+  survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times
+                                                           == period_choice)]
 
 pred <- data.frame(
   PatientID = PatientID,
@@ -1131,7 +1154,9 @@ require(gbm)
 
 
 
-var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in% c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))], collapse ="+")
+var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in%
+                            c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))],
+             collapse ="+")
 
 
 classification_formula <- formula(paste('ReachedEvent ~ ', var))
@@ -1153,7 +1178,9 @@ gbm_model = gbm(classification_formula,
 
 nTrees <- gbm.perf(gbm_model)
 
-validate_predictions <- predict(gbm_model, newdata = validate_df_classification[,feature_names], type="response", n.trees = nTrees)
+validate_predictions <- predict(gbm_model,
+                                newdata = validate_df_classification[,feature_names], 
+                                type="response", n.trees = nTrees)
 ```
 
 
