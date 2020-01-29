@@ -3,14 +3,6 @@ title: "Survival Lung Cancer Modeling: Xgboost, Random Forest, GBM tentatives"
 author: "Karim Mezhoud"
 date: '`r Sys.Date()`'
 output:
-  pdf_document:
-    fig_caption: yes
-    fig_height: 8
-    fig_width: 14
-    highlight: tango
-    number_sections: yes
-    toc: yes
-  urlcolor: blue
   html_document:
     code_folding: show
     fig_caption: yes
@@ -19,6 +11,14 @@ output:
     highlight: tango
     number_sections: yes
     theme: cosmo
+    toc: yes
+  urlcolor: blue
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
     toc: yes
 ---
 
@@ -29,6 +29,8 @@ knitr::opts_chunk$set(echo=TRUE, error=FALSE)
 
 
 - In pdf format, some plots are crowded. Please follow this [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html) to html format.
+
+- [Source](https://challengedata.ens.fr/participants/challenges/33/) of the datasets
 
 
 # Description
@@ -65,16 +67,23 @@ Both training and validation contain for each patient, the time to event (days),
 ## Setting python version and anaconda environment for R :-)
 
 ```{r}
-reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::use_python("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3", required = TRUE)
+#reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
 reticulate::py_config()
+```
+```{bash}
+#pip3 install --user sklearn
 ```
 
 
 ```{r}
 knitr::opts_chunk$set(engine.path = list(
-  python = '/Users/Mezhoud/anaconda3/bin/python3'
+  python = '/Library/Frameworks/Python.framework/Versions/3.7/bin/python3'
 ))
 
+# check xgboost module 
+reticulate::py_module_available("seaborn")
+#reticulate::install_miniconda("xgboost")
 ```
 
 ## Load scans and masks of Tumor lung cancer
@@ -171,6 +180,9 @@ plot_figures(mask, 9, 10)
 plt.show()
 ```
 
+- We can select the representative mask per patient by the sum of pixels (0,1). The matrix with higher value can be selected to represent owner patient.
+
+
 If we compare with the scan slides, we obtain:
 
 ```{python, fig.height = 7}
@@ -184,7 +196,7 @@ plt.show()
 
 - Comparing to masks, we can note that, between scan 34 and scan 65, the slides have more yellow stain or less blue color.
 
-### Superimposing Scan and mask images
+### Superimposing Scan and Mask images
 
 ```{python}
 import numpy as np
@@ -206,7 +218,7 @@ plt.imshow(overlay, cmap='jet', alpha=0.9)
 
 ```
 
-- It isnow clear that masks seems to be more useful that scans because the tumor in not visible in scan slides.
+- It is now clear that masks seems to be more useful that scans because the tumor in not visible in scan slides.
 
 
 ## Load images from test dataset
@@ -239,15 +251,17 @@ plt.show()
 ```
 
 
+- Superimpose mask and scan slide from test dataset
+
 ```{python}
 img_array = np.load('test/images/patient_001.npz')
 scan = img_array['scan']
 mask = img_array['mask']
 
-background = mask[1:92, 1:92, 34]
-overlay = scan[1:92, 1:92, 34]
+background = mask[1:92, 1:92, 35]
+overlay = scan[1:92, 1:92, 35]
 
-plt.title("Scan/Mask: 34")
+plt.title("Scan/Mask: 35")
 plt.imshow(background, cmap='gray')
 plt.imshow(overlay, cmap='jet', alpha=0.9)
 ```
@@ -265,13 +279,18 @@ plt.imshow(overlay, cmap='jet', alpha=0.9)
 
 ## Import image from python environment to R
 
-The goal of this step is to convert image matrices as vector. So, each image can be ranged in one row. Finally, we can obtain one dataframe with 92 rows (images) ofr each sample (patient).
+The goal of this step is to convert image matrices as a vector. So, each image can be ranged in one row. Finally, we can obtain one dataframe with 92 rows (images) for each sample (patient).
 
 ### Import useful R packages
 
 ```{r , include=FALSE}
 library(dplyr)
 require("reticulate")
+require(stringr)
+require(data.table)
+require(rsample)
+require(Matrix)
+require(xgboost)
 ```
 
 
@@ -299,7 +318,7 @@ paste0("One image is a: ", class(patient_002[[1]][,,1]))
 paste0("Two images are an: ", class(patient_002[[1]][,,1:2]))
 
 paste0("Print the first 10 pixels of Scan N°1: "); patient_002[[1]][,,1][1:10, 1:10]
-paste0("Print the first 10 pixels of Mask N°1: "); patient_002[[2]][,,1][1:10, 1:10]
+paste0("Print the first 10 pixels of Mask N°1: "); patient_002[[2]][,,3][1:10, 1:10]
 
 ```
 
@@ -308,53 +327,73 @@ paste0("Print the first 10 pixels of Mask N°1: "); patient_002[[2]][,,1][1:10, 
 
 ```{r}
 ls_scan_patient_002 <- lapply(seq(dim(patient_002[[1]])[3]), function(x) patient_002[[1]][ , , x])
-ls_mask_patient_002 <- lapply(seq(dim(patient_002[[2]])[3]), function(x) patient_002[[1]][ , , x])
+ls_mask_patient_002 <- lapply(seq(dim(patient_002[[2]])[3]), function(x) patient_002[[2]][ , , x])
 
 paste0("The dimension of the scan images is: ", length(ls_scan_patient_002))
 paste0("The dimension of the mask images is: ", length(ls_mask_patient_002))
+
 ```
 
 #### Convert image matrix to vector
 
 ```{r}
-mat2vec <- function(path){
+mat2vec <- function(path, target = 'mask'){
   
   # Load patient CT scan
   patient <- py$load_img_array(path)
   
+    #### For scans
+  if('scan' %in% target){
   # list scans
   scan <- lapply(seq(dim(patient[[1]])[3]), function(x) patient[[1]][ , , x])
-  # list masks
-  mask <- lapply(seq(dim(patient[[2]])[3]), function(x) patient[[1]][ , , x])
-  
-  # vectorize each matrix (image) into vector
+    # vectorize each matrix (image) into vector
   vec_scan <- lapply(scan, function(x) as.vector(x))
+   # bind vector into dataframe by row
+  df_scan <-as.data.frame( do.call(rbind, vec_scan)) 
+   # extract patient_id from path
+  scan_id <- paste0(tools::file_path_sans_ext(basename(path)), "_scan")
   
+  }
+    
+  #### For Masks
+  if('mask' %in% target){
+
+  # list masks
+  mask <- lapply(seq(dim(patient[[2]])[3]), function(x) patient[[2]][ , , x])
   # vectorise each mask (image) to vector
   vec_mask <- lapply(mask, function(x) as.vector(x))
-  
-  
   # bind vector into dataframe by row
-  df_scan <-as.data.frame( do.call(rbind, vec_scan)) 
   df_mask <-as.data.frame( do.call(rbind, vec_mask)) 
   
-  # extract patien_id from path
-  scan_id <- paste0(tools::file_path_sans_ext(basename(path)), "_scan")
+   # extract patient_id from path
   mask_id <- paste0(tools::file_path_sans_ext(basename(path)), "_mask")
+  }
   
+  if("scan" %in% target && "mask" %in% target){
   # group in list the scan and the mask dataframes
   ls <- list(df_scan, df_mask)
-  
+
   # Rename list
   names(ls) <- c(scan_id, mask_id)
   
-  
   return(ls)
+  
+  } else if(target == "scan"){
+    
+    names(df_scan) <- scan_id
+    
+    return(df_scan)
+    
+  }else{
+    #ls <- list(df_mask)
+    #names(ls) <- mask_id
+    return(df_mask)
+  }
 }
 
-patient2 <- mat2vec('train/images/patient_002.npz')
+patient2 <- mat2vec('train/images/patient_002.npz', target = c("mask", "scan"))
 
-paste0("The output is a: " ,class(patient2))
+paste0("The output is a: ", class(patient2))
 paste0("With length of: ", length(patient2))
 paste0("The names of two elements are: ") ; names(patient2)
 paste0("which are: ", class(patient2$patient_002_scan))
@@ -362,11 +401,381 @@ paste0("The dimension of each dataframe is: ") ; dim(patient2$patient_002_scan)
 
 ```
 
-- At this step we stop exploring scan and mask.
+
 
 - We think to use only masks for modeling
 
 - Potential method: keras, mxnet
+
+- The training dataset must contain 92 rows corresponding to 92 masks of each patient. The first column is the Event (target) of each patient. The remain columns are the pixel intensity or in our case (0,1) tags which delimit the tumor if exists.
+
+#### Select only the best mask for each Patient
+
+We consider that the mask that has more `TRUE` is the best representative slide for patient.
+The idea is to convert all matrices to vectors and count the value `TRUE` for each row.
+
+
+```{r}
+masks2 <- mat2vec('train/images/patient_002.npz', target = c("mask"))
+
+## display the sum of TRUE in each row for Patient002
+paste("Number of TRUE in each slide for Patient_002:") ; rowSums(masks2)
+
+```
+
+```{r}
+
+get_best_mask <- function(masks){
+# Display the biggest row with TRUE value
+Case <- masks[sort(rowSums(masks), index=TRUE, decreasing=TRUE)$ix, ][1,]
+#d <- cbind(`Patients` = as.character(names(masks)),Case)
+return(Case)
+}
+
+masks2[sort(rowSums(masks2), index=TRUE, decreasing=TRUE)$ix, ][1,][1:10]
+```
+
+
+#### Convert all images to matrices, each matrix corresponds to one patient
+
+```{r}
+require(stringr)
+require(data.table)
+
+
+get_best_masks_img2mat <- function(path){
+
+list_path <- as.list(list.files(path,full.names = TRUE))
+
+list_matrices <- lapply(list_path, function(x) mat2vec(x, target = c("mask")))
+
+best_masks <- lapply(list_matrices, function(x) get_best_mask(x))
+
+nm <- lapply(list_path, function(x) str_remove(tools::file_path_sans_ext(basename(x)), "patient_"))
+
+#names(best_masks) <- as.numeric(nm)
+
+#img_df <- bind_rows(best_masks)
+img_df <- data.table::rbindlist(best_masks)*1
+
+row.names(img_df) <- nm
+
+df_img <- tibble::rownames_to_column(img_df, "PatientID")
+
+return(df_img)
+}
+
+img_tr <- get_best_masks_img2mat("train/images/")
+img_ts <- get_best_masks_img2mat("test/images/")
+
+output_train <- data.table::fread("output_train.csv")
+output_test <- data.table::fread("output_test.csv")
+
+train_img <-  img_tr %>%
+    mutate(PatientID = as.numeric(PatientID)) %>%
+    left_join(output_train, by = "PatientID") %>%
+    select(PatientID,  SurvivalTime, Event, everything()) #%>%
+  #setDT() # convert to data.table
+
+
+test_img <-  img_ts %>%
+    mutate(PatientID = as.numeric(PatientID)) %>%
+    left_join(output_test, by = "PatientID") %>%
+    select(PatientID, SurvivalTime, Event, everything())#%>%
+  #setDT() # convert to data.table
+
+
+
+train_img[1:5,1:10]
+
+data.table::fwrite(train_img , "train_img.csv")
+data.table::fwrite(test_img , "test_img.csv")
+#rowSums(train_img[,-1])
+rm(list = ls())
+invisible(gc())
+```
+
+# R xgboost with best masks
+
+
+## Split Train dataset into Train & Valid sets
+
+```{r}
+require(rsample)
+
+train_img <- data.table::fread("train_img.csv")
+test_img <- data.table::fread("test_img.csv")
+
+# remove PatientID column
+train_img[,PatientID:= NULL]
+test_img[,Event :=NULL]
+
+set.seed(100)
+train_valid_split <- rsample::initial_split(train_img, prop = 0.8)
+train_valid_split
+
+train_img[,1:7]
+```
+
+- We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
+train_8 <- rsample::training(train_valid_split)
+valid_2  <- rsample::testing(train_valid_split)
+train_8[1:10, 1:10]
+```
+
+## Format train and test to DMatrix (R, Masks)
+
+```{r}
+require(Matrix)
+require(xgboost)
+
+
+# the option na.pass avoids missing value in age column
+options(na.action='na.pass')
+train_8_sparse <- sparse.model.matrix(Event ~., data=train_8)
+dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$Event)
+
+options(na.action='na.pass')
+valid_2_sparse <- sparse.model.matrix(Event ~., data=valid_2)
+dvalid_2 <- xgb.DMatrix(data=valid_2_sparse, label = valid_2$Event)
+
+```
+
+## Optimize features with Cross validation
+
+Here, we can see after how many rounds, we achieved the smallest test error.
+
+```{r}
+params <- list(booster = "gbtree",
+              tree_method = "auto",
+              objective = "binary:logistic",
+              eval_metric = "auc",         #  for Binary classification error rate
+              max_depth = 2,        # 6 makes training heavy, there is no correlation between features #1 is not better
+              eta = 0.03,                     # learning rate
+              subsample = 0.8,              # prevent overfitting
+              colsample_bytree = 0.1         # specify the fraction of columns to be subsampled. # 0.5 is not better
+             )
+
+
+tme <- Sys.time()
+cv_model <- xgb.cv(params = params,
+                   data = dtrain_8,
+                   nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE),  #2,
+                   nrounds = 25000,
+                   verbose = TRUE,
+                   nfold = 7,
+                   print_every_n = 500,
+                   early_stopping_rounds = 1000,
+                   maximize = TRUE,
+                   prediction = TRUE) # prediction of cv folds
+
+
+Sys.time() - tme
+```
+
+
+## Train the model
+
+```{r}
+watchlist <- list(train = dtrain_8, eval = dvalid_2)
+tme <- Sys.time()
+xgboost_tree_img <- xgb.train(data = dtrain_8, 
+                         params = params,
+                         watchlist = watchlist,
+                         nrounds = cv_model$best_iteration, # more than 12000 ~0.897
+                         print_every_n = 500,
+                         verbose = TRUE)
+
+Sys.time() - tme
+
+
+
+## Predict valid_2 dataset
+
+pred_valid_img <- predict(xgboost_tree_img, dvalid_2)
+
+paste0('SUMMARY: '); summary(pred_valid_img)
+
+
+# We suppose that if Prob > 0.5 (Median), the Event is 1, else 0
+pred_bin_img <- as.numeric(pred_valid_img >= 0.5)
+
+paste("RATIO: "); table(pred_bin_img)
+```
+
+```{r}
+## Confusion matrix for Tree model
+data.frame(prediction = as.numeric(pred_bin_img),
+         label = as.numeric(valid_2$Event)) %>%
+         count(prediction, label)
+```
+
+## Prediction with (R, Masks)
+
+```{r}
+
+test_sparse <- sparse.model.matrix(PatientID ~., data=test_img)
+dtest <- xgb.DMatrix(data=test_sparse, label = test_img$PatientID)
+ 
+pred_tree_img <- predict(xgboost_tree_img, dtest)
+
+pred_bin_xgboost_img <- as.numeric(pred_tree_img >= 0.5)
+
+
+print("ratio of predicted Events in test datset: "); table(pred_bin_xgboost_img)
+```
+```{r}
+print("ratio of Events in train datset: "); table(train_img$Event)
+```
+
+
+```{r}
+## submission
+
+pred_img <- data.frame(
+  PatientID = test_img$PatientID,
+  Event = pred_tree_img
+)
+
+output_test <- fread("output_test.csv")
+
+submission_img <- output_test %>%
+  select(PatientID, SurvivalTime) %>%
+  left_join(pred_img, by = "PatientID")
+
+fwrite(submission_img, "submission_img.csv")
+
+## Refresh memory
+rm(dtest, dtrain_8, dvalid_2, train_8, img_tr, img_ts, train_img, test_img, train_valid_split, patient2, patient_002, valid_2, train_8_sparse, masks2, ls_mask_patient_002, ls_scan_patient_002, test_sparse, valid_2_sparse)
+
+rm(list=ls())
+invisible(gc())
+
+```
+
+# Python xgboost with best masks
+
+```{python}
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+import xgboost
+
+test_img = pd.read_csv("test_img.csv")
+train_img = pd.read_csv("train_img.csv")
+
+# Set weed
+SEED = 1423
+
+#test_img.pop('PatientID')
+#test_img.pop('Event')
+#test_img.head()
+```
+
+```{python}
+# split data into train and test portions and model
+features = [feat for feat in list(train_img) if feat != 'Event']
+X_train, X_valid, y_train, y_valid = train_test_split(train_img[features], 
+                                                 train_img[['Event']], 
+                                                test_size=0.3, 
+                                                 random_state=SEED)
+ 
+
+
+import xgboost  as xgb
+xgb_params = {
+    'max_depth':3, 
+    'eta':0.01, 
+    'silent':0, 
+    'eval_metric':'auc',
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'objective':'binary:logistic',
+    'seed' : 1423
+}
+
+dtrain = xgb.DMatrix(X_train, y_train, feature_names=X_train.columns.values)
+dvalid = xgb.DMatrix(X_valid, y_valid, feature_names=X_valid.columns.values)
+
+
+evals = [(dtrain,'train'),(dvalid,'eval')]
+xgb_model_img = xgb.train ( params = xgb_params,
+              dtrain = dtrain,
+              num_boost_round = 5000,
+              verbose_eval=200, 
+              early_stopping_rounds = 500,
+              evals=evals,
+              maximize = True)
+```
+
+
+```{python}
+# get dataframe version of important feature for model 
+xgb_img_imp = pd.DataFrame(list(xgb_model_img.get_fscore().items()),
+columns = ['feature','importance']).sort_values('importance', ascending=False)
+xgb_img_imp.head(10)
+```
+
+```{python}
+# Confusion matrix
+dval_predictions = xgb_model_img.predict(dvalid)
+
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_valid, [1 if p > 0.5 else 0 for p in dval_predictions])
+
+plt.figure(figsize = (6,4))
+plt.ticklabel_format(style='plain', axis='y', useOffset=False)
+sns.set(font_scale=1.4)
+sns.heatmap(cm, annot=True, annot_kws={"size": 16}) 
+plt.show()
+```
+
+```{python}
+# evaluate predictions
+from sklearn.metrics import accuracy_score
+
+predictions_img = [round(value) for value in dval_predictions]
+
+accuracy = accuracy_score(y_valid, predictions_img)
+
+print("Accuracy: %.2f%%" % (accuracy * 100.0))
+```
+
+## Prediction (Python,Masks)
+
+```{python}
+
+dtest = xgb.DMatrix(test_img.drop('PatientID', axis=1),  feature_names=X_train.columns.values)
+
+dtest_predictions = xgb_model_img.predict(dtest)
+
+output_test = pd.read_csv("output_test.csv", index_col = False)
+
+
+
+# Format predictions in DataFrame: prediction_df
+#prediction_df = pd.DataFrame(PatientID = test_img['PatientID'] ,
+#                             Event = predictions_img)
+                             
+                             
+#output_test.join(submission_img.set_index('PatientID'), on='PatientID')
+
+output_test['Event'] = dtest_predictions
+
+
+output_test.to_csv("submission_img_p.csv", index=False)
+
+## save predictions for an ensemble
+#pickle.dump(Y_pred, open('xgb_train.pickle', 'wb'))
+#pickle.dump(Y_test, open('xgb_test.pickle', 'wb'))
+```
+
 
 # Exploratory Data Analysis of radiomics and clinical data
 
@@ -376,6 +785,10 @@ library(data.table)
 library(tidyverse)
 library(DT)
 library(ggplot2)
+library(rsample)
+library(xgboost)
+library(gbm)
+library(survival)
 ```
 
 
@@ -464,6 +877,11 @@ library(corrplot)
 library(gridExtra)
 library(scales)
 library(stringi)
+library(Matrix)
+library(xgboost)
+library(mice)
+library(DataExplorer)
+library(Matrix)
 ```
 
 
@@ -493,7 +911,7 @@ corrplot.mixed(M, tl.col="black", tl.pos = "lt", order = "hclust")
 
 -  We can return to these heatmap when we predict the most importante features using modeling.
 
-## Explore Clinical data
+## Explore Clinical data for Train
 
 ```{r, fig.height= 8,fig.width=8}
 
@@ -583,7 +1001,7 @@ new_clinical <- clinical %>%
                 #mutate(Source = as.numeric(as.factor(SourceDataset))) %>%
                 #select(everything(), - Histology, -SourceDataset)
 
-train <- new_clinical %>%
+train_features <- new_clinical %>%
   mutate_if(is.character, as.factor) %>%
   left_join(y = output_train, by = "PatientID") %>%
   left_join(y = new_radiomics, by = "PatientID") %>%
@@ -591,16 +1009,16 @@ train <- new_clinical %>%
   setDT()
 
 
-
-train[,1:10] %>% head()
+fwrite(train_features, "train_features.csv")
+train_features[,1:10] %>% head()
 
 ```
 
 ### Explore missing value in train
 
 ```{r, fig.height= 8, fig.width= 6}
-library(DataExplorer)
-DataExplorer::plot_missing(train)
+require(DataExplorer)
+DataExplorer::plot_missing(train_features)
 ```
 
 
@@ -636,7 +1054,7 @@ old_names_test <- colnames(radiomics_test)
 new_names_test <- c("PatientID", new_colnames_radiomics_test)
 
 new_radiomics_test <- radiomics_test[-1:-3,] %>%
-  rename_at(vars(old_names), ~ new_names) %>%
+  rename_at(vars(old_names_test), ~ new_names_test) %>%
   mutate_if(is.character, as.numeric) #%>%
 #as.matrix()
 
@@ -655,30 +1073,111 @@ new_clinical_test <- clinical_test %>%
                 mutate_if(is.factor, as.numeric) 
 ```
 
-### Merge clinical, radimoics, and output_test dataset
+### Explre clinical data for Test
+
+```{r, fig.height=5, fig.width=11}
+p1 <- new_clinical_test %>%
+  group_by(Histology = stringi::stri_trans_totitle(Histology)) %>% # case insensitive of adenocarcinoma and Adenocarcinoma
+  group_by(Histology) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = Histology, y = Count, fill= Histology) +
+  geom_col()+
+  geom_text(aes(label = percent(Count/sum(Count))), vjust = -0.5)+
+  geom_text(aes(label = Count), vjust = -2) +
+  theme(axis.text.x = element_text(color="black",size=10,hjust=.5,vjust=.5, angle=5))
+
+
+p2 <- ggplot(data=new_clinical_test[!is.na(new_clinical_test$age),]) +
+  aes(x= age) +
+  geom_histogram(fill="blue", bins = 60)  +
+  geom_vline(xintercept = c(65,70, 72 ), color = "red")
+#coord_flip()
+
+p3 <- new_clinical_test %>%
+  mutate(Nstage = as.factor(Nstage)) %>%
+  group_by(Mstage, Nstage, Tstage) %>%
+  summarise(Count = n()) %>%
+  ggplot() +
+  aes(x = Tstage, y = Count, color = Nstage) +
+  facet_grid(Mstage~ .) +
+  geom_point(size=4, alpha = 0.8)
+
+p4 <- new_clinical_test %>%
+  mutate(SourceDataset = as.factor(SourceDataset)) %>%
+  group_by(SourceDataset) %>%
+  summarise(Count = n()) %>%
+  ggplot()+
+  aes(x = "", y = Count, fill = SourceDataset) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme(legend.position = "top")
+
+
+grid.arrange(p1,p2,p3,p4, layout_matrix = rbind(c(1),c(2, 3, 4)), nrow = 2)
+```
+
+- There is fourth class for `Nstage` in test data taht is not available in train.
+- The average `age` in test seems tobe younger in test data than in train.
+- The Histology seems to have the same distribution
+
+### Merge clinical, radiomics, and output_test dataset
 
 ```{r}
-test <- new_clinical_test %>%
+test_features <- new_clinical_test %>%
   mutate_if(is.character, as.factor) %>%
   left_join(y = output_test, by = "PatientID") %>%
   left_join(y = new_radiomics_test, by = "PatientID") %>%
   select(PatientID, Event, everything()) %>%
   setDT() # convert to data.table
 
-test[,1:10] %>% head()
+
+fwrite(test_features, "test_features.csv")
+test_features[,1:10] %>% head()
 ```
 
 #### Explore missing value in test
 
 ```{r, fig.height= 8, fig.width=6}
 library(DataExplorer)
-DataExplorer::plot_missing(test)
+DataExplorer::plot_missing(test_features)
 ```
 
 - There are 4 missing `age` from 125.
 
+```{r}
+#refresh memoru
+rm(list = ls())
+invisible(gc())
+```
 
-# Xgboost modeling
+# Pull Radiomics, Clinical data and the best Masks
+
+```{r include=FALSE}
+require(bit64)
+train_features <-  fread("train_features.csv")
+train_img <- fread("train_img.csv")
+
+test_features <- fread("test_features.csv")
+test_img <- fread("test_img.csv")
+  
+train <- train_features %>%
+  left_join(train_img, by = c("PatientID", "SurvivalTime", "Event")) %>%
+  setDT() # convert to data.table
+
+test <- test_features %>%
+  left_join(test_img, by = c("PatientID", "SurvivalTime", "Event")) %>%
+  setDT() # convert to data.table
+
+fwrite(train, "train_fea_img.csv")
+fwrite(test, "test_fea_img.csv")
+
+rm(test_features, train_features, train_img, test_img)
+invisible(gc())
+```
+
+
+# R Xgboost modeling with Radiomics, Clinical and Masks
 
 ## Scaling Train and Test dataset
 
@@ -699,14 +1198,15 @@ dt[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
 train <- cbind(Event, head(dt,nrow(train)))
 test  <- cbind(PatientID, tail(dt, nrow(test)))
 rm(dt)
-gc()
+invisible(gc())
+
 ```
 
 
 ## Split Train dataset into Train & Valid sets
 
 ```{r}
-library(rsample)
+require(rsample)
 
 set.seed(100)
 train_valid_split <- rsample::initial_split(train, prop = 0.8)
@@ -726,9 +1226,10 @@ train_8[1:10, 1:10]
 ## Format train and test to DMatrix
 
 ```{r}
-library(Matrix)
-library(xgboost)
+require(Matrix)
+require(xgboost)
 
+# the option na.pass avoids missing value in age column
 options(na.action='na.pass')
 train_8_sparse <- sparse.model.matrix(Event ~., data=train_8)
 dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$Event)
@@ -749,7 +1250,7 @@ params <- list(booster = "gbtree",
               objective = "binary:logistic",
               eval_metric = "auc",         #  for Binary classification error rate
               max_depth = 2,        # 6 makes training heavy, there is no correlation between features #1 is not better
-              eta = 0.01,                     # learning rate
+              eta = 0.03,                     # learning rate
               subsample = 0.8,              # prevent overfitting
               colsample_bytree = 0.1         # specify the fraction of columns to be subsampled. # 0.5 is not better
              )
@@ -761,8 +1262,8 @@ cv_model <- xgb.cv(params = params,
                    nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE),  #2,
                    nrounds = 25000,
                    verbose = TRUE,
-                   nfold = 5,
-                   print_every_n = 100,
+                   nfold = 7,
+                   print_every_n = 500,
                    early_stopping_rounds = 1000,
                    maximize = TRUE,
                    prediction = TRUE) # prediction of cv folds
@@ -796,7 +1297,7 @@ summary(pred_valid)
 
 ```
 
-- We suppose that if Prob > 0.575 (Median), the Event is 1, else 0
+- We suppose that if Prob > 0.5 (Median), the Event is 1, else 0
 
 
 ## Transform propability to binary classification
@@ -851,11 +1352,14 @@ test_sparse <- sparse.model.matrix(PatientID ~., data=test)
 
 ```{r}
 pred_tree <- predict(xgboost_tree, dtest)
-head(pred_tree)
+
+pred_bin_xgboost <- as.numeric(pred_tree >= 0.5)
+
+print("ratio of predicted Events in test datset: "); table(pred_bin_xgboost)
 ```
 
 ```{r}
-summary(pred_tree)
+print("ratio of Events in train datset: "); table(train$Event)
 ```
 
 
@@ -868,363 +1372,518 @@ pred <- data.frame(
   Event = pred_tree
 )
 
+output_test <- fread("output_test.csv")
+
 submission <- output_test %>%
   select(PatientID, SurvivalTime) %>%
   left_join(pred, by = "PatientID")
 
-fwrite(submission, "submission.csv")
+fwrite(submission, "submission_fea_img_r.csv")
+
+submission %>% head(10)
 ```
 
-##################################################################################################
+```{r}
+rm(list = ls())
+invisible(gc())
+```
 
-# Random Forest Survival model (ranger package)
+# Python xgboost Prediction (Python, Radiomics, Clinical, Masks datasets)
 
- This method will give us an outcome probability over a time continuum (flipping the non-event to event probability)
+```{python}
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+test = pd.read_csv("test_fea_img.csv")
+train = pd.read_csv("train_fea_img.csv")
+train.head()
+```
+
+```{python}
+# impute age to median
+train['age'] = train['age'].fillna(train['age'].mean())
+test['age'] = test['age'].fillna(test['age'].mean())
+
+test.head()
+```
+
+```{python}
+# Set weed
+SEED = 1423
+train = train.drop('PatientID', axis=1)
+test = test.drop(['PatientID', 'Event'], axis = 1)
+
+def prepare_data_for_model(raw_dataframe, target_columns, drop_first = True, make_na_col = False):
+    # dummy all categorical fields 
+    dataframe_dummy = pd.get_dummies(raw_dataframe, columns=target_columns, 
+                                     drop_first=drop_first, 
+                                     dummy_na=make_na_col)
+    return (dataframe_dummy)
+
+# create dummy features 
+train_xgboost = prepare_data_for_model(train, target_columns=['Histology', 'Tstage']) #, 'Nstage' : 3 classes
+train_xgboost = train_xgboost.dropna() 
+
+# create dummy features for test
+test_xgboost = prepare_data_for_model(test, target_columns=['Histology', 'Tstage']) #, 'Nstage' : 4 classes
+test_xgboost = test_xgboost.dropna() 
+
+train_xgboost.head()
+```
+
+```{python}
+test_xgboost.head()
+```
+
+```{python}
+# split data into train and test portions and model
+features = [feat for feat in list(train_xgboost) if feat != 'Event']
+X_train, X_valid, y_train, y_valid = train_test_split(train_xgboost[features], 
+                                                 train_xgboost[['Event']], 
+                                                test_size=0.3, 
+                                                 random_state=SEED)
  
- Let’s take a quick look at the time period range in the training portion of our data set:
- 
-```{r}
-# reset train and test dataset
-train <-new_clinical %>%
-  mutate_if(is.character, as.factor) %>%
-  left_join(y = output_train, by = "PatientID") %>%
-  left_join(y = new_radiomics, by = "PatientID") %>%
-  select(PatientID, Event, everything()) %>%
-  setDT() # convert to data.table
 
 
- test <- new_clinical_test %>%
-  mutate_if(is.character, as.factor) %>%
-  left_join(y = output_test, by = "PatientID") %>%
-  left_join(y = new_radiomics_test, by = "PatientID") %>%
-  select(PatientID, Event, everything()) %>%
-  setDT() # convert to data.table
+import xgboost  as xgb
+xgb_params = {
+    'max_depth':3, 
+    'eta':0.01, 
+    'silent':0, 
+    'eval_metric':'auc',
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'objective':'binary:logistic',
+    'seed' : 1423
+}
 
-plot(sort(train$SurvivalTime), pch='.', type='o', 
-     col='blue', lwd=2 , 
-     main = 'Survival Days of Lung Cancer')
+dtrain = xgb.DMatrix(X_train, y_train, feature_names=X_train.columns.values)
+dvalid = xgb.DMatrix(X_valid, y_valid, feature_names=X_valid.columns.values)
+
+
+evals = [(dtrain,'train'),(dvalid,'eval')]
+xgb_model_fea = xgb.train ( params = xgb_params,
+              dtrain = dtrain,
+              num_boost_round = 5000,
+              verbose_eval=200, 
+              early_stopping_rounds = 500,
+              evals=evals,
+              maximize = True)
 ```
 
 
-## Dealing with missing Age
-
-### Check the data for missing values.
-
-```{r}
-sapply(train, function(x) sum(is.na(x)))
+```{python}
+# get dataframe version of important feature for model 
+xgb_fea_imp=pd.DataFrame(list(xgb_model_fea.get_fscore().items()),
+columns=['feature','importance']).sort_values('importance', ascending=False)
+xgb_fea_imp.head(10)
 ```
 
-### Imputation processing for train data
+```{python}
+# Confusion matrix
+dval_predictions = xgb_model_fea.predict(dvalid)
+dval_predictions
 
-```{r, fig.width=14}
-library(mice)
-init = mice(train, maxit=0) 
-meth = init$method
-predM = init$predictorMatrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_valid, [1 if p > 0.5 else 0 for p in dval_predictions])
+
+plt.figure(figsize = (6,4))
+plt.ticklabel_format(style='plain', axis='y', useOffset=False)
+sns.set(font_scale=1.4)
+sns.heatmap(cm, annot=True, annot_kws={"size": 16}) 
+plt.show()
 ```
 
-- We may not want to use a certain variable as predictors. For example, the PatitenID variable does not have any predictive value.
-
-```{r}
-predM[, c("PatientID")] <- 0
+```{python}
+# evaluate predictions
+from sklearn.metrics import accuracy_score
+predictions = [round(value) for value in dval_predictions]
+accuracy = accuracy_score(y_valid, predictions)
+print("Accuracy: %.2f%%" % (accuracy * 100.0))
 ```
 
+## Prediction with Python, features, Masks
 
-- If we want to skip a variable from imputation use the code below. This variable will be used for prediction.
+```{python}
+dtest = xgb.DMatrix(test_xgboost,  feature_names = X_train.columns.values)
 
-```{r}
-#colnames(train)[train[, !names(train) %in% c("PatientID")]]
+dtest_predictions = xgb_model_fea.predict(dtest)
 
-meth[c("PatientID")]=""
+output_test = pd.read_csv('output_test.csv',  index_col = False)
 
-```
+output_test['Event'] = dtest_predictions
 
+output_test.to_csv("submission_fea_img_p.csv", index=False)
 
-- Now let specify the methods for imputing the missing values. There are specific methods for continues, binary and ordinal variables. I set different methods for each variable. You can add more than one variable in each method.
-
-```{r}
-meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables )
-
-# pmm generate error. it is seems working with cart
-# (https://stackoverflow.com/questions/48355250/
-#do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu)
-```
-
-
-- Now it is time to run the multiple (m=5) imputation.
-
-```{r}
-set.seed(103)
-imputed = mice(train, method=meth, predictorMatrix=predM, m=5)
-```
-
-- Create a dataset after imputation.
-
-```{r}
-imputed <- complete(imputed)
-```
-
-- Check for missings in the imputed dataset.
-
-```{r}
-sapply(imputed, function(x) sum(is.na(x)))
-```
-
-- Accuracy
-
-```{r}
-print("train$age") ; summary(train$age)
-print("imputed$age") ; summary(imputed$age)
-```
-
-- Well done :-)
-
-### Do the same imputation for test
-
-```{r}
-init = mice(test, maxit=0) 
-meth = init$method
-predM = init$predictorMatrix
-
-predM[, c("PatientID")] <- 0
-meth[c("PatientID")]=""
-meth[c("age")]="cart" 
-
-set.seed(103)
-imputed_test = mice(test, method=meth, predictorMatrix=predM, m=5)
-imputed_test <- complete(imputed_test)
-
-imputed_test[1:10,1:10]
+output_test.head()
 ```
 
 
-## Preprocessing Train and Test 
+<!-- # Random Forest Survival model (ranger package) -->
 
-In order to measure the AUC of each model we need to split the data randomly (with seed) into two equal parts:
- 
-```{r}
-set.seed(1234)
-random_splits <- runif(nrow(imputed))
-train_df_official <- imputed[random_splits < .5,]
-dim(train_df_official)
+<!--  This method will give us an outcome probability over a time continuum (flipping the non-event to event probability) -->
 
+<!--  Let’s take a quick look at the time period range in the training portion of our data set: -->
 
-validate_df_official <- imputed[random_splits >= .5,]
-dim(validate_df_official)
+<!-- ```{r} -->
+<!-- # reset train and test dataset -->
+<!-- train <-new_clinical %>% -->
+<!--   mutate_if(is.character, as.factor) %>% -->
+<!--   left_join(y = output_train, by = "PatientID") %>% -->
+<!--   left_join(y = new_radiomics, by = "PatientID") %>% -->
+<!--   select(PatientID, Event, everything()) %>% -->
+<!--   setDT() # convert to data.table -->
 
-```
 
-In order to align the survival and the classification models, we will focus on the probability of reaching event over the first `quantile(test$SurvivalTime)[[2]]` days.
+<!--  test <- new_clinical_test %>% -->
+<!--   mutate_if(is.character, as.factor) %>% -->
+<!--   left_join(y = output_test, by = "PatientID") %>% -->
+<!--   left_join(y = new_radiomics_test, by = "PatientID") %>% -->
+<!--   select(PatientID, Event, everything()) %>% -->
+<!--   setDT() # convert to data.table -->
 
-```{r}
-period_choice <- round(quantile(test$SurvivalTime)[[2]])
-period_choice <- 825
+<!-- plot(sort(train$SurvivalTime), pch='.', type='o',  -->
+<!--      col='blue', lwd=2 ,  -->
+<!--      main = 'Survival Days of Lung Cancer') -->
+<!-- ``` -->
 
 
-```
+<!-- ## Dealing with missing Age -->
 
-- We also need to create a classification-centric outcome variable. This will measure how many patients reached event or not within the chosen period. Here we look for a censor feature of 1 (i.e. the event happened) under the chosen period to set the outcome to 1, everything else is set to 0:
+<!-- ### Check the data for missing values. -->
 
-```{r}
-# classification data set
-train_df_classificaiton  <- train_df_official 
+<!-- ```{r} -->
+<!-- sapply(train, function(x) sum(is.na(x))) -->
+<!-- ``` -->
 
-train_df_classificaiton$ReachedEvent <- ifelse((train_df_classificaiton$Event == 1 & 
-                                     train_df_classificaiton$SurvivalTime <= period_choice), 1, 0)
+<!-- ### Imputation processing for train data -->
 
-summary(train_df_classificaiton$ReachedEvent)
-```
+<!-- ```{r} -->
+<!-- require(mice) -->
+<!-- init = mice(train, maxit=0)  -->
+<!-- meth = init$method -->
+<!-- predM = init$predictorMatrix -->
+<!-- ``` -->
 
+<!-- - We may not want to use a certain variable as predictors. For example, the PatitenID variable does not have any predictive value. -->
 
-```{r}
-validate_df_classification  <- validate_df_official 
+<!-- ```{r} -->
+<!-- predM[, c("PatientID")] <- 0 -->
+<!-- ``` -->
 
-validate_df_classification$ReachedEvent <- ifelse((validate_df_classification$Event == 1 & 
-                                        validate_df_classification$SurvivalTime <= period_choice), 1, 0)
 
-summary(validate_df_classification$ReachedEvent)
-```
+<!-- - If we want to skip a variable from imputation use the code below. This variable will be used for prediction. -->
 
-- Now we can easily get an AUC score on the probability of reaching event within our allotted period choice 
+<!-- ```{r} -->
+<!-- #colnames(train)[train[, !names(train) %in% c("PatientID")]] -->
 
+<!-- meth[c("PatientID")]="" -->
 
-##  Survival Model (ranger)
+<!-- ``` -->
 
 
-```{r include=FALSE}
-library(ranger)
-library(survival)
-library(gbm)
-library(pROC)
-library(mice)
-```
+<!-- - Now let specify the methods for imputing the missing values. There are specific methods for continues, binary and ordinal variables. I set different methods for each variable. You can add more than one variable in each method. -->
 
-```{r}
-# omit PatientID from variable importance
-var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID",
-                                                          "Event", 
-                                                          "SurvivalTime")]],
-              collapse ="+")
+<!-- ```{r} -->
+<!-- meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables ) -->
 
-survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var))
+<!-- # pmm generate error. it is seems working with cart -->
+<!-- # (https://stackoverflow.com/questions/48355250/ -->
+<!-- #do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu) -->
+<!-- ``` -->
 
 
-survival_formula
-```
+<!-- - Now it is time to run the multiple (m=5) imputation. -->
 
+<!-- ```{r} -->
+<!-- set.seed(103) -->
+<!-- imputed = mice(train, method=meth, predictorMatrix=predM, m=5) -->
+<!-- ``` -->
 
-```{r}
-survival_model <- ranger(survival_formula,
-               data = train_df_official,  
-               seed = 1234,
-               importance = 'permutation',
-               mtry = 2,
-               verbose = TRUE,
-               num.trees = 50,
-               write.forest=TRUE)
+<!-- - Create a dataset after imputation. -->
 
-# print out coefficients
-sort(survival_model$variable.importance, decreasing = TRUE) %>% head(20)
-```
+<!-- ```{r} -->
+<!-- imputed <- complete(imputed) -->
+<!-- ``` -->
 
-- The orange PatientID has more probability to survive.
- 
-```{r}
-print("Orange PatientID: "); imputed[1,c(2,7,8,9)]
-print("Blue PatientID: "); imputed[56,c(2,7,8,9)]
-```
+<!-- - Check for missings in the imputed dataset. -->
 
-- Once we have our survival_model model object, we can take a look at some probabilities of survival (this is just for illustrative purposes as we haven’t split our data set yet). Let’s look at two patients - row 1 and row 56:
+<!-- ```{r} -->
+<!-- sapply(imputed, function(x) sum(is.na(x))) -->
+<!-- ``` -->
 
-```{r}
-plot(survival_model$unique.death.times, survival_model$survival[1,],
-     type='l', col='orange', ylim=c(0.2,1))
+<!-- - Accuracy -->
 
-lines(survival_model$unique.death.times, 
-      survival_model$survival[56,], col='blue')
-```
+<!-- ```{r} -->
+<!-- print("train$age") ; summary(train$age) -->
+<!-- print("imputed$age") ; summary(imputed$age) -->
+<!-- ``` -->
 
+<!-- - Well done :-) -->
 
-### Scoring the Random Forest Survival Model
+<!-- ### Do the same imputation for test dataset -->
 
-First we get the basic survival prediction using our validation split set and then we flip the probability of the period of choice and get the AUC score:
+<!-- ```{r} -->
+<!-- init = mice(test, maxit=0)  -->
+<!-- meth = init$method -->
+<!-- predM = init$predictorMatrix -->
 
-```{r}
-feature_names <- setdiff(names(train_df_classificaiton),
-                         c('PatientID', 'ReachedEvent', 
-                           'SurvivalTime', 'Event'))
+<!-- predM[, c("PatientID")] <- 0 -->
+<!-- meth[c("PatientID")]="" -->
+<!-- meth[c("age")]="cart"  -->
 
+<!-- set.seed(103) -->
+<!-- imputed_test = mice(test, method=meth, predictorMatrix=predM, m=5) -->
+<!-- imputed_test <- complete(imputed_test) -->
 
-suvival_predictions <- predict( survival_model, 
-                                validate_df_official[, feature_names])
+<!-- imputed_test[1:10,1:10] -->
+<!-- ``` -->
 
-roc(response = validate_df_classification$ReachedEvent,
-    predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times
-                                                        == period_choice)])
-```
 
-### RF survival Prediction
+<!-- ## Preprocessing Train and Test  -->
 
-```{r}
+<!-- In order to measure the AUC of each model we need to split the data randomly (with seed) into two equal parts: -->
 
-survival_predictions_test <- predict( survival_model,imputed_test[, feature_names])
+<!-- ```{r} -->
+<!-- set.seed(1234) -->
+<!-- random_splits <- runif(nrow(imputed)) -->
+<!-- train_df_official <- imputed[random_splits < .5,] -->
+<!-- dim(train_df_official) -->
 
-predictor <- 1 - 
-  survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times
-                                                           == period_choice)]
 
-pred <- data.frame(
-  PatientID = PatientID,
-  Event = predictor
-)
+<!-- validate_df_official <- imputed[random_splits >= .5,] -->
+<!-- dim(validate_df_official) -->
 
-submission_surv <- output_test %>%
-  select(PatientID, SurvivalTime) %>%
-  left_join(pred, by = "PatientID")
+<!-- ``` -->
 
-fwrite(submission_surv, "submission_surv.csv")
-```
+<!-- In order to align the survival and the classification models, we will focus on the probability of reaching event over the 825 days. We tried the Median, mean, quantile but it seems not well as 825 days. -->
 
+<!-- ```{r} -->
+<!-- period_choice <- round(quantile(test$SurvivalTime)[[2]]) -->
+<!-- period_choice <- 825 -->
 
-# GBM Classification modeling
 
-- Let’s run and score our classification GBM model:
+<!-- ``` -->
 
-```{r}
-require(gbm)
+<!-- - We also need to create a classification-centric outcome variable. This will measure how many patients reached event or not within the chosen period. Here we look for a censor feature of 1 (i.e. the event happened) under the chosen period to set the outcome to 1, everything else is set to 0: -->
 
+<!-- ```{r} -->
+<!-- # classification data set -->
+<!-- train_df_classificaiton  <- train_df_official  -->
 
+<!-- train_df_classificaiton$ReachedEvent <- ifelse((train_df_classificaiton$Event == 1 &  -->
+<!--                                      train_df_classificaiton$SurvivalTime <= period_choice), 1, 0) -->
 
-var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in%
-                            c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))],
-             collapse ="+")
+<!-- summary(train_df_classificaiton$ReachedEvent) -->
+<!-- ``` -->
 
 
-classification_formula <- formula(paste('ReachedEvent ~ ', var))
+<!-- ```{r} -->
+<!-- validate_df_classification  <- validate_df_official  -->
 
-classification_formula
-```
+<!-- validate_df_classification$ReachedEvent <- ifelse((validate_df_classification$Event == 1 &  -->
+<!--                                         validate_df_classification$SurvivalTime <= period_choice), 1, 0) -->
 
-```{r}
-set.seed(1234)
-gbm_model = gbm(classification_formula, 
-                data =  train_df_classificaiton,
-                distribution='bernoulli',
-                n.trees=500,         
-                interaction.depth=3,
-                shrinkage=0.01,
-                bag.fraction=0.5,
-                keep.data=FALSE,
-                cv.folds=5)
+<!-- summary(validate_df_classification$ReachedEvent) -->
+<!-- ``` -->
 
-nTrees <- gbm.perf(gbm_model)
+<!-- - Now we can easily get an AUC score on the probability of reaching event within our allotted period choice  -->
 
-validate_predictions <- predict(gbm_model,
-                                newdata = validate_df_classification[,feature_names], 
-                                type="response", n.trees = nTrees)
-```
 
+<!-- ##  Survival Model (ranger) -->
 
 
-```{r}
-require(pROC)
-roc(response=validate_df_classification$ReachedEvent, predictor=validate_predictions)
-```
+<!-- ```{r include=FALSE} -->
+<!-- require(ranger) -->
+<!-- require(survival) -->
+<!-- require(pROC) -->
+<!-- ``` -->
 
+<!-- ```{r} -->
+<!-- # omit PatientID from variable importance -->
+<!-- var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID", -->
+<!--                                                           "Event",  -->
+<!--                                                           "SurvivalTime")]], -->
+<!--               collapse ="+") -->
 
-Now that both models can predict the same period and the probability of reaching the event, we average them together and see how they help each other (straight 50/50 here which may not be the best mix)
+<!-- survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var)) -->
 
 
-### GBM Classifiaction Prediction
+<!-- survival_formula -->
+<!-- ``` -->
 
-```{r}
 
-gbm_predictions_test <- predict(gbm_model, imputed_test[,feature_names])
+<!-- ```{r} -->
+<!-- survival_model <- ranger(survival_formula, -->
+<!--                data = train_df_official,   -->
+<!--                seed = 1234, -->
+<!--                importance = 'permutation', -->
+<!--                mtry = 2, -->
+<!--                verbose = TRUE, -->
+<!--                num.trees = 50, -->
+<!--                write.forest=TRUE) -->
 
+<!-- # print out coefficients -->
+<!-- sort(survival_model$variable.importance, decreasing = TRUE) %>% head(20) -->
+<!-- ``` -->
 
-PatientID <- imputed_test$PatientID
 
-pred <- data.frame(
-  PatientID = PatientID,
-  Event = gbm_predictions_test
-)
+<!-- - Once we have our survival_model model object, we can take a look at some probabilities of survival (this is just for illustrative purposes as we haven’t split our data set yet). Let’s look at two patients - row 1 and row 56: -->
 
-submission_gbm <- output_test %>%
-  select(PatientID, SurvivalTime) %>%
-  left_join(pred, by = "PatientID")
+<!-- ```{r} -->
+<!-- plot(survival_model$unique.death.times, survival_model$survival[1,], -->
+<!--      type='l', col='orange', ylim=c(0.2,1)) -->
 
-fwrite(submission_gbm, "submission_gbm.csv")
-```
+<!-- lines(survival_model$unique.death.times,  -->
+<!--       survival_model$survival[56,], col='blue') -->
+<!-- ``` -->
 
+<!-- - The orange PatientID has more probability to survive. -->
 
+<!-- ```{r} -->
+<!-- print("Orange PatientID: "); imputed[1,c(2,7,8,9)] -->
+<!-- print("Blue PatientID: "); imputed[56,c(2,7,8,9)] -->
+<!-- ``` -->
 
-## Blend both models (Survival and Classification) together 
+<!-- ### Scoring the Random Forest Survival Model -->
 
-```{r}
-roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[,
-                                                        which(suvival_predictions$unique.death.times==period_choice)]))/2, 
-          response = validate_df_classification$ReachedEvent)
-```
+<!-- First we get the basic survival prediction using our validation split set and then we flip the probability of the period of choice and get the AUC score: -->
+
+<!-- ```{r} -->
+<!-- feature_names <- setdiff(names(train_df_classificaiton), -->
+<!--                          c('PatientID', 'ReachedEvent',  -->
+<!--                            'SurvivalTime', 'Event')) -->
+
+
+<!-- suvival_predictions <- predict( survival_model,  -->
+<!--                                 validate_df_official[, feature_names]) -->
+
+<!-- roc(response = validate_df_classification$ReachedEvent, -->
+<!--     predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times -->
+<!--                                                         == period_choice)]) -->
+<!-- ``` -->
+
+<!-- ### RF survival Prediction -->
+
+<!-- ```{r} -->
+
+<!-- survival_predictions_test <- predict( survival_model,imputed_test[, feature_names]) -->
+
+<!-- predictor <- 1 -  -->
+<!--   survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times -->
+<!--                                                            == period_choice)] -->
+
+<!-- pred_survival <- data.frame( -->
+<!--   PatientID = PatientID, -->
+<!--   Event = predictor -->
+<!-- ) -->
+
+<!-- submission_surv <- output_test %>% -->
+<!--   select(PatientID, SurvivalTime) %>% -->
+<!--   left_join(pred_survival, by = "PatientID") -->
+
+<!-- fwrite(submission_surv, "submission_surv.csv") -->
+
+<!-- pred_bin_survival <- as.numeric(predictor > 0.5) -->
+
+<!-- print("ratio of predicted Events in test datset: "); table(pred_bin_survival) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- print("ratio of Events in traindatset: "); table(train$Event) -->
+<!-- ``` -->
+
+
+<!-- # GBM Classification modeling -->
+
+<!-- - Let’s run and score our classification GBM model: -->
+
+<!-- ```{r} -->
+<!-- require(gbm) -->
+
+
+
+<!-- var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in% -->
+<!--                             c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))], -->
+<!--              collapse ="+") -->
+
+
+<!-- classification_formula <- formula(paste('ReachedEvent ~ ', var)) -->
+
+<!-- classification_formula -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- set.seed(1234) -->
+<!-- gbm_model = gbm(classification_formula,  -->
+<!--                 data =  train_df_classificaiton, -->
+<!--                 distribution='bernoulli', -->
+<!--                 n.trees=500,          -->
+<!--                 interaction.depth=3, -->
+<!--                 shrinkage=0.01, -->
+<!--                 bag.fraction=0.5, -->
+<!--                 keep.data=FALSE, -->
+<!--                 cv.folds=5) -->
+
+<!-- nTrees <- gbm.perf(gbm_model) -->
+
+<!-- validate_predictions <- predict(gbm_model, -->
+<!--                                 newdata = validate_df_classification[,feature_names],  -->
+<!--                                 type="response", n.trees = nTrees) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- require(pROC) -->
+<!-- roc(response=validate_df_classification$ReachedEvent, predictor=validate_predictions) -->
+<!-- ``` -->
+
+
+<!-- Now that both models can predict the same period and the probability of reaching the event, we average them together and see how they help each other (straight 50/50 here which may not be the best mix) -->
+
+
+<!-- ### GBM Classifiaction Prediction -->
+
+<!-- ```{r} -->
+
+<!-- gbm_predictions_test <- predict(gbm_model, imputed_test[,feature_names]) -->
+
+
+<!-- PatientID <- imputed_test$PatientID -->
+
+<!-- pred <- data.frame( -->
+<!--   PatientID = PatientID, -->
+<!--   Event = gbm_predictions_test -->
+<!-- ) -->
+
+<!-- submission_gbm <- output_test %>% -->
+<!--   select(PatientID, SurvivalTime) %>% -->
+<!--   left_join(pred, by = "PatientID") -->
+
+<!-- fwrite(submission_gbm, "submission_gbm.csv") -->
+
+<!-- pred_bin_gbm <- as.numeric(gbm_predictions_test > 0.5) -->
+
+<!-- print("ratio of predicted Events in test dataset: "); table(pred_bin_gbm) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- print("ratio of Events in train dataset: "); table(train$Event) -->
+<!-- ``` -->
+
+<!-- ## Blend both models (Survival and Classification) together  -->
+
+<!-- ```{r} -->
+<!-- roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[, -->
+<!--                                                         which(suvival_predictions$unique.death.times==period_choice)]))/2,  -->
+<!--           response = validate_df_classification$ReachedEvent) -->
+<!-- ``` -->
 
 
 
