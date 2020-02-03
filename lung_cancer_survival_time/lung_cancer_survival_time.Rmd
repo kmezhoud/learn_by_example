@@ -1,5 +1,10 @@
 ---
-title: "Survival Lung Cancer Modeling: Xgboost, Random Forest, GBM tentatives"
+title: "Survival Lung Cancer Modeling With Python & R"
+subtitle: | 
+          | - Images, Radiomics and Clinical data Exploration.
+          | - xgboost modeling with Masks slides 
+          | - xgboost modeling with Masks + Features (Radiomics & Clinical data)
+          | - RF Survival Model (Ranger package) and GBM with Features
 author: "Karim Mezhoud"
 date: '`r Sys.Date()`'
 output:
@@ -649,8 +654,6 @@ submission_img <- output_test %>%
 fwrite(submission_img, "submission_img.csv")
 
 ## Refresh memory
-rm(dtest, dtrain_8, dvalid_2, train_8, img_tr, img_ts, train_img, test_img, train_valid_split, patient2, patient_002, valid_2, train_8_sparse, masks2, ls_mask_patient_002, ls_scan_patient_002, test_sparse, valid_2_sparse)
-
 rm(list=ls())
 invisible(gc())
 
@@ -755,8 +758,12 @@ dtest = xgb.DMatrix(test_img.drop('PatientID', axis=1),  feature_names=X_train.c
 
 dtest_predictions = xgb_model_img.predict(dtest)
 
+dtest_predictions[dtest_predictions > 0.5] = 1
+dtest_predictions[dtest_predictions <= 0.5] = 0
+
 output_test = pd.read_csv("output_test.csv", index_col = False)
 
+#submission_img_p['Event'] = np.where(submission_img_p['Event'] >0.5, 1, 0)
 
 
 # Format predictions in DataFrame: prediction_df
@@ -769,7 +776,10 @@ output_test = pd.read_csv("output_test.csv", index_col = False)
 output_test['Event'] = dtest_predictions
 
 
+
+
 output_test.to_csv("submission_img_p.csv", index=False)
+
 
 ## save predictions for an ensemble
 #pickle.dump(Y_pred, open('xgb_train.pickle', 'wb'))
@@ -882,6 +892,8 @@ library(xgboost)
 library(mice)
 library(DataExplorer)
 library(Matrix)
+library(caret)
+library(e1071)
 ```
 
 
@@ -1073,7 +1085,7 @@ new_clinical_test <- clinical_test %>%
                 mutate_if(is.factor, as.numeric) 
 ```
 
-### Explre clinical data for Test
+### Explore clinical data for Test
 
 ```{r, fig.height=5, fig.width=11}
 p1 <- new_clinical_test %>%
@@ -1303,21 +1315,33 @@ summary(pred_valid)
 ## Transform propability to binary classification
 
 ```{r}
-pred_bin <- as.numeric(pred_valid >= 0.5)
-table(pred_bin)
+table(as.numeric(pred_valid >= 0.63))
 ```
 
 
-## Confusion matrix for Tree model
+## Confusion matrix for Tree model and performances
 
 ```{r}
 
-data.frame(prediction = as.numeric(pred_bin),
-         label = as.numeric(valid_2$Event)) %>%
-         count(prediction, label)
+# data.frame(prediction = as.numeric(pred_bin),
+#          label = as.numeric(valid_2$Event)) %>%
+#          count(prediction, label)
+
+pred_valid_bin <- as.factor(ifelse(pred_valid > 0.63,1,0))
+
+valid_2_event <- as.factor(valid_2$Event)
+
+caret::confusionMatrix(pred_valid_bin, valid_2_event)
 
 ```
 
+
+
+```{r}
+pred_valid_error <- ROCR::prediction(pred_valid , valid_2$Event)
+auc.valid <- ROCR::performance(pred_valid_error, "auc")
+print("AUC: "); as.numeric(auc.valid@y.values)
+```
 
 ## Extract the most important features from tree xgboost model
 
@@ -1351,11 +1375,12 @@ test_sparse <- sparse.model.matrix(PatientID ~., data=test)
 
 
 ```{r}
-pred_tree <- predict(xgboost_tree, dtest)
+pred_test <- predict(xgboost_tree, dtest)
 
-pred_bin_xgboost <- as.numeric(pred_tree >= 0.5)
+pred_test_bin <- as.numeric(pred_test >= 0.63)
 
-print("ratio of predicted Events in test datset: "); table(pred_bin_xgboost)
+
+print("ratio of predicted Events in test datset: "); table(pred_test_bin)
 ```
 
 ```{r}
@@ -1366,13 +1391,16 @@ print("ratio of Events in train datset: "); table(train$Event)
 ## submission
 
 ```{r}
-
-pred <- data.frame(
-  PatientID = PatientID,
-  Event = pred_tree
-)
+pred_test_bin <- as.factor(ifelse(pred_test > 0.63,1,0))
 
 output_test <- fread("output_test.csv")
+
+pred <- data.frame(
+  PatientID = output_test$PatientID,
+  Event = pred_test_bin
+)
+
+
 
 submission <- output_test %>%
   select(PatientID, SurvivalTime) %>%
@@ -1487,7 +1515,6 @@ xgb_fea_imp.head(10)
 ```{python}
 # Confusion matrix
 dval_predictions = xgb_model_fea.predict(dvalid)
-dval_predictions
 
 from sklearn.metrics import confusion_matrix
 cm = confusion_matrix(y_valid, [1 if p > 0.5 else 0 for p in dval_predictions])
@@ -1502,9 +1529,14 @@ plt.show()
 ```{python}
 # evaluate predictions
 from sklearn.metrics import accuracy_score
+
+dval_predictions[dval_predictions > 0.5] = 1
+dval_predictions[dval_predictions <= 0.5] = 0
+
 predictions = [round(value) for value in dval_predictions]
 accuracy = accuracy_score(y_valid, predictions)
 print("Accuracy: %.2f%%" % (accuracy * 100.0))
+
 ```
 
 ## Prediction with Python, features, Masks
@@ -1514,376 +1546,436 @@ dtest = xgb.DMatrix(test_xgboost,  feature_names = X_train.columns.values)
 
 dtest_predictions = xgb_model_fea.predict(dtest)
 
+dtest_predictions[dtest_predictions > 0.5] = 1
+dtest_predictions[dtest_predictions <= 0.5] = 0
+
 output_test = pd.read_csv('output_test.csv',  index_col = False)
 
 output_test['Event'] = dtest_predictions
 
+# submission_fea_img_p['Event'] = np.where(submission_fea_img_p['Event'] >0.5, 1, 0)
+
 output_test.to_csv("submission_fea_img_p.csv", index=False)
+
 
 output_test.head()
 ```
 
 
-<!-- # Random Forest Survival model (ranger package) -->
 
-<!--  This method will give us an outcome probability over a time continuum (flipping the non-event to event probability) -->
 
-<!--  Let’s take a quick look at the time period range in the training portion of our data set: -->
+# Random Forest Survival model (ranger package)
 
-<!-- ```{r} -->
-<!-- # reset train and test dataset -->
-<!-- train <-new_clinical %>% -->
-<!--   mutate_if(is.character, as.factor) %>% -->
-<!--   left_join(y = output_train, by = "PatientID") %>% -->
-<!--   left_join(y = new_radiomics, by = "PatientID") %>% -->
-<!--   select(PatientID, Event, everything()) %>% -->
-<!--   setDT() # convert to data.table -->
+ This method will give us an outcome probability over a time continuum (flipping the non-event to event probability)
 
+ Let’s take a quick look at the time period range in the training portion of our data set:
 
-<!--  test <- new_clinical_test %>% -->
-<!--   mutate_if(is.character, as.factor) %>% -->
-<!--   left_join(y = output_test, by = "PatientID") %>% -->
-<!--   left_join(y = new_radiomics_test, by = "PatientID") %>% -->
-<!--   select(PatientID, Event, everything()) %>% -->
-<!--   setDT() # convert to data.table -->
+```{r}
 
-<!-- plot(sort(train$SurvivalTime), pch='.', type='o',  -->
-<!--      col='blue', lwd=2 ,  -->
-<!--      main = 'Survival Days of Lung Cancer') -->
-<!-- ``` -->
+test <- fread("test_features.csv" )
+train <- fread("train_features.csv")
 
 
-<!-- ## Dealing with missing Age -->
+# # reset train and test dataset
+# train <-new_clinical %>%
+#   mutate_if(is.character, as.factor) %>%
+#   left_join(y = output_train, by = "PatientID") %>%
+#   left_join(y = new_radiomics, by = "PatientID") %>%
+#   select(PatientID, Event, everything()) %>%
+#   setDT() # convert to data.table
+# 
+# 
+#  test <- new_clinical_test %>%
+#   mutate_if(is.character, as.factor) %>%
+#   left_join(y = output_test, by = "PatientID") %>%
+#   left_join(y = new_radiomics_test, by = "PatientID") %>%
+#   select(PatientID, Event, everything()) %>%
+#   setDT() # convert to data.table
 
-<!-- ### Check the data for missing values. -->
+plot(sort(train$SurvivalTime), pch='.', type='o',
+     col='blue', lwd=2 ,
+     main = 'Survival Days of Lung Cancer')
+```
 
-<!-- ```{r} -->
-<!-- sapply(train, function(x) sum(is.na(x))) -->
-<!-- ``` -->
 
-<!-- ### Imputation processing for train data -->
+## Dealing with missing Age
 
-<!-- ```{r} -->
-<!-- require(mice) -->
-<!-- init = mice(train, maxit=0)  -->
-<!-- meth = init$method -->
-<!-- predM = init$predictorMatrix -->
-<!-- ``` -->
+### Check the data for missing values.
 
-<!-- - We may not want to use a certain variable as predictors. For example, the PatitenID variable does not have any predictive value. -->
+```{r}
+sapply(train, function(x) sum(is.na(x)))
+```
 
-<!-- ```{r} -->
-<!-- predM[, c("PatientID")] <- 0 -->
-<!-- ``` -->
+### Imputation processing for train data
+```{r include=FALSE}
+require(mice)
+```
 
 
-<!-- - If we want to skip a variable from imputation use the code below. This variable will be used for prediction. -->
+```{r}
+require(mice)
+init = mice(train, maxit=0)
+meth = init$method
+predM = init$predictorMatrix
+```
 
-<!-- ```{r} -->
-<!-- #colnames(train)[train[, !names(train) %in% c("PatientID")]] -->
+- We may not want to use a certain variable as predictors. For example, the PatitenID variable does not have any predictive value.
 
-<!-- meth[c("PatientID")]="" -->
+```{r}
+predM[, c("PatientID")] <- 0
+```
 
-<!-- ``` -->
 
+- If we want to skip a variable from imputation use the code below. This variable will be used for prediction.
 
-<!-- - Now let specify the methods for imputing the missing values. There are specific methods for continues, binary and ordinal variables. I set different methods for each variable. You can add more than one variable in each method. -->
+```{r}
+#colnames(train)[train[, !names(train) %in% c("PatientID")]]
 
-<!-- ```{r} -->
-<!-- meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables ) -->
+meth[c("PatientID")]=""
 
-<!-- # pmm generate error. it is seems working with cart -->
-<!-- # (https://stackoverflow.com/questions/48355250/ -->
-<!-- #do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu) -->
-<!-- ``` -->
+```
 
 
-<!-- - Now it is time to run the multiple (m=5) imputation. -->
+- Now let specify the methods for imputing the missing values. There are specific methods for continues, binary and ordinal variables.
 
-<!-- ```{r} -->
-<!-- set.seed(103) -->
-<!-- imputed = mice(train, method=meth, predictorMatrix=predM, m=5) -->
-<!-- ``` -->
+```{r}
+meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables )
 
-<!-- - Create a dataset after imputation. -->
+# pmm generate error. it is seems working with cart
+# (https://stackoverflow.com/questions/48355250/
+#do-imputation-in-r-when-mice-returns-error-that-system-is-computationally-singu)
+```
 
-<!-- ```{r} -->
-<!-- imputed <- complete(imputed) -->
-<!-- ``` -->
 
-<!-- - Check for missings in the imputed dataset. -->
+- Now it is time to run the multiple (m=5) imputation.
 
-<!-- ```{r} -->
-<!-- sapply(imputed, function(x) sum(is.na(x))) -->
-<!-- ``` -->
+```{r}
+set.seed(103)
+imputed = mice(train, method=meth, predictorMatrix=predM, m=5)
+```
 
-<!-- - Accuracy -->
+- Create a dataset after imputation.
 
-<!-- ```{r} -->
-<!-- print("train$age") ; summary(train$age) -->
-<!-- print("imputed$age") ; summary(imputed$age) -->
-<!-- ``` -->
+```{r}
+imputed <- complete(imputed)
+```
 
-<!-- - Well done :-) -->
+- Check for missings in the imputed dataset.
 
-<!-- ### Do the same imputation for test dataset -->
+```{r}
+sapply(imputed, function(x) sum(is.na(x)))
+```
 
-<!-- ```{r} -->
-<!-- init = mice(test, maxit=0)  -->
-<!-- meth = init$method -->
-<!-- predM = init$predictorMatrix -->
+- Accuracy
 
-<!-- predM[, c("PatientID")] <- 0 -->
-<!-- meth[c("PatientID")]="" -->
-<!-- meth[c("age")]="cart"  -->
+```{r}
+print("train$age") ; summary(train$age)
+print("imputed$age") ; summary(imputed$age)
+```
 
-<!-- set.seed(103) -->
-<!-- imputed_test = mice(test, method=meth, predictorMatrix=predM, m=5) -->
-<!-- imputed_test <- complete(imputed_test) -->
+- Well done :-)
 
-<!-- imputed_test[1:10,1:10] -->
-<!-- ``` -->
+### Do the same imputation for test dataset
 
+```{r}
+init = mice(test, maxit=0)
+meth = init$method
+predM = init$predictorMatrix
 
-<!-- ## Preprocessing Train and Test  -->
+predM[, c("PatientID")] <- 0
+meth[c("PatientID")]=""
+meth[c("age")]="cart"
 
-<!-- In order to measure the AUC of each model we need to split the data randomly (with seed) into two equal parts: -->
+set.seed(103)
+imputed_test = mice(test, method=meth, predictorMatrix=predM, m=5)
+imputed_test <- complete(imputed_test)
 
-<!-- ```{r} -->
-<!-- set.seed(1234) -->
-<!-- random_splits <- runif(nrow(imputed)) -->
-<!-- train_df_official <- imputed[random_splits < .5,] -->
-<!-- dim(train_df_official) -->
+imputed_test[1:10,1:10]
+```
 
 
-<!-- validate_df_official <- imputed[random_splits >= .5,] -->
-<!-- dim(validate_df_official) -->
+## Preprocessing Train and Test
 
-<!-- ``` -->
+In order to measure the AUC of each model we need to split the data randomly (with seed) into two equal parts:
 
-<!-- In order to align the survival and the classification models, we will focus on the probability of reaching event over the 825 days. We tried the Median, mean, quantile but it seems not well as 825 days. -->
+```{r}
+set.seed(1234)
+random_splits <- runif(nrow(imputed))
+train_df_official <- imputed[random_splits < .5,]
+dim(train_df_official)
 
-<!-- ```{r} -->
-<!-- period_choice <- round(quantile(test$SurvivalTime)[[2]]) -->
-<!-- period_choice <- 825 -->
 
+validate_df_official <- imputed[random_splits >= .5,]
+dim(validate_df_official)
 
-<!-- ``` -->
+```
 
-<!-- - We also need to create a classification-centric outcome variable. This will measure how many patients reached event or not within the chosen period. Here we look for a censor feature of 1 (i.e. the event happened) under the chosen period to set the outcome to 1, everything else is set to 0: -->
+In order to align the survival and the classification models, we will focus on the probability of reaching event over the 825 days. We tried the Median, mean, quantile but it seems not well as 825 days.
 
-<!-- ```{r} -->
-<!-- # classification data set -->
-<!-- train_df_classificaiton  <- train_df_official  -->
+```{r}
+period_choice <- round(quantile(test$SurvivalTime)[[2]])
+period_choice <- 825
 
-<!-- train_df_classificaiton$ReachedEvent <- ifelse((train_df_classificaiton$Event == 1 &  -->
-<!--                                      train_df_classificaiton$SurvivalTime <= period_choice), 1, 0) -->
 
-<!-- summary(train_df_classificaiton$ReachedEvent) -->
-<!-- ``` -->
+```
 
+- We also need to create a classification-centric outcome variable. This will measure how many patients reached event or not within the chosen period. Here we look for a censor feature of 1 (i.e. the event happened) under the chosen period to set the outcome to 1, everything else is set to 0:
 
-<!-- ```{r} -->
-<!-- validate_df_classification  <- validate_df_official  -->
+```{r}
+# classification data set
+train_df_classificaiton  <- train_df_official
 
-<!-- validate_df_classification$ReachedEvent <- ifelse((validate_df_classification$Event == 1 &  -->
-<!--                                         validate_df_classification$SurvivalTime <= period_choice), 1, 0) -->
+train_df_classificaiton$ReachedEvent <- ifelse((train_df_classificaiton$Event == 1 &
+                                     train_df_classificaiton$SurvivalTime <= period_choice), 1, 0)
 
-<!-- summary(validate_df_classification$ReachedEvent) -->
-<!-- ``` -->
+summary(train_df_classificaiton$ReachedEvent)
+```
 
-<!-- - Now we can easily get an AUC score on the probability of reaching event within our allotted period choice  -->
 
+```{r}
+validate_df_classification  <- validate_df_official
 
-<!-- ##  Survival Model (ranger) -->
+validate_df_classification$ReachedEvent <- ifelse((validate_df_classification$Event == 1 &
+                                        validate_df_classification$SurvivalTime <= period_choice), 1, 0)
 
+summary(validate_df_classification$ReachedEvent)
+```
 
-<!-- ```{r include=FALSE} -->
-<!-- require(ranger) -->
-<!-- require(survival) -->
-<!-- require(pROC) -->
-<!-- ``` -->
+- Now we can easily get an AUC score on the probability of reaching event within our allotted period choice
 
-<!-- ```{r} -->
-<!-- # omit PatientID from variable importance -->
-<!-- var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID", -->
-<!--                                                           "Event",  -->
-<!--                                                           "SurvivalTime")]], -->
-<!--               collapse ="+") -->
 
-<!-- survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var)) -->
+##  Survival Model (ranger)
 
 
-<!-- survival_formula -->
-<!-- ``` -->
+```{r include=FALSE}
+require(ranger)
+require(survival)
+require(pROC)
+```
 
+```{r}
+# omit PatientID from variable importance
+var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID",
+                                                          "Event",
+                                                          "SurvivalTime")]],
+              collapse ="+")
 
-<!-- ```{r} -->
-<!-- survival_model <- ranger(survival_formula, -->
-<!--                data = train_df_official,   -->
-<!--                seed = 1234, -->
-<!--                importance = 'permutation', -->
-<!--                mtry = 2, -->
-<!--                verbose = TRUE, -->
-<!--                num.trees = 50, -->
-<!--                write.forest=TRUE) -->
+survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var))
 
-<!-- # print out coefficients -->
-<!-- sort(survival_model$variable.importance, decreasing = TRUE) %>% head(20) -->
-<!-- ``` -->
 
+survival_formula
+```
 
-<!-- - Once we have our survival_model model object, we can take a look at some probabilities of survival (this is just for illustrative purposes as we haven’t split our data set yet). Let’s look at two patients - row 1 and row 56: -->
 
-<!-- ```{r} -->
-<!-- plot(survival_model$unique.death.times, survival_model$survival[1,], -->
-<!--      type='l', col='orange', ylim=c(0.2,1)) -->
+```{r}
+survival_model <- ranger(survival_formula,
+               data = train_df_official,
+               seed = 1234,
+               importance = 'permutation',
+               mtry = 2,
+               verbose = TRUE,
+               num.trees = 50,
+               write.forest=TRUE)
 
-<!-- lines(survival_model$unique.death.times,  -->
-<!--       survival_model$survival[56,], col='blue') -->
-<!-- ``` -->
+# print out coefficients
+sort(survival_model$variable.importance, decreasing = TRUE) %>% head(10)
+```
 
-<!-- - The orange PatientID has more probability to survive. -->
 
-<!-- ```{r} -->
-<!-- print("Orange PatientID: "); imputed[1,c(2,7,8,9)] -->
-<!-- print("Blue PatientID: "); imputed[56,c(2,7,8,9)] -->
-<!-- ``` -->
+- Once we have our survival_model model object, we can take a look at some probabilities of survival (this is just for illustrative purposes as we haven’t split our data set yet). Let’s look at two patients - row 1 and row 56:
 
-<!-- ### Scoring the Random Forest Survival Model -->
+```{r}
+plot(survival_model$unique.death.times, survival_model$survival[1,],
+     type='l', col='orange', ylim=c(0.2,1))
 
-<!-- First we get the basic survival prediction using our validation split set and then we flip the probability of the period of choice and get the AUC score: -->
+lines(survival_model$unique.death.times,
+      survival_model$survival[56,], col='blue')
+```
 
-<!-- ```{r} -->
-<!-- feature_names <- setdiff(names(train_df_classificaiton), -->
-<!--                          c('PatientID', 'ReachedEvent',  -->
-<!--                            'SurvivalTime', 'Event')) -->
+- The orange PatientID has more probability to survive.
 
+```{r}
+print("Orange PatientID: "); imputed[1,c(2,7,8,9)]
 
-<!-- suvival_predictions <- predict( survival_model,  -->
-<!--                                 validate_df_official[, feature_names]) -->
+print("Blue PatientID: "); imputed[56,c(2,7,8,9)]
+```
 
-<!-- roc(response = validate_df_classification$ReachedEvent, -->
-<!--     predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times -->
-<!--                                                         == period_choice)]) -->
-<!-- ``` -->
+### Scoring the Random Forest Survival Model
 
-<!-- ### RF survival Prediction -->
+First we get the basic survival prediction using our validation split set and then we flip the probability of the period of choice and get the AUC score:
 
-<!-- ```{r} -->
+```{r}
+feature_names <- setdiff(names(train_df_classificaiton),
+                         c('PatientID', 'ReachedEvent',
+                           'SurvivalTime', 'Event'))
 
-<!-- survival_predictions_test <- predict( survival_model,imputed_test[, feature_names]) -->
 
-<!-- predictor <- 1 -  -->
-<!--   survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times -->
-<!--                                                            == period_choice)] -->
+suvival_predictions <- predict( survival_model,
+                                validate_df_official[, feature_names])
 
-<!-- pred_survival <- data.frame( -->
-<!--   PatientID = PatientID, -->
-<!--   Event = predictor -->
-<!-- ) -->
+roc(response = validate_df_classification$ReachedEvent,
+    predictor = 1 - suvival_predictions$survival[,which(suvival_predictions$unique.death.times
+                                                        == period_choice)])
+```
 
-<!-- submission_surv <- output_test %>% -->
-<!--   select(PatientID, SurvivalTime) %>% -->
-<!--   left_join(pred_survival, by = "PatientID") -->
+### RF survival Prediction
 
-<!-- fwrite(submission_surv, "submission_surv.csv") -->
+```{r}
 
-<!-- pred_bin_survival <- as.numeric(predictor > 0.5) -->
+survival_predictions_test <- predict( survival_model,imputed_test[, feature_names])
 
-<!-- print("ratio of predicted Events in test datset: "); table(pred_bin_survival) -->
-<!-- ``` -->
+predictor <- 1 -
+  survival_predictions_test$survival[,which(survival_predictions_test$unique.death.times
+                                                           == period_choice)]
 
-<!-- ```{r} -->
-<!-- print("ratio of Events in traindatset: "); table(train$Event) -->
-<!-- ``` -->
+pred_survival <- data.frame(
+  PatientID = imputed_test$PatientID,
+  Event = predictor
+)
 
+output_test <- fread("output_test.csv")
 
-<!-- # GBM Classification modeling -->
+submission_surv <- output_test %>%
+  select(PatientID, SurvivalTime) %>%
+  left_join(pred_survival, by = "PatientID")
 
-<!-- - Let’s run and score our classification GBM model: -->
+submission_surv["Event"] <- ifelse(submission_surv$Event > 0.42, 1,0)
 
-<!-- ```{r} -->
-<!-- require(gbm) -->
+fwrite(submission_surv, "submission_surv.csv")
 
 
 
-<!-- var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in% -->
-<!--                             c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))], -->
-<!--              collapse ="+") -->
 
+pred_bin_survival <- as.numeric(predictor > 0.5)
 
-<!-- classification_formula <- formula(paste('ReachedEvent ~ ', var)) -->
+print("ratio of predicted Events in test datset: "); table(pred_bin_survival)
+```
 
-<!-- classification_formula -->
-<!-- ``` -->
+```{r}
+print("ratio of Events in traindatset: "); table(train$Event)
+```
 
-<!-- ```{r} -->
-<!-- set.seed(1234) -->
-<!-- gbm_model = gbm(classification_formula,  -->
-<!--                 data =  train_df_classificaiton, -->
-<!--                 distribution='bernoulli', -->
-<!--                 n.trees=500,          -->
-<!--                 interaction.depth=3, -->
-<!--                 shrinkage=0.01, -->
-<!--                 bag.fraction=0.5, -->
-<!--                 keep.data=FALSE, -->
-<!--                 cv.folds=5) -->
 
-<!-- nTrees <- gbm.perf(gbm_model) -->
+## GBM Classification modeling
 
-<!-- validate_predictions <- predict(gbm_model, -->
-<!--                                 newdata = validate_df_classification[,feature_names],  -->
-<!--                                 type="response", n.trees = nTrees) -->
-<!-- ``` -->
+- Let’s run and score our classification GBM model:
 
+```{r include=FALSE}
+require(gbm)
+require(pROC)
+require(caret)
+require(e1071)
+```
 
+```{r}
+require(gbm)
 
-<!-- ```{r} -->
-<!-- require(pROC) -->
-<!-- roc(response=validate_df_classification$ReachedEvent, predictor=validate_predictions) -->
-<!-- ``` -->
+var <- paste(colnames(train_df_classificaiton)[ !(names(train_df_classificaiton) %in%
+                            c("PatientID", 'SurvivalTime' , "ReachedEvent", "Event"))],
+             collapse ="+")
 
 
-<!-- Now that both models can predict the same period and the probability of reaching the event, we average them together and see how they help each other (straight 50/50 here which may not be the best mix) -->
+classification_formula <- formula(paste('ReachedEvent ~ ', var))
 
+classification_formula
+```
 
-<!-- ### GBM Classifiaction Prediction -->
+```{r}
+set.seed(1234)
+gbm_model = gbm(classification_formula,
+                data =  train_df_classificaiton,
+                distribution='bernoulli',
+                n.trees=2000,
+                interaction.depth=2,
+                shrinkage=0.001,
+                bag.fraction=0.8,
+                keep.data=FALSE,
+                cv.folds=5)
 
-<!-- ```{r} -->
+nTrees_opt_cv <- gbm.perf(gbm_model, method = "cv")
 
-<!-- gbm_predictions_test <- predict(gbm_model, imputed_test[,feature_names]) -->
+validate_predictions <- predict(gbm_model,
+                                newdata = validate_df_classification[,feature_names],
+                                type="response", n.trees = nTrees_opt_cv )
 
 
-<!-- PatientID <- imputed_test$PatientID -->
+```
 
-<!-- pred <- data.frame( -->
-<!--   PatientID = PatientID, -->
-<!--   Event = gbm_predictions_test -->
-<!-- ) -->
+```{r}
+print(gbm_model)
+```
 
-<!-- submission_gbm <- output_test %>% -->
-<!--   select(PatientID, SurvivalTime) %>% -->
-<!--   left_join(pred, by = "PatientID") -->
 
-<!-- fwrite(submission_gbm, "submission_gbm.csv") -->
+```{r}
+summary(gbm_model)
+```
 
-<!-- pred_bin_gbm <- as.numeric(gbm_predictions_test > 0.5) -->
 
-<!-- print("ratio of predicted Events in test dataset: "); table(pred_bin_gbm) -->
-<!-- ``` -->
+```{r}
+require(pROC)
+roc(response=validate_df_classification$ReachedEvent, predictor=validate_predictions)
+```
 
-<!-- ```{r} -->
-<!-- print("ratio of Events in train dataset: "); table(train$Event) -->
-<!-- ``` -->
 
-<!-- ## Blend both models (Survival and Classification) together  -->
+```{r}
+validate_predictions_bin <- as.factor(ifelse(validate_predictions  > 0.39,1,0))
+validate_df_classification_event <- as.factor(validate_df_classification$Event)
 
-<!-- ```{r} -->
-<!-- roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[, -->
-<!--                                                         which(suvival_predictions$unique.death.times==period_choice)]))/2,  -->
-<!--           response = validate_df_classification$ReachedEvent) -->
-<!-- ``` -->
+caret::confusionMatrix(validate_predictions_bin, validate_df_classification_event)
+
+```
+
+
+### GBM Classification Prediction
+
+```{r}
+
+gbm_predictions_test <- predict(gbm_model, 
+                                imputed_test[,feature_names],
+                                n.trees = nTrees_opt_cv,
+                                type = "response")
+
+
+
+```
+
+
+```{r}
+PatientID <- imputed_test$PatientID
+
+pred <- data.frame(
+  PatientID = PatientID,
+  Event = gbm_predictions_test
+)
+
+submission_gbm <- output_test %>%
+  select(PatientID, SurvivalTime) %>%
+  left_join(pred, by = "PatientID")
+
+fwrite(submission_gbm, "submission_gbm.csv")
+
+#submission_bin_gbm <- submission_gbm %>%
+#                     mutate(Event = ifelse(Event > 0.39, 1,0))
+pred_bin_gbm <- as.factor(ifelse(pred > 0.39, 1, 0))
+print("ratio of predicted Events in test dataset: "); table(pred_bin_gbm)
+```
+
+
+```{r}
+print("ratio of Events in train dataset: "); table(train$Event)
+```
+
+
+Now that both models can predict the same period and the probability of reaching the event, we average them together and see how they help each other (straight 50/50 here which may not be the best mix)
+
+
+## Blend both models (Survival and Classification) together
+
+```{r}
+roc(predictor = (validate_predictions + (1 - suvival_predictions$survival[,
+                                                        which(suvival_predictions$unique.death.times==period_choice)]))/2,
+          response = validate_df_classification$ReachedEvent)
+```
 
 
 
