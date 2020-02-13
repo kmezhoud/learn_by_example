@@ -1,5 +1,5 @@
 ---
-title: "Survival Lung Cancer Modeling With Python & R"
+title: "Survival Lung Cancer Event (0,1) Modeling With Python & R"
 subtitle: | 
           | - Images, Radiomics and Clinical data Exploration.
           | - xgboost modeling with Masks slides 
@@ -1666,11 +1666,13 @@ imputed <- complete(imputed)
 sapply(imputed, function(x) sum(is.na(x)))
 ```
 
-- Accuracy
+- Accuracy of imputation
 
 ```{r}
 print("train$age") ; summary(train$age)
 print("imputed$age") ; summary(imputed$age)
+
+fwrite(imputed, "train_features_imputed.csv")
 ```
 
 - Well done :-)
@@ -1690,6 +1692,7 @@ set.seed(103)
 imputed_test = mice(test, method=meth, predictorMatrix=predM, m=5)
 imputed_test <- complete(imputed_test)
 
+fwrite(imputed_test, "test_features_imputed.csv")
 imputed_test[1:10,1:10]
 ```
 
@@ -1750,14 +1753,18 @@ summary(validate_df_classification$ReachedEvent)
 ```{r include=FALSE}
 require(ranger)
 require(survival)
+require("survminer")
 require(pROC)
 ```
 
 ```{r}
-# omit PatientID from variable importance
-var <- paste(colnames(train)[train[, !names(train) %in% c("PatientID",
+train_df_classificaiton <- as.data.table(train_df_classificaiton)
+# omit PatientID  and S3:integer64 from variable importance, Event and SurvivalTime will be used in formula
+var <- paste(colnames(train_df_classificaiton)[train_df_classificaiton[, !names(train_df_classificaiton) %in% c("PatientID",
                                                           "Event",
-                                                          "SurvivalTime")]],
+                                                          "SurvivalTime",
+                                                          "ReachedEvent",
+                                                          "firstorder_Energy")]], # first_orderEnergy is not double
               collapse ="+")
 
 survival_formula <- formula(paste('Surv(', 'SurvivalTime', ',', 'Event', ') ~ ', var))
@@ -1769,7 +1776,7 @@ survival_formula
 
 ```{r}
 survival_model <- ranger(survival_formula,
-               data = train_df_official,
+               data = train_df_classificaiton,
                seed = 1234,
                importance = 'permutation',
                mtry = 2,
@@ -1778,7 +1785,7 @@ survival_model <- ranger(survival_formula,
                write.forest=TRUE)
 
 # print out coefficients
-sort(survival_model$variable.importance, decreasing = TRUE) %>% head(10)
+sort(survival_model$variable.importance, decreasing = TRUE) %>% head(10) %>% names()
 ```
 
 
@@ -1810,7 +1817,7 @@ feature_names <- setdiff(names(train_df_classificaiton),
                            'SurvivalTime', 'Event'))
 
 
-suvival_predictions <- predict( survival_model,
+suvival_predictions <- predict(survival_model,
                                 validate_df_official[, feature_names])
 
 roc(response = validate_df_classification$ReachedEvent,
@@ -1853,6 +1860,66 @@ print("ratio of predicted Events in test datset: "); table(pred_bin_survival)
 
 ```{r}
 print("ratio of Events in traindatset: "); table(train$Event)
+```
+
+
+
+
+### CoxPH model
+
+```{r}
+
+#sapply(train_df_official, function(x) sum(is.na(x)))
+
+tr <- train_df_classificaiton %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(Event = ifelse(Event == 0, 1, 2)) #%>%
+   #select(which(sapply(.,is.numeric)))
+
+
+res.cox <- coxph(survival_formula, data =  tr)
+
+
+summary(res.cox)
+
+
+```
+
+
+- restart the model of the most significant
+
+```{r}
+cox2 <- coxph(Surv(SurvivalTime, Event) ~ Mstage + Nstage + SourceDataset + age + shape_Compactness1 + shape_Compactness2 + shape_SphericalDisproportion +shape_Sphericity+ glrlm_ShortRunEmphasis, data = tr )
+
+summary(cox2)
+```
+
+#### Testing proportional Hazards assumption
+
+```{r}
+test.cox2 <- cox.zph(cox2)
+test.cox2
+```
+
+```{r, fig.height= 5, fig.width=14}
+require("survminer")
+
+ggcoxzph(test.cox2)
+```
+
+- In the figure above, the solid line is a smoothing spline fit to the plot, with the dashed lines representing a +/- 2-standard-error band around the fit.
+
+```{r}
+#Var <- stringr::str_split(string = var, pattern = "\\+", simplify = TRUE, )
+#coxph.fit(tr %>% select(-Event), tr$Event)
+
+
+fit <- survfit(cox2, newdata = validate_df_classification, data = train_df_classificaiton)
+
+#ggsurvplot(fit, conf.int = TRUE, palette = "Dark2", 
+#           censor = FALSE)
+
+summary(fit)
 ```
 
 
