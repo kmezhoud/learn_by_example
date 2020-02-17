@@ -30,3 +30,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Image particle classification after collision](cern_particle/particle_class.html)
 - [Lung Cancer Event (0,1) prediction](lung_cancer_survival_time/lung_cancer_survival_time.html)
 - [Lung Cancer Survival Time (duration in days) prediction](lung_cancer_survival_time/kmezhoud_LCST.html)
+- [Particle specimen classification after collision](cern_particle/cirtaChallenge.html)

@@ -105,3 +105,7 @@
 <a href="https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html" target = "_blank">
 <img src="images/lung_cancer_survival_time.png" align="left" height="150" width="250" title="Lung Cancer Survival Time (xgboost)">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/cern_particle/cirtaChallenge.html" target = "_blank">
+<img src="images/Cirta_Particle_class.png" align="left" height="150" width="250" title= Particle specimen classification after collision (GPL, XGB)">
+</a>

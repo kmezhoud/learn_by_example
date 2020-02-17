@@ -134,7 +134,7 @@ def read_pickle_file(file):
 ```
 ## Load R packages
 
-```{r, echo=FALSE, comment=FALSE}
+```{r comment=FALSE, include=FALSE}
 library(dplyr)
 require("reticulate")
 library(data.table)
@@ -156,6 +156,11 @@ paste0(" Target N°1: "); event1[[2,1]]
 
 ```
 
+```{r}
+lapply(event1[1,], function(x) as.vector(x))
+
+dim(event1)
+```
 
 
 

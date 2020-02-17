@@ -45,7 +45,11 @@ Read throught this notebook to discover more about the particles.
 ```{python}
 #Import libraries to load and process data
 import numpy as np
+import pandas as pd
 import pickle
+import os
+from collections import Counter
+from numpy import unique
 ```
 
 
@@ -54,35 +58,97 @@ import pickle
 pkl_file = open("download/event1.pkl", 'rb')
 event1 = pickle.load(pkl_file)
 np.shape(event1)
-event1
+event1[1]
 ```
+
+```{python}
+
+
+def get_pkl_filename(path):
+  list_files = os.listdir(path)
+  PIK = "pickle.dat"
+
+  with open(PIK, "wb") as f:
+      pickle.dump(len(list_files), f)
+      for value in list_files:
+          pickle.dump(value, f)
+  filename_ls = []
+  with open(PIK, "rb") as f:
+      for _ in range(pickle.load(f)):
+          filename_ls.append(pickle.load(f))
+  return(filename_ls)
+
+list_file = get_pkl_filename("download/")
+
+# Glimpse the format of the output
+isinstance(list_file, list)
+len(list_file)
+list_file[1]
+
+```
+
+```{python}
+path = 'download/'
+#pkl = [pickle.load(path + s) for s in list_file]
+
+def load_pkl(file_pkl):
+  with open(file_pkl, 'rb') as pickle_file:
+      content = pickle.load(pickle_file)
+      return(content)
+
+
+
+pkl = [load_pkl(path + '/' + s) for s in list_file]
+
+len(pkl)
+```
+
 
 
 ```{python}
-# get the data and target
-data,target=event1[0],event1[1]
-target=target.astype('int')
-target
-```
+from sklearn.preprocessing import LabelEncoder
 
+
+arrays = [item[0] for item in pkl]
+labels = [item[1] for item in pkl]
+
+# convert a list of narray to narray
+xtrain = np.stack(np.concatenate( arrays, axis=0 ), axis=0)
+# reshape array from (1176475,10,10)  to 2 dimension (1176475, 100)
+xtrain = xtrain.reshape(len(xtrain),-1)
+
+# Convert a list of narray to array
+ytrain = np.stack(np.concatenate( labels, axis=0 ), axis=0)
+
+# Encode labels
+ytrain_en = LabelEncoder().fit(ytrain).transform(ytrain)
+
+#ytrain_en =  pd.DataFrame(ytrain_en)
+
+type(xtrain)
+
+len(ytrain_en)
+```
 
 ```{python}
-# code to particle name dictionary -- more here : 
-dic_types={11: "electron", 13 : "muon", 211:"pion", 321:"kaon",2212 : "proton"}
+
+
+train = pd.DataFrame({'label': ytrain_en, 'images': list(xtrain)}, columns=['label', 'images'])
+
+
+xtrain.shape
+type(xtrain)
+#train.images.to_list()
+type(train.images)
+type(xtrain[1])
+type(train.images[1])
+
+st = np.stack(train.images.values)
+
+st.shape
 ```
 
-## Example  of a particle
 
-
-```{python}
-import matplotlib.pyplot as plt
-plt.title(dic_types[target[0]])
-plt.imshow(data[0])
-plt.show()
-```
-
-
-![png](cirtaChallenge_files/cirtaChallenge_7_0.png)
 
 
 ## Distribution of particles in an event
@@ -90,155 +156,201 @@ plt.show()
 
 ```{python}
 
-from collections import Counter
+Counter(ytrain_en)
+Counter(ytrain)
+```
 
-plt.bar(range(len(dic_types)),list(Counter(target).values()))
-plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(target).keys())])
+
+```{python}
+import matplotlib.pyplot as plt
+
+
+# code to particle name dictionary -- more here : 
+dic_types={0: "electron", 1 : "muon", 2:"pion", 3:"kaon",4 : "proton"}
+
+
+
+plt.bar(range(len(dic_types)),list(Counter(train['label']).values()))
+plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(train['label']).keys())])
 
 plt.show()
 ```
 
+# Up-sample Minority Classes
 
-![png](cirtaChallenge_files/cirtaChallenge_9_0.png)
+```{python}
+train[train.label == 0].shape
+train[train.label == 1].shape
+train[train.label == 2].shape
+train[train.label == 3].shape
+train[train.label == 4].shape
+```
+
+```{python}
+# Separate minors and major classes
+train_0 = train[train.label == 0]
+train_1 = train[train.label == 1]
+train_2 = train[train.label == 2]
+train_3 = train[train.label == 3]
+train_4 = train[train.label == 4]
+
+```
+
+```{python}
+from sklearn.utils import resample
+
+# Upsample minority classes
+train_0_upsampled = resample(train_0, 
+                                 replace=True,     # sample with replacement
+                                 n_samples=111730,    # to match majority class
+                                 random_state=123) # reproducible results
+
+# Upsample minority classes
+train_1_upsampled = resample(train_1, 
+                                 replace=True,     # sample with replacement
+                                 n_samples=111730,    # to match majority class
+                                 random_state=123) # reproducible results                              
 
 
-# SVM
+# Downsample majority class
+train_2_downsampled = resample(train_2, 
+                                 replace=False,    # sample without replacement
+                                 n_samples=111730,     # to match minority class
+                                 random_state=123) # reproducible results
+                                 
+# Downsample majority class
+train_3_downsampled = resample(train_3, 
+                                 replace=False,    # sample without replacement
+                                 n_samples=111730,     # to match minority class
+                                 random_state=123) #
+                                 
+                          
+# Combine minority class with downsampled majority class
+train_balanced = pd.concat([train_0_upsampled, train_1_upsampled, train_2_downsampled, train_3_downsampled, train_4])
 
-Let us try to predict the particle type with an SVM model from the famous sklearn library. First we split the data into training and test sets.
+train_balanced.head
+```
+
+```{python}
+# plt.bar(range(len(dic_types)),list(Counter(train_balanced['label']).values()))
+# plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(train_balanced['label']).keys())])
+# 
+# plt.show()
+```
+
+```{python}
+Counter(train_balanced.label)
+```
 
 
 ```{python}
+from numpy import save
+# Separate input features (X) and target variable (y)
+Y = train_balanced.label
+#X = train_balanced.drop('label', axis=1)
+X = np.stack(train_balanced.images.values)
+
+save('X.npy', X)
+
+save('Y.npy', Y)
+
+
+# load array
+#Y = load('Y.npy')
+```
+
+
+```{python}
+#import mxnet as mx
 from sklearn.model_selection import train_test_split
+import xgboost as xgb
+import time
 
-# we transform the 10x10 images into arrays of 100. You can play with that :) 
-X_train, X_test, y_train, y_test = train_test_split(
-    [np.concatenate((i)) for i in data], target, test_size=0.20, random_state=42)
+
+
+## Split 
+trn_x, val_x, trn_y, val_y = train_test_split(X, Y, random_state = 42,
+                                              stratify = Y, test_size = 0.20)
+                                              
+                                              
+start_time = time.process_time()
+
+clf = xgb.XGBRegressor(booster = 'gbtree',
+                      objective = 'multi:softprob', # multi:softmax, multi:softprob  #'reg:squarederror',  # reg:linear reg:logistic
+                      num_class =  5,
+                      max_depth = 10,
+                      n_estimators = 100,
+                      min_child_weight = 9,
+                      learning_rate = 0.01,
+                      nthread = 8,
+                      subsample = 0.80,
+                      colsample_bytree = 0.80,
+                      seed = 4242)
+
+
+
+
+clf.fit(trn_x,
+        trn_y,
+        eval_set = [(val_x, val_y)],
+        verbose = True,
+        #verbose_eval= 10,  # print every 10 boost
+        eval_metric = 'mlogloss', # rmse, logloss, mae, map, cox-nloglik
+        early_stopping_rounds = 10)
+        
+print((time.process_time() - start_time)/60, "Minutes")
 ```
-
-
-```{python}
-#new shape of our data
-np.array(X_train).shape, np.array(y_train).shape
-```
-
-
-
-
-    ((2752, 100), (2752,))
-
-
-
-
-```{python}
-# particle distribution in our training
-Counter(y_train)
-```
-
-
-
-
-    Counter({211: 2116, 2212: 248, 321: 379, 11: 8, 13: 1})
-
-
-
-
-```{python}
-from sklearn.svm import SVC
-clf = SVC(gamma='auto')
-clf.fit(X_train, y_train)
-```
-
-
-
-
-    SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
-        decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
-        max_iter=-1, probability=False, random_state=None, shrinking=True,
-        tol=0.001, verbose=False)
-
 
 
 
 ```{python}
-# particle distribution in our test
-Counter(y_test)
+#clf.score(val_x,val_y)
+
+# Predict
+preds = clf.predict(val_x)
+
+## Wich max prob
+import numpy as np
+best_preds = np.asarray([np.argmax(line) for line in preds])
+
+# Determine the precision of this prediction:
+from sklearn.metrics import precision_score
+precision_score(val_y, best_preds, average='macro')
 ```
-
-
-
-
-    Counter({321: 93, 211: 516, 2212: 77, 11: 2, 13: 1})
-
-
 
 
 ```{python}
-clf.score(X_test,y_test)
+
+pkl_test = open("data_test_file.pkl", 'rb')
+test = pickle.load(pkl_test)
+
+t1 = np.stack( test, axis=0 )
+
+t2 = np.stack(t1[:,1])
+
+xtest = t2.reshape(len(t2),-1)
+
+X.shape
+xtest.shape
 ```
-
-
-
-
-    0.7489114658925979
-
-
-
-The score is already pretty good ! Let's now try to focus on less frequent particle by removing the most redundant one, the "pion"
-
-
-```{python}
-#we have now reduced our test sample ! 
-idx_non_pion=np.where(y_test!=211)[0]
-Counter(y_test[idx_non_pion])
-```
-
-
-
-
-    Counter({321: 93, 2212: 77, 11: 2, 13: 1})
 
 
 
 
 ```{python}
-#let's see how our model behaves then
+pred_test = clf.predict(xtest)
+#pred_test
+#np.asarray([np.argmax(line) for line in pred_test])
+#dic_types={0: "electron", 1 : "muon", 2:"pion", 3:"kaon",4 : "proton"}
+submission = pd.DataFrame(pred_test)
 
-clf.score(np.array(X_test)[idx_non_pion],np.array(y_test)[idx_non_pion])
+
+
+#submission['image'] = submission.index
+submission = submission.reset_index()
+submission.columns = ['image', 'electron', 'muon', 'pion', 'kaon', 'proton']
+#submission.rename( columns={'index': 'image'}, index ={'index', 'image'},axis=, inplace=True)
+submission.to_csv("submission.csv")
+
+submission.head
 ```
-
-
-
-
-    0.0
-
-
-
-### oups !! Our model is actually really bad then...
-
-
-```{python}
-#let's take a closer look at which particle type the model is predicting 
-clf.predict(np.array(X_test)[idx_non_pion])
-```
-
-
-
-
-    array([211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211,
-           211, 211, 211, 211])
-
-
-
-## It seems our model is overfitting by predicting only pions! Can you help improve it?
