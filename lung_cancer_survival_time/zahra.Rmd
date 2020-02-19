@@ -1,0 +1,629 @@
+---
+title: "Survival Lung Cancer Modeling With Python & R"
+subtitle: | 
+          | - Zahra ELHAMRAOUI
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+  urlcolor: blue
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+
+```{r}
+#reticulate::use_python("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3", required = TRUE)
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+```{bash}
+#conda install -c conda-forge missingno
+#conda install -c conda-forge lifelines
+```
+
+
+```{python}
+import pandas as pd
+import numpy as np
+#import missingno
+from sklearn.preprocessing import LabelEncoder , OneHotEncoder
+from lifelines.utils import concordance_index
+from lifelines import CoxPHFitter, WeibullAFTFitter , LogNormalAFTFitter, LogLogisticAFTFitter , PiecewiseExponentialRegressionFitter
+from lifelines.utils import k_fold_cross_validation
+#from IPython.display import HTML
+import seaborn as sns
+```
+
+
+```{python}
+# loads imputed age dataset
+train_fea = pd.read_csv("train_features_imputed.csv")
+# set PatientID as index
+train_fea = train_fea.set_index('PatientID')
+# set variable matrix xtrain
+xtrain = train_fea.drop(['SurvivalTime', 'Event',], axis=1)
+# set target ytrain
+ytrain = train_fea[["SurvivalTime","Event"]]
+```
+
+## Glimpse for Survival Time distribution
+
+```{python}
+ytrain = train_fea[["SurvivalTime","Event"]]
+ytrain.SurvivalTime.plot.hist()
+```
+
+# Removing features with low variance
+
+We can select manually features if we have any idea or drop columns with few (variance)[https://stackoverflow.com/questions/29298973/removing-features-with-low-variance-using-scikit-learn]
+
+```{python}
+## select variables manually
+xtrain = train_fea[["shape_Sphericity", "shape_SurfaceVolumeRatio", "shape_Maximum3DDiameter",
+"glcm_Id","glcm_Idm" ,"SourceDataset","Nstage","Tstage","age" , "Histology" ,"firstorder_Entropy" ]] # , "glcm_MaximumProbability" ","glcm_Correlation", "shape_SphericalDisproportion", ,"firstorder_Median" , "glcm_Imc1"
+
+```
+
+
+## Merge xtrain and ytrain
+
+```{python}
+train = pd.concat([xtrain, ytrain], axis = 1)
+```
+
+
+# Built Models with selected Radiomics and clinical features
+
+
+```{python}
+##  CoxPHFitter model
+cph = CoxPHFitter().fit(train, duration_col = 'SurvivalTime', event_col='Event')
+## WeibullAFTFitter
+Wei = WeibullAFTFitter().fit(train, duration_col = 'SurvivalTime', event_col='Event')
+## LogNormalAFTFitter
+log = LogNormalAFTFitter().fit(train, duration_col = 'SurvivalTime', event_col='Event')
+## LogLogisticAFTFitter
+logistic = LogLogisticAFTFitter().fit(train, duration_col = 'SurvivalTime', event_col='Event')
+
+```
+
+
+# Corcondance index as an Evaluation Metric (link)[https://medium.com/analytics-vidhya/concordance-index-72298c11eac7]
+
+- The choice of k is usually 5 or 10, but there is no formal rule.
+
+
+```{python}
+import random
+#random.seed(123)
+cph_cv_result = k_fold_cross_validation(cph, train, duration_col='SurvivalTime', event_col='Event', k=5)
+print('CoxPHFitter C-index(cross-validation) = ', np.median(cph_cv_result))
+
+wei_cv_result = k_fold_cross_validation(Wei, train, duration_col='SurvivalTime', event_col='Event', k=5)
+print('WeibullAFTFitter C-index(cross-validation) = ', np.median(wei_cv_result))
+
+log_cv_result = k_fold_cross_validation(log, train, duration_col='SurvivalTime', event_col='Event', k=5)
+print('LogNormalAFTFitter C-index(cross-validation) = ', np.median(log_cv_result))
+
+logistic_cv_result = k_fold_cross_validation(logistic, train, duration_col='SurvivalTime', event_col='Event', k=5)
+print('Logistic C-index(cross-validation) = ', np.median(logistic_cv_result))
+```
+
+# Plot distribution of Event prob at days 850 of train Dataset
+
+```{python}
+import matplotlib.pyplot as plt
+
+## Lifetime prediction for 850 days
+cph_850 = cph.predict_survival_function(train, times= 850)
+## Lifetime prediction for 850 days
+log_850 = log.predict_survival_function(train, times= 850)
+## Lifetime prediction for 850 days
+Wei_850 = Wei.predict_survival_function(train, times= 850)
+## Lifetime prediction for 850 days
+logistic_850 = logistic.predict_survival_function(train, times= 850)
+
+
+survivalTime_850 = pd.concat([cph_850, Wei_850, log_850, logistic_850])
+
+#survivalTime_850.rename( index={ 'cph', 'Wei', 'log', 'logistic'}, inplace=True)
+survivalTime_850.index = [ 'cph', 'Wei', 'log', 'logistic']
+
+survivalTime_850 = survivalTime_850.T
+
+p = survivalTime_850[["cph", "Wei", "log", "logistic"]].plot.kde()
+p.set_title('Distribution of Event probability at days 850 for train dataset')
+#plt.legend( ncol=2, loc='upper left')
+```
+
+
+# Tie all code to built and evaluate
+
+```{python}
+
+def evalModels(dt, dtype):
+  ##  CoxPHFitter model
+  cph = CoxPHFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## WeibullAFTFitter
+  Wei = WeibullAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## LogNormalAFTFitter
+  log = LogNormalAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## LogLogisticAFTFitter
+  logistic = LogLogisticAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  
+  cph_cv_result = k_fold_cross_validation(cph, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  #print('CoxPHFitter C-index(cross-validation) = ', np.median(cph_cv_result))
+
+  wei_cv_result = k_fold_cross_validation(Wei, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  #print('WeibullAFTFitter C-index(cross-validation) = ', np.median(wei_cv_result))
+
+  log_cv_result = k_fold_cross_validation(log, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  #print('LogNormalAFTFitter C-index(cross-validation) = ', np.median(log_cv_result))
+
+  logistic_cv_result = k_fold_cross_validation(logistic, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  #print('Logistic C-index(cross-validation) = ', np.median(logistic_cv_result))
+  
+  results = pd.DataFrame(np.nan, 
+                    index=[ 'CoxPHFitter',
+                   'WeibullAFTFitter',
+                   'LogNormalAFTFitter',
+                   'Logistic'],
+                    columns=[dtype],
+                    dtype='float')
+                    
+  results[dtype] = [np.median(cph_cv_result),
+                   np.median(wei_cv_result),
+                   np.median(log_cv_result),
+                   np.median(logistic_cv_result)]
+  
+  return [results,cph, Wei, log, logistic]
+
+import random
+random.seed(1234)
+evalModels(dt = train, dtype = "Features")[0]
+  
+```
+
+# Prediction and submission
+
+```{python}
+test_fea = pd.read_csv("test_features_imputed.csv")
+
+test_fea = test_fea.set_index('PatientID')
+
+# select the same variables
+xtest = test_fea[["shape_Sphericity", "shape_SurfaceVolumeRatio", "shape_Maximum3DDiameter","firstorder_Entropy",
+"glcm_Id","glcm_Idm","SourceDataset","Nstage","Tstage","age"]]
+
+
+## LogNormalAFTFitter
+log = LogNormalAFTFitter().fit(train,duration_col = 'SurvivalTime', event_col='Event')
+
+# Predict with log model
+log_pred = log.predict_expectation(xtest)
+
+# Load output test file
+output_test = pd.read_csv("output_test.csv")
+# index PatientID
+output_test = output_test.set_index('PatientID')
+# add predcition to SurvivalTime
+output_test['SurvivalTime'] = log_pred
+
+output_test.head()
+
+output_test.to_csv('log_pred_survival.csv')
+
+```
+
+# Function to get multiple prediction
+
+- We focus on CoxPH, WeiBull, log , and logistic models.
+
+
+```{python}
+def getMultiplePred(path_test):
+  # prepare xtest
+  test_fea = pd.read_csv(path_test)
+  test_fea = test_fea.set_index('PatientID')
+  # select the same variables
+  xtest = test_fea[["shape_Sphericity", "shape_SurfaceVolumeRatio", "shape_Maximum3DDiameter","firstorder_Entropy",
+        "glcm_Id","glcm_Idm","SourceDataset","Nstage","Tstage","age", "Histology"]]
+  
+  
+  # get models
+  models = evalModels(dt = train, dtype = "Features")
+  
+  # predict
+  cph_pred = models[1].predict_expectation(xtest)
+  Wei_pred = models[2].predict_expectation(xtest)
+  log_pred = models[3].predict_expectation(xtest)
+  logistic_pred = models[4].predict_expectation(xtest)
+  
+  # Load output test file
+  output_test = pd.read_csv("output_test.csv")
+  # index PatientID
+  output_test = output_test.set_index('PatientID')
+  #pd.merge(df1, df2, left_index=True, right_index=True)
+  
+  # add predcition to SurvivalTime
+  output_test['cph'] = cph_pred
+  output_test['Wei'] = Wei_pred
+  output_test['log'] = log_pred
+  output_test['logistic'] = logistic_pred
+
+  return output_test.head()
+  
+
+getMultiplePred("test_features_imputed.csv")  
+```
+
+
+
+
+# Submission with Event xgboost prediction
+
+- I tried to add Event prediction and see if the score will change or not. The scoring is not depend on Event column even we add prediction (0,1).
+
+```{python}
+
+sub_fea_img_p = pd.read_csv("submission_fea_img_p.csv")
+sub_fea_img_p = sub_fea_img_p.set_index('PatientID')
+
+#sub_fea_img_r = pd.read_csv("submission_fea_img_r.csv")
+
+sub_logSurv_xgbEvent = output_test.drop(['Event'], axis=1).merge(sub_fea_img_p.drop(['SurvivalTime'], axis=1),
+                        left_on='PatientID', right_on='PatientID')
+
+sub_logSurv_xgbEvent.to_csv("sub_logSurv_xgbEvent.csv")
+
+sub_logSurv_xgbEvent.head
+```
+
+- The score remains the same. This means that the scoring is not depending in `Event` column.
+
+
+# Random Columns sampling and C-index evaluation
+
+- We selected manually 10 features from radiomics and clinicals data that seems to be the most important. But we are not sure if we luck any other important variable. 
+
+- The follwing code try to select ramdomly features from radiomics and cinical dataset and evaluate the models.
+
+```{python}
+from random import sample
+from sklearn.feature_selection import VarianceThreshold
+
+def drop_low_variance_col(df, threshold):
+  sel = VarianceThreshold(threshold=(threshold* (1 - threshold) ))
+  sel_var=sel.fit_transform(df)
+  remain = df[df.columns[sel.get_support(indices=True)]]
+  return(remain)
+
+
+def getRandomCol(path, size, seed, threshold):
+  # loads imputed age dataset
+  train_fea = pd.read_csv(path)
+  # set PatientID as index
+  train_fea = train_fea.set_index('PatientID')
+  # set variable matrix xtrain
+  xtrain = train_fea.drop(['SurvivalTime', 'Event'], axis=1)
+  
+  # Drop column with few variance
+  new_xtrain = drop_low_variance_col(xtrain, threshold=threshold)
+  if(new_xtrain.shape[1] >= size):
+    msg1 = "It remains {} variables for prediction. You can select more."
+    print(msg1.format(new_xtrain.shape[1]))
+  else:
+    size = new_xtrain.shape[1]
+    msg2 = "We can select only {} variables!"
+    print(msg2.format(new_xtrain.shape[1]))
+  
+  # Random sampling of columns
+  random.seed(seed)
+  sub_xtrain = new_xtrain.sample(n= size, axis=1)
+  # set target ytrain
+  ytrain = train_fea[["SurvivalTime","Event"]]
+
+  train = pd.concat([sub_xtrain, ytrain], axis = 1)
+  return train
+
+
+for x in [1234, 54321, 123]:
+  tr = getRandomCol(path = "train_features_imputed.csv", size = 10 ,seed = x, threshold = 0.9)
+  random.seed(1234)
+  evalModels(dt = tr, dtype = x)[0]
+```
+
+
+- The score change by setting `random.seed` sampling. 
+
+- There are an infinity of possibilities.
+
+- The scores seem to be not better that the models built with  features selecte manually. For this reason we stay with our first models.
+
+
+# Built model with masks dataset
+
+- Even radiomics dataset summary features of the images (scan and masks), we want to ty to extract more knowledge from this images dataset. 
+
+- In this section, we will use preformated dataset of image. 
+
+- Each row in the data frame is the best masks of each patientID 
+
+- The best masks corresponds to masks wich has more `1` or `True`.
+
+
+```{python}
+for x in [1234, 54321, 123]:
+  tr = getRandomCol(path = "train_img.csv", size = 20 , seed = x,  threshold = 0.7)
+  random.seed(1234)
+  evalModels(dt = tr, dtype = x)[0]
+```
+
+- Interesting scoring!
+
+# Built model with features and Masks
+
+- Let's see if we use features and masks together.
+
+- We use pre-formated dataset that groups radiomics, clinical and masks datasets.
+
+```{python}
+for x in [1234, 54321, 123]:
+  tr = getRandomCol(path = "train_fea_img.csv", size = 20 , seed = x,  threshold = 0.7)
+  random.seed(1234)
+  evalModels(dt = tr, dtype = x)[0]
+```
+
+- Well! not bad, but features only seems to be better.
+
+
+
+
+
+
+
+
+
+
+# xgboost: SurvivalTime prediction with linear regression and rmse evaluation
+
+We use in this section only features dataset.
+
+## Load libraries
+
+```{r include=FALSE}
+library(dplyr)
+library(data.table)
+library(Matrix)
+library(xgboost)
+require(rsample)
+```
+
+
+```{r}
+train <- fread("train_features_imputed.csv")
+test <- fread("test_features_imputed.csv")
+
+trainremoveCols <- c('PatientID','Event', 'SurvivalTime')
+testremoveCols <- c('PatientID', 'Event', 'SurvivalTime')
+
+SurvivalTime <- train$SurvivalTime
+PatientID <- test$PatientID
+
+train[,(trainremoveCols) := NULL]
+test[,(testremoveCols) := NULL]
+
+# Do scaling
+dt <- rbind(train, test)
+scale.cols <- colnames(dt)
+dt[, (scale.cols) := lapply(.SD, scale), .SDcols = scale.cols]
+train <- cbind(SurvivalTime, head(dt,nrow(train)))
+test  <- cbind(PatientID, tail(dt, nrow(test)))
+rm(dt)
+invisible(gc())
+```
+
+## Split Train dataset into Train & Valid sets
+
+```{r}
+require(rsample)
+
+set.seed(100)
+train_valid_split <- rsample::initial_split(train, prop = 0.8)
+train_valid_split
+```
+
+- We can retrieve our training and testing sets using training() and testing() functions.
+
+```{r}
+# Retrieve train and test sets
+train_8 <- rsample::training(train_valid_split)
+valid_2  <- rsample::testing(train_valid_split)
+train_8[1:10, 1:10]
+```
+
+## Format train and test to DMatrix
+
+```{r}
+require(Matrix)
+require(xgboost)
+require(caret)
+
+# the option na.pass avoids missing value in age column
+options(na.action='na.pass')
+train_8_sparse <- sparse.model.matrix(SurvivalTime ~., data=train_8)
+dtrain_8 <- xgb.DMatrix(data=train_8_sparse, label = train_8$SurvivalTime)
+
+options(na.action='na.pass')
+valid_2_sparse <- sparse.model.matrix(SurvivalTime ~., data=valid_2)
+dvalid_2 <- xgb.DMatrix(data=valid_2_sparse, label = valid_2$SurvivalTime)
+dtrain_8 %>% head
+
+```
+
+```{r}
+params <- list(booster = "gbtree",  # gblinear
+              tree_method = "auto",
+              objective = "reg:linear",        # survival:cox
+              eval_metric = "rmse",     # 'rmse'    cox-nloglik
+              max_depth = 5,        # 6 makes training heavy, there is no correlation between features #1 is not better
+              eta = 0.001,                     # learning rate
+              subsample = 0.8,              # prevent overfitting
+              colsample_bytree = 0.1         # specify the fraction of columns to be subsampled. # 0.5 is not better
+             )
+
+
+tme <- Sys.time()
+cv_model <- xgb.cv(params = params,
+                   data = dtrain_8,
+                   nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE),  #2,
+                   nrounds = 25000,
+                   verbose = TRUE,
+                   nfold = 7,
+                   print_every_n = 1000,
+                   early_stopping_rounds = 1000,
+                   maximize = FALSE,
+                   prediction = TRUE) # prediction of cv folds
+
+watchlist <- list(train = dtrain_8, eval = dvalid_2)
+tme <- Sys.time()
+xgboost_tree <- xgb.train(data = dtrain_8, 
+                         params = params,
+                         watchlist = watchlist,
+                         nrounds = cv_model$best_iteration, # more than 12000 ~0.897
+                         print_every_n = 500,
+                         verbose = TRUE)
+
+Sys.time() - tme
+
+pred_valid <- predict(xgboost_tree, dvalid_2)
+
+ggplot() +
+aes(x = pred_valid, y = valid_2$SurvivalTime) +
+geom_point() +
+geom_smooth(method='lm', se = TRUE) +
+ggtitle("predicted and  real SurvivalTime correlation")
+```
+
+## Prediction
+
+```{r}
+options(na.action='na.pass')
+test_sparse <- sparse.model.matrix(PatientID ~., data=test)
+dtest <- xgb.DMatrix(data=test_sparse, label = test$PatientID)
+
+pred_xgboost_cox <- predict(xgboost_tree, dtest)
+
+output_test <- fread("output_test.csv")
+
+pred <- data.frame(
+  PatientID = output_test$PatientID,
+  SurvivalTime = pred_xgboost_cox
+)
+
+
+
+submission <- output_test %>%
+  select(PatientID, Event) %>%
+  left_join(pred, by = "PatientID") %>%
+  select(PatientID, SurvivalTime, Event)
+
+fwrite(submission, "submission_fea_gbtree_linear.csv")
+
+submission %>% head(10)
+```
+
+
+# Xgboost for survival using mlr in R
+
+- (source)[https://stackoverflow.com/questions/56731190/xgboost-for-survival-using-mlr-in-r]
+
+- Not well working! to be reviewed...
+
+```{r}
+require(RWeka)
+require(xgboost)
+require(mlr)
+require(rJava)
+require(survival)
+require(mda)
+require(modeltools)
+require(mboost)
+
+# trainLearner.surv.xgboost = function(.learner, .task, .subset, .weights = NULL,  ...) {
+#   parlist = list(...)
+# 
+#   if (is.null(parlist$objective))
+#   {
+#     parlist$objective = "survival:cox"
+#     parlist$eval_metric = "cox-nloglik"
+#   }
+# 
+#   task.data = getTaskData(.task, .subset, target.extra = TRUE)
+#   survtime <- ifelse(task.data$target$Event==1, task.data$target$SurvivalTime, -task.data$target$SurvivalTime)
+# 
+#   parlist$data = xgboost::xgb.DMatrix(data = data.matrix(task.data$data), label = survtime)
+# 
+#   if (!is.null(.weights))
+#     xgboost::setinfo(parlist$data, "weight", .weights)
+# 
+#   if (is.null(parlist$watchlist))
+#     parlist$watchlist = list(train = parlist$data)
+# 
+#   do.call(xgboost::xgb.train, parlist)
+# }
+
+train <- read.csv("train_features_imputed.csv") %>% select( -PatientID)
+test <- read.csv("test_features_imputed.csv") %>% select(-PatientID, - Event, -SurvivalTime)
+
+xgb.task <- makeSurvTask(id="XGBOOST_SurvivalTime", data = train, target = c("SurvivalTime", "Event"))
+surv.measures = list(cindex)
+outer= makeResampleDesc("CV", iters=7)
+
+### learning type
+xgb.learner <- makeLearner(id="xgboost",
+                          cl="surv.glmboost",  # surv.gamboost surv.glmboost regr.xgboost
+                          predict.type = "response")
+
+# Cox proportional hazards model with custom name
+cox.lrn = makeLearner("surv.coxph", id = "cph" )
+
+
+learners = list(xgb.learner)
+bmr = benchmark(learners, xgb.task, outer, surv.measures, show.info = TRUE)
+
+mod <- mlr::train(xgb.learner, xgb.task)
+
+pred = predict(mod,  newdata = test)
+
+as.data.frame(pred) %>% head
+```
+
+
+- The prediction output seems tobe probability of Event. 
+
+- Negative values seems to be PatientID that leaves experience or do not have enought data.
+
+
+
+
+

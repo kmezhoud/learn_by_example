@@ -1,0 +1,423 @@
+---
+title: "SurvivalTime prediction of  Lung Cancer"
+author: "Karim Mezhoud"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: yes
+  html_document:
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+  urlcolor: blue
+---
+
+- In this report, I will go directly to the solution. A HTML version in available following this [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/kmezhoud_LCST.html).
+
+- A second [document](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html) ( [link](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html)) focus on:
+
+  - Exploration of Radiomics, Clinical and Images data sets.
+  
+  - Event prediction using features and images.
+
+
+```{r}
+# Set python environment and version in RStudio ;-)
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+
+# Preprocessing of Radiomics and Clinical datasets with R 
+
+
+```{r include=FALSE}
+## Load R packages
+library(data.table)
+library(tidyverse)
+require(mice) # for imputation
+require(corrplot)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+# Function to impute age  
+age_imputation <- function(df){
+            init = mice(df, maxit=0)
+            meth = init$method
+            predM = init$predictorMatrix
+            predM[, c("PatientID")] <- 0
+            meth[c("PatientID")]=""
+            meth[c("age")]="cart"  # pmm (Predictive Mean Matching suitable for numeric variables )
+            set.seed(103)
+            imputed = mice(df, method=meth, predictorMatrix=predM, m=5)
+            imputed <- complete(imputed)
+            return(imputed)
+}
+
+# Function to reshape and merge Radiomics and clinical datasets
+Features_prepocessing <- function(path_radiomics, path_clinical, path_submission){
+
+  #Load dataset
+  radiomics <- fread(path_radiomics, quote = "")
+  clinical <- fread(path_clinical)
+  submission <- fread(path_submission, quote = "")
+
+# Attributes groups to (shape, firstorder, textural) and features to (original_shaep_Compacteness1 .....)
+  groups <- radiomics[1:2,-1] %>%
+    t() %>%
+    as.data.frame() %>%
+    rename("Groups" = V1, "Features" = V2)
+
+# Omit "original_" from features
+  new_colnames_radiomics <- groups %>%
+    mutate(Features = stringr::str_remove(Features,"original_")) %>%
+    pull(Features)
+
+# Renames columns of radiomics
+  old_names <- colnames(radiomics)
+  new_names <- c("PatientID", new_colnames_radiomics)
+
+# Get new radiomics dataset
+  new_radiomics <- radiomics[-1:-3,] %>%
+      rename_at(vars(old_names), ~ new_names) %>%
+      mutate_if(is.character, as.numeric)
+  
+# Get new Clinical dataset
+# age imputation
+  clinical <- age_imputation(clinical)
+# Convert character variables to numeric
+  new_clinical <- clinical %>%
+                mutate(Histology = stringi::stri_trans_totitle(Histology)) %>% 
+                mutate_if(is.character, as.factor) %>%
+                mutate_if(is.factor, as.numeric) 
+
+# Join radimics and Clinical dataset by PatientID
+  features <- new_clinical %>%
+    mutate_if(is.character, as.factor) %>%
+    left_join(y = submission, by = "PatientID") %>%
+    left_join(y = new_radiomics, by = "PatientID") %>%
+    dplyr::select(PatientID, SurvivalTime, everything()) %>%
+    setDT()
+
+  return(features)
+}
+
+
+train <- Features_prepocessing(path_radiomics = "train/features/radiomics.csv",
+                      path_clinical = "train/features/clinical_data.csv",
+                      path_submission = "output_train.csv")
+
+test <- Features_prepocessing(path_radiomics = "test/features/radiomics.csv",
+                      path_clinical = "test/features/clinical_data.csv",
+                      path_submission = "output_test.csv")
+
+fwrite(train, "train.csv")
+fwrite(test, "test.csv")
+```
+
+```{r}
+train[1:10, 1:10]
+```
+
+# Evaluate CoxPH, WeiBull, Log and Logistic Models with Python
+
+
+```{python}
+## Load usefull Python modules 
+import os
+import numpy as np
+import pandas as pd
+import mxnet as mx
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder , OneHotEncoder
+from lifelines.utils import concordance_index
+from lifelines import CoxPHFitter, WeibullAFTFitter , LogNormalAFTFitter, LogLogisticAFTFitter , PiecewiseExponentialRegressionFitter
+from lifelines.utils import k_fold_cross_validation
+import seaborn as sns
+import xgboost as xgb
+import time
+import re
+import glob
+import random
+import pickle
+
+```
+
+```{python}
+
+# Function to read and select pertinente features
+def select_features(path):
+  df = pd.read_csv(path) #,header=0, delim_whitespace=True
+  df = df.set_index('PatientID')
+  # set target ytrain
+  ydf = df[["SurvivalTime","Event"]]
+  # set variable matrix xtrain
+  xdf = df.drop(['SurvivalTime', 'Event'], axis=1)
+  xdf = xdf[["shape_Sphericity", "shape_SurfaceVolumeRatio", "shape_Maximum3DDiameter",
+    "glcm_Id","glcm_Idm" ,"SourceDataset","Nstage","Tstage","age"  ,"firstorder_Entropy" ]] # , "Histology"
+  df = pd.concat([xdf, ydf], axis = 1)
+  return(df)
+    
+
+# Function to evaluate 4 models and return datafarame with scores, cph, Wei, log and logistic models
+def evalModels(dt, dtype):
+  
+  ##  CoxPHFitter model
+  cph = CoxPHFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## WeibullAFTFitter
+  Wei = WeibullAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## LogNormalAFTFitter
+  log = LogNormalAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  ## LogLogisticAFTFitter
+  logistic = LogLogisticAFTFitter().fit(dt,duration_col = 'SurvivalTime', event_col='Event')
+  
+  ## k_fold Cross validation 
+  cph_cv_result = k_fold_cross_validation(cph, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  wei_cv_result = k_fold_cross_validation(Wei, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  log_cv_result = k_fold_cross_validation(log, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  logistic_cv_result = k_fold_cross_validation(logistic, dt, duration_col='SurvivalTime', event_col='Event', k=5)
+  
+  # built empty dataframe
+  results = pd.DataFrame(np.nan, 
+                    index=[ 'CoxPHFitter',
+                   'WeibullAFTFitter',
+                   'LogNormalAFTFitter',
+                   'Logistic'],
+                    columns=[dtype],
+                    dtype='float')
+                    
+  # Fill dataframe with the median c-index scores                  
+  results[dtype] = [np.median(cph_cv_result),
+                   np.median(wei_cv_result),
+                   np.median(log_cv_result),
+                   np.median(logistic_cv_result)]
+  
+  return [results,cph, Wei, log, logistic]
+
+
+train = select_features("train.csv")
+random.seed(1234)
+models = evalModels(dt = train, dtype = "Features")
+
+# save the model to disk
+filename = 'models.sav'
+pickle.dump(models, open(filename, 'wb'))
+
+# load the model from disk
+#loaded_models = pickle.load(open(filename, 'rb'))
+#result = loaded_models.score(X_test, Y_test)
+#print(result)
+
+models[0]
+
+
+```
+
+# Multiple Predictions (cph, Wei, log, logistic)
+
+```{python}
+# Function to run the 4 predictions
+def getMultiplePred(path_test):
+  # prepare xtest
+  test_fea = pd.read_csv(path_test)
+  test_fea = test_fea.set_index('PatientID')
+  # select the same variables
+  xtest = test_fea[["shape_Sphericity", "shape_SurfaceVolumeRatio", "shape_Maximum3DDiameter","firstorder_Entropy",
+        "glcm_Id","glcm_Idm","SourceDataset","Nstage","Tstage","age", "Histology"]]
+  
+  
+  # get models
+  #models = evalModels(dt = train, dtype = "Features")
+  # load the model from disk
+  models = pickle.load(open("models.sav", 'rb'))
+  
+  # predict
+  cph_pred = models[1].predict_expectation(xtest)
+  Wei_pred = models[2].predict_expectation(xtest)
+  log_pred = models[3].predict_expectation(xtest)
+  logistic_pred = models[4].predict_expectation(xtest)
+  
+  # Load output test file
+  output_test = pd.read_csv("output_test.csv")
+  # index PatientID
+  output_test = output_test.set_index('PatientID')
+  #pd.merge(df1, df2, left_index=True, right_index=True)
+  
+  # add predcition to SurvivalTime
+  output_test['cph'] = cph_pred
+  output_test['Wei'] = Wei_pred
+  output_test['log'] = log_pred
+  output_test['logistic'] = logistic_pred
+
+  return output_test
+  
+
+multiple_pred = getMultiplePred("test.csv")  
+multiple_pred.head
+```
+
+
+# Masks dataset processing
+
+- In this section we will use masks to train xgboost model.
+
+```{python}
+from numpy import save
+
+# This function reshape masks image (300, 92, 92, 92) to 300, 778688)
+# accepts as input a path to folder npz files, and the number of the file in the folder.
+def masks2dtrain(path, size):
+  #path = 'train/images/'
+  npz = [np.load(path + '/' + s) for s in os.listdir(path)]
+  masks = [item['mask'] for item in npz]
+  x = np.array(masks, dtype = int)
+  x = x.reshape(size,-1) # convert (300, 92, 92, 92) to (300, 778688)
+  return(x)
+
+
+xtrain = masks2dtrain(path ='train/images/', size = 300)
+
+#save('xtrain.npy', xtrain)
+
+features_tr = pd.read_csv("train.csv")
+ytrain = features_tr[['SurvivalTime']]#.as_matrix()  
+
+#save('ytrain.npy', ytrain)
+
+trn_x, val_x, trn_y, val_y = train_test_split(xtrain, ytrain, random_state = 42,  # stratify = ytrain,(if classes)
+                                                                   test_size = 0.20)
+```
+
+# xgboost learning model using Masks
+
+```{python}
+#import xgboost
+#from sklearn.model_selection import StratifiedKFold
+#from sklearn.model_selection import cross_val_score
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
+
+start_time = time.process_time()
+
+
+xgb_model = xgb.XGBRegressor(booster = 'gbtree',
+                      objective = 'reg:squarederror', #'survival:cox',  #'reg:squarederror',  # reg:linear reg:logistic
+                      max_depth = 10,
+                      n_estimators = 100,
+                      min_child_weight = 9,
+                      learning_rate = 0.1,
+                      nthread = 8,
+                      subsample = 0.80,
+                      colsample_bytree = 0.80,
+                      seed = 4242)
+
+
+
+xgb_model.fit(trn_x,
+          trn_y,
+          eval_set = [(val_x, val_y)],
+          verbose = True,
+          #verbose_eval= 10,  # print every 10 boost
+          eval_metric = 'rmse', # rmse, logloss, mae, map, cox-nloglik
+          early_stopping_rounds = 10)
+          
+print("######    Elapsed time: ",str((time.clock() - start_time)/60), "Minutes    ######")
+
+```
+
+```{python}
+#save the model to disk
+filename_xgb = 'xgb_model.sav'
+pickle.dump(xgb_model, open(filename_xgb, 'wb'))
+```
+
+# Prediction by xgboost model
+
+```{python}
+xtest = masks2dtrain(path = "test/images/", size = 125)
+
+#save('xtest.npy', xtest)
+```
+
+
+```{python}
+
+#def getname(path):
+#  name = os.path.basename(path)
+#  return(re.sub("\D", "", name))
+
+# get PatientID
+#paths = glob.glob('test/images/*.npz')
+#labels = [getname(item) for item in paths]
+
+
+xgb_model = pickle.load(open(filename_xgb, 'rb'))
+result = xgb_model.score(val_x, val_y)
+#print(result)
+
+xtest = masks2dtrain(path = "test/images/", size = 125)
+
+#save('xtest.npy', xtest)
+
+pred = xgb_model.predict(xtest)
+
+            
+multiple_pred['xgb_masks'] = pred
+
+multiple_pred.to_csv("multiple_pred.csv")
+
+multiple_pred.head
+```
+
+# Averaging Ensemble with R
+
+```{r, fig.height=5, fig.width=10}
+multiple_pred <- fread("multiple_pred.csv")
+
+ensemble <- multiple_pred %>%
+  rowwise() %>% 
+  mutate(mean = mean(c(cph,Wei,log,logistic,xgb_masks)),
+         median = median(c(cph,Wei,log,logistic,xgb_masks)),
+         max = max(c(cph,Wei,log,logistic,xgb_masks)),
+         min = min(c(cph,Wei,log,logistic,xgb_masks)),
+         quantile1 = quantile(c(cph,Wei,log,logistic,xgb_masks))[[1]],
+         quantile2 = quantile(c(cph,Wei,log,logistic,xgb_masks))[[2]],
+         quantile3 = quantile(c(cph,Wei,log,logistic,xgb_masks))[[3]],
+         quantile4 = quantile(c(cph,Wei,log,logistic,xgb_masks))[[4]],
+         quantile5 = quantile(c(cph,Wei,log,logistic,xgb_masks))[[5]])
+
+require(corrplot)
+M <- cor(ensemble %>% select(-PatientID, - Event))
+#corrplot(M,  method = "circle")
+corrplot.mixed(M, tl.col="black", tl.pos = "lt")
+```
+
+- The idea is to merge  UNCORRELATED model prediction. xgb_model seems to be not correlated with all the other.
+
+- The key idea is to average `xgb_model` with the best score of `cph, Wei, log , and logistic`.
+
+- In our last run `log` seems to have the best score (the model  `c-index` scoring is ramdonly changing)
+
+```{r}
+# Mean Ensembling seems to be the best
+submission <- multiple_pred %>%
+  rowwise() %>% 
+  mutate(mean = mean(c(log,xgb_masks))) %>% # cph,Wei,log,logistic,
+  mutate(SurvivalTime = mean) %>%
+  select(PatientID, SurvivalTime, Event)
+
+fwrite(submission, "submission_ensemble_mean_cph_xgb.csv")
+
+```
+

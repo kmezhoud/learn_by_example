@@ -1,0 +1,266 @@
+---
+title: "mxnet 3D-array training"
+subtitle: | 
+          | 
+author: "Karim Mezhoud"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+  urlcolor: blue
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=FALSE)
+```
+
+
+```{r}
+#reticulate::use_python("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3", required = TRUE)
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+## Load scans and masks of Tumor lung cancer
+
+```{python}
+import numpy as np
+from matplotlib import pyplot as plt
+#from matplotlib import pyplot
+from PIL import Image
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+print("the dimension of scan array is: ", str(scan.shape))
+print("the dimension of mask array is: ", str(mask.shape))
+
+print("plot some images from patient 002: ")
+#plt.imshow(scan[:, :, 3])
+
+f, axarr = plt.subplots(2,3)
+axarr[0,0].imshow(scan[1:92, 1:92, 0])
+axarr[1,0].imshow(mask[1:92, 1:92, 0])
+axarr[0,1].imshow(scan[:, :, 3])
+axarr[1,1].imshow(mask[:, :, 3])
+axarr[0,2].imshow(scan[:, :, 80])
+axarr[1,2].imshow(mask[:, :, 80])
+
+```
+
+### Function to plot multiple image from array
+
+```{python}
+
+def plot_figures(figures, nrows = 1, ncols=1):
+  """Plot a dictionary of figures.
+
+  Parameters
+  ----------
+  figures : <title, figure> dictionary
+  ncols : number of columns of subplots wanted in the display
+  nrows : number of rows of subplots wanted in the figure
+  """
+  fig, axeslist = plt.subplots(ncols=ncols, nrows=nrows)
+  for ind,title in zip(range(len(figures)), figures):
+      axeslist.ravel()[ind].imshow(figures[title], cmap=plt.jet())
+      axeslist.ravel()[ind].set_title(title)
+      axeslist.ravel()[ind].set_axis_off()
+  plt.tight_layout() 
+
+
+img_array = np.load('train/images/patient_002.npz')
+scan = img_array['scan']
+mask = img_array['mask']
+
+
+# generation of a dictionary of (title, images)
+mask = {'mask'+str(i): mask[1:92, 1:92, i] for i in range(92)}
+
+# plot of the images in a figure, with 5 rows and 4 columns
+plot_figures(mask, 10, 10)
+plt.show()
+
+```
+
+
+```{python}
+# read all npz file
+import os
+
+path = 'train/images/'
+
+npz = [np.load(path + '/' + s) for s in os.listdir(path)]
+
+
+print("the npz object is a : ", str(type(npz)))
+print("with lenght of  : ", str(len(npz)))
+print("each element of npz is a : ", str(type(npz[0])))
+print("with lenght of  : ", str(len(npz[0])))
+print("Each sub-element is an  : ", str(type(npz[1]['mask'])))
+print("With shape of  : ", str(npz[1]['mask'].shape))
+
+```
+
+```{python}
+mask = {'mask'+str(i): npz[1]['mask'][1:92, 1:92, i] for i in range(90)}
+plot_figures(mask, 9, 10)
+plt.show()
+```
+
+```{python}
+
+# get only masks
+masks = [item['mask'] for item in npz]
+
+print("masks object is a ", str(type(masks)))
+print("with lenght of : ", str(len(masks)))
+print("Each element of maks is a: ", str(type(masks[1])))
+print("Whith dimension of : ", str(masks[1].shape))
+print("Convert the lst to array 4D:" , str(np.array(masks, dtype=int).shape))
+```
+
+# get PatientID from masks
+
+```{python}
+# importing re for regular expressions 
+import re
+import pandas as pd
+import glob
+
+def getname(path):
+  name = os.path.basename(path)
+  return(re.sub("\D", "", name))
+
+paths = glob.glob('train/images/*.npz')
+labels = [getname(item) for item in paths]
+
+len(labels)
+```
+
+```{bash}
+#conda install -c conda-forge mxnet
+```
+
+
+```{python}
+import os
+import numpy as np
+import pandas as pd
+import mxnet as mx
+from sklearn.model_selection import train_test_split
+import xgboost as xgb
+import time
+
+
+def masks2dtrain(path, size):
+  #path = 'train/images/'
+  npz = [np.load(path + '/' + s) for s in os.listdir(path)]
+  masks = [item['mask'] for item in npz]
+  x = np.array(masks, dtype=int)
+  x = x.reshape(size,-1) # convert (300, 92, 92, 92) to (300, 778688)
+  return(x)
+  
+
+xtrain = masks2dtrain(path ='train/images/', size = 300)
+
+
+#x = x[0:250,]
+#y = y[0:250]
+
+features_tr = pd.read_csv("train_features.csv")
+ytrain = features_tr[['SurvivalTime']]#.as_matrix()
+
+
+trn_x, val_x, trn_y, val_y = train_test_split(xtrain, ytrain, random_state = 42,  # stratify = ytrain,(if classes)
+                                                                   test_size = 0.20)
+
+
+```
+
+```{python}
+xtrain.shape
+ytrain.shape
+```
+
+
+```{python}
+start_time = time.clock()
+
+clf = xgb.XGBRegressor(booster = 'gbtree',
+                      objective = 'reg:squarederror', #'survival:cox',  #'reg:squarederror',  # reg:linear reg:logistic
+                      max_depth = 10,
+                      n_estimators = 100,
+                      min_child_weight = 9,
+                      learning_rate = 0.1,
+                      nthread = 8,
+                      subsample = 0.80,
+                      colsample_bytree = 0.80,
+                      seed = 4242)
+
+print(str(time.clock() - start_time), "seconds")
+
+clf.fit(trn_x,
+        trn_y,
+        eval_set = [(val_x, val_y)],
+        verbose = True,
+        #verbose_eval= 10,  # print every 10 boost
+        eval_metric = 'rmse', # rmse, logloss, mae, map, cox-nloglik
+        early_stopping_rounds = 10)
+```
+
+
+```{python}
+
+
+xtest = masks2dtrain(path = "test/images/", size = 125)
+
+pred = clf.predict(xtest)
+
+output_test = pd.read_csv("output_test.csv")
+
+output_test['SurvivalTime'] = pred
+
+output_test.to_csv("xgb_squarederror_masks.csv", index=False)
+
+output_test
+```
+
+# Ensemble mean of predicted SurvivalTime
+
+```{r}
+library(data.table)
+library(dplyr)
+pred_fea <- fread("log_pred_survival.csv")
+pred_mask <- fread("xgb_cox_masks.csv")
+output_test <- fread("output_test.csv")
+
+ensemble <- output_test %>%
+  select(PatientID) %>%
+  left_join(pred_fea, by = "PatientID") %>%
+  select(PatientID, SurvivalTime) %>%
+  left_join(pred_mask, by = "PatientID") %>%
+  mutate(SurvivalTime = (SurvivalTime.x +SurvivalTime.y)/2) %>%
+  select(PatientID, SurvivalTime, Event)
+
+fwrite(ensemble, "ensemble_sub.csv")
+
+cbind(ensemble, pred_fea, pred_mask)
+```
+
+
