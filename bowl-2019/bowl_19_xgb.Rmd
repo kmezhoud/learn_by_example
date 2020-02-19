@@ -30,7 +30,7 @@ library(DiagrammeR)
 library(plotly)
 library(xgboost)
 library(tictoc)
-library(lightgbm)
+#library(lightgbm)
 library(Metrics)
 library(rsample)
 #BINARY_URL <- "https://github.com/catboost/catboost/releases/download/v0.12.1/catboost-R-Darwin-0.12.1.tgz"

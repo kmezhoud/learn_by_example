@@ -11,10 +11,11 @@
 
 <meta name="author" content="Karim Mezhoud" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2020-02-19" />
 
-<title>Particle Classification after collision (demo code in Python)</title>
+<title>Particle images Classification using arrays and xgboost</title>
 
+<script src="cirtaChallenge_files/header-attrs-2.1/header-attrs.js"></script>
 <script src="cirtaChallenge_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="cirtaChallenge_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -27,26 +28,27 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -55,9 +57,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  { background-color: #f8f8f8; }
+  {  background-color: #f8f8f8; }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ef2929; } /* Alert */
 code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
@@ -272,276 +274,277 @@ summary {
 
 
 
-<h1 class="title toc-ignore">Particle Classification after collision (demo code in Python)</h1>
+<h1 class="title toc-ignore">Particle images Classification using arrays and xgboost</h1>
 <h4 class="author">Karim Mezhoud</h4>
-<h4 class="date">2020-02-17</h4>
+<h4 class="date">2020-02-19</h4>
 
 </div>
 
 <div id="TOC">
 <ul>
 <li><a href="#set-python-version-and-anaconda-environment"><span class="toc-section-number">0.1</span> set python version and anaconda environment</a></li>
-<li><a href="#particle-type-classification"><span class="toc-section-number">1</span> Particle type classification</a><ul>
+<li><a href="#particle-type-classification"><span class="toc-section-number">1</span> Particle type classification</a>
+<ul>
 <li><a href="#distribution-of-particles-in-an-event"><span class="toc-section-number">1.1</span> Distribution of particles in an event</a></li>
 </ul></li>
 <li><a href="#up-sample-minority-classes"><span class="toc-section-number">2</span> Up-sample Minority Classes</a></li>
 </ul>
 </div>
 
-<div id="set-python-version-and-anaconda-environment" class="section level2">
-<h2><span class="header-section-number">0.1</span> set python version and anaconda environment</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/anaconda3/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">reticulate<span class="op">::</span><span class="kw">py_config</span>()</a></code></pre></div>
+<div id="set-python-version-and-anaconda-environment" class="section level2" number="0.1">
+<h2 number="0.1"><span class="header-section-number">0.1</span> set python version and anaconda environment</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>reticulate<span class="op">::</span><span class="kw">use_python</span>(<span class="st">&quot;/Users/Mezhoud/anaconda3/bin/python3&quot;</span>, <span class="dt">required =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a>reticulate<span class="op">::</span><span class="kw">py_config</span>()</span></code></pre></div>
 </div>
-<div id="particle-type-classification" class="section level1">
-<h1><span class="header-section-number">1</span> Particle type classification</h1>
+<div id="particle-type-classification" class="section level1" number="1">
+<h1 number="1"><span class="header-section-number">1</span> Particle type classification</h1>
 <p>Welcome!</p>
 <p>In this challenge we want to build a machine learning model to help us recognize particles. Particles are the tiny constituant of matter generated in a collision between proton bunches at the Large Hadron Collider at CERN.</p>
 <p>Particles are of course of different types and identifying which particle was produced in an extremly important task for particle physicists.</p>
 <p>Our dataset comprises 350 independent simulated events, where each event contains labelled images of particle trajectories.</p>
 <p>A good model assigns the correct particle type to any particle, even the least frequent ones.</p>
 <p>Read throught this notebook to discover more about the particles.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#Import libraries to load and process data</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="im">import</span> numpy <span class="im">as</span> np</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="im">import</span> pandas <span class="im">as</span> pd</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="im">import</span> pickle</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="im">import</span> os</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="im">from</span> collections <span class="im">import</span> Counter</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="im">from</span> numpy <span class="im">import</span> unique</a></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co"># replace by your own file path</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">pkl_file <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;download/event1.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">event1 <span class="op">=</span> pickle.load(pkl_file)</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">np.shape(event1)</a></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1">event1[<span class="dv">1</span>]</a></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">def</span> get_pkl_filename(path):</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">  list_files <span class="op">=</span> os.listdir(path)</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">  PIK <span class="op">=</span> <span class="st">&quot;pickle.dat&quot;</span></a>
-<a class="sourceLine" id="cb5-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">  <span class="cf">with</span> <span class="bu">open</span>(PIK, <span class="st">&quot;wb&quot;</span>) <span class="im">as</span> f:</a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">      pickle.dump(<span class="bu">len</span>(list_files), f)</a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">      <span class="cf">for</span> value <span class="kw">in</span> list_files:</a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">          pickle.dump(value, f)</a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">  filename_ls <span class="op">=</span> []</a>
-<a class="sourceLine" id="cb5-12" data-line-number="12">  <span class="cf">with</span> <span class="bu">open</span>(PIK, <span class="st">&quot;rb&quot;</span>) <span class="im">as</span> f:</a>
-<a class="sourceLine" id="cb5-13" data-line-number="13">      <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(pickle.load(f)):</a>
-<a class="sourceLine" id="cb5-14" data-line-number="14">          filename_ls.append(pickle.load(f))</a>
-<a class="sourceLine" id="cb5-15" data-line-number="15">  <span class="cf">return</span>(filename_ls)</a>
-<a class="sourceLine" id="cb5-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb5-17" data-line-number="17">list_file <span class="op">=</span> get_pkl_filename(<span class="st">&quot;download/&quot;</span>)</a>
-<a class="sourceLine" id="cb5-18" data-line-number="18"></a>
-<a class="sourceLine" id="cb5-19" data-line-number="19"><span class="co"># Glimpse the format of the output</span></a>
-<a class="sourceLine" id="cb5-20" data-line-number="20"><span class="bu">isinstance</span>(list_file, <span class="bu">list</span>)</a></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="bu">len</span>(list_file)</a></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1">list_file[<span class="dv">1</span>]</a></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1">path <span class="op">=</span> <span class="st">&#39;download/&#39;</span></a>
-<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">#pkl = [pickle.load(path + s) for s in list_file]</span></a>
-<a class="sourceLine" id="cb8-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="kw">def</span> load_pkl(file_pkl):</a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">  <span class="cf">with</span> <span class="bu">open</span>(file_pkl, <span class="st">&#39;rb&#39;</span>) <span class="im">as</span> pickle_file:</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">      content <span class="op">=</span> pickle.load(pickle_file)</a>
-<a class="sourceLine" id="cb8-7" data-line-number="7">      <span class="cf">return</span>(content)</a>
-<a class="sourceLine" id="cb8-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb8-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb8-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb8-11" data-line-number="11">pkl <span class="op">=</span> [load_pkl(path <span class="op">+</span> <span class="st">&#39;/&#39;</span> <span class="op">+</span> s) <span class="cf">for</span> s <span class="kw">in</span> list_file]</a>
-<a class="sourceLine" id="cb8-12" data-line-number="12"></a>
-<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="bu">len</span>(pkl)</a></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder</a>
-<a class="sourceLine" id="cb9-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb9-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb9-4" data-line-number="4">arrays <span class="op">=</span> [item[<span class="dv">0</span>] <span class="cf">for</span> item <span class="kw">in</span> pkl]</a>
-<a class="sourceLine" id="cb9-5" data-line-number="5">labels <span class="op">=</span> [item[<span class="dv">1</span>] <span class="cf">for</span> item <span class="kw">in</span> pkl]</a>
-<a class="sourceLine" id="cb9-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="co"># convert a list of narray to narray</span></a>
-<a class="sourceLine" id="cb9-8" data-line-number="8">xtrain <span class="op">=</span> np.stack(np.concatenate( arrays, axis<span class="op">=</span><span class="dv">0</span> ), axis<span class="op">=</span><span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co"># reshape array from (1176475,10,10)  to 2 dimension (1176475, 100)</span></a>
-<a class="sourceLine" id="cb9-10" data-line-number="10">xtrain <span class="op">=</span> xtrain.reshape(<span class="bu">len</span>(xtrain),<span class="op">-</span><span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb9-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="co"># Convert a list of narray to array</span></a>
-<a class="sourceLine" id="cb9-13" data-line-number="13">ytrain <span class="op">=</span> np.stack(np.concatenate( labels, axis<span class="op">=</span><span class="dv">0</span> ), axis<span class="op">=</span><span class="dv">0</span>)</a>
-<a class="sourceLine" id="cb9-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb9-15" data-line-number="15"><span class="co"># Encode labels</span></a>
-<a class="sourceLine" id="cb9-16" data-line-number="16">ytrain_en <span class="op">=</span> LabelEncoder().fit(ytrain).transform(ytrain)</a>
-<a class="sourceLine" id="cb9-17" data-line-number="17"></a>
-<a class="sourceLine" id="cb9-18" data-line-number="18"><span class="co">#ytrain_en =  pd.DataFrame(ytrain_en)</span></a>
-<a class="sourceLine" id="cb9-19" data-line-number="19"></a>
-<a class="sourceLine" id="cb9-20" data-line-number="20"><span class="bu">type</span>(xtrain)</a></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="bu">len</span>(ytrain_en)</a></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb11-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">train <span class="op">=</span> pd.DataFrame({<span class="st">&#39;label&#39;</span>: ytrain_en, <span class="st">&#39;images&#39;</span>: <span class="bu">list</span>(xtrain)}, columns<span class="op">=</span>[<span class="st">&#39;label&#39;</span>, <span class="st">&#39;images&#39;</span>])</a>
-<a class="sourceLine" id="cb11-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb11-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb11-6" data-line-number="6">xtrain.shape</a></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="bu">type</span>(xtrain)</a>
-<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="co">#train.images.to_list()</span></a></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="bu">type</span>(train.images)</a></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="bu">type</span>(xtrain[<span class="dv">1</span>])</a></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="bu">type</span>(train.images[<span class="dv">1</span>])</a></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" data-line-number="1">st <span class="op">=</span> np.stack(train.images.values)</a>
-<a class="sourceLine" id="cb16-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb16-3" data-line-number="3">st.shape</a></code></pre></div>
-<div id="distribution-of-particles-in-an-event" class="section level2">
-<h2><span class="header-section-number">1.1</span> Distribution of particles in an event</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb17-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb17-2" data-line-number="2">Counter(ytrain_en)</a></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb18-1" data-line-number="1">Counter(ytrain)</a></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
-<a class="sourceLine" id="cb19-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb19-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb19-4" data-line-number="4"><span class="co"># code to particle name dictionary -- more here : </span></a>
-<a class="sourceLine" id="cb19-5" data-line-number="5">dic_types<span class="op">=</span>{<span class="dv">0</span>: <span class="st">&quot;electron&quot;</span>, <span class="dv">1</span> : <span class="st">&quot;muon&quot;</span>, <span class="dv">2</span>:<span class="st">&quot;pion&quot;</span>, <span class="dv">3</span>:<span class="st">&quot;kaon&quot;</span>,<span class="dv">4</span> : <span class="st">&quot;proton&quot;</span>}</a>
-<a class="sourceLine" id="cb19-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb19-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb19-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb19-9" data-line-number="9">plt.bar(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)),<span class="bu">list</span>(Counter(train[<span class="st">&#39;label&#39;</span>]).values()))</a></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb20-1" data-line-number="1">plt.xticks(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)), [dic_types[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">list</span>(Counter(train[<span class="st">&#39;label&#39;</span>]).keys())])</a></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb21-1" data-line-number="1">plt.show()</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="co">#Import libraries to load and process data</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="im">import</span> pickle</span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="im">import</span> os</span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="im">from</span> numpy <span class="im">import</span> unique</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># replace by your own file path</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>pkl_file <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;download/event1.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>event1 <span class="op">=</span> pickle.load(pkl_file)</span>
+<span id="cb3-4"><a href="#cb3-4"></a>np.shape(event1)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>event1[<span class="dv">1</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">def</span> get_pkl_filename(path):</span>
+<span id="cb5-4"><a href="#cb5-4"></a>  list_files <span class="op">=</span> os.listdir(path)</span>
+<span id="cb5-5"><a href="#cb5-5"></a>  PIK <span class="op">=</span> <span class="st">&quot;pickle.dat&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a></span>
+<span id="cb5-7"><a href="#cb5-7"></a>  <span class="cf">with</span> <span class="bu">open</span>(PIK, <span class="st">&quot;wb&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb5-8"><a href="#cb5-8"></a>      pickle.dump(<span class="bu">len</span>(list_files), f)</span>
+<span id="cb5-9"><a href="#cb5-9"></a>      <span class="cf">for</span> value <span class="kw">in</span> list_files:</span>
+<span id="cb5-10"><a href="#cb5-10"></a>          pickle.dump(value, f)</span>
+<span id="cb5-11"><a href="#cb5-11"></a>  filename_ls <span class="op">=</span> []</span>
+<span id="cb5-12"><a href="#cb5-12"></a>  <span class="cf">with</span> <span class="bu">open</span>(PIK, <span class="st">&quot;rb&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb5-13"><a href="#cb5-13"></a>      <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(pickle.load(f)):</span>
+<span id="cb5-14"><a href="#cb5-14"></a>          filename_ls.append(pickle.load(f))</span>
+<span id="cb5-15"><a href="#cb5-15"></a>  <span class="cf">return</span>(filename_ls)</span>
+<span id="cb5-16"><a href="#cb5-16"></a></span>
+<span id="cb5-17"><a href="#cb5-17"></a>list_file <span class="op">=</span> get_pkl_filename(<span class="st">&quot;download/&quot;</span>)</span>
+<span id="cb5-18"><a href="#cb5-18"></a></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="co"># Glimpse the format of the output</span></span>
+<span id="cb5-20"><a href="#cb5-20"></a><span class="bu">isinstance</span>(list_file, <span class="bu">list</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a><span class="bu">len</span>(list_file)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a>list_file[<span class="dv">1</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a>path <span class="op">=</span> <span class="st">&#39;download/&#39;</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="co">#pkl = [pickle.load(path + s) for s in list_file]</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="kw">def</span> load_pkl(file_pkl):</span>
+<span id="cb8-5"><a href="#cb8-5"></a>  <span class="cf">with</span> <span class="bu">open</span>(file_pkl, <span class="st">&#39;rb&#39;</span>) <span class="im">as</span> pickle_file:</span>
+<span id="cb8-6"><a href="#cb8-6"></a>      content <span class="op">=</span> pickle.load(pickle_file)</span>
+<span id="cb8-7"><a href="#cb8-7"></a>      <span class="cf">return</span>(content)</span>
+<span id="cb8-8"><a href="#cb8-8"></a></span>
+<span id="cb8-9"><a href="#cb8-9"></a></span>
+<span id="cb8-10"><a href="#cb8-10"></a></span>
+<span id="cb8-11"><a href="#cb8-11"></a>pkl <span class="op">=</span> [load_pkl(path <span class="op">+</span> <span class="st">&#39;/&#39;</span> <span class="op">+</span> s) <span class="cf">for</span> s <span class="kw">in</span> list_file]</span>
+<span id="cb8-12"><a href="#cb8-12"></a></span>
+<span id="cb8-13"><a href="#cb8-13"></a><span class="bu">len</span>(pkl)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a>arrays <span class="op">=</span> [item[<span class="dv">0</span>] <span class="cf">for</span> item <span class="kw">in</span> pkl]</span>
+<span id="cb9-5"><a href="#cb9-5"></a>labels <span class="op">=</span> [item[<span class="dv">1</span>] <span class="cf">for</span> item <span class="kw">in</span> pkl]</span>
+<span id="cb9-6"><a href="#cb9-6"></a></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co"># convert a list of narray to narray</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a>xtrain <span class="op">=</span> np.stack(np.concatenate( arrays, axis<span class="op">=</span><span class="dv">0</span> ), axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co"># reshape array from (1176475,10,10)  to 2 dimension (1176475, 100)</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a>xtrain <span class="op">=</span> xtrain.reshape(<span class="bu">len</span>(xtrain),<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb9-11"><a href="#cb9-11"></a></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co"># Convert a list of narray to array</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a>ytrain <span class="op">=</span> np.stack(np.concatenate( labels, axis<span class="op">=</span><span class="dv">0</span> ), axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb9-14"><a href="#cb9-14"></a></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="co"># Encode labels</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a>ytrain_en <span class="op">=</span> LabelEncoder().fit(ytrain).transform(ytrain)</span>
+<span id="cb9-17"><a href="#cb9-17"></a></span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="co">#ytrain_en =  pd.DataFrame(ytrain_en)</span></span>
+<span id="cb9-19"><a href="#cb9-19"></a></span>
+<span id="cb9-20"><a href="#cb9-20"></a><span class="bu">type</span>(xtrain)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1"></a><span class="bu">len</span>(ytrain_en)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2"></a></span>
+<span id="cb11-3"><a href="#cb11-3"></a>train <span class="op">=</span> pd.DataFrame({<span class="st">&#39;label&#39;</span>: ytrain_en, <span class="st">&#39;images&#39;</span>: <span class="bu">list</span>(xtrain)}, columns<span class="op">=</span>[<span class="st">&#39;label&#39;</span>, <span class="st">&#39;images&#39;</span>])</span>
+<span id="cb11-4"><a href="#cb11-4"></a></span>
+<span id="cb11-5"><a href="#cb11-5"></a></span>
+<span id="cb11-6"><a href="#cb11-6"></a>xtrain.shape</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1"></a><span class="bu">type</span>(xtrain)</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#train.images.to_list()</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1"></a><span class="bu">type</span>(train.images)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1"></a><span class="bu">type</span>(xtrain[<span class="dv">1</span>])</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1"></a><span class="bu">type</span>(train.images[<span class="dv">1</span>])</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1"></a>st <span class="op">=</span> np.stack(train.images.values)</span>
+<span id="cb16-2"><a href="#cb16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3"></a>st.shape</span></code></pre></div>
+<div id="distribution-of-particles-in-an-event" class="section level2" number="1.1">
+<h2 number="1.1"><span class="header-section-number">1.1</span> Distribution of particles in an event</h2>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1"></a></span>
+<span id="cb17-2"><a href="#cb17-2"></a>Counter(ytrain_en)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1"></a>Counter(ytrain)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb19-2"><a href="#cb19-2"></a></span>
+<span id="cb19-3"><a href="#cb19-3"></a></span>
+<span id="cb19-4"><a href="#cb19-4"></a><span class="co"># code to particle name dictionary -- more here : </span></span>
+<span id="cb19-5"><a href="#cb19-5"></a>dic_types<span class="op">=</span>{<span class="dv">0</span>: <span class="st">&quot;electron&quot;</span>, <span class="dv">1</span> : <span class="st">&quot;muon&quot;</span>, <span class="dv">2</span>:<span class="st">&quot;pion&quot;</span>, <span class="dv">3</span>:<span class="st">&quot;kaon&quot;</span>,<span class="dv">4</span> : <span class="st">&quot;proton&quot;</span>}</span>
+<span id="cb19-6"><a href="#cb19-6"></a></span>
+<span id="cb19-7"><a href="#cb19-7"></a></span>
+<span id="cb19-8"><a href="#cb19-8"></a></span>
+<span id="cb19-9"><a href="#cb19-9"></a>plt.bar(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)),<span class="bu">list</span>(Counter(train[<span class="st">&#39;label&#39;</span>]).values()))</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1"></a>plt.xticks(<span class="bu">range</span>(<span class="bu">len</span>(dic_types)), [dic_types[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">list</span>(Counter(train[<span class="st">&#39;label&#39;</span>]).keys())])</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1"></a>plt.show()</span></code></pre></div>
 <p><img src="cirtaChallenge_files/figure-html/unnamed-chunk-9-1.png" width="1152" /></p>
 </div>
 </div>
-<div id="up-sample-minority-classes" class="section level1">
-<h1><span class="header-section-number">2</span> Up-sample Minority Classes</h1>
-<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" data-line-number="1">train[train.label <span class="op">==</span> <span class="dv">0</span>].shape</a></code></pre></div>
-<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb23-1" data-line-number="1">train[train.label <span class="op">==</span> <span class="dv">1</span>].shape</a></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb24-1" data-line-number="1">train[train.label <span class="op">==</span> <span class="dv">2</span>].shape</a></code></pre></div>
-<div class="sourceCode" id="cb25"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb25-1" data-line-number="1">train[train.label <span class="op">==</span> <span class="dv">3</span>].shape</a></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb26-1" data-line-number="1">train[train.label <span class="op">==</span> <span class="dv">4</span>].shape</a></code></pre></div>
-<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="co"># Separate minors and major classes</span></a>
-<a class="sourceLine" id="cb27-2" data-line-number="2">train_0 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">0</span>]</a>
-<a class="sourceLine" id="cb27-3" data-line-number="3">train_1 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb27-4" data-line-number="4">train_2 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">2</span>]</a>
-<a class="sourceLine" id="cb27-5" data-line-number="5">train_3 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">3</span>]</a>
-<a class="sourceLine" id="cb27-6" data-line-number="6">train_4 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">4</span>]</a></code></pre></div>
-<div class="sourceCode" id="cb28"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="im">from</span> sklearn.utils <span class="im">import</span> resample</a>
-<a class="sourceLine" id="cb28-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb28-3" data-line-number="3"><span class="co"># Upsample minority classes</span></a>
-<a class="sourceLine" id="cb28-4" data-line-number="4">train_0_upsampled <span class="op">=</span> resample(train_0, </a>
-<a class="sourceLine" id="cb28-5" data-line-number="5">                                 replace<span class="op">=</span><span class="va">True</span>,     <span class="co"># sample with replacement</span></a>
-<a class="sourceLine" id="cb28-6" data-line-number="6">                                 n_samples<span class="op">=</span><span class="dv">111730</span>,    <span class="co"># to match majority class</span></a>
-<a class="sourceLine" id="cb28-7" data-line-number="7">                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results</span></a>
-<a class="sourceLine" id="cb28-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb28-9" data-line-number="9"><span class="co"># Upsample minority classes</span></a>
-<a class="sourceLine" id="cb28-10" data-line-number="10">train_1_upsampled <span class="op">=</span> resample(train_1, </a>
-<a class="sourceLine" id="cb28-11" data-line-number="11">                                 replace<span class="op">=</span><span class="va">True</span>,     <span class="co"># sample with replacement</span></a>
-<a class="sourceLine" id="cb28-12" data-line-number="12">                                 n_samples<span class="op">=</span><span class="dv">111730</span>,    <span class="co"># to match majority class</span></a>
-<a class="sourceLine" id="cb28-13" data-line-number="13">                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results                              </span></a>
-<a class="sourceLine" id="cb28-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb28-15" data-line-number="15"></a>
-<a class="sourceLine" id="cb28-16" data-line-number="16"><span class="co"># Downsample majority class</span></a>
-<a class="sourceLine" id="cb28-17" data-line-number="17">train_2_downsampled <span class="op">=</span> resample(train_2, </a>
-<a class="sourceLine" id="cb28-18" data-line-number="18">                                 replace<span class="op">=</span><span class="va">False</span>,    <span class="co"># sample without replacement</span></a>
-<a class="sourceLine" id="cb28-19" data-line-number="19">                                 n_samples<span class="op">=</span><span class="dv">111730</span>,     <span class="co"># to match minority class</span></a>
-<a class="sourceLine" id="cb28-20" data-line-number="20">                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results</span></a>
-<a class="sourceLine" id="cb28-21" data-line-number="21">                                 </a>
-<a class="sourceLine" id="cb28-22" data-line-number="22"><span class="co"># Downsample majority class</span></a>
-<a class="sourceLine" id="cb28-23" data-line-number="23">train_3_downsampled <span class="op">=</span> resample(train_3, </a>
-<a class="sourceLine" id="cb28-24" data-line-number="24">                                 replace<span class="op">=</span><span class="va">False</span>,    <span class="co"># sample without replacement</span></a>
-<a class="sourceLine" id="cb28-25" data-line-number="25">                                 n_samples<span class="op">=</span><span class="dv">111730</span>,     <span class="co"># to match minority class</span></a>
-<a class="sourceLine" id="cb28-26" data-line-number="26">                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co">#</span></a>
-<a class="sourceLine" id="cb28-27" data-line-number="27">                                 </a>
-<a class="sourceLine" id="cb28-28" data-line-number="28">                          </a>
-<a class="sourceLine" id="cb28-29" data-line-number="29"><span class="co"># Combine minority class with downsampled majority class</span></a>
-<a class="sourceLine" id="cb28-30" data-line-number="30">train_balanced <span class="op">=</span> pd.concat([train_0_upsampled, train_1_upsampled, train_2_downsampled, train_3_downsampled, train_4])</a>
-<a class="sourceLine" id="cb28-31" data-line-number="31"></a>
-<a class="sourceLine" id="cb28-32" data-line-number="32">train_balanced.head</a></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># plt.bar(range(len(dic_types)),list(Counter(train_balanced[&#39;label&#39;]).values()))</span></a>
-<a class="sourceLine" id="cb29-2" data-line-number="2"><span class="co"># plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(train_balanced[&#39;label&#39;]).keys())])</span></a>
-<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="co"># </span></a>
-<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="co"># plt.show()</span></a></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb30-1" data-line-number="1">Counter(train_balanced.label)</a></code></pre></div>
-<div class="sourceCode" id="cb31"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="im">from</span> numpy <span class="im">import</span> save</a>
-<a class="sourceLine" id="cb31-2" data-line-number="2"><span class="co"># Separate input features (X) and target variable (y)</span></a>
-<a class="sourceLine" id="cb31-3" data-line-number="3">Y <span class="op">=</span> train_balanced.label</a>
-<a class="sourceLine" id="cb31-4" data-line-number="4"><span class="co">#X = train_balanced.drop(&#39;label&#39;, axis=1)</span></a>
-<a class="sourceLine" id="cb31-5" data-line-number="5">X <span class="op">=</span> np.stack(train_balanced.images.values)</a>
-<a class="sourceLine" id="cb31-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb31-7" data-line-number="7">save(<span class="st">&#39;X.npy&#39;</span>, X)</a>
-<a class="sourceLine" id="cb31-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb31-9" data-line-number="9">save(<span class="st">&#39;Y.npy&#39;</span>, Y)</a>
-<a class="sourceLine" id="cb31-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb31-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb31-12" data-line-number="12"><span class="co"># load array</span></a>
-<a class="sourceLine" id="cb31-13" data-line-number="13"><span class="co">#Y = load(&#39;Y.npy&#39;)</span></a></code></pre></div>
-<div class="sourceCode" id="cb32"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb32-1" data-line-number="1"><span class="co">#import mxnet as mx</span></a>
-<a class="sourceLine" id="cb32-2" data-line-number="2"><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</a>
-<a class="sourceLine" id="cb32-3" data-line-number="3"><span class="im">import</span> xgboost <span class="im">as</span> xgb</a>
-<a class="sourceLine" id="cb32-4" data-line-number="4"><span class="im">import</span> time</a>
-<a class="sourceLine" id="cb32-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb32-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb32-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb32-8" data-line-number="8"><span class="co">## Split </span></a>
-<a class="sourceLine" id="cb32-9" data-line-number="9">trn_x, val_x, trn_y, val_y <span class="op">=</span> train_test_split(X, Y, random_state <span class="op">=</span> <span class="dv">42</span>,</a>
-<a class="sourceLine" id="cb32-10" data-line-number="10">                                              stratify <span class="op">=</span> Y, test_size <span class="op">=</span> <span class="fl">0.20</span>)</a>
-<a class="sourceLine" id="cb32-11" data-line-number="11">                                              </a>
-<a class="sourceLine" id="cb32-12" data-line-number="12">                                              </a>
-<a class="sourceLine" id="cb32-13" data-line-number="13">start_time <span class="op">=</span> time.process_time()</a>
-<a class="sourceLine" id="cb32-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb32-15" data-line-number="15">clf <span class="op">=</span> xgb.XGBRegressor(booster <span class="op">=</span> <span class="st">&#39;gbtree&#39;</span>,</a>
-<a class="sourceLine" id="cb32-16" data-line-number="16">                      objective <span class="op">=</span> <span class="st">&#39;multi:softprob&#39;</span>, <span class="co"># multi:softmax, multi:softprob  #&#39;reg:squarederror&#39;,  # reg:linear reg:logistic</span></a>
-<a class="sourceLine" id="cb32-17" data-line-number="17">                      num_class <span class="op">=</span>  <span class="dv">5</span>,</a>
-<a class="sourceLine" id="cb32-18" data-line-number="18">                      max_depth <span class="op">=</span> <span class="dv">10</span>,</a>
-<a class="sourceLine" id="cb32-19" data-line-number="19">                      n_estimators <span class="op">=</span> <span class="dv">100</span>,</a>
-<a class="sourceLine" id="cb32-20" data-line-number="20">                      min_child_weight <span class="op">=</span> <span class="dv">9</span>,</a>
-<a class="sourceLine" id="cb32-21" data-line-number="21">                      learning_rate <span class="op">=</span> <span class="fl">0.01</span>,</a>
-<a class="sourceLine" id="cb32-22" data-line-number="22">                      nthread <span class="op">=</span> <span class="dv">8</span>,</a>
-<a class="sourceLine" id="cb32-23" data-line-number="23">                      subsample <span class="op">=</span> <span class="fl">0.80</span>,</a>
-<a class="sourceLine" id="cb32-24" data-line-number="24">                      colsample_bytree <span class="op">=</span> <span class="fl">0.80</span>,</a>
-<a class="sourceLine" id="cb32-25" data-line-number="25">                      seed <span class="op">=</span> <span class="dv">4242</span>)</a>
-<a class="sourceLine" id="cb32-26" data-line-number="26"></a>
-<a class="sourceLine" id="cb32-27" data-line-number="27"></a>
-<a class="sourceLine" id="cb32-28" data-line-number="28"></a>
-<a class="sourceLine" id="cb32-29" data-line-number="29"></a>
-<a class="sourceLine" id="cb32-30" data-line-number="30">clf.fit(trn_x,</a>
-<a class="sourceLine" id="cb32-31" data-line-number="31">        trn_y,</a>
-<a class="sourceLine" id="cb32-32" data-line-number="32">        eval_set <span class="op">=</span> [(val_x, val_y)],</a>
-<a class="sourceLine" id="cb32-33" data-line-number="33">        verbose <span class="op">=</span> <span class="va">True</span>,</a>
-<a class="sourceLine" id="cb32-34" data-line-number="34">        <span class="co">#verbose_eval= 10,  # print every 10 boost</span></a>
-<a class="sourceLine" id="cb32-35" data-line-number="35">        eval_metric <span class="op">=</span> <span class="st">&#39;mlogloss&#39;</span>, <span class="co"># rmse, logloss, mae, map, cox-nloglik</span></a>
-<a class="sourceLine" id="cb32-36" data-line-number="36">        early_stopping_rounds <span class="op">=</span> <span class="dv">10</span>)</a>
-<a class="sourceLine" id="cb32-37" data-line-number="37">        </a></code></pre></div>
-<div class="sourceCode" id="cb33"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="bu">print</span>((time.process_time() <span class="op">-</span> start_time)<span class="op">/</span><span class="dv">60</span>, <span class="st">&quot;Minutes&quot;</span>)</a></code></pre></div>
-<div class="sourceCode" id="cb34"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb34-1" data-line-number="1"><span class="co">#clf.score(val_x,val_y)</span></a>
-<a class="sourceLine" id="cb34-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb34-3" data-line-number="3"><span class="co"># Predict</span></a>
-<a class="sourceLine" id="cb34-4" data-line-number="4">preds <span class="op">=</span> clf.predict(val_x)</a>
-<a class="sourceLine" id="cb34-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb34-6" data-line-number="6"><span class="co">## Wich max prob</span></a>
-<a class="sourceLine" id="cb34-7" data-line-number="7"><span class="im">import</span> numpy <span class="im">as</span> np</a>
-<a class="sourceLine" id="cb34-8" data-line-number="8">best_preds <span class="op">=</span> np.asarray([np.argmax(line) <span class="cf">for</span> line <span class="kw">in</span> preds])</a>
-<a class="sourceLine" id="cb34-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb34-10" data-line-number="10"><span class="co"># Determine the precision of this prediction:</span></a>
-<a class="sourceLine" id="cb34-11" data-line-number="11"><span class="im">from</span> sklearn.metrics <span class="im">import</span> precision_score</a>
-<a class="sourceLine" id="cb34-12" data-line-number="12">precision_score(val_y, best_preds, average<span class="op">=</span><span class="st">&#39;macro&#39;</span>)</a></code></pre></div>
-<div class="sourceCode" id="cb35"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb35-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb35-2" data-line-number="2">pkl_test <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;data_test_file.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</a>
-<a class="sourceLine" id="cb35-3" data-line-number="3">test <span class="op">=</span> pickle.load(pkl_test)</a>
-<a class="sourceLine" id="cb35-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb35-5" data-line-number="5">t1 <span class="op">=</span> np.stack( test, axis<span class="op">=</span><span class="dv">0</span> )</a>
-<a class="sourceLine" id="cb35-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb35-7" data-line-number="7">t2 <span class="op">=</span> np.stack(t1[:,<span class="dv">1</span>])</a>
-<a class="sourceLine" id="cb35-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb35-9" data-line-number="9">xtest <span class="op">=</span> t2.reshape(<span class="bu">len</span>(t2),<span class="op">-</span><span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb35-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb35-11" data-line-number="11">X.shape</a></code></pre></div>
-<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb36-1" data-line-number="1">xtest.shape</a></code></pre></div>
-<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb37-1" data-line-number="1">pred_test <span class="op">=</span> clf.predict(xtest)</a>
-<a class="sourceLine" id="cb37-2" data-line-number="2"><span class="co">#pred_test</span></a>
-<a class="sourceLine" id="cb37-3" data-line-number="3"><span class="co">#np.asarray([np.argmax(line) for line in pred_test])</span></a>
-<a class="sourceLine" id="cb37-4" data-line-number="4"><span class="co">#dic_types={0: &quot;electron&quot;, 1 : &quot;muon&quot;, 2:&quot;pion&quot;, 3:&quot;kaon&quot;,4 : &quot;proton&quot;}</span></a>
-<a class="sourceLine" id="cb37-5" data-line-number="5">submission <span class="op">=</span> pd.DataFrame(pred_test)</a>
-<a class="sourceLine" id="cb37-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb37-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb37-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb37-9" data-line-number="9"><span class="co">#submission[&#39;image&#39;] = submission.index</span></a>
-<a class="sourceLine" id="cb37-10" data-line-number="10">submission <span class="op">=</span> submission.reset_index()</a>
-<a class="sourceLine" id="cb37-11" data-line-number="11">submission.columns <span class="op">=</span> [<span class="st">&#39;image&#39;</span>, <span class="st">&#39;electron&#39;</span>, <span class="st">&#39;muon&#39;</span>, <span class="st">&#39;pion&#39;</span>, <span class="st">&#39;kaon&#39;</span>, <span class="st">&#39;proton&#39;</span>]</a>
-<a class="sourceLine" id="cb37-12" data-line-number="12"><span class="co">#submission.rename( columns={&#39;index&#39;: &#39;image&#39;}, index ={&#39;index&#39;, &#39;image&#39;},axis=, inplace=True)</span></a>
-<a class="sourceLine" id="cb37-13" data-line-number="13">submission.to_csv(<span class="st">&quot;submission.csv&quot;</span>)</a>
-<a class="sourceLine" id="cb37-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb37-15" data-line-number="15">submission.head</a></code></pre></div>
+<div id="up-sample-minority-classes" class="section level1" number="2">
+<h1 number="2"><span class="header-section-number">2</span> Up-sample Minority Classes</h1>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1"></a>train[train.label <span class="op">==</span> <span class="dv">0</span>].shape</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1"></a>train[train.label <span class="op">==</span> <span class="dv">1</span>].shape</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1"></a>train[train.label <span class="op">==</span> <span class="dv">2</span>].shape</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1"></a>train[train.label <span class="op">==</span> <span class="dv">3</span>].shape</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1"></a>train[train.label <span class="op">==</span> <span class="dv">4</span>].shape</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1"></a><span class="co"># Separate minors and major classes</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a>train_0 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">0</span>]</span>
+<span id="cb27-3"><a href="#cb27-3"></a>train_1 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">1</span>]</span>
+<span id="cb27-4"><a href="#cb27-4"></a>train_2 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">2</span>]</span>
+<span id="cb27-5"><a href="#cb27-5"></a>train_3 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">3</span>]</span>
+<span id="cb27-6"><a href="#cb27-6"></a>train_4 <span class="op">=</span> train[train.label <span class="op">==</span> <span class="dv">4</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1"></a><span class="im">from</span> sklearn.utils <span class="im">import</span> resample</span>
+<span id="cb28-2"><a href="#cb28-2"></a></span>
+<span id="cb28-3"><a href="#cb28-3"></a><span class="co"># Upsample minority classes</span></span>
+<span id="cb28-4"><a href="#cb28-4"></a>train_0_upsampled <span class="op">=</span> resample(train_0, </span>
+<span id="cb28-5"><a href="#cb28-5"></a>                                 replace<span class="op">=</span><span class="va">True</span>,     <span class="co"># sample with replacement</span></span>
+<span id="cb28-6"><a href="#cb28-6"></a>                                 n_samples<span class="op">=</span><span class="dv">111730</span>,    <span class="co"># to match majority class</span></span>
+<span id="cb28-7"><a href="#cb28-7"></a>                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results</span></span>
+<span id="cb28-8"><a href="#cb28-8"></a></span>
+<span id="cb28-9"><a href="#cb28-9"></a><span class="co"># Upsample minority classes</span></span>
+<span id="cb28-10"><a href="#cb28-10"></a>train_1_upsampled <span class="op">=</span> resample(train_1, </span>
+<span id="cb28-11"><a href="#cb28-11"></a>                                 replace<span class="op">=</span><span class="va">True</span>,     <span class="co"># sample with replacement</span></span>
+<span id="cb28-12"><a href="#cb28-12"></a>                                 n_samples<span class="op">=</span><span class="dv">111730</span>,    <span class="co"># to match majority class</span></span>
+<span id="cb28-13"><a href="#cb28-13"></a>                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results                              </span></span>
+<span id="cb28-14"><a href="#cb28-14"></a></span>
+<span id="cb28-15"><a href="#cb28-15"></a></span>
+<span id="cb28-16"><a href="#cb28-16"></a><span class="co"># Downsample majority class</span></span>
+<span id="cb28-17"><a href="#cb28-17"></a>train_2_downsampled <span class="op">=</span> resample(train_2, </span>
+<span id="cb28-18"><a href="#cb28-18"></a>                                 replace<span class="op">=</span><span class="va">False</span>,    <span class="co"># sample without replacement</span></span>
+<span id="cb28-19"><a href="#cb28-19"></a>                                 n_samples<span class="op">=</span><span class="dv">111730</span>,     <span class="co"># to match minority class</span></span>
+<span id="cb28-20"><a href="#cb28-20"></a>                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co"># reproducible results</span></span>
+<span id="cb28-21"><a href="#cb28-21"></a>                                 </span>
+<span id="cb28-22"><a href="#cb28-22"></a><span class="co"># Downsample majority class</span></span>
+<span id="cb28-23"><a href="#cb28-23"></a>train_3_downsampled <span class="op">=</span> resample(train_3, </span>
+<span id="cb28-24"><a href="#cb28-24"></a>                                 replace<span class="op">=</span><span class="va">False</span>,    <span class="co"># sample without replacement</span></span>
+<span id="cb28-25"><a href="#cb28-25"></a>                                 n_samples<span class="op">=</span><span class="dv">111730</span>,     <span class="co"># to match minority class</span></span>
+<span id="cb28-26"><a href="#cb28-26"></a>                                 random_state<span class="op">=</span><span class="dv">123</span>) <span class="co">#</span></span>
+<span id="cb28-27"><a href="#cb28-27"></a>                                 </span>
+<span id="cb28-28"><a href="#cb28-28"></a>                          </span>
+<span id="cb28-29"><a href="#cb28-29"></a><span class="co"># Combine minority class with downsampled majority class</span></span>
+<span id="cb28-30"><a href="#cb28-30"></a>train_balanced <span class="op">=</span> pd.concat([train_0_upsampled, train_1_upsampled, train_2_downsampled, train_3_downsampled, train_4])</span>
+<span id="cb28-31"><a href="#cb28-31"></a></span>
+<span id="cb28-32"><a href="#cb28-32"></a>train_balanced.head</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># plt.bar(range(len(dic_types)),list(Counter(train_balanced[&#39;label&#39;]).values()))</span></span>
+<span id="cb29-2"><a href="#cb29-2"></a><span class="co"># plt.xticks(range(len(dic_types)), [dic_types[i] for i in list(Counter(train_balanced[&#39;label&#39;]).keys())])</span></span>
+<span id="cb29-3"><a href="#cb29-3"></a><span class="co"># </span></span>
+<span id="cb29-4"><a href="#cb29-4"></a><span class="co"># plt.show()</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1"></a>Counter(train_balanced.label)</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1"></a><span class="im">from</span> numpy <span class="im">import</span> save</span>
+<span id="cb31-2"><a href="#cb31-2"></a><span class="co"># Separate input features (X) and target variable (y)</span></span>
+<span id="cb31-3"><a href="#cb31-3"></a>Y <span class="op">=</span> train_balanced.label</span>
+<span id="cb31-4"><a href="#cb31-4"></a><span class="co">#X = train_balanced.drop(&#39;label&#39;, axis=1)</span></span>
+<span id="cb31-5"><a href="#cb31-5"></a>X <span class="op">=</span> np.stack(train_balanced.images.values)</span>
+<span id="cb31-6"><a href="#cb31-6"></a></span>
+<span id="cb31-7"><a href="#cb31-7"></a>save(<span class="st">&#39;X.npy&#39;</span>, X)</span>
+<span id="cb31-8"><a href="#cb31-8"></a></span>
+<span id="cb31-9"><a href="#cb31-9"></a>save(<span class="st">&#39;Y.npy&#39;</span>, Y)</span>
+<span id="cb31-10"><a href="#cb31-10"></a></span>
+<span id="cb31-11"><a href="#cb31-11"></a></span>
+<span id="cb31-12"><a href="#cb31-12"></a><span class="co"># load array</span></span>
+<span id="cb31-13"><a href="#cb31-13"></a><span class="co">#Y = load(&#39;Y.npy&#39;)</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1"></a><span class="co">#import mxnet as mx</span></span>
+<span id="cb32-2"><a href="#cb32-2"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb32-3"><a href="#cb32-3"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
+<span id="cb32-4"><a href="#cb32-4"></a><span class="im">import</span> time</span>
+<span id="cb32-5"><a href="#cb32-5"></a></span>
+<span id="cb32-6"><a href="#cb32-6"></a></span>
+<span id="cb32-7"><a href="#cb32-7"></a></span>
+<span id="cb32-8"><a href="#cb32-8"></a><span class="co">## Split </span></span>
+<span id="cb32-9"><a href="#cb32-9"></a>trn_x, val_x, trn_y, val_y <span class="op">=</span> train_test_split(X, Y, random_state <span class="op">=</span> <span class="dv">42</span>,</span>
+<span id="cb32-10"><a href="#cb32-10"></a>                                              stratify <span class="op">=</span> Y, test_size <span class="op">=</span> <span class="fl">0.20</span>)</span>
+<span id="cb32-11"><a href="#cb32-11"></a>                                              </span>
+<span id="cb32-12"><a href="#cb32-12"></a>                                              </span>
+<span id="cb32-13"><a href="#cb32-13"></a>start_time <span class="op">=</span> time.process_time()</span>
+<span id="cb32-14"><a href="#cb32-14"></a></span>
+<span id="cb32-15"><a href="#cb32-15"></a>clf <span class="op">=</span> xgb.XGBRegressor(booster <span class="op">=</span> <span class="st">&#39;gbtree&#39;</span>,</span>
+<span id="cb32-16"><a href="#cb32-16"></a>                      objective <span class="op">=</span> <span class="st">&#39;multi:softprob&#39;</span>, <span class="co"># multi:softmax, multi:softprob  #&#39;reg:squarederror&#39;,  # reg:linear reg:logistic</span></span>
+<span id="cb32-17"><a href="#cb32-17"></a>                      num_class <span class="op">=</span>  <span class="dv">5</span>,</span>
+<span id="cb32-18"><a href="#cb32-18"></a>                      max_depth <span class="op">=</span> <span class="dv">10</span>,</span>
+<span id="cb32-19"><a href="#cb32-19"></a>                      n_estimators <span class="op">=</span> <span class="dv">100</span>,</span>
+<span id="cb32-20"><a href="#cb32-20"></a>                      min_child_weight <span class="op">=</span> <span class="dv">9</span>,</span>
+<span id="cb32-21"><a href="#cb32-21"></a>                      learning_rate <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span id="cb32-22"><a href="#cb32-22"></a>                      nthread <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb32-23"><a href="#cb32-23"></a>                      subsample <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span id="cb32-24"><a href="#cb32-24"></a>                      colsample_bytree <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span id="cb32-25"><a href="#cb32-25"></a>                      seed <span class="op">=</span> <span class="dv">4242</span>)</span>
+<span id="cb32-26"><a href="#cb32-26"></a></span>
+<span id="cb32-27"><a href="#cb32-27"></a></span>
+<span id="cb32-28"><a href="#cb32-28"></a></span>
+<span id="cb32-29"><a href="#cb32-29"></a></span>
+<span id="cb32-30"><a href="#cb32-30"></a>clf.fit(trn_x,</span>
+<span id="cb32-31"><a href="#cb32-31"></a>        trn_y,</span>
+<span id="cb32-32"><a href="#cb32-32"></a>        eval_set <span class="op">=</span> [(val_x, val_y)],</span>
+<span id="cb32-33"><a href="#cb32-33"></a>        verbose <span class="op">=</span> <span class="va">True</span>,</span>
+<span id="cb32-34"><a href="#cb32-34"></a>        <span class="co">#verbose_eval= 10,  # print every 10 boost</span></span>
+<span id="cb32-35"><a href="#cb32-35"></a>        eval_metric <span class="op">=</span> <span class="st">&#39;mlogloss&#39;</span>, <span class="co"># rmse, logloss, mae, map, cox-nloglik</span></span>
+<span id="cb32-36"><a href="#cb32-36"></a>        early_stopping_rounds <span class="op">=</span> <span class="dv">10</span>)</span>
+<span id="cb32-37"><a href="#cb32-37"></a>        </span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1"></a><span class="bu">print</span>((time.process_time() <span class="op">-</span> start_time)<span class="op">/</span><span class="dv">60</span>, <span class="st">&quot;Minutes&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1"></a><span class="co">#clf.score(val_x,val_y)</span></span>
+<span id="cb34-2"><a href="#cb34-2"></a></span>
+<span id="cb34-3"><a href="#cb34-3"></a><span class="co"># Predict</span></span>
+<span id="cb34-4"><a href="#cb34-4"></a>preds <span class="op">=</span> clf.predict(val_x)</span>
+<span id="cb34-5"><a href="#cb34-5"></a></span>
+<span id="cb34-6"><a href="#cb34-6"></a><span class="co">## Wich max prob</span></span>
+<span id="cb34-7"><a href="#cb34-7"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb34-8"><a href="#cb34-8"></a>best_preds <span class="op">=</span> np.asarray([np.argmax(line) <span class="cf">for</span> line <span class="kw">in</span> preds])</span>
+<span id="cb34-9"><a href="#cb34-9"></a></span>
+<span id="cb34-10"><a href="#cb34-10"></a><span class="co"># Determine the precision of this prediction:</span></span>
+<span id="cb34-11"><a href="#cb34-11"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> precision_score</span>
+<span id="cb34-12"><a href="#cb34-12"></a>precision_score(val_y, best_preds, average<span class="op">=</span><span class="st">&#39;macro&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1"></a></span>
+<span id="cb35-2"><a href="#cb35-2"></a>pkl_test <span class="op">=</span> <span class="bu">open</span>(<span class="st">&quot;data_test_file.pkl&quot;</span>, <span class="st">&#39;rb&#39;</span>)</span>
+<span id="cb35-3"><a href="#cb35-3"></a>test <span class="op">=</span> pickle.load(pkl_test)</span>
+<span id="cb35-4"><a href="#cb35-4"></a></span>
+<span id="cb35-5"><a href="#cb35-5"></a>t1 <span class="op">=</span> np.stack( test, axis<span class="op">=</span><span class="dv">0</span> )</span>
+<span id="cb35-6"><a href="#cb35-6"></a></span>
+<span id="cb35-7"><a href="#cb35-7"></a>t2 <span class="op">=</span> np.stack(t1[:,<span class="dv">1</span>])</span>
+<span id="cb35-8"><a href="#cb35-8"></a></span>
+<span id="cb35-9"><a href="#cb35-9"></a>xtest <span class="op">=</span> t2.reshape(<span class="bu">len</span>(t2),<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb35-10"><a href="#cb35-10"></a></span>
+<span id="cb35-11"><a href="#cb35-11"></a>X.shape</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1"></a>xtest.shape</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1"></a>pred_test <span class="op">=</span> clf.predict(xtest)</span>
+<span id="cb37-2"><a href="#cb37-2"></a><span class="co">#pred_test</span></span>
+<span id="cb37-3"><a href="#cb37-3"></a><span class="co">#np.asarray([np.argmax(line) for line in pred_test])</span></span>
+<span id="cb37-4"><a href="#cb37-4"></a><span class="co">#dic_types={0: &quot;electron&quot;, 1 : &quot;muon&quot;, 2:&quot;pion&quot;, 3:&quot;kaon&quot;,4 : &quot;proton&quot;}</span></span>
+<span id="cb37-5"><a href="#cb37-5"></a>submission <span class="op">=</span> pd.DataFrame(pred_test)</span>
+<span id="cb37-6"><a href="#cb37-6"></a></span>
+<span id="cb37-7"><a href="#cb37-7"></a></span>
+<span id="cb37-8"><a href="#cb37-8"></a></span>
+<span id="cb37-9"><a href="#cb37-9"></a><span class="co">#submission[&#39;image&#39;] = submission.index</span></span>
+<span id="cb37-10"><a href="#cb37-10"></a>submission <span class="op">=</span> submission.reset_index()</span>
+<span id="cb37-11"><a href="#cb37-11"></a>submission.columns <span class="op">=</span> [<span class="st">&#39;image&#39;</span>, <span class="st">&#39;electron&#39;</span>, <span class="st">&#39;muon&#39;</span>, <span class="st">&#39;pion&#39;</span>, <span class="st">&#39;kaon&#39;</span>, <span class="st">&#39;proton&#39;</span>]</span>
+<span id="cb37-12"><a href="#cb37-12"></a><span class="co">#submission.rename( columns={&#39;index&#39;: &#39;image&#39;}, index ={&#39;index&#39;, &#39;image&#39;},axis=, inplace=True)</span></span>
+<span id="cb37-13"><a href="#cb37-13"></a>submission.to_csv(<span class="st">&quot;submission.csv&quot;</span>)</span>
+<span id="cb37-14"><a href="#cb37-14"></a></span>
+<span id="cb37-15"><a href="#cb37-15"></a>submission.head</span></code></pre></div>
 </div>
 
 

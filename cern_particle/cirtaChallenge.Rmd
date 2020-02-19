@@ -1,5 +1,5 @@
 ---
-title: "Particle Classification after collision (demo code in Python)"
+title: "Particle images Classification using arrays and xgboost "
 author: "Karim Mezhoud"
 date: '`r Sys.Date()`'
 output:
