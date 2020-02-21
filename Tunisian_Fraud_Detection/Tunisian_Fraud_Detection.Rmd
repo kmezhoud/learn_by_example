@@ -1,0 +1,515 @@
+---
+title: "Tunisian Fraud Detection Challenge"
+author: "Karim Mezhoud"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: yes
+  urlcolor: blue
+---
+
+
+
+```{r}
+# Set python environment and version in RStudio ;-)
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+# Dataset Preprocessing with R
+
+```{r include=FALSE}
+library(tidyverse)
+library(data.table)
+library(ggplot2)
+library(DataExplorer)
+library(stringr)
+library(tictoc)
+library(inspectdf)
+require(Matrix)
+require(xgboost)
+require(rsample)
+```
+
+
+```{r}
+train <- read.csv("train_.csv")
+test <- read.csv("test_.csv")
+sampleSubmission <- read.csv("SampleSubmission.csv")
+variableDescription <- read.csv("VariableDescription.csv")
+```
+
+```{r, fig.width=7, fig.height=10}
+DataExplorer::plot_missing(train)
+```
+
+```{r}
+setdiff(colnames(train), colnames(test))
+```
+
+
+- If target == 0 that is not Fraud else is.fraud
+
+
+```{r, fig.width=6, fig.height=8}
+# convert target to binary classes
+#train <- train %>%
+#  mutate(target = ifelse(target == 0, 0, 1))
+
+Target = train$target
+
+train$target <- NULL
+
+full <- rbind(train, test)
+
+plot_missing(full)
+```
+
+
+## remove variable with more that 75% missing values
+
+- Not need to seelct more than 75%  NA.
+
+```{r, fig.width=10, fig.height=10}
+# remove variable with more than 74% NA
+#colSums(is.na(full))[colSums(is.na(full))/nrow(full) < 0.6] %>% sort(decreasing=TRUE)
+
+full2drop <- full[colSums(is.na(full))/nrow(full) >= 0.75]
+
+full2save <- full[colSums(is.na(full))/nrow(full) < 0.75]
+
+full2save %>% plot_missing()
+#full2drop %>% plot_missing()
+```
+
+
+
+## Inspect numeric avec categorical variables
+
+```{r}
+# inspect the type of variable
+num_var <- inspect_num(full2save, include_int = TRUE)[["col_name"]]
+
+# If values are integer type, value==floor(value)
+
+paste("Number of numeric variables that we can convert to interger:", length(num_var), "/", ncol(full2save) - 1)
+```
+
+```{r}
+# inspect categorical variable
+cat_var <- inspect_cat(full2save)[["col_name"]]
+cat_var
+```
+
+
+## factorize categorical variables
+
+```{r}
+cat_var_bkp <- full2save %>%
+                mutate(CTR_CATEGO_X_num = as.numeric(CTR_CATEGO_X)) %>%
+                select(CTR_CATEGO_X, CTR_CATEGO_X_num) %>% table
+
+
+full2save <- full2save %>%
+             mutate(CTR_CATEGO_X =  as.numeric(CTR_CATEGO_X))
+
+cat_var_bkp
+```
+
+
+## Scale variables as the target [log(1+x)]
+
+- In discussion Ahmed said that the target column is computed by log(x+1). It is useful. It gives a best score
+
+
+```{r}
+full2save <- full2save %>%
+  mutate_if(is.numeric,funs(log(1 + .))) %>%
+  select(id,everything())
+
+full2save %>% head
+```
+
+## Convert numeric variable to integer to reduce memory computing 
+
+- We do not need this transformation. Does not give a best score.
+
+```{r}
+
+# before <- object.size(full2save)
+# print(paste("Before :", format(before, units = "MB")))
+# full2save <- full2save %>% mutate_if(is.numeric, as.integer)
+# 
+# after <- object.size(full2save)
+# print(paste("After :", format(after, units = "MB") ))  
+```
+
+
+
+## imputate missing values
+
+- Not working.
+
+```{r, fig.width=10, fig.height=10}
+
+require(mice)
+
+# impute <- function(dt,col2drop ,col2imput){
+#               init = mice(dt, maxit=0)
+#               meth = init$method
+#               predM = init$predictorMatrix
+#               predM[, c(col2drop)] <- 0
+#               meth[c(col2drop)]=""
+#               meth[c(col2imput)]= "cart" # pmm (Predictive Mean Matching suitable for numeric variables )"cart"
+#               set.seed(103)
+#               imputed <- mice(dt, method=meth, predictorMatrix=predM, m=5)
+#               imputed <- complete(imputed)
+#               return(imputed)
+# }
+# 
+# num_var <- inspect_num(full2save)[["col_name"]]
+# 
+# 
+# imp <- mice(full2save, m=5, maxit=10, printFlag=TRUE) 
+# 
+# Datimp <- complete(imp, "long", include=TRUE)
+# 
+# q <- impute(full2save, "id", num_var[1])
+
+
+```
+
+
+
+## Split train and test
+
+```{r}
+xtrain <- full2save %>%
+          filter(str_detect(id, "train")) %>%
+          select(-id)
+
+test <- full2save %>%
+  filter(str_detect(id, "test"))
+
+fwrite(test, "test.csv")
+
+ytest <- test %>% select(id)
+
+xtest <- test %>% select(-id)
+
+```
+
+
+## Check skewed target distribution
+
+```{r}
+## Only with binary target (0,1)
+#table(Target)
+```
+
+- Seems not skewed 1/3.
+
+
+# Training  the model
+
+```{r}
+train <- cbind(Target, xtrain)
+
+fwrite(train, "train.csv")
+
+require(rsample)
+
+set.seed(100)
+train_valid_split <- rsample::initial_split(train, prop = 0.8)
+
+# Retrieve train and test sets
+train <- rsample::training(train_valid_split)
+valid  <- rsample::testing(train_valid_split)
+train[1:10, 1:10]
+```
+
+## Format train and test to DMatrix
+
+```{r}
+
+# the option na.pass avoids missing value in age column
+options(na.action='na.pass')
+train_sparse <- sparse.model.matrix(Target ~., data=train)
+dtrain <- xgb.DMatrix(data=train_sparse, label = train$Target)
+
+options(na.action='na.pass')
+valid_sparse <- sparse.model.matrix(Target ~., data=valid)
+dvalid <- xgb.DMatrix(data=valid_sparse, label = valid$Target)
+```
+
+
+## Optimize features with Cross validation
+
+```{r}
+params <- list(booster = "gbtree",
+              tree_method = "auto",
+              objective = "reg:squarederror",
+              eval_metric = "rmse",         #  for Binary classification error rate
+              max_depth = 10,        # 6 makes training heavy, there is no correlation between features #1 is not better
+              eta = 0.01,                     # learning rate
+              subsample = 0.8,              # prevent overfitting
+              colsample_bytree = 0.1         # specify the fraction of columns to be subsampled. # 0.5 is not better
+             )
+
+
+tme <- Sys.time()
+cv_model <- xgb.cv(params = params,
+                   data = dtrain,
+                   nthread = parallel::detectCores(all.tests = FALSE, logical = TRUE),  #2,
+                   nrounds = 1000,
+                   verbose = TRUE,
+                   nfold = 7,
+                   print_every_n = 50,
+                   early_stopping_rounds = 50,
+                   maximize = TRUE,
+                   prediction = TRUE) # prediction of cv folds
+```
+
+
+## Train the model
+
+```{r}
+watchlist <- list(train = dtrain, eval = dvalid)
+tme <- Sys.time()
+xgboost_tree <- xgb.train(data = dtrain, 
+                         params = params,
+                         watchlist = watchlist,
+                         nrounds = cv_model$best_iteration, # more than 12000 ~0.897
+                         print_every_n = 5,
+                         verbose = TRUE)
+```
+
+```{r}
+pred_valid <- predict(xgboost_tree, dvalid)
+
+```
+
+```{r}
+test = cbind(ytest, xtest)
+#fwrite(test, "test.csv")
+test_sparse <- sparse.model.matrix(id ~., data=test)
+dtest <- xgb.DMatrix(data=test_sparse, label = test$id)
+pred_test <- predict(xgboost_tree, dtest)
+
+summary(pred_test)
+```
+
+
+# xgboost and lightgbm  with Python
+
+```{bash}
+#pip3 install --user lightgbm
+```
+
+
+```{python}
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
+
+import lightgbm as lgb
+from xgboost import XGBRegressor
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.utils import resample
+```
+
+```{python}
+train = pd.read_csv("train.csv")
+#train_ = pd.read_csv("train_.csv")
+# reset original Target  column
+#train['Target'] = train_['target']
+train.head()
+```
+
+
+
+## Up-sample Minority Classe
+
+- DO NOT GIVES BEST SCORE
+
+```{python}
+
+# train['Target2'] = train_['target']
+# # Separate minors and major classes
+# train_0 = train[train.Target == 0]
+# train_1 = train[train.Target == 1]
+# 
+# train_0.shape
+# train_1.shape
+# 
+# 
+# #train_0_upsampled = resample(train_0,
+# #                            replace = True,
+# #                            n_samples= 18000,
+# #                            random_state = 123)
+#                             
+# # Downsample minority classes
+# train_1_downsampled = resample(train_1, 
+#                                  replace=False,     # sample with replacement
+#                                  n_samples=6325,    # to match majority class
+#                                  random_state=123) # reproducible results
+#                                  
+#                                  
+# # Combine minority class with downsampled majority class
+# train_balanced = pd.concat([train_1_downsampled, train_0])
+# 
+# train_balanced = train_balanced.drop('Target', axis = 1)
+# 
+# train_balanced = train_balanced.rename(columns ={"Target2":"Target"})
+# 
+# train_balanced
+```
+
+
+## Imputation
+
+```{python}
+from sklearn.impute import SimpleImputer 
+import numpy
+
+imputer = SimpleImputer(missing_values=np.nan,strategy='mean')
+imputer = imputer.fit(train)
+train_im = pd.DataFrame(imputer.transform(train), columns = train.columns) # we need to convert array to dataframe in ass colnames
+
+# count the number of NaN values in each column
+print(numpy.isnan(train_im).sum())
+print(numpy.isnan(train).sum())
+```
+
+
+```{python}
+xtrain, xvalid, ytrain, yvalid = train_test_split(train_im.drop('Target', axis=1), train_im.Target, test_size=0.3, random_state=42)
+
+```
+
+- The third model give better rmse score. We common the xgb and gbm modeling.
+
+```{python}
+
+# print('Start training...')
+# # train
+# xgb = XGBRegressor(objective='reg:squarederror',
+#                   learning_rate=0.01,
+#                   n_estimators = 10000,
+#                   max_depth = 10,
+#                   min_child_weight = 9,
+#                   subsample = 0.8)
+#                   
+# xgb.fit(xtrain, ytrain, 
+#         eval_set=[(xvalid, yvalid)], 
+#         eval_metric='rmse', 
+#         early_stopping_rounds=50, 
+#         verbose=100)
+# 
+# gbm = lgb.LGBMRegressor(objective='regression', 
+#                         num_leaves=31,
+#                         learning_rate=0.01, 
+#                         n_estimators=10000,
+#                         max_depth = 10,
+#                         min_child_weight = 9,
+#                         subsample = 0.8)
+#                         
+# gbm.fit(xtrain, ytrain, 
+#         eval_set=[(xvalid, yvalid)],
+#         eval_metric='rmse',  # l1
+#         early_stopping_rounds= 50,
+#         verbose=100)
+# 
+# 
+# print('Start predicting...')
+# # predict
+# y_pred_xgb = xgb.predict(xvalid)
+# y_pred_gbm = gbm.predict(xvalid, num_iteration = gbm.best_iteration_)
+# 
+# # eval
+# print('The rmse of prediction xgboost is:', mean_squared_error(yvalid, y_pred_xgb) ** 0.5)
+# print('The rmse of prediction lightgbm is:', mean_squared_error(yvalid, y_pred_gbm) ** 0.5)
+```
+
+## Other configuration of xgb
+
+```{python}
+xgb_model = XGBRegressor(booster = 'gbtree',
+                      objective = 'reg:squarederror', #'survival:cox',  #'reg:squarederror',  # reg:linear reg:logistic
+                      max_depth = 15,
+                      n_estimators = 10000,
+                      min_child_weight = 9,
+                      learning_rate = 0.01,
+                      nthread = 8,
+                      subsample = 0.80,
+                      colsample_bytree = 0.80,
+                      seed = 4242)
+
+
+
+xgb_model.fit(xtrain,
+          ytrain,
+          eval_set = [(xvalid, yvalid)],
+          verbose = 100,
+          #verbose_eval= 10,  # print every 10 boost
+          eval_metric = 'rmse', # rmse, logloss, mae, map, cox-nloglik
+          early_stopping_rounds = 20)
+```
+
+```{r}
+# 5.64553, 10000 iterations, 0.001 rate, max depth = 25  0.25 % NA
+# 5.63781   1438    , 0.01 learning rate, max depth 20   0.25 % NA
+# 5.63571   2077        , 0.01 learning rate, max depth 15, min_child_weight = 9
+# 5.63613  2848 , 0.01, max depth 10, min_child_weight = 5  0.25 % NA
+# 5.8992 2026, 0.01, max depth 5 min_child_weight = 10  0.25 % NA
+# 5.61926 2419, 0.01, max depth 15, min_chil = 9, 0.75 % NA
+# 5.63            , 0.01, max depth 15, min_chil = 9, 0.75 % NA , imputed "median"
+# 5.61146 2036  0.01, max depth 15, min_chil = 9, 0.75 % NA , imputed "mean"
+# 5.61146 2036  0.01, max depth 15, min_chil = 9, 0.85 % NA , imputed "mean"
+#  5.95087  780    0.01, max depth 15, min_chil = 9, 0.85 % NA , imputed "mean" , convert to integer
+```
+
+
+```{python}
+test = pd.read_csv("test.csv")
+#xgb_pred = xgb.predict(test.drop('id', axis=1))
+#gbm_pred = gbm.predict(test.drop('id', axis=1))
+xgb2_pred = xgb_model.predict(test.drop('id', axis=1))
+
+#Submission_xgb = pd.read_csv("SampleSubmission.csv", index_col = None)
+#Submission_xgb['target'] = xgb_pred
+#Submission_xgb.to_csv("Submission_xgb.csv", index = False)
+
+#Submission_gbm = pd.read_csv("SampleSubmission.csv", index_col = None)
+#Submission_gbm['target'] = gbm_pred
+#Submission_gbm.to_csv("Submission_gbm.csv", index = False)
+
+
+Submission_xgb2 = pd.read_csv("SampleSubmission.csv", index_col = None)
+Submission_xgb2['target'] = xgb2_pred 
+Submission_xgb2.to_csv("Submission_xgb2.csv", index = False)
+```
+
+```{python}
+Submission_xgb2.head()
+```
+
