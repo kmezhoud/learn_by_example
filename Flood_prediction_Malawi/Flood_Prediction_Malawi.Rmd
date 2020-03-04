@@ -280,7 +280,7 @@ new_train <-new_train %>%
 
 ## Visualize Pluviometry
 
-```{r, fig.width=4}
+```{r, fig.width=4, fig.width=4}
 new_train %>%
   ggplot() +
   geom_line( aes(x = `Week of`, y = Pluviometry), color = "blue")+
