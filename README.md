@@ -114,3 +114,7 @@
 <img src="images/survivalTime_prediction.png" align="left" height="150" width="250" title="Lung Cancer Survival Time prediction using (images arrays and xgboost)">
 </a>
 
+
+<a href="https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html" target = "_blank">
+<img src="images/Flood_in_Malawi.png" align="left" height="150" width="250" title="Flood Prediction in Malawi - Cumul Pluviometry, Altitude , xgboost regression">
+</a>
