@@ -48,6 +48,7 @@ require(gganimate)
 #require(gifski)
 library(caret)
 library(DT)
+library(kableExtra)
 ```
 
 ```{r}
@@ -60,7 +61,8 @@ Train <- Train %>%
   unite("other", v1, v2,v3, v4, sep = "-") %>%
   select(Longitude,Latitude,`Altitude (m)`,  LC_Type1_mode,Square_ID, other , everything()) 
   #filter(row_number()==1 )
-Train %>% head() %>% knitr::kable()
+Train %>% head() %>% knitr::kable() %>%   kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 
@@ -135,7 +137,8 @@ Soil_pal <- Soil_pal %>%
   separate(Description, into = c("Soil Name", "Description"), sep = ":" , remove = FALSE) %>%
   mutate(`Soil Name` = as.factor(`Soil Name`))
 
-Soil_pal %>% knitr::kable()
+Soil_pal %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 
@@ -259,7 +262,8 @@ new_train <- Train %>%
                         labels=c("R1","L1" , "L2" , "L3", "L4", "L5", "L6"))) %>%
   select(-target_2015)
 
-new_train  %>% head %>% knitr::kable()
+new_train  %>% head %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 ## Set Water bodies,  Permanent Wetland and Rivers areas with independent class even that have the same Altitude with other Soil Name
@@ -279,7 +283,8 @@ SquareID_River3 <- new_train %>% filter(Year == 2015) %>% filter(Height == "Rive
 new_train <-new_train %>%
     mutate(Height = if_else(Year == 2019 & Height == "L2" & Square_ID %in% SquareID_River3$Square_ID, "River3", Height)) 
 
-new_train %>% head() %>% knitr::kable()
+new_train %>% head() %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 
@@ -342,7 +347,8 @@ new_train <- new_train %>%
  mutate(wrap_mode = as.factor(if_else(Target == 0, "No Risk 2015", "With Risk 2015"))) %>%
    left_join(SoilHeight_weight, by = c("Height", "Soil_type", "wrap_mode"))
 
-new_train %>% head %>% knitr::kable()
+new_train %>% head %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 ## Categorize elevation to set slopes and define how water moves in the environment
@@ -660,7 +666,8 @@ Train_2019_TR <- Train_2019 %>%
 
 new_train01[new_train01$Year == 2019,]$`Target Range` <- Train_2019_TR$`Target Range`
 
-new_train01[new_train01$Year == 2019,] %>% head %>% knitr::kable()
+new_train01[new_train01$Year == 2019,] %>% head %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 ## Save Train2015 and test2019 dataset for Python
@@ -682,7 +689,8 @@ dataset2015 <- new_train01 %>%
 
 fwrite(dataset2015, "dataset2015.csv")
 
-dataset2015 %>% head() %>% knitr::kable()
+dataset2015 %>% head() %>% knitr::kable() %>% kable_styling() %>%
+  scroll_box(width = "1000px", height = "1000px")
 ```
 
 
@@ -1039,6 +1047,5 @@ sub <- new_train %>%
   select(Square_ID,target_2019)
 
 fwrite(sub, "sub.csv")
-
 
 ```
