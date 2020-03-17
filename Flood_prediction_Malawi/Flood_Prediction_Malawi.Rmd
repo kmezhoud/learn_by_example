@@ -47,6 +47,7 @@ library(plotly)
 require(gganimate)
 #require(gifski)
 library(caret)
+library(DT)
 ```
 
 ```{r}
@@ -59,7 +60,7 @@ Train <- Train %>%
   unite("other", v1, v2,v3, v4, sep = "-") %>%
   select(Longitude,Latitude,`Altitude (m)`,  LC_Type1_mode,Square_ID, other , everything()) 
   #filter(row_number()==1 )
-Train %>% head()
+Train %>% head() %>% knitr::kable()
 ```
 
 
@@ -134,7 +135,7 @@ Soil_pal <- Soil_pal %>%
   separate(Description, into = c("Soil Name", "Description"), sep = ":" , remove = FALSE) %>%
   mutate(`Soil Name` = as.factor(`Soil Name`))
 
-Soil_pal
+Soil_pal %>% knitr::kable()
 ```
 
 
@@ -158,7 +159,7 @@ as.data.frame(colors)
 ```
 
 
-```{r, fig.height=4, fig.width=10}
+```{r, fig.width=8}
 
 p1 <- Train %>%
   distinct(Square_ID, .keep_all = TRUE) %>%
@@ -203,9 +204,12 @@ p2 <- Train %>%
                fill = "transparent", color = "black", size = 0.5) +
     ggtitle("Soil Name distibution and Urban zone localisation") 
 
+p1bis
+#gridExtra::grid.arrange( p1bis, p2, nrow = 2)
+```
 
-
-gridExtra::grid.arrange( p1bis, p2, ncol = 2)
+```{r, fig.width=10}
+p2
 ```
 
 - We obtain similar plots compared to `Elevation` and `Landcover` plots from biblography.
@@ -255,7 +259,7 @@ new_train <- Train %>%
                         labels=c("R1","L1" , "L2" , "L3", "L4", "L5", "L6"))) %>%
   select(-target_2015)
 
-new_train  %>% head
+new_train  %>% head %>% knitr::kable()
 ```
 
 ## Set Water bodies,  Permanent Wetland and Rivers areas with independent class even that have the same Altitude with other Soil Name
@@ -275,12 +279,13 @@ SquareID_River3 <- new_train %>% filter(Year == 2015) %>% filter(Height == "Rive
 new_train <-new_train %>%
     mutate(Height = if_else(Year == 2019 & Height == "L2" & Square_ID %in% SquareID_River3$Square_ID, "River3", Height)) 
 
+new_train %>% head() %>% knitr::kable()
 ```
 
 
 ## Visualize Pluviometry
 
-```{r, fig.width=4, fig.width=4}
+```{r, fig.width=10}
 new_train %>%
   ggplot() +
   geom_line( aes(x = `Week of`, y = Pluviometry), color = "blue")+
@@ -297,6 +302,7 @@ new_train %>%
 
 ```{r ,fig.width=10}
 new_train %>%
+  #distinct(Square_ID, .keep_all = TRUE) %>%
   filter(Year == 2015) %>%
   mutate(wrap_mode = as.factor(if_else(Target == 0, "No Risk 2015", "With Risk 2015"))) %>%
   group_by(Soil_type, Height, `Soil Name`, wrap_mode)%>%
@@ -307,7 +313,8 @@ new_train %>%
   aes(x = Soil_Height, y= Frequency, fill = `Soil Name`) +
   geom_col() +
   facet_grid(wrap_mode ~ .)+
-  theme(legend.position="bottom") 
+  theme(legend.position="bottom") +
+  theme(axis.text.x = element_text(color="black",size=10,hjust=.5,vjust=.5, angle=50))
   #scale_fill_viridis_d(option = "plasma")
 
   
@@ -335,12 +342,12 @@ new_train <- new_train %>%
  mutate(wrap_mode = as.factor(if_else(Target == 0, "No Risk 2015", "With Risk 2015"))) %>%
    left_join(SoilHeight_weight, by = c("Height", "Soil_type", "wrap_mode"))
 
-new_train %>% head
+new_train %>% head %>% knitr::kable()
 ```
 
 ## Categorize elevation to set slopes and define how water moves in the environment
 
-```{r, fig.height=4, fig.width=5}
+```{r, fig.height=5, fig.width=7}
 
 
 new_train %>%
@@ -361,7 +368,7 @@ ggtitle("Map Altitudes and Flood Risks: 7 Height levels and 4 Probabilities rang
 
 ## Target distribution
 
-```{r}
+```{r, fig.height=4, fig.width=7}
 
   new_train %>%
   filter(Year == 2015) %>%
@@ -394,7 +401,7 @@ We note:
 
 
 
-# Deal with unbalanced dataset
+# Dealing with unbalanced dataset
 
 ```{r}
  # balanced_train <- new_train %>%
@@ -600,7 +607,7 @@ require(caret)
 
 ```{r}
 new_train01 <- new_train %>%
-    mutate(Target = as.factor(if_else(Target >= 0.5, 1, 0)))%>%
+    mutate(binTarget = as.factor(if_else(Target >= 0.5, 1, 0)))%>%
     group_by(Square_ID) %>%
    mutate(meanPluv = mean(Pluviometry),
    medianPluv = median(Pluviometry),
@@ -609,23 +616,26 @@ new_train01 <- new_train %>%
 
 new_train01 %>%
   filter(Year == 2015)%>%
-  group_by(Target) %>%
+  group_by(binTarget) %>%
   summarise(nbr = n()) %>%
   ggplot() +
-  aes(x = Target, y = nbr, fill= Target) +
+  aes(x = binTarget, y = nbr, fill= binTarget) +
   geom_col()
 
 ```
 
 
+## Visualize Floot area after round target to (0,1)
+
 ```{r}
 new_train01 %>%
 #mutate(Target = as.factor(Target)) %>%
 filter(Year == 2015) %>%
+   distinct(Square_ID, .keep_all = TRUE) %>%
   ggplot +
   geom_point(aes(x = Longitude, y = Latitude, color = Height)) +
   geom_point(#data = subset(new_train, Target == 1), 
-             aes(x = Longitude, y = Latitude, color = Target, shape = Target),
+             aes(x = Longitude, y = Latitude, color = binTarget, shape = binTarget),
              size = 0.6, stroke = 0, shape = 19) +
   scale_colour_manual(values = c( "lightblue" ,  "red" , "green" , "lightgreen" ,  "pink" ,"gold" ,"orange" , "darkorange1" ,"chocolate", "darkseagreen1","darkseagreen1","darkorchid" ,  "azure2","burlywood1"),
                   labels = c( "0", "1", "L1", "L2", "L3", "L4","L5", "L6", "L7" , "River1", "River2","River3", "Water" , "Wetlands" ),                   name = "Height/Target") 
@@ -650,18 +660,19 @@ Train_2019_TR <- Train_2019 %>%
 
 new_train01[new_train01$Year == 2019,]$`Target Range` <- Train_2019_TR$`Target Range`
 
-new_train01[new_train01$Year == 2019,] %>% head
+new_train01[new_train01$Year == 2019,] %>% head %>% knitr::kable()
 ```
 
 ## Save Train2015 and test2019 dataset for Python
+
 ```{r}
 
-dataset2019 <- new_train01 %>%
+dataset2015 <- new_train01 %>%
   select(Longitude, Latitude,`Week of` , Week, `Altitude (m)`, 
-         Soil_type, Square_ID, Pluviometry, cum_Pluvio, Target,
+         Soil_type, Square_ID, Pluviometry, cum_Pluvio, Target, binTarget,
          `Target Range`, Height, SoilHeight_Weight, meanPluv, medianPluv, maxPluv) %>%
   rename(weeks = `Week of`) %>%
-  filter(weeks > "2015-03-30") %>%
+  filter(weeks < "2015-03-30") %>%
   rename(Altitude = `Altitude (m)`) %>%
   mutate(Altitude = log(Altitude)) %>%
   rename(Target_Range = `Target Range`) %>%
@@ -669,9 +680,9 @@ dataset2019 <- new_train01 %>%
   mutate(Height = as.numeric(as.factor(Height)) - 1)
 
 
-fwrite(dataset2019, "dataset2019.csv")
+fwrite(dataset2015, "dataset2015.csv")
 
-head(dataset2019)
+dataset2015 %>% head() %>% knitr::kable()
 ```
 
 
@@ -879,11 +890,11 @@ train_balanced.columns
 
 ```{python}
 
-ytrain = train.Target
+ytrain = train.binTarget
 
-xtrain = train.drop(['Target', 'Square_ID', 'weeks', 'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1)  # 
+xtrain = train.drop(['Target','binTarget' ,'Square_ID', 'weeks', 'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1)  # 
 
-xtest = test.drop(['Target', 'weeks',  'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1) # 
+xtest = test.drop(['Target','binTarget', 'weeks',  'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1) # 
 
 ## Dummy  variable levels is not better
 # def prepare_data_for_model(raw_dataframe, target_columns, drop_first = True, make_na_col = False):
@@ -982,22 +993,28 @@ submission.head
 ```
 
 
-## Visualize prediction
+## Visualize of the distribution of the Flood probabilities during 2015 and 2019
 
 ```{r}
 pred_test <- fread("pred_test.csv")
 
 
+new_train01[new_train01$Year == 2019,]$Target <- pred_test$pred
 
-new_train[new_train$Year == 2019,]$Target <- pred_test$pred
+ new_train01 %>% 
+   #filter(Target > 0.5) %>%
+   ggplot() +
+   aes(Target) +
+   geom_density() +
+   facet_wrap(Year ~., ncol =2, scales = "free")#+
+   #facet_grid(wrap_mode~ ., scales = "free") 
+#ggplot(pred_test,aes(x=pred)) + geom_density()
 
-ggplot(new_train, aes(Target)) + geom_density()
-ggplot(pred_test,aes(x=pred)) + geom_density()
 ```
 
 
-```{r, fig.height=3, fig.width=5}
-new_train %>%
+```{r, fig.height=4, fig.width=10}
+new_train01 %>%
   #filter(Year == 2019) %>%
   group_by(Year) %>%
   filter(`Week of` == max(`Week of`))%>%
