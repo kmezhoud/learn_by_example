@@ -215,7 +215,7 @@ p1bis
 p2
 ```
 
-- We obtain similar plots compared to `Elevation` and `Landcover` plots from biblography.
+- We obtain similar plots compared to `Elevation` and `Landcover` plots from bibliography.
 
 - The right plot shows less Altitude of  the green dark area in the south of the Malawi.
 
@@ -898,11 +898,14 @@ train_balanced.columns
 
 ```{python}
 
-ytrain = train.binTarget
+ytrain = train_balanced.binTarget
 
-xtrain = train.drop(['Target','binTarget' ,'Square_ID', 'weeks', 'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1)  # 
+#xtrain = train.drop(['Target','binTarget' ,'Square_ID', 'weeks', 'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1)  # 
 
-xtest = test.drop(['Target','binTarget', 'weeks',  'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1) # 
+#xtest = test.drop(['Target','binTarget', 'weeks',  'Latitude', 'Longitude', 'meanPluv', 'medianPluv', 'maxPluv', 'Pluviometry'], axis=1) # 
+
+xtrain = train_balanced.drop(['Target','binTarget' ,'Square_ID', 'weeks'], axis=1)
+xtest = test.drop(['Target', 'Square_ID', 'weeks'], axis=1)
 
 ## Dummy  variable levels is not better
 # def prepare_data_for_model(raw_dataframe, target_columns, drop_first = True, make_na_col = False):
@@ -921,7 +924,7 @@ xtest = test.drop(['Target','binTarget', 'weeks',  'Latitude', 'Longitude', 'mea
 # xtest_dum = prepare_data_for_model(xtest, target_columns=['Soil_type', 'Height']) #, 'Nstage' : 4 classes
 # xtest_dum = xtest_dum.dropna() 
 # 
-# xtrain_dum.head
+xtest.columns
 ```
 
 
@@ -941,10 +944,10 @@ trn_x, val_x, trn_y, val_y = train_test_split(xtrain , ytrain, random_state = 42
 ```{python}
 start_time = time.process_time()
 
-clf = xgb.XGBRegressor(booster = 'gbtree',
+clf = xgb.XGBClassifier(booster = 'gbtree',
                       objective = 'reg:logistic', # multi:softmax, multi:softprob  #'reg:squarederror',  # reg:linear reg:logistic binary:logistic
                       #num_class =  2,
-                      max_depth = 10,
+                      max_depth = 14,
                       n_estimators = 10000,
                       min_child_weight = 9,
                       learning_rate = 0.01,
@@ -984,7 +987,7 @@ precision_score(val_y, best_preds, average='macro')
 
 
 ```{python}
-#xtest = test.drop(['Target', 'weeks', 'Latitude', 'Longitude'], axis=1)
+xtest = test.drop(['Target', 'weeks', 'Latitude', 'Longitude'], axis=1)
 test_ID = xtest.Square_ID
 xtest = xtest.drop('Square_ID', axis = 1)
 pred_test = clf.predict(xtest)
@@ -1040,12 +1043,58 @@ new_train01 %>%
 
 
 ```{r}
-sub <- new_train %>%
-  mutate(Square_ID = paste(Square_ID, other, sep = "-")) %>%
-  filter(`Week of` >= "2019-05-07") %>%
-  rename(target_2019 = Target ) %>%
-  select(Square_ID,target_2019)
 
-fwrite(sub, "sub.csv")
+SampleSubmission <- read_csv("Flood_prediction_Malawi/SampleSubmission.csv")
+pred_test <- fread("pred_test.csv")
+
+
+kmSubXgb <- SampleSubmission %>%
+  separate(Square_ID, into = c("Square_ID", "v1", "v2", "v3", "v4"), sep = "-" , remove = FALSE) %>%
+  left_join(pred_test, by= "Square_ID") %>%
+  distinct(Square_ID, .keep_all = TRUE) %>%
+  unite("Square_ID", Square_ID, v1, v2,v3, v4, sep = "-") %>%
+  select(Square_ID, pred) %>%
+  rename (target_2019 = pred) 
+
+fwrite(kmSubXgb, "kmSub.csv")
 
 ```
+
+
+# Merge Fetaures fom two approaches (Emanuelle, Karim)
+
+```{r}
+# # read Train from Emanuelle
+# trainm <- fread("Emanuelle/Trainm.csv") %>%
+#   rename(`Altitude (m)` = elevation) %>%
+#   rename(Longitude = X) %>%
+#   rename(Latitude = Y) %>%
+#    gather(key = `Week of` , value = Pluviometry, 4:20) 
+# 
+# trainm <- trainm %>%
+#   gather(key = xtrain_ft, value = xtrain_stat, 5:10)
+# trainm <- trainm %>%
+#   gather(key = ytrain_ft, value = ytrain_stat, 5:10) 
+#   
+# # Subset the dataframe because the computed can not gather
+# 
+# trainm1 <- trainm %>%
+#   select(Longitude, Latitude, `Altitude (m)`, `Week of`, Pluviometry, xtrain_ft, xtrain_stat, ytrain_ft, ytrain_stat)
+# 
+# trainm <- trainm %>%
+#   select(-c(`Week of`, Pluviometry, xtrain_ft, xtrain_stat, ytrain_ft, ytrain_stat)) %>%
+#   gather(key = altitude_ft, value = altitude_stat, 5:10)
+
+```
+
+
+```{r}
+# new_train <- Train %>%
+#   gather(key = `Week of` , value = Pluviometry, 8:ncol(Train)) %>%
+#   mutate(`Week of` = str_extract(`Week of`, "\\d{4}-\\d{2}-\\d{2}") ) %>%
+#   mutate(`Week of` = as.Date(`Week of`, format= "%Y-%m-%d")) %>%
+#   mutate(Week = lubridate::week(`Week of`)) %>%
+#   mutate(Year = if_else(`Week of` <= "2015-03-15", 2015, 2019)) %>%
+#   group_by(Square_ID, Year) 
+```
+
