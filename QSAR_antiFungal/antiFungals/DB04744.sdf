@@ -1,0 +1,138 @@
+
+  Mrv1909 10301918572D          
+
+ 13 14  0  0  0  0            999 V2000
+    5.6262    0.6794    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    4.9118    0.2669    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.9118   -0.5580    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1973   -0.9705    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1973   -1.7955    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.4828   -0.5580    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.7683   -0.9705    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0539   -0.5580    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0539    0.2669    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.7683    0.6794    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.4828    0.2669    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1973    0.6794    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1973    1.5044    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  2  3  2  0  0  0  0
+  3  4  1  0  0  0  0
+  4  5  2  0  0  0  0
+  4  6  1  0  0  0  0
+  6  7  2  0  0  0  0
+  7  8  1  0  0  0  0
+  8  9  2  0  0  0  0
+  9 10  1  0  0  0  0
+ 10 11  2  0  0  0  0
+  6 11  1  0  0  0  0
+ 11 12  1  0  0  0  0
+  2 12  1  0  0  0  0
+ 12 13  2  0  0  0  0
+M  END
+> <DATABASE_ID>
+DB04744
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+OC1=CC(=O)C2=CC=CC=C2C1=O
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C10H6O3/c11-8-5-9(12)10(13)7-4-2-1-3-6(7)8/h1-5,12H
+
+> <INCHI_KEY>
+CSFWPUWCSPOLJW-UHFFFAOYSA-N
+
+> <FORMULA>
+C10H6O3
+
+> <MOLECULAR_WEIGHT>
+174.1528
+
+> <EXACT_MASS>
+174.031694058
+
+> <JCHEM_ACCEPTOR_COUNT>
+3
+
+> <JCHEM_ATOM_COUNT>
+19
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+16.419152508837577
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+1
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+2-hydroxy-1,4-dihydronaphthalene-1,4-dione
+
+> <ALOGPS_LOGP>
+0.99
+
+> <JCHEM_LOGP>
+0.975660269333333
+
+> <ALOGPS_LOGS>
+-1.99
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+2
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+-1
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+5.319285276038729
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+-5.401604620510081
+
+> <JCHEM_POLAR_SURFACE_AREA>
+54.37
+
+> <JCHEM_REFRACTIVITY>
+48.150600000000004
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+0
+
+> <JCHEM_RULE_OF_FIVE>
+1
+
+> <ALOGPS_SOLUBILITY>
+1.80e+00 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+tigecycline
+
+> <JCHEM_VEBER_RULE>
+0
+
+> <DRUGBANK_ID>
+DB04744
+
+> <DRUG_GROUPS>
+experimental
+
+> <GENERIC_NAME>
+Lawsone
+
+> <SYNONYMS>
+2-hydroxy-1,4-naphthalenedione; 2-hydroxy-1,4-naphthoquinone; 2-hydroxynaphthoquinone; Lawsone
+
+$$$$

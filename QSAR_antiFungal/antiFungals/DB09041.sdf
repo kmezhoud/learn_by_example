@@ -1,0 +1,143 @@
+ 
+  Mrv1533004231513282D          
+
+ 11 12  0  0  0  0            999 V2000
+   15.6014  -18.1299    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   15.6014  -18.9549    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   16.3158  -19.3674    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   17.0303  -18.9549    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   17.0303  -18.1299    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   16.3158  -17.7174    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   14.8869  -19.3674    0.0000 F   0  0  0  0  0  0  0  0  0  0  0  0
+   17.8150  -19.2098    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   18.2999  -18.5424    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   17.8150  -17.8750    0.0000 B   0  0  0  0  0  0  0  0  0  0  0  0
+   18.0690  -17.0931    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  2  3  1  0  0  0  0
+  3  4  2  0  0  0  0
+  4  5  1  0  0  0  0
+  5  6  2  0  0  0  0
+  1  6  1  0  0  0  0
+  2  7  1  0  0  0  0
+  4  8  1  0  0  0  0
+  8  9  1  0  0  0  0
+  9 10  1  0  0  0  0
+  5 10  1  0  0  0  0
+ 10 11  1  0  0  0  0
+M  END
+> <DATABASE_ID>
+DB09041
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+OB1OCC2=CC(F)=CC=C12
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C7H6BFO2/c9-6-1-2-7-5(3-6)4-11-8(7)10/h1-3,10H,4H2
+
+> <INCHI_KEY>
+LFQDNHWZDQTITF-UHFFFAOYSA-N
+
+> <FORMULA>
+C7H6BFO2
+
+> <MOLECULAR_WEIGHT>
+151.93
+
+> <EXACT_MASS>
+152.044488
+
+> <JCHEM_ACCEPTOR_COUNT>
+2
+
+> <JCHEM_ATOM_COUNT>
+17
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+14.207719106662456
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+1
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+5-fluoro-1,3-dihydro-2,1-benzoxaborol-1-ol
+
+> <ALOGPS_LOGP>
+1.51
+
+> <JCHEM_LOGP>
+2.2371999999999996
+
+> <ALOGPS_LOGS>
+-1.13
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+2
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+0
+
+> <JCHEM_PKA>
+15.538352513154432
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+8.914382285310808
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+-4.835490669256251
+
+> <JCHEM_POLAR_SURFACE_AREA>
+29.46
+
+> <JCHEM_REFRACTIVITY>
+33.8568
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+0
+
+> <JCHEM_RULE_OF_FIVE>
+1
+
+> <ALOGPS_SOLUBILITY>
+1.13e+01 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+5-fluoro-3H-2,1-benzoxaborol-1-ol
+
+> <JCHEM_VEBER_RULE>
+1
+
+> <DRUGBANK_ID>
+DB09041
+
+> <SECONDARY_ACCESSION_NUMBERS>
+DB05058
+
+> <DRUG_GROUPS>
+approved; investigational
+
+> <GENERIC_NAME>
+Tavaborole
+
+> <SYNONYMS>
+5-Fluoro-1,3-dihydro-1-hydroxy-2,1-benzoxaborole; 5-Fluoro-2,1-benzoxaborol-1(3H)-ol; Tavaborole
+
+> <PRODUCTS>
+Kerydin
+
+$$$$

@@ -1,0 +1,168 @@
+
+  Mrv1902 02111921292D          
+
+ 27 26  0  0  0  0            999 V2000
+   -3.5708    0.0032    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8567   -0.4102    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1608    0.0056    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4468   -0.4077    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7341    0.0082    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0202   -0.4051    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.2581   -0.4128    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6922    0.0108    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1213    0.0179    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8358   -0.3946    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5502    0.0179    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2648   -0.3945    0.0000 N   0  3  0  0  0  0  0  0  0  0  0  0
+    4.9792    0.0179    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2648   -1.2195    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.9810   -0.8128    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4088   -0.3981    0.0000 P   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4128   -1.2231    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4088    0.4269    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0
+   -4.9810   -0.0152    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4305    1.2181    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1446    0.8047    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8404    1.2205    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.5544    0.8072    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.2670    1.2231    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.9810    0.8098    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7431    0.8021    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0202    1.1995    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  0  0  0  0
+  7  1  1  0  0  0  0
+  3  2  1  0  0  0  0
+  4  3  1  0  0  0  0
+  5  4  1  0  0  0  0
+  6  5  1  0  0  0  0
+  8  6  1  0  0  0  0
+ 10  9  1  0  0  0  0
+ 11 10  1  0  0  0  0
+ 12 11  1  0  0  0  0
+ 12 13  1  0  0  0  0
+ 12 14  1  0  0  0  0
+ 12 15  1  0  0  0  0
+  8 16  1  0  0  0  0
+ 16  9  1  0  0  0  0
+ 16 17  2  0  0  0  0
+ 16 18  1  0  0  0  0
+  7 19  1  0  0  0  0
+ 21 20  1  0  0  0  0
+ 26 20  1  0  0  0  0
+ 22 21  1  0  0  0  0
+ 23 22  1  0  0  0  0
+ 24 23  1  0  0  0  0
+ 25 24  1  0  0  0  0
+ 26 27  1  0  0  0  0
+ 19 25  1  0  0  0  0
+M  CHG  2  12   1  18  -1
+M  END
+> <DATABASE_ID>
+DB09031
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+CCCCCCCCCCCCCCCCOP([O-])(=O)OCC[N+](C)(C)C
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C21H46NO4P/c1-5-6-7-8-9-10-11-12-13-14-15-16-17-18-20-25-27(23,24)26-21-19-22(2,3)4/h5-21H2,1-4H3
+
+> <INCHI_KEY>
+PQLXHQMOHUQAKB-UHFFFAOYSA-N
+
+> <FORMULA>
+C21H46NO4P
+
+> <MOLECULAR_WEIGHT>
+407.576
+
+> <EXACT_MASS>
+407.316445963
+
+> <JCHEM_ACCEPTOR_COUNT>
+2
+
+> <JCHEM_ATOM_COUNT>
+73
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+50.58768696219128
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+0
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+hexadecyl 2-(trimethylazaniumyl)ethyl phosphate
+
+> <ALOGPS_LOGP>
+2.68
+
+> <JCHEM_LOGP>
+2.2508485231949216
+
+> <ALOGPS_LOGS>
+-6.32
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+0
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+0
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+1.8803148742183158
+
+> <JCHEM_POLAR_SURFACE_AREA>
+58.59
+
+> <JCHEM_REFRACTIVITY>
+125.51309999999997
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+20
+
+> <JCHEM_RULE_OF_FIVE>
+1
+
+> <ALOGPS_SOLUBILITY>
+2.20e-04 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+miltex
+
+> <JCHEM_VEBER_RULE>
+0
+
+> <DRUGBANK_ID>
+DB09031
+
+> <DRUG_GROUPS>
+approved; investigational
+
+> <GENERIC_NAME>
+Miltefosine
+
+> <SYNONYMS>
+HDPC; hexadecyl 2-(trimethylazaniumyl)ethyl phosphate; Hexadecylphosphocholine; Hexadecylphosphorylcholine; Miltefosin; Miltefosina; Miltéfosine; Miltefosine; Monohexadecylphosphocholine; Monohexadecylphosphorylcholine
+
+> <PRODUCTS>
+Impavido
+
+> <INTERNATIONAL_BRANDS>
+Miltex
+
+$$$$

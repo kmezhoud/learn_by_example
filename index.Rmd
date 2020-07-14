@@ -32,3 +32,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Lung Cancer Event (0,1) prediction](lung_cancer_survival_time/lung_cancer_survival_time.html)
 - [Lung Cancer Survival Time (duration in days) prediction](lung_cancer_survival_time/kmezhoud_LCST.html)
 - [Flood Prediction in Malawi](Flood_prediction_Malawi/Flood_Prediction_Malawi.html)
+- [QSAR Antifungal quantification (Binary and Regression Classification RF,XGB)](QSAR_antiFungal/qsar_antifungal.html)

@@ -1,0 +1,600 @@
+---
+title: "QSAR Antifungal quantification (Binary and Regression Classification)"
+author: "Karim Mezhoud"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: yes
+  urlcolor: blue
+---
+
+
+```{r}
+# Set python environment and version in RStudio ;-)
+reticulate::use_python("/Users/Mezhoud/anaconda3/bin/python3", required = TRUE)
+reticulate::py_config()
+```
+
+We need rdkit package from anaconda.
+
+```{r}
+reticulate::py_module_available("rdkit")
+```
+
+Install rdkit if is not available
+```{bash}
+#conda install -c rdkit rdkit
+```
+
+Import needed modules
+
+```{python}
+from rdkit import Chem, DataStructs
+from rdkit.Chem import AllChem, Descriptors
+import numpy as np
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV, KFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, cohen_kappa_score, matthews_corrcoef
+import joblib
+```
+
+
+Merge molecules from sdf files to one file
+
+```{bash}
+cat antiFungals/*.sdf > all_antiFungals.sdf
+
+```
+
+```{bash}
+cat antiBacterial_viral_biotic_sulfonamides/*.sdf > antiBacterial_viral_biotic_sulfonamides.sdf
+```
+
+```{bash}
+# How many molécules in classes
+grep -c 'END' antiBacterial_viral_biotic_sulfonamides.sdf
+grep -c 'END' all_antiFungals.sdf
+```
+
+Merge the two datasets  for Training
+
+```{bash}
+cat all_antiFungals.sdf  antiBacterial_viral_biotic_sulfonamides.sdf > alldata.sdf
+grep -c 'END' alldata.sdf
+```
+
+
+```{bash}
+# cancatenate our list of molecule to classify as antifungic or not
+cat mols2predict/*.sdf > mols2predict.sdf
+grep -c "END" mols2predict.sdf
+```
+
+# Reading molecules and activity from SDF
+
+* We select `ALOGPS_LOGP` as the activity. But we can select other feature.
+
+```{python}
+fname = "alldata.sdf"
+
+mols = []
+y = []
+for mol in Chem.SDMolSupplier(fname):
+    if mol is not None:
+        mols.append(mol)
+        #y.append(Descriptors.MolLogP(mol)) # For Regression Model
+        
+
+# y for Classification Model
+y = [1] * 74 + [0] * 77
+```
+```{python}
+type(y)
+type(mols)
+y
+```
+
+```{python}
+## Reformat unkown molecules
+fname = "mols2predict.sdf"
+
+mols2pred = []
+for mol in Chem.SDMolSupplier(fname):
+    if mol is not None:
+        mols2pred.append(mol)
+```
+
+
+## Get directly descritor
+
+```{python}
+
+#mols[1].GetDoubleProp('PUBCHEM_CONFORMER_RMSD') #  works when comment y.append(Descriptors.MolLogP(mol))
+#mols[1].GetIntProp("JCHEM_NUMBER_OF_RINGS")
+Descriptors.MolLogP(mols[1])
+Descriptors.MolLogP(Chem.SDMolSupplier("alldata.sdf")[11])
+
+```
+
+# Calculate descriptors: generate binary Morgan fingerprint with radius 2
+
+```{python}
+# generate binary Morgan fingerprint with radius 2
+fp = [AllChem.GetMorganFingerprintAsBitVect(m, 2) for m in mols]
+
+fp2pred = [AllChem.GetMorganFingerprintAsBitVect(m, 2) for m in mols2pred]
+```
+
+## Convert fp to array
+```{python}
+def rdkit_numpy_convert(fp):
+    output = []
+    for f in fp:
+        arr = np.zeros((1,))
+        DataStructs.ConvertToNumpyArray(f, arr)
+        output.append(arr)
+    return np.asarray(output)
+
+fpx = rdkit_numpy_convert(fp)
+
+fpx2pred = rdkit_numpy_convert(fp2pred)
+
+fpx.shape
+fpx2pred.shape
+
+```
+
+
+```{python}
+# check wether the data set is balanced
+sum(y) / len(y)
+```
+
+
+# Add to Morgan fingerprints some other descriptors and look at the model performance¶
+
+## Calculate some descriptors
+A list of descriptors is available [here](https://www.rdkit.org/docs/GettingStartedInPython.html#list-of-available-descriptors).
+
+```{python}
+
+
+# calc some descriptors
+descr = []
+for m in mols:
+    descr.append([Descriptors.MolLogP(m),
+                  Descriptors.TPSA(m),
+                  Descriptors.NHOHCount(m),
+                  Descriptors.NOCount(m),
+                  Descriptors.NumHAcceptors(m),
+                  Descriptors.NumHDonors(m),
+                  Descriptors.NumRotatableBonds(m),
+                  #Descriptors.VSA_EState1(m),
+                  Descriptors.NumHeteroatoms(m),
+                  Descriptors.FractionCSP3(m)])
+descr = np.asarray(descr)
+
+# calc some descriptors for unknown molecules
+descr2pred = []
+for m in mols2pred:
+    descr2pred.append([Descriptors.MolLogP(m),
+                  Descriptors.TPSA(m),
+                  Descriptors.NHOHCount(m),
+                  Descriptors.NOCount(m),
+                  Descriptors.NumHAcceptors(m),
+                  Descriptors.NumHDonors(m),
+                  Descriptors.NumRotatableBonds(m),
+                  #Descriptors.VSA_EState1(m),
+                  Descriptors.NumHeteroatoms(m),
+                  Descriptors.FractionCSP3(m)])
+descr2pred = np.asarray(descr2pred)
+
+
+descr.shape
+descr2pred.shape
+
+
+```
+
+
+```{python}
+# add them to morgan fingerprints
+x = np.concatenate((fpx, descr), axis=1)
+
+x2pred = np.concatenate((fpx2pred, descr2pred), axis=1)
+x.shape
+x2pred.shape
+```
+
+
+# Split the whole set on training and test sets
+
+```{python}
+
+#Set random seed to make all further calculations reproducible
+seed = 42
+
+# randomly select 20% of compounds as test set
+x_tr, x_ts, y_tr, y_ts = train_test_split(x, y, test_size=0.20, random_state=seed)
+
+```
+
+
+# Create folds for cross-validation
+
+```{python}
+cv = StratifiedKFold(n_splits=5, random_state=seed)  # Binary Y
+#cv = KFold(n_splits=5, random_state=seed)             # Countinious Y
+
+
+# print out ids of folds
+for i, (train_index, test_index) in enumerate(cv.split(x_tr, y_tr)):
+    print("\nFold_" + str(i+1))
+    print("TRAIN:", train_index)
+    print("TEST:", test_index)
+
+
+```
+
+
+# Scale X
+
+This step may be crucial for certain modeling approaches lke SVM. In the case of binary fingerprints it may be less useful.
+
+```{python}
+# obtain scale object which can be further applied to scale any data to fit the training set
+scale = StandardScaler().fit(x_tr)
+x_tr = scale.transform(x_tr)
+
+# it is a good idea to save it for future use
+joblib.dump(scale, "MolLogP_scale.pkl", compress=3)
+
+```
+
+# Ramdom Forest Regression model
+
+## Search for optimal tuning parameters and build the model
+
+```{python}
+# create grid search dictionary
+param_grid = {"max_features": [x_tr.shape[1] // 10, x_tr.shape[1] // 7, x_tr.shape[1] // 5, x_tr.shape[1] // 3], 
+              "n_estimators": [100, 250, 500]}
+
+# setup model building
+m = GridSearchCV(RandomForestClassifier(), param_grid, n_jobs=2, cv=cv, verbose=1) # classification
+#m = GridSearchCV(RandomForestRegressor(), param_grid, n_jobs=2, cv=cv, verbose=1) # Regression
+# run model building
+m.fit(x_tr, y_tr)
+
+
+```
+
+```{python}
+m.best_params_
+```
+```{python}
+m.best_score_
+```
+
+```{python}
+m.cv_results_
+```
+
+
+```{python}
+m.cv_results_['mean_test_score']
+```
+
+
+```{python}
+m.cv_results_['params']
+```
+
+
+## Let's try to analyse which variables are the most important in the model
+
+```{python}
+
+# CLASSIFICATION
+# rebuild RF model manually using best parameters to be able to extract additional information from the model
+rf = RandomForestClassifier(n_estimators=m.best_params_["n_estimators"], 
+                           max_features=m.best_params_["max_features"],
+                           random_state=seed)
+rf.fit(x_tr, y_tr)
+
+
+# REGRESSION
+# # rebuild RF model manually using best parameters to be able to extract additional information from the model
+# rf = RandomForestRegressor(n_estimators=m.best_params_["n_estimators"], 
+#                            max_features=m.best_params_["max_features"],
+#                            random_state=seed)
+# rf.fit(x_tr, y_tr)
+```
+
+```{python}
+imp = rf.feature_importances_
+
+imp
+
+
+```
+```{python}
+indices = np.argsort(imp)[::-1]
+
+print("Feature ranking:")
+
+# print top 10 features
+for i in range(10):
+    print("%d. feature %d (%f)" % (i + 1, indices[i], imp[indices[i]]))
+```
+
+* Features with numbers 1-2048 are different Morgan fingerprints
+
+2049 - MolLogP
+2050 - TPSA(m)
+2051 - NHOHCount
+2052 - NOCount 2053 - NumHAcceptors
+2054 - NumHDonors
+2055 - NumRotatableBonds
+2056 - NumHeteroatoms
+2057 - FractionCSP3
+
+
+## Predict test set compounds
+
+```{python}
+# load scale if necessary
+scale = joblib.load("MolLogP_scale.pkl")
+
+# scale descriptors of the test set compounds
+x_ts = scale.transform(x_ts)
+
+# predict logBB class
+pred_rf = rf.predict(x_ts)
+
+pred_rf
+```
+
+
+
+
+## Calculate statistics for test set preditions
+
+### For Classification
+
+```{python}
+print("Accuracy = ", accuracy_score(y_ts, pred_rf))
+print("MCC = ", matthews_corrcoef(y_ts, pred_rf))
+print("Kappa = ", cohen_kappa_score(y_ts, pred_rf))
+```
+
+### For Regression
+```{python}
+import sklearn.metrics as sm
+print("Mean absolute error =", round(sm.mean_absolute_error(y_ts, pred_rf), 2))
+print("Mean squared error =", round(sm.mean_squared_error(y_ts, pred_rf), 2))
+print("Median absolute error =", round(sm.median_absolute_error(y_ts, pred_rf), 2))
+print("Explain variance score =", round(sm.explained_variance_score(y_ts, pred_rf), 2))
+print("R2 score =", round(sm.r2_score(y_ts, pred_rf), 2))
+```
+
+* Mean absolute error: This is the average of absolute errors of all the data points in the given dataset.
+
+* Mean squared error: This is the average of the squares of the errors of all the data points in the given dataset. It is one of the most popular metrics out there!
+
+* Median absolute error: This is the median of all the errors in the given dataset. The main advantage of this metric is that it's robust to outliers. A single bad point in the test dataset wouldn't skew the entire error metric, as opposed to a mean error metric.
+
+* Explained variance score: This score measures how well our model can account for the variation in our dataset. A score of 1.0 indicates that our model is perfect.
+
+* R2 score: This is pronounced as R-squared, and this score refers to the coefficient of determination. This tells us how well the unknown samples will be predicted by our model. The best possible score is 1.0, but the score can be negative as well.
+    
+## Applicability domain estimates
+
+```{python}
+# if the model includes several ones like RF models or consensus models (or for probabilistic models)
+# we can calculate consistency of predictions amongs those models and use it for estimation of applicability domain
+pred_prob = rf.predict_proba(x_ts)
+pred_prob
+
+```
+
+```{python}
+# setup threshold
+threshold = 0.95
+# calc maximum predicted probability for each row (compound) and compare to the threshold
+da = np.amax(pred_prob, axis=1) > threshold
+da
+```
+
+
+
+# GBM Model
+
+## For Classification
+
+```{python}
+# setup model building
+param_grid = {"n_estimators": [100, 200, 300, 400, 500]}
+gbm = GridSearchCV(GradientBoostingClassifier(subsample=0.5, max_features=0.5), 
+                   param_grid, n_jobs=2, cv=cv, verbose=1)
+
+# run model building
+gbm.fit(x_tr, y_tr)
+```
+
+
+## For Regression
+```{python}
+# # setup model building
+# param_grid = {"n_estimators": [100, 200, 300, 400, 500]}
+# gbm = GridSearchCV(GradientBoostingRegressor(subsample=0.5, max_features=0.5), 
+#                    param_grid, n_jobs=2, cv=cv, verbose=1)
+# 
+# # run model building
+# gbm.fit(x_tr, y_tr)
+
+```
+
+```{python}
+gbm.best_score_
+```
+
+```{python}
+gbm.best_params_
+```
+### For Classification
+
+```{python}
+pred_gbm = gbm.predict(x_ts)
+print("Accuracy = ", accuracy_score(y_ts, pred_gbm))
+print("MCC = ", matthews_corrcoef(y_ts, pred_gbm))
+print("Kappa = ", cohen_kappa_score(y_ts, pred_gbm))
+```
+
+### For Regression
+```{python}
+pred_gbm = gbm.predict(x_ts)
+print("Mean absolute error =", round(sm.mean_absolute_error(y_ts, pred_gbm), 2)) 
+print("Mean squared error =", round(sm.mean_squared_error(y_ts, pred_gbm), 2)) 
+print("Median absolute error =", round(sm.median_absolute_error(y_ts, pred_gbm), 2)) 
+print("Explain variance score =", round(sm.explained_variance_score(y_ts, pred_gbm), 2)) 
+print("R2 score =", round(sm.r2_score(y_ts, pred_gbm), 2))
+```
+
+
+```{python}
+from sklearn.inspection import permutation_importance
+imp_gbm = gbm.best_estimator_.feature_importances_
+
+imp_gbm
+
+
+```
+
+
+```{python}
+indices = np.argsort(imp_gbm)[::-1]
+
+print("Feature ranking:")
+
+# print top 10 features
+for i in range(10):
+    print("%d. feature %d (%f)" % (i + 1, indices[i], imp[indices[i]]))
+```
+
+
+# Consensus model (ensemble)
+
+```{python}
+pred_c = 1 * (((pred_rf + pred_gbm) / 2) >= 0.5)
+pred_c
+```
+```{python}
+# calc statistics
+print("Accuracy = ", accuracy_score(y_ts, pred_c))
+print("MCC = ", matthews_corrcoef(y_ts, pred_c))
+print("Kappa = ", cohen_kappa_score(y_ts, pred_c))
+```
+
+
+# Classify unknown molecules as antifungic or not
+
+## With Random Forest
+
+```{python}
+x2pred = scale.transform(x2pred)
+pred_unknown_rf = rf.predict(x2pred)
+pred_unknown_rf
+```
+
+```{python}
+pred_unknown_rf_prob = rf.predict_proba(x2pred)
+pred_unknown_rf_prob 
+```
+
+
+```{bash}
+# Associate prediction with molecule CID
+grep -A1 "> <PUBCHEM_COMPOUND_CID>" mols2predict.sdf
+```
+
+
+```{python}
+## Domaine d'applicability
+da2pred_rf = np.amax(pred_unknown_rf_prob, axis = 1) > threshold
+
+da2pred_rf
+```
+
+
+```{python}
+molname = ["Amphotericin b", "2,4-Di-tert-butylphenol", "17-Methyloctadecanoic acid", "squalene", "4-tert-Butylcalix[4]arene"]
+dict(zip(molname,da2pred_rf.tolist()))
+
+print("With Probabilities:")
+pred_unknown_rf_prob.tolist() 
+```
+
+* which are : Amphotericin b; 2,4-Di-tert-butylphenol; 17-Methyloctadecanoic acid; squalene; 4-tert-Butylcalix[4]arene
+
+
+
+
+## With XGB
+
+```{python}
+#x2pred = scale.transform(x2pred)
+pred_unknown_gbm = gbm.predict(x2pred)
+pred_unknown_gbm
+```
+
+```{python}
+pred_unknown_gbm_prob = gbm.predict_proba(x2pred)
+pred_unknown_gbm_prob 
+```
+
+
+```{bash}
+# Associate prediction with molecule CID
+grep -A1 "> <PUBCHEM_COMPOUND_CID>" mols2predict.sdf
+```
+
+
+```{python}
+da2pred_gbm = np.amax(pred_unknown_gbm_prob, axis = 1) > threshold
+
+da2pred_gbm
+```
+
+
+```{python}
+molname = ["Amphotericin b", "2,4-Di-tert-butylphenol", "17-Methyloctadecanoic acid", "squalene", "4-tert-Butylcalix[4]arene"]
+dict(zip(molname,da2pred_gbm.tolist()))
+
+print("With Probabilities:")
+pred_unknown_gbm_prob.tolist() 
+```
+
+* which are : Amphotericin b; 2,4-Di-tert-butylphenol; 17-Methyloctadecanoic acid; squalene; 4-tert-Butylcalix[4]arene
+```{r}
+#library(devtools)
+#install_github("pauca/rrdkit/rrdkit")
+#install.packages("RCDK")
+```
+

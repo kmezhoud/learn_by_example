@@ -1,0 +1,163 @@
+2022
+  -OEChem-07121917233D
+
+ 27 28  0     0  0  0  0  0  0999 V2000
+    2.5840    0.3522    0.0637 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.7999    0.9358   -0.9813 O   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2188   -1.4320   -1.3409 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4335    0.9970    0.6027 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6945   -1.1578    0.5860 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2428    2.2145   -0.2604 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.9368   -1.0947   -0.2715 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.9471   -3.0975    0.4806 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6018    0.1571    0.3712 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7296    0.6821    1.1503 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.6158    0.9044   -0.1528 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0043    2.2397    0.2026 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8759    0.2839   -0.5102 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.9089   -1.7472    0.2401 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8997    0.0529    0.5095 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.7623   -0.2903   -0.6896 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1002    1.5632    1.6855 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6282   -0.1595    1.8433 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6218    3.1189    0.2712 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0582   -1.7177    0.9727 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3205    0.9164    1.0361 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8558   -0.8035    1.1923 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.7866   -0.5200   -0.3834 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.7811    0.5309   -1.4130 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1514   -3.5877    0.8742 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.7753   -3.6443    0.2717 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.3044   -1.2166   -1.5928 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1 10  1  0  0  0  0
+  1 15  1  0  0  0  0
+  2 13  2  0  0  0  0
+  3 16  1  0  0  0  0
+  3 27  1  0  0  0  0
+  4  9  1  0  0  0  0
+  4 10  1  0  0  0  0
+  4 12  1  0  0  0  0
+  5  9  1  0  0  0  0
+  5 14  1  0  0  0  0
+  5 20  1  0  0  0  0
+  6 11  1  0  0  0  0
+  6 12  2  0  0  0  0
+  7 13  1  0  0  0  0
+  7 14  2  0  0  0  0
+  8 14  1  0  0  0  0
+  8 25  1  0  0  0  0
+  8 26  1  0  0  0  0
+  9 11  2  0  0  0  0
+ 10 17  1  0  0  0  0
+ 10 18  1  0  0  0  0
+ 11 13  1  0  0  0  0
+ 12 19  1  0  0  0  0
+ 15 16  1  0  0  0  0
+ 15 21  1  0  0  0  0
+ 15 22  1  0  0  0  0
+ 16 23  1  0  0  0  0
+ 16 24  1  0  0  0  0
+M  END
+> <DATABASE_ID>
+DB00787
+
+> <DATABASE_NAME>
+drugbank
+
+> <ORIGINAL_SOURCE>
+PUBCHEM
+
+> <ORIGINAL_SOURCE_URL>
+https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/MKUXAQIIEYXACX-UHFFFAOYSA-N/SDF?record_type=3d
+
+> <SMILES>
+NC1=NC(=O)C2=C(N1)N(COCCO)C=N2
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C8H11N5O3/c9-8-11-6-5(7(15)12-8)10-3-13(6)4-16-2-1-14/h3,14H,1-2,4H2,(H3,9,11,12,15)
+
+> <INCHI_KEY>
+MKUXAQIIEYXACX-UHFFFAOYSA-N
+
+> <FORMULA>
+C8H11N5O3
+
+> <MOLECULAR_WEIGHT>
+225.2046
+
+> <EXACT_MASS>
+225.086189243
+
+> <JCHEM_ACCEPTOR_COUNT>
+7
+
+> <JCHEM_ATOM_COUNT>
+27
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+21.507933725133036
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+3
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+2-amino-9-[(2-hydroxyethoxy)methyl]-6,9-dihydro-3H-purin-6-one
+
+> <ALOGPS_LOGP>
+-0.95
+
+> <JCHEM_LOGP>
+-1.0319567660000002
+
+> <ALOGPS_LOGS>
+-1.39
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+2
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+0
+
+> <JCHEM_PKA>
+15.117578228426233
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+11.984859791921778
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+3.0163894181545694
+
+> <JCHEM_POLAR_SURFACE_AREA>
+114.75999999999999
+
+> <JCHEM_REFRACTIVITY>
+54.6334
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+4
+
+> <JCHEM_RULE_OF_FIVE>
+1
+
+> <ALOGPS_SOLUBILITY>
+9.08e+00 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+aciclovir
+
+> <JCHEM_VEBER_RULE>
+0
+
+$$$$

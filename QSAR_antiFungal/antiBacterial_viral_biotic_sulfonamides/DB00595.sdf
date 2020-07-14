@@ -1,0 +1,199 @@
+
+  Mrv1718012301821502D          
+
+ 35 38  0  0  0  0            999 V2000
+    0.6948   -0.1983    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.7048    0.6038    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+   -0.0398   -0.6034    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+    1.4168   -0.6403    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -0.0005    1.0216    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4548    1.0458    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7048    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7495   -0.1971    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -0.0398   -1.4283    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1632   -0.2198    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4168   -1.4652    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7425    0.6279    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0005    1.8465    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1697    0.5922    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4548    1.8708    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4708   -0.6022    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+    2.8790   -0.6324    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1245   -1.8729    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6967   -1.8783    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4412    1.0533    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8856    1.0048    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1746   -0.1843    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1066   -1.1256    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1746    0.6407    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4412    1.8783    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.6053    0.5878    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8856    1.8250    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8910   -0.5852    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8594    1.0533    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.6053   -0.1740    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.6053    0.6523    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8594    1.8782    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6948   -1.0228    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7495   -1.0221    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2603   -1.3979    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  0  0  0  0
+  2  5  1  0  0  0  0
+  2  6  1  0  0  0  0
+  2  7  1  1  0  0  0
+  3  8  1  0  0  0  0
+  3  9  1  1  0  0  0
+  4 10  1  0  0  0  0
+  4 11  1  1  0  0  0
+  5 12  2  0  0  0  0
+  5 13  1  0  0  0  0
+  6 14  1  0  0  0  0
+  6 15  2  0  0  0  0
+  8 16  1  0  0  0  0
+ 10 17  1  0  0  0  0
+ 11 18  1  0  0  0  0
+ 11 19  1  0  0  0  0
+ 12 20  1  0  0  0  0
+ 14 21  1  0  0  0  0
+ 16 22  1  0  0  0  0
+ 16 23  1  1  0  0  0
+ 20 24  1  0  0  0  0
+ 20 25  2  0  0  0  0
+ 21 26  1  0  0  0  0
+ 21 27  2  0  0  0  0
+ 22 28  1  0  0  0  0
+ 24 29  1  0  0  0  0
+ 28 30  2  0  0  0  0
+ 29 31  2  0  0  0  0
+ 29 32  1  0  0  0  0
+  8 12  1  0  0  0  0
+ 10 14  2  0  0  0  0
+ 22 24  2  0  0  0  0
+ 30 31  1  0  0  0  0
+  1 33  1  1  0  0  0
+  8 34  1  1  0  0  0
+ 16 35  1  0  0  0  0
+M  END
+> <DATABASE_ID>
+DB00595
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+[H][C@@]12[C@@H](O)[C@@]3([H])C(C(=O)C4=C(C=CC=C4O)[C@@]3(C)O)=C(O)[C@]1(O)C(=O)C(C(N)=O)=C(O)[C@H]2N(C)C
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C22H24N2O9/c1-21(32)7-5-4-6-8(25)9(7)15(26)10-12(21)17(28)13-14(24(2)3)16(27)11(20(23)31)19(30)22(13,33)18(10)29/h4-6,12-14,17,25,27-29,32-33H,1-3H3,(H2,23,31)/t12-,13-,14+,17+,21-,22+/m1/s1
+
+> <INCHI_KEY>
+IWVCMVBTMGNXQD-PXOLEDIWSA-N
+
+> <FORMULA>
+C22H24N2O9
+
+> <MOLECULAR_WEIGHT>
+460.434
+
+> <EXACT_MASS>
+460.148180376
+
+> <JCHEM_ACCEPTOR_COUNT>
+10
+
+> <JCHEM_ATOM_COUNT>
+57
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+43.218888299800234
+
+> <JCHEM_BIOAVAILABILITY>
+0
+
+> <JCHEM_DONOR_COUNT>
+7
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+(4S,4aR,5S,5aR,6S,12aS)-4-(dimethylamino)-3,5,6,10,12,12a-hexahydroxy-6-methyl-1,11-dioxo-1,4,4a,5,5a,6,11,12a-octahydrotetracene-2-carboxamide
+
+> <ALOGPS_LOGP>
+-0.99
+
+> <JCHEM_LOGP>
+-4.5013489734732826
+
+> <ALOGPS_LOGS>
+-2.52
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+4
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+0
+
+> <JCHEM_PKA>
+7.957388085273197
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+2.842774671640649
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+7.413124695057921
+
+> <JCHEM_POLAR_SURFACE_AREA>
+201.85
+
+> <JCHEM_REFRACTIVITY>
+115.39819999999997
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+2
+
+> <JCHEM_RULE_OF_FIVE>
+0
+
+> <ALOGPS_SOLUBILITY>
+1.40e+00 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+oxytetracycline
+
+> <JCHEM_VEBER_RULE>
+0
+
+> <DRUGBANK_ID>
+DB00595
+
+> <SECONDARY_ACCESSION_NUMBERS>
+APRD00019
+
+> <DRUG_GROUPS>
+approved; investigational; vet_approved
+
+> <GENERIC_NAME>
+Oxytetracycline
+
+> <SYNONYMS>
+5-Hydroxytetracycline; Embryostat; Hydroxytetracyclinum; Mepatar; Ossitetraciclina; Oxitetraciclina; Oxyterracin; Oxyterracine; Oxytetracyclin; Oxytétracycline; Oxytetracycline; Oxytetracycline (anhydrous); Oxytetracycline amphoteric; Oxytetracyclinum
+
+> <PRODUCTS>
+Terra-Cortril; Terramycin; Urobiotic
+
+> <INTERNATIONAL_BRANDS>
+Adamycin; Anglocycline; Corsamycin; Oxacin; Oxypan; Oxyterracyna; Terrados; Tetran; Tetrasona
+
+> <SALTS>
+Oxytetracycline calcium; Oxytetracycline dihydrate; Oxytetracycline hydrochloride; Oxytetracycline monocalcium
+
+$$$$

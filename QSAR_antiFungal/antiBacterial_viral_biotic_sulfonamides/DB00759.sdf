@@ -1,0 +1,194 @@
+
+  Mrv0541 02231214592D          
+
+ 34 37  0  0  1  0            999 V2000
+   -1.4289   -0.3397    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4289    0.4853    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4289   -0.3397    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    1.4289    0.4853    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+    0.7145   -0.7522    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    0.8978    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -0.3397    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.0000    0.4853    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145    0.8978    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -0.7522    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+    2.1434   -0.7522    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    2.1434    0.8978    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4289    1.3103    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8579   -0.3397    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1434   -1.5772    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7145    1.7228    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8579    0.4853    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1434    1.7228    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5724   -0.7522    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8579   -1.9897    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4289   -1.9897    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5724    0.8978    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145    1.7228    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2868    0.4853    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5724    1.7228    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1434   -0.7522    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1434    0.8978    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8579   -0.3397    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8579    0.4853    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1434    1.7228    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4289   -1.1647    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000   -1.1647    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4289   -1.1647    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7145   -1.5772    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1 26  2  0  0  0  0
+  1  2  1  0  0  0  0
+  2 27  2  0  0  0  0
+  3 11  1  0  0  0  0
+  3 31  1  1  0  0  0
+  3  4  1  0  0  0  0
+  4 12  1  0  0  0  0
+  4 13  1  1  0  0  0
+  3  5  1  0  0  0  0
+  4  6  1  0  0  0  0
+  6 16  1  0  0  0  0
+  5  7  1  0  0  0  0
+  7 32  1  1  0  0  0
+  7  8  1  0  0  0  0
+  6  8  2  0  0  0  0
+  8  9  1  0  0  0  0
+  9  2  1  0  0  0  0
+  9 23  2  0  0  0  0
+  7 10  1  0  0  0  0
+ 10  1  1  0  0  0  0
+ 10 34  1  1  0  0  0
+ 10 33  1  0  0  0  0
+ 11 14  1  0  0  0  0
+ 11 15  1  1  0  0  0
+ 12 17  1  0  0  0  0
+ 12 18  2  0  0  0  0
+ 14 19  1  0  0  0  0
+ 14 17  2  0  0  0  0
+ 15 20  1  0  0  0  0
+ 15 21  1  0  0  0  0
+ 17 22  1  0  0  0  0
+ 22 24  1  0  0  0  0
+ 22 25  2  0  0  0  0
+ 26 28  1  0  0  0  0
+ 27 29  1  0  0  0  0
+ 27 30  1  0  0  0  0
+ 28 29  2  0  0  0  0
+M  END
+> <DATABASE_ID>
+DB00759
+
+> <DATABASE_NAME>
+drugbank
+
+> <SMILES>
+[H][C@@]12C[C@@]3([H])C(=C(O)[C@]1(O)C(=O)C(C(N)=O)=C(O)[C@H]2N(C)C)C(=O)C1=C(O)C=CC=C1[C@@]3(C)O
+
+> <INCHI_IDENTIFIER>
+InChI=1S/C22H24N2O8/c1-21(31)8-5-4-6-11(25)12(8)16(26)13-9(21)7-10-15(24(2)3)17(27)14(20(23)30)19(29)22(10,32)18(13)28/h4-6,9-10,15,25,27-28,31-32H,7H2,1-3H3,(H2,23,30)/t9-,10-,15-,21+,22-/m0/s1
+
+> <INCHI_KEY>
+OFVLGDICTFRJMM-WESIUVDSSA-N
+
+> <FORMULA>
+C22H24N2O8
+
+> <MOLECULAR_WEIGHT>
+444.4346
+
+> <EXACT_MASS>
+444.153265754
+
+> <JCHEM_ACCEPTOR_COUNT>
+9
+
+> <JCHEM_AVERAGE_POLARIZABILITY>
+43.0269057235486
+
+> <JCHEM_BIOAVAILABILITY>
+1
+
+> <JCHEM_DONOR_COUNT>
+6
+
+> <JCHEM_FORMAL_CHARGE>
+0
+
+> <JCHEM_GHOSE_FILTER>
+0
+
+> <JCHEM_IUPAC>
+(4S,4aS,5aS,6S,12aS)-4-(dimethylamino)-3,6,10,12,12a-pentahydroxy-6-methyl-1,11-dioxo-1,4,4a,5,5a,6,11,12a-octahydrotetracene-2-carboxamide
+
+> <ALOGPS_LOGP>
+-0.56
+
+> <JCHEM_LOGP>
+-3.5476153931003833
+
+> <ALOGPS_LOGS>
+-2.52
+
+> <JCHEM_MDDR_LIKE_RULE>
+0
+
+> <JCHEM_NUMBER_OF_RINGS>
+4
+
+> <JCHEM_PHYSIOLOGICAL_CHARGE>
+-1
+
+> <JCHEM_PKA>
+4.670540135524194
+
+> <JCHEM_PKA_STRONGEST_ACIDIC>
+-2.2437223466266376
+
+> <JCHEM_PKA_STRONGEST_BASIC>
+8.243558682468391
+
+> <JCHEM_POLAR_SURFACE_AREA>
+181.61999999999998
+
+> <JCHEM_REFRACTIVITY>
+114.1883
+
+> <JCHEM_ROTATABLE_BOND_COUNT>
+2
+
+> <JCHEM_RULE_OF_FIVE>
+0
+
+> <ALOGPS_SOLUBILITY>
+1.33e+00 g/l
+
+> <JCHEM_TRADITIONAL_IUPAC>
+tetracycline
+
+> <JCHEM_VEBER_RULE>
+0
+
+> <DRUGBANK_ID>
+DB00759
+
+> <SECONDARY_ACCESSION_NUMBERS>
+APRD00572
+
+> <DRUG_GROUPS>
+approved; vet_approved
+
+> <GENERIC_NAME>
+Tetracycline
+
+> <SYNONYMS>
+(4S,4aS,5aS,12aS)-4-(Dimethylamino)-1,4,4a,5,5a,6,11,12a-octahydro-3,6,10,12,12a-pentahydroxy-6-methyl-1,11-dioxo-2-naphthacenecarboxamide; Abramycin; Anhydrotetracycline; Deschlorobiomycin; Tetracyclin; Tétracycline; Tetracycline; Tetracyclinum; Tetrazyklin; Tsiklomitsin
+
+> <PRODUCTS>
+Achromycin Ont Oph 1%; Achromycin V; Achromycin V Cap 250mg; Acnecycline; Actisite; Apo Tetra Tabs 250mg; Bismuth Subsalicylate/Metronidazole/Tetracycline Hydrochloride; Dermacline; Diabecline; Dyabetex; FIRST Marys Mouthwash Compounding; HELIDAC Therapy; Jaa Tetra Tab 250mg; Medicycline Cap 250mg; Novo-tetra 250mg; Novo-tetra Sus 125mg/5ml; Nu-tetra Capsules 250mg; Pylera; Sumycin; Tetra-abc; TetraNext; TetraStem; Tetracycline; Tetracycline 1% Onguent Ophthalmic; Tetracycline 3 percent a First Aid Antibiotic; Tetracycline Cap 250mg; Tetracycline Hydrochloride; Tetracycline-ABC; Tetracyn Cap 250mg; Viabecline; Viabecline First Aid Antibiotic; Vitastem; Vitastem-tetracycline hydrochloride
+
+> <INTERNATIONAL_BRANDS>
+Achromycin; Liquamycin
+
+> <SALTS>
+Tetracycline hydrochloride; Tetracycline phosphate
+
+$$$$

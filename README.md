@@ -118,3 +118,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html" target = "_blank">
 <img src="images/Flood_in_Malawi.png" align="left" height="150" width="250" title="Flood Prediction in Malawi - Cumul Pluviometry, Altitude , xgboost regression">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/QSAR_antiFungal/qsar_antifungal.html" target = "_blank">
+<img src="images/QSAR.jpg" align="left" height="150" width="250" title="FQSAR Antifungal quantification (Binary and Regression Classification, RF and XGB)">
+</a>
