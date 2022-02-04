@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Us</title>
+<meta name="description" content="">
+<meta name="author" content="">
+
+<!-- Favicons
+    ================================================== -->
+
+<link href="{{ url_for('static',filename = 'style.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static',filename = 'bootstrap.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static',filename = 'bootstrap.min.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static',filename = 'default.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static',filename = 'nivo-lightbox.css') }}" rel="stylesheet" type="text/css">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css"  href="css/bootstrap.css">
+<link rel="stylesheet" type="text/css" href="fonts/font-awesome/css/font-awesome.css">
+
+<!-- Stylesheet
+    ================================================== --><!--
+<link rel="stylesheet" type="text/css"  href="css/style.css">
+<link rel="stylesheet" type="text/css" href="css/nivo-lightbox/nivo-lightbox.css">
+<link rel="stylesheet" type="text/css" href="css/nivo-lightbox/default.css"> -->
+<link href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Dancing+Script:400,700" rel="stylesheet">
+  
+      <style>
+        .card {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.6);
+    transition: 0.3s;
+    width: 40%;
+    border-radius: 5px;
+            
+            
+}
+.card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+      
+img {
+    border-radius: 5px 5px 0 0;
+}
+.container {
+    padding: 20px 16px;
+}
+        .right {
+    float: right;
+    width: 300px;
+            background-color:azure;
+    border: 4px solid #73AD21;
+    padding: 6px;
+}
+               
+    </style>
+
+</head>
+
+
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+<script src="{{ url_for('static',filename = 'validate.js') }}"></script>
+<!-- Navigation
+    ==========================================-->
+<nav id="menu" class="navbar navbar-default navbar-fixed-top">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+      <a class="navbar-brand page-scroll" href="#page-top">Dig In!</a> </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="/index" class="page-scroll">Home</a></li>
+        <li><a href="/register" class="page-scroll">User Register</a></li>
+        <li><a href="/login" class="page-scroll">User Login</a></li>
+       <li><a href="/restlogin" class="page-scroll">Restaurant Login</a></li>
+        <li><a href="/adminlogin" class="page-scroll">Admin Login</a></li>
+        <li><a href="/about" class="page-scroll">About us</a></li>
+      </ul>
+    </div>
+    <!-- /.navbar-collapse -->
+  </div>
+</nav>
+<!-- Header -->
+<header id="header">
+  <div class="intro qwerty" style="background-image:url({{url_for('static',filename='intro-bg.jpg')}});">
+    <div class="overlay">
+      <div class="container">
+        <div class="row">
+          <div class="intro-text">
+        <!-- <div class="spacing"> -->
+          <h2 style="font-family: Lucida Console; color:white;">FUNCTIONALITY</h2>
+        <p style="color: white" ><h4 style="color: white"> <br>
+    Through this website, users can register and subsequently login to place orders from nearby restaurants. Restaurant manager can get their restaurants registered on the website. After approval from the admin, the restaurant will be added to the list of nearby restaurants and will be visible to the users. The restaurant manager can edit their restuarant's menu (change price, add/delete items ) at any time. Restaurants can also accept/reject orders. </h4> </p>
+
+        </br>
+        </br>
+        </br>
+           <!-- <h3 style="color: pink">OUR TEAM</h3> -->
+           <!-- <h6>Please visit again..!</h6> -->
+        <p  style="color: orange"> OUR TEAM </p>
+        <h4 style="color: pink">We have a team of 4 members based in Hyderabad.</h4>
+<div class="row">
+      <div class="portfolio-items">
+        <div class="col-sm-6 col-md-4 col-lg-3 breakfast">
+          <div class="portfolio-item">
+            <div class="hover-bg"> 
+              <div class="hover-text">
+              
+              </div>
+              <img src="static/a.jpeg" class="img-responsive" alt="Project Title"> </a> </div>
+              <h2 style="color: white">Anjul </h2>
+          </div>
+        </div>
+
+        <div class="row">
+      <div class="portfolio-items">
+        <div class="col-sm-6 col-md-4 col-lg-3 breakfast">
+          <div class="portfolio-item">
+            <div class="hover-bg"> 
+              <div class="hover-text">
+              
+              </div>
+              <img src="static/k.jpeg" height="300" width="300" class="img-responsive" alt="Project Title"> </a> </div>
+              <h2 style="color: white">Kishan </h2>
+          </div>
+        </div>
+
+        <div class="row">
+      <div class="portfolio-items">
+        <div class="col-sm-6 col-md-4 col-lg-3 breakfast">
+          <div class="portfolio-item">
+            <div class="hover-bg"> 
+              <div class="hover-text">
+              
+              </div>
+              <img src="static/g.jpeg" class="img-responsive" alt="Project Title"> </a> </div>
+              <h2 style="color: white">Gaurav </h2>
+          </div>
+        </div>
+
+        <div class="row">
+      <div class="portfolio-items">
+        <div class="col-sm-6 col-md-4 col-lg-3 breakfast">
+          <div class="portfolio-item">
+            <div class="hover-bg"> 
+              <div class="hover-text">
+              
+              </div>
+              <img src="static/m.jpeg" height="300" width="300" class="img-responsive" alt="Project Title"> </a> </div>
+              <h2 style="color: white">Megha </h2>
+          </div>
+        </div>
+  
+</header>
+
+<!-- Contact Section -->
+
+<div id="footer">
+  <div class="container text-center">
+    <div class="col-md-4">
+      <h3>Office Address</h3>
+      <div class="contact-item">
+        <p>IIIT HYDERABAD </p>
+        <p> Professor CR Rao Rd </p>
+        <p> Gachibowli, Hyderabad  </p>
+         <p> Telangana 500032 </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h3>ISSUES </h3>
+      <div class="contact-item">
+    <p> If Forget Password, <br> Mail at keshu@admin.com </p>
+      <p> To register your Restaurant, <br>  keshu@admin.com </p>
+        <!-- <p> <a href="https://www.swiggy.com/privacy-policy" rel="nofollow">Partner Privacy Policy </a> </p> -->
+
+
+
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h3>Contact Info</h3>
+      <div class="contact-item">
+      <p> <a href="https://www.facebook.com/kishan.ssinghal" rel="nofollow">facebook </a> </p>
+        <p> <a href="https://twitter.com/Starlord_75" rel="nofollow">twitter </a> </p>
+        <p> Email : meghashree.ka@students.iiit.ac.in </p>
+        <p> Phone Number : +91 70575 33780 </p>
+
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid text-center copyrights">
+    <div class="col-md-8 col-md-offset-2">
+      <p> Copyright &copy; 2018 Dig In!. All rights reserved. Designed by <a href="https://www.facebook.com/anjulgupta1994" rel="nofollow">fsociety</a></p>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

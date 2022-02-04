@@ -1,0 +1,70 @@
+{% extends 'fpiweb/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+    {% if constraints.id %}
+        Edit Constraint
+    {% else %}
+        Add Constraint
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <h1 class="h1">
+                {% if constraints.id %}
+                    Edit Constraint
+                {% else %}
+                    Add Constraint
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <ul>
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form action="" method="post">
+        {% csrf_token %}
+        {% bootstrap_field form.constraint_name %}
+        {% bootstrap_field form.constraint_descr %}
+        {% bootstrap_field form.constraint_type %}
+        {% bootstrap_field form.constraint_min %}
+        {% bootstrap_field form.constraint_max %}
+        {% bootstrap_field form.constraint_list %}
+        <input type="submit" value="Submit"/>
+    </form>
+
+
+    <br/>
+    <a href="{% url 'fpiweb:constraints_view' %}">
+        Back to constraint list
+    </a>
+
+    <hr class="style-one">
+
+    <h6>
+        Template: constraint_edit.html
+    </h6>
+    <h6>
+        View: ConstraintCreateView and ConstraintUpdateView
+    </h6>
+    <h6>
+        Add URL: {% url 'fpiweb:constraint_new' %}
+    </h6>
+    <h6>
+         Save URL: {% url 'fpiweb:constraints_view' %}
+    </h6>
+    <h6>
+        Return URL: {% url 'fpiweb:constraints_view' %}
+    </h6>
+
+{% endblock %}

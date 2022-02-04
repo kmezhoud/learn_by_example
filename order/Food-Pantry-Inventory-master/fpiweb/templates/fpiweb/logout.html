@@ -1,0 +1,22 @@
+{% extends 'fpiweb/base.html' %}
+
+{# Purpose: Logout (deauthenticate) #}
+{# URL Name: fpiweb:logout #}
+{# URL response: Post #}
+{# Table: (none)) #}
+{# form: logout #}
+
+{% block title %}Logout{% endblock %}
+
+{% block content %}
+    <div>
+        <h3 class="'row text-center">
+            Now logged out.
+        </h3>
+    </div>
+    <div>
+        <a href="{% url 'fpiweb:login' %}">Go to login page.</a>
+    </div>
+
+{% endblock %}
+

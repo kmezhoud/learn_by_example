@@ -1,0 +1,50 @@
+{% extends 'fpiweb/base.html' %}
+
+{% block title %}
+    About Food Pantry Inventory
+{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>
+            About the Food Pantry Inventory System
+        </h1>
+    </div>
+    <br/>
+
+    <h2>{{ site_name }}</h2>
+
+    <br/>
+
+    <div class="text-center">
+        <strong>{{ site_address }}</strong>
+    </div>
+    <div class="text-center">
+        <strong>{{ site_csz }}</strong>
+    </div>
+    <div class="text-center">
+        <strong>{{ site_phone }}</strong>
+    </div>
+
+    <br/>
+
+    <div class="text-center">
+        <a href="{{ site_url }}">{{ site_url }}</a>
+    </div>
+
+    <br/>
+
+    <div class="text-center">
+        For more information about this system click
+        <a href="https://food-pantry-inventory.readthedocs.io/en/latest/">
+            here.
+        </a>
+    </div>
+
+    <hr/>
+
+    <div>
+        <a href="{% url 'fpiweb:index' %}">Return to main page.</a>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+[
+  {
+    "model": "fpiweb.pallet",
+    "pk": 2,
+    "fields": {
+      "name": "purple",
+      "location": null,
+      "pallet_status": "Fill"
+    }
+  }
+]
+
+
+
