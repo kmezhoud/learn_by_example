@@ -121,5 +121,10 @@
 
 
 <a href="https://kmezhoud.github.io/learn_by_example/QSAR_antiFungal/qsar_antifungal.html" target = "_blank">
-<img src="images/QSAR.jpg" align="left" height="150" width="250" title="FQSAR Antifungal quantification (Binary and Regression Classification, RF and XGB)">
+<img src="images/QSAR.jpg" align="left" height="150" width="250" title="QSAR Antifungal quantification (Binary and Regression Classification, RF and XGB)">
+</a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/biodiversity_performance/biodiversity_performance.html" target = "_blank">
+<img src="images/biodiversity.png" align="left" height="150" width="250" title="Biodiversity ShinyApp improvement: design, performance">
 </a>

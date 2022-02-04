@@ -1,0 +1,91 @@
+---
+title: "ShinyApp Improvement"
+subtitle: "Biodiversity: a Dashboard for kingdoms tracking using world Map"
+author: "Karim Mezhoud"
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    code_folding: show
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    theme: cosmo
+    toc: true
+  pdf_document:
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 14
+    highlight: tango
+    number_sections: yes
+    toc: true
+  urlcolor: blue
+---
+
+This document illustrate how we can improve ShinyApp  Styling, and recativities.
+
+During Assignment, I developped a shiny app to track encounter animals and plants species in the world.
+The app si R package named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
+
+While adding countries to the database, the app become slow, mainly during ploting the map. The bottleneck become bigger with there are more markers (encounters).
+
+# Profiling
+
+We will use `profvis`  package to screen when the code takes a lot of memory 
+
+
+```{r echo=FALSE}
+library(biodiversity)
+library(profvis)
+#profvis::profvis({biodiversity()})
+```
+
+![](data_tab.png){width=50%}![](flame_graph.png){width=50%}
+<!--<img src="data.png" width="400"/ align="left"> <img src="Flame_graph.png"  width="400"/ align="right">-->
+
+It is clear that the rendering leaflet map takes more time than the other process.
+
+# Catching
+
+User can select a country to focus on and search for species. 
+When the user wants to iterate the choice of the country, a popup appears and wait for input country. here we can catch previous plot and wait if the user reselect the same country, the app can use it.
+
+## bindCache() of renderleaflet()
+
+
+```{r eval = FALSE, echo=FALSE}
+vals <- reactiveValues(countries = NULL) 
+
+  ## Listening OK button
+  observeEvent(input$ok, {
+    if (!is.null(input$countries_id) && nzchar(input$countries_id)) {
+      vals$countries <- input$countries_id
+      removeModal()
+    } else {
+      showModal(popupModal(failed = TRUE))
+    }
+  })
+  
+  
+output$worldMap <- renderLeaflet({
+     ...
+      for (i in input$countries_id){
+      #Put each table in the list, one by one
+      table_list[[i]] <- tbl(con,i) %>% as_tibble()
+      
+      ...
+    }
+  
+}) %>% bindCache(vals$countries, cache = "session")
+```
+
+Adding `%>% bindCache(vals$countries, cache = "session")` the app save data loading, processig and renderplot if the user reselect the same country. In the other hand, we do not view progress bar for loading, preprocessing and ploting. It is a chaching at session level.
+
+We can generalize the cache at the application level and memorize the object for multiple user by setting `cache = "app"`.
+
+```{r}
+#profvis::profvis({biodiversity()})
+```
+
+

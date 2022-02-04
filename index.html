@@ -13,6 +13,7 @@
 
 <title>Exploratory Data Analysis</title>
 
+<script src="site_libs/header-attrs-2.5/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
@@ -22,8 +23,19 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -333,7 +345,8 @@ $(document).ready(function () {
 <li><a href="lung_cancer_survival_time/lung_cancer_survival_time.html">Lung Cancer Event (0,1) prediction</a></li>
 <li><a href="lung_cancer_survival_time/kmezhoud_LCST.html">Lung Cancer Survival Time (duration in days) prediction</a></li>
 <li><a href="Flood_prediction_Malawi/Flood_Prediction_Malawi.html">Flood Prediction in Malawi</a></li>
-<li><a href="QSAR_antiFungal/qsar_antifungal.html">QSAR Antifungal quantification (Binary and Regression Classification</a></li>
+<li><a href="QSAR_antiFungal/qsar_antifungal.html">QSAR Antifungal quantification (Binary and Regression Classification RF,XGB)</a></li>
+<li><a href="biodiversity_performance/biodiversity_performance.html">Performance and design Shiny App Improvement</a></li>
 </ul>
 
 
@@ -345,7 +358,7 @@ $(document).ready(function () {
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
