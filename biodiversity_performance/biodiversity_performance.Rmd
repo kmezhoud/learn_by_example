@@ -23,38 +23,152 @@ output:
   urlcolor: blue
 ---
 
-This document illustrate how we can improve ShinyApp  Styling, and recativities.
+This document illustrate how we can improve ShinyApp  Style, and performance.
+The  assignment consists of developing a shiny app  that tracks encounter animals and plants species in the world.
+The dataset comes from two csv large files (4G, 2.4G) which are can not open with an ordinary computer.
 
-During Assignment, I developped a shiny app to track encounter animals and plants species in the world.
-The app si R package named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
-
-While adding countries to the database, the app become slow, mainly during ploting the map. The bottleneck become bigger with there are more markers (encounters).
-
-# Profiling
-
-We will use `profvis`  package to screen when the code takes a lot of memory 
+To demonstrate how we can improve recativities and play around skilling shiny app, We will walk through survey sections and try to site concrete example.
 
 
-```{r echo=FALSE}
-library(biodiversity)
+```{r, message=FALSE}
+library(remotes)
+library(tictoc)
+library(RSQLite)
+library(tidyverse)
+library(geojson)
+library(geojsonio)
+library(data.table)
 library(profvis)
-#profvis::profvis({biodiversity()})
 ```
 
-![](data_tab.png){width=50%}![](flame_graph.png){width=50%}
+
+# Shiny Framework {.tabset .tabset-fade .tabset-pills}
+
+## Shiny: Building complete shiny apps (end to end)
+
+The app is a full R package that responds to CRAN/Bioconductor criteria. It is named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
+
+To install and run `biodiversity` shiny app, just run these code
+
+```{r, eval=FALSE}
+
+#install_github("kmezhoud/biodiversity")
+library(biodiversity)
+biodiversity::biodiversity()
+```
+
+![Screenshot of biodiversity](screenshot.png){width=50%}
+
+## Shiny Performance: Making Shiny apps fast(er) and scalable
+
+### Loading data
+As we said, the dataset is two csv files with about 6.5G. The first option to deal with this, is to convert the csv files to `sqlite` database for example.
+
+#### Use Database instead any files formats: csv, rds, ...
+
+![](database.png){width=50%}
+
+In reality, using DB instead csv file is not enought to scale the App to 1000s of users. It  is importante use Faster function, like here:
+
+#### Use Faster Function: `apply` family versus `looping`
+
+```{r}
+con <-  DBI::dbConnect(RSQLite::SQLite(), "../../../DATA/Concours/Appsilon/biodiversity/biodiversity/inst/biodiversity/extdata/biodiversity.db") 
+
+countries_list <- NULL
+tic(msg = "###  LOOPING PROCESS  ###")
+for (i in DBI::dbListTables(con)){
+    countries_list[[i]] <- tbl(con,i) %>% as_tibble() 
+  }
+toc()
+
+countries_list <- NULL
+tic(msg = "### LAPPLY PROCESS  ###")
+countries_list <- lapply(DBI::dbListTables(con), function(x) tbl(con,x) %>% as_tibble)
+toc()
+```
+
+In general it is better to use `apply` family function instead `looping`.
+
+#### Relief the package from extra data
+
+In our case, we need to load `geo.json` file map. Mainly, this kid of files have a metadata that can to become heavier. Here,  we compared to file with different metadata countain. The first one is heavy and  located at `/extdata` folder, and the other loaded directly from the url source. 
+
+```{r}
+##  Load Map SLOW  
+tic(msg = "###  From File  ###")
+countries_map <- geojson_read("../../../DATA/Concours/Appsilon/countries.geojson", what = "sp")
+toc()
+
+  ##  Load map FASTER
+tic(msg = "###  From link  ###")
+  countries_map <- geojson_read("https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json", what = "sp")
+  toc()
+  
+```
+Nice! In the next steps we will improve the map loading by `Caching`.
+
+
+### Pre-processing
+
+#### Filtering Manner at the top of processing
+
+We can compare multiple ways to filter our data. Here we tried three methods (`grepl`, `%in`, `str_detect`) and we will select the faster one.
+
+```{r}
+ set.seed(34)
+countries <-  c("Poland", "Switzerland")
+tic("####  USING grepl  ###")
+ biodiversity_data<- countries_list %>% 
+                     rbindlist() %>%
+                     filter(grepl(paste0(countries, collapse = "|"), country, ignore.case = TRUE))
+
+toc()
+
+tic("###  USING %in%  ###")
+biodiversity_data <- countries_list %>% 
+                     rbindlist() %>%
+                     filter( country %in% countries )
+
+toc()
+
+
+tic("###  USING str_detect  ###")
+
+biodiversity_data <- countries_list %>% 
+                     rbindlist() %>%
+                     filter( str_detect(country, countries))
+     
+toc()
+
+```
+
+
+### Profiling
+
+While adding countries to the database, the app become slow, mainly during ploting the map. The bottleneck become bigger when there are more circles markers (encounters) to plot on the map.
+
+We will use `profvis`  package to screen when the code takes a lot of memory.
+
+```{r}
+profvis::profvis({biodiversity::biodiversity()})
+```
+
+<!--![](data_tab.png){width=50%}![](flame_graph.png){width=50%}-->
 <!--<img src="data.png" width="400"/ align="left"> <img src="Flame_graph.png"  width="400"/ align="right">-->
 
 It is clear that the rendering leaflet map takes more time than the other process.
 
-# Catching
+### Catching repeated process during plotting
 
 User can select a country to focus on and search for species. 
-When the user wants to iterate the choice of the country, a popup appears and wait for input country. here we can catch previous plot and wait if the user reselect the same country, the app can use it.
+When the user wants to iterate the choice of the country, a popup appears and wait for input country. Here we can catch previous plot and wait if the user/users (session/application level) reselect the same country, then the app can return it without computing.
 
-## bindCache() of renderleaflet()
+#### `bindCache()` of `renderleaflet()`
 
+We just added ` %>% bindCache(vals$countries, cache = "session")` to the end of `renderleaflet()`.
 
-```{r eval = FALSE, echo=FALSE}
+```{r eval = FALSE}
 vals <- reactiveValues(countries = NULL) 
 
   ## Listening OK button
@@ -80,9 +194,216 @@ output$worldMap <- renderLeaflet({
 }) %>% bindCache(vals$countries, cache = "session")
 ```
 
-Adding `%>% bindCache(vals$countries, cache = "session")` the app save data loading, processig and renderplot if the user reselect the same country. In the other hand, we do not view progress bar for loading, preprocessing and ploting. It is a chaching at session level.
+**Note** 
 
-We can generalize the cache at the application level and memorize the object for multiple user by setting `cache = "app"`.
+Adding `%>% bindCache(vals$countries, cache = "session")` the app cache to the memory all processes of `renderleaflet()` for a specific `vals$countries`. If the user select a new `vals$countries`, le computing will be done, if not the app return saved cache. Concretely, we do not view progress bar for loading, preprocessing and ploting if the app was cached the `vals$countries`.
+
+We used a caching at **session level**. We can generalize the cache at the **application level** and memorize the object for multiple user by setting `%>% bindCache(vals$countries, cache = "app")`.
+
+```{r}
+library(biodiversityBindCache)
+biodiversityBindCache::biodiversityBindCache()
+```
+
+**Steps of this demo**: Query Poland, Poland, Switzerland, Switzerland, Poland.
+
+Only the first query on each country has computing steps.
+
+You can see the **Loading Map for ...** is done for Poland and Switzerland which is not necessary. In the next step, we will cache it by `memoise`.
+
+#### `Memoise` functions
+
+The same result can be obtained by using `memoise` function. Here we will generate a BAD function inside `renderLeaflet` just to see how it works.
+
+```{r, eval=FALSE}
+output$worldMap <- renderLeaflet({
+  
+  leaflet_fun <- function(countries_id){
+     ...
+      for (i in input$countries_id){
+      #Put each table in the list, one by one
+      table_list[[i]] <- tbl(con,i) %>% as_tibble()
+      
+      ...
+      }
+    
+  }
+
+## memorize at the session level
+m_leaflet_fun <- memoise::memoise(leaflet_fun, cache = session$cache)
+  
+}) 
+
+m_leaflet_fun(input$countries_id)
+```
+
+**Note**
+
+The argument used in memorize function is the input country (selected country). In this case, all processing will run only if a new country was selected by user. In the other hand, like in previous example `bindCache()`, each country will be proceed only the first time.
+
+
+```{r}
+library(biodiversityMemoise)
+biodiversityMemoise::biodiversityMemoise()
+```
+
+**Steps**: Query Poland, Poland, Switzerland, Switzerland, Poland.
+
+Only the first query on each country has computing steps.
+
+To  memoize the process at Application level we need to change the argument `cache`  by `, m_leaflet_fun <- memoise::memoise(leaflet_fun, cache = getShinyOption("cache"))`
+
+
+Reading geojson map takes a while to load. And, it is reloaded in each country which is not necessary. To memoize the map we can do this:
+
+```{r, eval=FALSE}
+    geojson_read_fun <- function(url){
+      
+      withProgress(message = 'Loading Map ...', value = 20, {
+        
+        ##  Load Map source : https://datahub.io/core/geo-countries#r
+        #countries_map <- geojson_read("extdata/countries.geojson", what = "sp")
+        ##  Load map Faster
+        geojson_read(url, what = "sp")
+  
+      })
+    }
+    
+    m_geojson_read_fun <- memoise::memoise(geojson_read_fun, cache = session$cache)
+    
+```
+
+```{r, eval=FALSE}
+
+  tic(paste0("Loading Map for ", countries_id))
+  countries_map <- m_geojson_read_fun("https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
+  toc()
+
+```
+
+**Note**
+
+If you an see in the last run of `biodiversityMemoise::biodiversityMemoise()`, the **Loading Map... ** was consumed time only the first query. The following query have elapsed time 0s. 
+
+### Asynchronous programming
+
+
+
+## Shiny Beautiful UI: Making Shiny apps (more) beautiful 
+
+Here an example of how we can play with `css` and `js` files to improve the beauty of Shiny App. Also we can add beauty documentation using `markdown` or `Rmarkdown`.
+
+```{r, eval = FALSE}
+
+shinyUI(fluidPage(theme = shinytheme("flatly"), title = "Biodiversity", #superhero, flatly
+                    
+                  # Add CSS files
+                  includeCSS(path = "www/AdminLTE.css"),
+                  includeCSS(path = "www/shinydashboard.css"),
+                  tags$head(includeCSS("www/styles.css")),
+                  ## Include Appsilon logo at the right of the navbarPage
+                  tags$head(tags$script(type="text/javascript", src = "logo.js" )),
+                  ## Include Biodirsity logo
+                  navbarPage(title=div(img(src="biodiversity.png", height = "50px", widht = "50px",
+                                           style = "position: relative; top: -14px; right: 1px;"),
+                                       "Biodiversity"),
+                             
+                             
+                             tabPanel("Globe",icon = icon('globe'),
+                                      div(class="outer",
+                                          tags$head(includeCSS("www/styles.css")),
+                                          
+                                          uiOutput('ui_frontPage')
+                                      )),
+                             
+                             navbarMenu("", icon = icon("question-circle"),
+                                        tabPanel("About",icon = icon("info"),
+                                                 withMathJax(includeMarkdown("extdata/help/about.md"))
+                                                 #includeHTML("README.html")
+                                        ),
+                                        tabPanel("Performance",icon = icon("creative-commons-sampling"),
+                                                 withMathJax(includeMarkdown("extdata/help/performance.md"))
+                                                 #includeHTML("README.html")
+                                        ),
+                                        tabPanel("Help",  icon = icon("question"),
+                                                 withMathJax(includeMarkdown("extdata/help/help.md"))), #uiOutput("help_ui")
+                                        tabPanel(tags$a(
+                                          "", href = "https://github.com/kmezhoud/biodiversity/issues", target = "_blank",
+                                          list(icon("github"), "Report issue")
+                                        )),
+                                        tabPanel(tags$a(
+                                          "", href = "https://github.com/kmezhoud/biodiversity", target = "_blank",
+                                          list(icon("globe"), "Resources")
+                                        ))
+                             )
+                   
+                                       
+                  )
+))
+
+
+````
+
+
+We can add a transparent layer with button, collapsable table and plotly. Like this piece of code to generate transparent panel with button over the Map:
+
+```{r, eval = FALSE}
+    column(width = 12,#style='height:200px',
+           div(class="outer",
+               tags$head(includeCSS("www/styles.css")),
+               leafletOutput("worldMap", height = "600px"),
+               absolutePanel(id = "panel_id", class = "panel panel-default",
+                             top = 300, left = 20, width = 45, fixed=FALSE,
+                             draggable = TRUE, height =  45 ,#"auto",
+                             # Make the absolutePanla collapsable
+                             #HTML('<button data-toggle="collapse" data-target="#popup_id">Country</button> '),
+                             #tags$div(id = 'popup_id',  class="collapse",#style='background-color:transparent; border-color: transparent',
+                             div(actionButton(inputId = "popup_id",label = "",
+                                               icon = icon("globe"),
+                                               style='background-color:transparent; border-color: transparent',),
+                                 style = "font-size:100%") 
+                             #)
+               ),
+               
+               
+           )
+    )
+```
+
+
+## Javascript for Shiny: Extending Shiny with advanced functionalities
+
+# Generic key skills {.tabset .tabset-fade .tabset-pills}
+
+## Software Testing: Delivering high quality solutions thanks to testing
+
+## Quick Prototyping: Quick prototyping in at least one technology 
+
+## Advanced Data Visualization 
+
+# Fullstack {.tabset .tabset-fade .tabset-pills}
+
+## Fullstack Javascript 
+
+## Fullstack Python 
+
+# Deployment {.tabset .tabset-fade .tabset-pills}
+
+## Shiny Infrastructure: Knowledge of infrastructure solutions for Shiny 
+
+## RStudio Products 
+
+## AWS infrastructure
+
+## Google Cloud infrastructure
+
+## Azure infrastructure
+
+# Machine Learning {.tabset .tabset-fade .tabset-pills}
+
+
+
+
 
 ```{r}
 #profvis::profvis({biodiversity()})
