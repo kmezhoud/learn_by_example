@@ -51,7 +51,7 @@ library(future)
 
 The Shiny App named `biodiversity` I that developed during assignment, is a full R package that responds to CRAN/Bioconductor criteria. It is named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
 
-To install and run `biodiversity` shiny app, just run these code
+To install and run `biodiversity` shiny app, just run these code, or try the [demo](https://kmezhoud.shinyapps.io/biodiversity/)
 
 ```{r, eval=FALSE}
 
@@ -60,7 +60,7 @@ library(biodiversity)
 biodiversity::biodiversity()
 ```
 
-![Screenshot of biodiversity](screenshot.png) : [(demo)](https://kmezhoud.shinyapps.io/biodiversity/)
+![Screenshot of biodiversity](screenshot.png)
 
 ## Shiny Performance: Making Shiny apps fast(er) and scalable
 
@@ -435,9 +435,9 @@ We can add a transparent layer with button, collapsable table and plotly. Like t
 
 ## Javascript for Shiny: Extending Shiny with advanced functionalities
 
-I can site a wrapper of zxing JS library to shinyApp. The goal is to read barcode using smartphone/laptop camera [link](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js). [demo](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/)
+I can site a wrapper of zxing JS library to shinyApp. The goal is to read barcode using smartphone/laptop camera [link](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js). 
 
-The demo shows a complex  DT table with multiple gadgets:
+The [demo](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/) shows a complex  DT table with multiple gadgets:
 
 1- SelectInput in each row
 
@@ -447,7 +447,7 @@ user can scroll serial number or scan barcode to match the serial number. Each b
 
 ![Scrolling Serial Number](Xzing1.png) ![Scan barcode: The app return serial number of the barcode](Xzing.png)
 
-Below the image, the gadget returns the serial number of scanned barcode. I added a sound signal **BIP** to inform the user that is OK. The returned serial number goes automatically to specific cell in the DT.
+Below the camera frame, the gadget returns the serial number of scanned barcode. I added a sound signal **BIP** to inform the user that is OK. The returned serial number goes automatically to specific cell in the DT.
 
 # Generic key skills
 
