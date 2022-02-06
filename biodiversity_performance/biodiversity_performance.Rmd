@@ -25,7 +25,7 @@ output:
 
 This document illustrate how we can improve ShinyApp  Style, and performance.
 The  assignment consists of developing a shiny app  that tracks encounter animals and plants species in the world.
-The dataset comes from two csv large files (4G, 2.4G) which are can not open with an ordinary computer.
+The dataset comes from two csv large files (4G, 2.4G) which can not open with an ordinary computer.
 
 To demonstrate how we can improve recativities and play around skilling shiny app, We will walk through survey sections and try to site concrete example.
 
@@ -39,14 +39,17 @@ library(geojson)
 library(geojsonio)
 library(data.table)
 library(profvis)
+library(DT)
+library(promises)
+library(future)
 ```
 
 
-# Shiny Framework {.tabset .tabset-fade .tabset-pills}
+# Shiny Framework
 
 ## Shiny: Building complete shiny apps (end to end)
 
-The app is a full R package that responds to CRAN/Bioconductor criteria. It is named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
+The Shiny App named `biodiversity` I that developed during assignment, is a full R package that responds to CRAN/Bioconductor criteria. It is named biodiversity. It uses a map with multiple layers. The species are marked with different color in the map. User can view/hide any kingdom, search any species using keywords and the app return matched species and focus on select one.
 
 To install and run `biodiversity` shiny app, just run these code
 
@@ -57,7 +60,7 @@ library(biodiversity)
 biodiversity::biodiversity()
 ```
 
-![Screenshot of biodiversity](screenshot.png){width=50%}
+![Screenshot of biodiversity](screenshot.png) : [(demo)](https://kmezhoud.shinyapps.io/biodiversity/)
 
 ## Shiny Performance: Making Shiny apps fast(er) and scalable
 
@@ -113,12 +116,12 @@ Nice! In the next steps we will improve the map loading by `Caching`.
 
 #### Filtering Manner at the top of processing
 
-We can compare multiple ways to filter our data. Here we tried three methods (`grepl`, `%in`, `str_detect`) and we will select the faster one.
+We can compare multiple ways to filter our data. Here we tried three methods (`grepl`, `%in%`, `str_detect`, `data.table`, and `DT`) and we will select the faster one.
 
 ```{r}
  set.seed(34)
 countries <-  c("Poland", "Switzerland")
-tic("####  USING grepl  ###")
+tic("###  USING grepl  ###")
  biodiversity_data<- countries_list %>% 
                      rbindlist() %>%
                      filter(grepl(paste0(countries, collapse = "|"), country, ignore.case = TRUE))
@@ -141,13 +144,32 @@ biodiversity_data <- countries_list %>%
      
 toc()
 
+
+tic("###  USING data.table  ###")
+
+biodiversity_data <- countries_list %>%
+                     rbindlist() %>% as.data.table()
+
+ biodiversity_data <-    biodiversity_data[country == paste0(countries, collapse ="|")]
+toc()
+
+tic("###  USING DT  ###")
+biodiversity_data <- countries_list %>%
+                     rbindlist() %>% as.data.table()
+
+ biodiversity_data <-  biodiversity_data[grepl(paste0(countries, collapse ="|"), country)]
+
+ toc()
 ```
 
 
 ### Profiling
 
-While adding countries to the database, the app become slow, mainly during ploting the map. The bottleneck become bigger when there are more circles markers (encounters) to plot on the map.
+While adding countries to the database, the app become slow, mainly during ploting the map. The bottleneck become bigger when there are more and more circles markers (encounters) to plot on the map. 
 
+**Note**
+
+In the case of `biodiversity` package, the loading inputs (Map and Tables), the Processing, and the building of the map with circles seems not to be the bottleneck. It should be the displaying process of the screen. We will process to analyse this hypothesis.
 We will use `profvis`  package to screen when the code takes a lot of memory.
 
 ```{r}
@@ -156,8 +178,9 @@ profvis::profvis({biodiversity::biodiversity()})
 
 <!--![](data_tab.png){width=50%}![](flame_graph.png){width=50%}-->
 <!--<img src="data.png" width="400"/ align="left"> <img src="Flame_graph.png"  width="400"/ align="right">-->
+The blue color in the profiling indicates that the `output$wotldMap` is the most heavy computing.
 
-It is clear that the rendering leaflet map takes more time than the other process.
+We will try to Analyze thoroughly using `tictoc`.
 
 ### Catching repeated process during plotting
 
@@ -196,7 +219,7 @@ output$worldMap <- renderLeaflet({
 
 **Note** 
 
-Adding `%>% bindCache(vals$countries, cache = "session")` the app cache to the memory all processes of `renderleaflet()` for a specific `vals$countries`. If the user select a new `vals$countries`, le computing will be done, if not the app return saved cache. Concretely, we do not view progress bar for loading, preprocessing and ploting if the app was cached the `vals$countries`.
+Adding `%>% bindCache(vals$countries, cache = "session")` to the `rendereaflet()`, we catche its all processes ran with a specific `vals$countries`. If the user select a new `vals$countries`, le computing will be done, if not the app returns catched object. Concretely, we do not view progress bar for loading data, preprocessing and ploting the map.
 
 We used a caching at **session level**. We can generalize the cache at the **application level** and memorize the object for multiple user by setting `%>% bindCache(vals$countries, cache = "app")`.
 
@@ -239,7 +262,7 @@ m_leaflet_fun(input$countries_id)
 
 **Note**
 
-The argument used in memorize function is the input country (selected country). In this case, all processing will run only if a new country was selected by user. In the other hand, like in previous example `bindCache()`, each country will be proceed only the first time.
+The argument used in memoise function is the input country (selected country). In this case, all processing will run only if a new country was selected by user. In the other hand, like in previous example `bindCache()`, each country will be proceed only the first time.
 
 
 ```{r}
@@ -251,31 +274,32 @@ biodiversityMemoise::biodiversityMemoise()
 
 Only the first query on each country has computing steps.
 
-To  memoize the process at Application level we need to change the argument `cache`  by `, m_leaflet_fun <- memoise::memoise(leaflet_fun, cache = getShinyOption("cache"))`
+To  memoize the process at Application level we need to change the argument `cache`  by `m_leaflet_fun <- memoise::memoise(leaflet_fun, cache = getShinyOption("cache"))`
 
 
 Reading geojson map takes a while to load. And, it is reloaded in each country which is not necessary. To memoize the map we can do this:
 
-```{r, eval=FALSE}
+```{r}
     geojson_read_fun <- function(url){
       
-      withProgress(message = 'Loading Map ...', value = 20, {
+      #withProgress(message = 'Loading Map ...', value = 20, {
         
         ##  Load Map source : https://datahub.io/core/geo-countries#r
         #countries_map <- geojson_read("extdata/countries.geojson", what = "sp")
         ##  Load map Faster
         geojson_read(url, what = "sp")
   
-      })
+      #})
     }
     
-    m_geojson_read_fun <- memoise::memoise(geojson_read_fun, cache = session$cache)
+    m_geojson_read_fun <- memoise::memoise(geojson_read_fun)
     
 ```
 
-```{r, eval=FALSE}
 
-  tic(paste0("Loading Map for ", countries_id))
+```{r}
+
+  tic(paste0("Loading Map for ", "Poland"))
   countries_map <- m_geojson_read_fun("https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
   toc()
 
@@ -283,9 +307,49 @@ Reading geojson map takes a while to load. And, it is reloaded in each country w
 
 **Note**
 
-If you an see in the last run of `biodiversityMemoise::biodiversityMemoise()`, the **Loading Map... ** was consumed time only the first query. The following query have elapsed time 0s. 
+Nice!  If you can see in the last run of `biodiversityMemoise::biodiversityMemoise()`, the **Loading Map... ** was consumed about 4.6~sec. The following query have elapsed time 0s. 
 
 ### Asynchronous programming
+
+Actually, I did not find a way to use `promises` and `future` to improve loading data or renderLeaflet. Since integrating `promises` to shiny is used generally within outputs, reactive expressions, and observers.
+
+In our case, `renderLeaflet` is an exception of shiny Outputs. it exepects a value like `renderText()` or `renderPlot()` but needs two data type to plot the map (geo.json) and to enrich it with biodiversity data.
+
+We can improve loading  data or map, but we can not use them as a `promise` class. It take a long time to convert them. like:
+
+```{r}
+  tic("NORMAl Loding the Map " )
+    #countries_map <- geojson_read("https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json",what = "sp")
+    countries_map <- geojson_read("../../../DATA/Concours/Appsilon/countries.geojson", what = "sp")
+  toc()
+  
+  tic("FUTURE Loading the Map " )
+  countries_map <- future({
+    #countries_map <- geojson_read("https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json",what = "sp")
+    geojson_read("../../../DATA/Concours/Appsilon/countries.geojson", what = "sp")
+  })
+  toc()
+  
+  tic("convert Map FUTURE using value()")
+  countries_map <- value(countries_map)
+  toc()
+  
+
+  tic("NORMAL Load data")
+  biodiversity_data <-   read_rds("../../../DATA/Concours/Appsilon/biodiversity-data/full_data_Poland_Switzerland_Germany_France_Spain_USA.rds")
+  toc()
+  
+  tic("FUTURE Load data")
+  biodiversity_data_fu <-future({
+    read_rds("../../../DATA/Concours/Appsilon/biodiversity-data/full_data_Poland_Switzerland_Germany_France_Spain_USA.rds")
+  })
+  toc()
+  
+  tic("Converting data FUTURE using Value()")
+  biodiversity_data <- value(biodiversity_data_fu)
+  print(paste0("Table dimension: ", dim(biodiversity_data)))
+  toc()
+```
 
 
 
@@ -303,7 +367,7 @@ shinyUI(fluidPage(theme = shinytheme("flatly"), title = "Biodiversity", #superhe
                   tags$head(includeCSS("www/styles.css")),
                   ## Include Appsilon logo at the right of the navbarPage
                   tags$head(tags$script(type="text/javascript", src = "logo.js" )),
-                  ## Include Biodirsity logo
+                  ## Include Biodiversity logo
                   navbarPage(title=div(img(src="biodiversity.png", height = "50px", widht = "50px",
                                            style = "position: relative; top: -14px; right: 1px;"),
                                        "Biodiversity"),
@@ -319,14 +383,12 @@ shinyUI(fluidPage(theme = shinytheme("flatly"), title = "Biodiversity", #superhe
                              navbarMenu("", icon = icon("question-circle"),
                                         tabPanel("About",icon = icon("info"),
                                                  withMathJax(includeMarkdown("extdata/help/about.md"))
-                                                 #includeHTML("README.html")
                                         ),
                                         tabPanel("Performance",icon = icon("creative-commons-sampling"),
                                                  withMathJax(includeMarkdown("extdata/help/performance.md"))
-                                                 #includeHTML("README.html")
                                         ),
                                         tabPanel("Help",  icon = icon("question"),
-                                                 withMathJax(includeMarkdown("extdata/help/help.md"))), #uiOutput("help_ui")
+                                                 withMathJax(includeMarkdown("extdata/help/help.md"))), 
                                         tabPanel(tags$a(
                                           "", href = "https://github.com/kmezhoud/biodiversity/issues", target = "_blank",
                                           list(icon("github"), "Report issue")
@@ -354,7 +416,7 @@ We can add a transparent layer with button, collapsable table and plotly. Like t
                leafletOutput("worldMap", height = "600px"),
                absolutePanel(id = "panel_id", class = "panel panel-default",
                              top = 300, left = 20, width = 45, fixed=FALSE,
-                             draggable = TRUE, height =  45 ,#"auto",
+                             draggable = TRUE, height =  45 ,
                              # Make the absolutePanla collapsable
                              #HTML('<button data-toggle="collapse" data-target="#popup_id">Country</button> '),
                              #tags$div(id = 'popup_id',  class="collapse",#style='background-color:transparent; border-color: transparent',
@@ -373,40 +435,172 @@ We can add a transparent layer with button, collapsable table and plotly. Like t
 
 ## Javascript for Shiny: Extending Shiny with advanced functionalities
 
-# Generic key skills {.tabset .tabset-fade .tabset-pills}
+I can site a wrapper of zxing JS library to shinyApp. The goal is to read barcode using smartphone/laptop camera [link](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js). [demo](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/)
+
+The demo shows a complex  DT table with multiple gadgets:
+
+1- SelectInput in each row
+
+2- buttons in each row to run barcode reader using camera.
+
+user can scroll serial number or scan barcode to match the serial number. Each button is recognize its row_id.
+
+![Scrolling Serial Number](Xzing1.png) ![Scan barcode: The app return serial number of the barcode](Xzing.png)
+
+Below the image, the gadget returns the serial number of scanned barcode. I added a sound signal **BIP** to inform the user that is OK. The returned serial number goes automatically to specific cell in the DT.
+
+# Generic key skills
 
 ## Software Testing: Delivering high quality solutions thanks to testing
 
+Mainly, shiny Apps that I developed are  a full R package with:
+
+1- build, test, check processes during development
+
+2- Functions documents 
+
+3- Vignette for user
+
+If the task is a part of a big project hosted in github:
+
+1- Clone the github:branch
+
+2- Make changes and features for the solution
+
+3- Build, Test, Check
+
+4- Pull request
+
 ## Quick Prototyping: Quick prototyping in at least one technology 
+
+I'm using my background and examples that I developed during previous years. 
+
+Also I can use useful packages like: `geolm`, `shinydashboard`, `shiny.sementic`, `shinymobile` to accelerate prototyping. 
 
 ## Advanced Data Visualization 
 
+A- Screenshots of 6 shiny Apps:  [Shiny Apps Screenshot.pdf](https://drive.google.com/file/d/1-f1mC24cR6ArQkmsXeHYw-aAj0pOrNVw/view?usp=sharing)
+
+B- Examples of EDA :
+
+  1- [Flood Prediction In Malawi](https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html)
+
+  2- [Restaurants reservation and costumers behaviours](https://kmezhoud.github.io/learn_by_example/RestaurantEDA/RestaurantEDA.html)
+  
+  3- [Sales Count Prediction per shops for the next month](https://kmezhoud.github.io/learn_by_example/predict-future-sales/predict_future_sales.html)
+
+  4- [Instacart Market Basket Analysis](https://kmezhoud.github.io/learn_by_example/instacart_market_basket_analysis/instacart_market_basket.html)
+
 # Fullstack {.tabset .tabset-fade .tabset-pills}
+
+## Fullstack Python 
+
+I used Spyder IDE to develop web app with python. I tried Django and Flash. But I am more comfortable with Rstudio and shiny.
+
+1- [Generate a python script that lists all the repeats equal or longer than 9 bases in double strand dna sequences](https://kmezhoud.github.io/Yubsis/Yubsis.html)
+
+2 - [Survival Lung Cancer Event prediction](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html)
+
+3- [Flood Prediction In Malawi](https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html)
+
+4- [Antifungal Activity prediction for new chemical compunds]( https://kmezhoud.github.io/learn_by_example/QSAR_antiFungal/qsar_antifungal.html)
+
+5- [Fraud transaction prediction](https://www.kaggle.com/kmezhoud/abnormal-transaction-detection)
 
 ## Fullstack Javascript 
 
-## Fullstack Python 
+I try to wrap JS library to shiny for better performance.
+
+Case study: 
+A wrapper of zxing JS library to shinyApp to read barcode using camera. [(github)](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js), [(demo)](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/)
+
 
 # Deployment {.tabset .tabset-fade .tabset-pills}
 
 ## Shiny Infrastructure: Knowledge of infrastructure solutions for Shiny 
 
+**Local infrastructure**
+
+The infrastructure of shiny app is like R package.  Maybe, to give support, please see the infrastructure of [shiny app package](https://github.com/kmezhoud/biodiversity) develeped during assignment step (private but appsilon-hiring is collaborator) . 
+
+**Deployment purpose:**
+
+1- When using shiny server (using local or cloud ubuntu server), the app can be installed as a package or deployed at `/srv/shiny-server/app_name`. 
+
+2- As a docker image: `docker run -d -p  3838:3838 kmezhoud/biodiversity:0.1`
+
+3- As a kubernetes image
+
+**Deployment setting:**
+
+1- nginx or traefik
+
+2- Port and redirection
+
+3- firewall, iptable, and email alert
+
+4- reverse proxy, and SSL domain certificate
+
+5- keyring sensitive code like: login detail, IP address, tables and column names of the database.
+
+I can site an example of shiny mobile app named [mobi100c](https://kmezhoud.shinyapps.io/mobi100c/). It is developed to make easy the ordering processes between customers, retailers, and Stores with central Azure database and different login profiles. (login:WASSIM, pwd:1)
+
+![](secu3.png)
+
 ## RStudio Products 
+
+I am familiar with RStudio and RStudio server. I can install and use Rstudio server at digitalOcean.
 
 ## AWS infrastructure
 
+I suppose like digialOcean.
+
 ## Google Cloud infrastructure
+
+I suppose like digialOcean.
 
 ## Azure infrastructure
 
-# Machine Learning {.tabset .tabset-fade .tabset-pills}
+I suppose like digialOcean.
+
+# Machine Learning
+
+
+1- [Flood Prediction In Malawi](https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html#xgboost-regression-with-python)
+
+2- [Biological Activities prediction of new chemical compound](https://kmezhoud.github.io/learn_by_example/QSAR_antiFungal/qsar_antifungal.html)
+
+3- [Dealing with unbalanced data in machine learning](https://kmezhoud.github.io/learn_by_example/unbalanced_multi_class/unbalanced_multiclass.html)
+
+4- [Survival Lung Cancer Event](https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html)
+
+5- [Instacart Market Basket Analysis - APRIORI algorithme](https://kmezhoud.github.io/learn_by_example/instacart_market_basket_analysis/instacart_market_basket.html)
+
+6- [Fraud transaction prediction](https://kmezhoud.github.io/learn_by_example/Fraud_detection/IEEE-CIS/IEEE-CIS.html)
 
 
 
+<a href="https://kmezhoud.github.io/learn_by_example/Flood_prediction_Malawi/Flood_Prediction_Malawi.html" target = "_blank">
+<img src="Flood_in_Malawi.png" align="left" height="150" width="250" title="Flood Prediction in Malawi - Cumul Pluviometry, Altitude , xgboost regression">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/QSAR_antiFungal/qsar_antifungal.html" target = "_blank">
+<img src="QSAR.jpg" align="left" height="150" width="250" title="Biological Activities prediction of new chemical compound (Binary and Regression Classification, RF and XGB)">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/unbalanced_multi_class/unbalanced_multiclass.html" target = "_blank">
+<img src="unbalanced_multiclass.png" align="left" height="150" width="250" title="Dealing with unbalanced data in machine learning">
+</a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/lung_cancer_survival_time/lung_cancer_survival_time.html" target = "_blank">
+<img src="lung_cancer_survival_time.png" align="left" height="150" width="250" title="Lung Cancer Survival Time (xgboost)">
+</a>
 
 
-```{r}
-#profvis::profvis({biodiversity()})
-```
+<a href="https://kmezhoud.github.io/learn_by_example/instacart_market_basket_analysis/instacart_market_basket.html" target = "_blank">
+<img src="instacart_market.png" align="left" height="150" width="250" title="Instacart Market Basket Analysis - APRIORI algorithme">
+</a>
 
-
+<a href="https://kmezhoud.github.io/learn_by_example/Fraud_detection/IEEE-CIS/IEEE-CIS.html" target = "_blank">
+<img src="IEEE_fraud_detection1.png" align="left" height="150" width="250" title="IEEE-CIS Fraud Detection">
+</a>
