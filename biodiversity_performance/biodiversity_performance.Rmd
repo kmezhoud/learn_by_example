@@ -404,7 +404,7 @@ shinyUI(fluidPage(theme = shinytheme("flatly"), title = "Biodiversity", #superhe
 ))
 
 
-````
+```
 
 
 We can add a transparent layer with button, collapsable table and plotly. Like this piece of code to generate transparent panel with button over the Map:
@@ -509,7 +509,7 @@ I used Spyder IDE to develop web app with python. I tried Django and Flash. But 
 
 ## Fullstack Javascript 
 
-I try to wrap JS library to shiny for better performance.
+I did not have the time to dive in javascript, since I can wrap a JS library to Shiny.
 
 Case study: 
 A wrapper of zxing JS library to shinyApp to read barcode using camera. [(github)](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js), [(demo)](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/)
