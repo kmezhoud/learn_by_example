@@ -515,7 +515,7 @@ Case study:
 A wrapper of zxing JS library to shinyApp to read barcode using camera. [(github)](https://github.com/kmezhoud/shinyQuaggaJS/tree/zxing-js), [(demo)](https://kmezhoud.shinyapps.io/shinyXZing/_w_8de908dc/)
 
 
-# Deployment {.tabset .tabset-fade .tabset-pills}
+# Deployment
 
 ## Shiny Infrastructure: Knowledge of infrastructure solutions for Shiny 
 
@@ -549,19 +549,111 @@ I can site an example of shiny mobile app named [mobi100c](https://kmezhoud.shin
 
 ## RStudio Products 
 
-I am familiar with RStudio and RStudio server. I can install and use Rstudio server at digitalOcean.
+I am familiar with digitalOcean and ubuntu server to deploy RStudio and Shiny server.
+Integrate automatic reporting using Rmarkdown, and run python code in R environment.
 
 ## AWS infrastructure
 
-I suppose like digialOcean.
+Depending on the following easy tutorial to host R Shiny on AWS, I think, it seems to be similar to DigitalOcean cloud computing services which I was installed and host R Shiny package. Today, the app is not working and need updates.
+
+[How to host an R Shiny App on AWS cloud in 7 simple steps](https://towardsdatascience.com/how-to-host-a-r-shiny-app-on-aws-cloud-in-7-simple-steps-5595e7885722)
+
+But in the following code, a glimpse of `mobi100c` deployement:
+
+```{bash, eval = FALSE}
+#add user with root privilege
+adduser kirus
+gpasswd -a kirus sudo
+su - kirus
+# install nginx
+sudo apt-get update
+sudo apt-get -y install nginx
+# Set virtual domain name
+# add source for most recent version of R  for ubuntu 18.04
+sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu bionic-cran40/" >> /etc/apt/sources.list'
+gpg --keyserver keyserver.ubuntu.com --recv-key E298A3A825C0D65DFD57CBB651716619E084DAB9
+gpg -a --export E298A3A825C0D65DFD57CBB651716619E084DAB9 | sudo apt-key add -
+# install R
+sudo apt-get update
+sudo apt-get -y install r-base
+# install useful packages
+sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
+sudo su - -c "R -e \"install.packages('promises', repos='http://cran.rstudio.com/')\""
+# install rstudio server
+sudo apt-get install gdebi-core
+wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.4.1106-amd64.deb
+sudo gdebi rstudio-server-1.4.1106-amd64.deb
+10.11.12.121:8787/
+
+# install shiny server
+sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('rmarkdown', repos='http://cran.rstudio.com/')\""
+wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.15.953-amd64.deb
+sudo gdebi shiny-server-1.5.15.953-amd64.deb
+http://10.11.12:3838/
+Sudo apt-get install synaptic
+#  Install an SSL Certificate with Let’s Encrypt
+sudo apt-get install git
+git clone https://github.com/letsencrypt/letsencrypt
+cd letsencrypt
+
+#Now before we install the certificate, we have to stop our web server (NGINX). In the code below, replace yourdomain.com #with your actual domain name that you registered for this site.
+
+$ sudo service nginx stop
+$ sudo ./letsencrypt-auto certonly –standalone -d yourdomain.com -d http://www.yourdomain.com
+
+#If all goes well, it should have installed your new certificates in the /etc/letsencrypt/live/yourdomain.com folder.
+
+# Configure the Reverse Proxy on NGINX
+$ sudo nano /etc/nginx/nginx.conf
+#And add the following lines near the bottom of the main http block,
+ just before the section labeled “Virtual Host Configs”. 
+
+
+# Setting Appropriate Permissions
+$ sudo groupadd shiny-apps
+$ sudo usermod -aG shiny-apps kirus
+$ sudo usermod -aG shiny-apps shiny
+$ cd /srv/shiny-server
+$ sudo chown -R kirus:shiny-apps .
+$ sudo chmod g+w .
+$ sudo chmod g+s .
+
+# set shiny-server.conf
+nano /etc/shiny-server/shiny-server.conf
+## Add the following section
+location /mobi100c {
+ app_dir /usr/local/lib/R/site-library/mobi100c/mobi100c;
+ log_dir /var/log/shiny-server;
+ directory_index on;
+ }
+
+```
+
 
 ## Google Cloud infrastructure
 
-I suppose like digialOcean.
+I thing the must difficule step is to build a docker image beofre to host it in GCS. I build a Docker image for shiny App developped during Assignment. You can run it.
+
+```{bash, eval= FALSE}
+docker run -d -p  3838:3838 kmezhoud/biodiversity:0.1
+```
+
+Here some references of how to do:
+
+1- [googleComputeEngineR](https://cloudyr.github.io/googleComputeEngineR/articles/shiny-app.html)
+
+2- [How to put a Shiny app into production](https://anderfernandez.com/en/blog/put-shiny-app-into-production/)
+
+3- [Dockerizing and Deploying a Shiny Dashboard on Google Cloud](https://towardsdatascience.com/dockerizing-and-deploying-a-shiny-dashboard-on-google-cloud-a990ceb3c33a)
+
+4- [DIY Attribution Dashboard Using R Shiny & Google Cloud Computing](https://www.empiricalpath.com/insights/article-attribution-dashboard/)
 
 ## Azure infrastructure
 
-I suppose like digialOcean.
+I think the straight way to host a Shiny application is to use a [docker](https://www.puresourcecode.com/programming-languages/r/deploying-dockerized-r-shiny-apps-on-microsoft-azure/) image.
+
+- [Build Scalable R Shiny Apps with Azure and Docker](https://joetorres531.medium.com/build-an-enterprise-ready-r-shiny-app-with-azure-and-docker-a87c73028d97)
 
 # Machine Learning
 
