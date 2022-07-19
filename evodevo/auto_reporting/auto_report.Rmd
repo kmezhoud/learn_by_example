@@ -76,7 +76,7 @@ data
 killer_stage <- 
 clinicalData %>%
  group_by(CLIN_T_STAGE, PATH_T_STAGE, OS_STATUS, DFS_STATUS) %>%
-  filter(OS_STATUS == 'DECEASED') %>%
+  filter(OS_STATUS == '1:DECEASED') %>%
   ungroup() %>%
   mutate(PATH_T_STAGE = as.factor(PATH_T_STAGE)) %>%
   count(PATH_T_STAGE) %>%
