@@ -34,3 +34,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Flood Prediction in Malawi](Flood_prediction_Malawi/Flood_Prediction_Malawi.html)
 - [QSAR Antifungal quantification (Binary and Regression Classification RF,XGB)](QSAR_antiFungal/qsar_antifungal.html)
 - [Performance and design Shiny App Improvement](biodiversity_performance/biodiversity_performance.html)
+- [Full Shiny App with Domain and HTTPS certificate](fullShinyDomain/fullShinyDomain.html)

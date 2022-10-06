@@ -128,3 +128,8 @@
 <a href="https://kmezhoud.github.io/learn_by_example/biodiversity_performance/biodiversity_performance.html" target = "_blank">
 <img src="images/biodiversity.png" align="left" height="150" width="250" title="Biodiversity ShinyApp improvement: design, performance">
 </a>
+
+
+<a href="https://kmezhoud.github.io/learn_by_example/fullShinyDomain/fullShinyDomain.html" target = "_blank">
+<img src="images/fullShinyDomain.png" align="left" height="150" width="250" title="Full Shiny App With Domain and HTTPS">
+</a>

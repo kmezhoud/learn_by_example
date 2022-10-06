@@ -1,0 +1,42 @@
+# sudo chmod 666 /var/run/docker.sock
+# build: docker build -f ./reverseproxy/Dockerfile -t reverseproxy .
+# run: docker-compose up --build -d
+version: '3.3'
+services:
+    reverseproxy:
+        image: kmezhoud/fullshinydomain:reverseproxy
+        container_name: reverseproxy
+        build:
+          context: ./reverseproxy
+          dockerfile: Dockerfile
+        ports:
+            - '80:80'
+            #- 443:443
+        restart: on-failure
+
+    shinyproxy:
+      image: kmezhoud/fullshinydomain:shinyproxy
+      container_name: shinyproxy
+      build:
+        context: ./shinyproxy
+        dockerfile: Dockerfile
+      ports:
+        - '8080:8080'
+      depends_on:
+        - reverseproxy
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        
+#    nginx:
+#        depends_on:
+##            - reverseproxy
+#        image: nginx:alpine
+#        container_name: nginx
+#        ports:
+#            - '90:80'
+#        restart: on-failure
+        
+networks:
+  default:
+    external:
+      name: sp-example-net

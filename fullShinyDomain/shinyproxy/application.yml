@@ -1,0 +1,53 @@
+server:
+  forward-headers-strategy: native
+  secure-cookies: true # usefull for callback url in SAML2 authentification
+proxy:
+  title: My Shiny App with free Domain
+  landing-page: /
+  heartbeat-rate: 10000
+  heartbeat-timeout: 600000
+  #bind-address: 127.0.0.1 ## disturbe the connect to shinyproxy
+  port: 8080
+  hide-navbar: false
+  template-path: ./template
+  container-log-path: /container-logs
+  authentication: saml # simple
+  same-site-cookie: None ## usefull to avoid callback url error
+  # users:
+  # - name: admin
+  #   password: admin
+  #   groups: admins
+  # - name: user1
+  #   password: user1
+  #   groups: entreprise1
+  # - name: user2
+  #   password: user2
+  #   groups: entreprise2
+  saml:
+    idp-metadata-url: https://dev-tpt1bng7.us.auth0.com/samlp/metadata/2f5KdpXxQcg15SBzDwCz1yWLE4bAaqDv
+    force-authn: true
+    app-entity-id: urn:dev-tpt1bng7.us.auth0.com
+    app-base-url: https://www.fullshinydomain.ml
+    name-attribute: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+    roles-attribute: http://schemas.auth0.com/shinyproxy_roles
+    logout-url: https://dev-tpt1bng7.us.auth0.com/v2/logout?client_id=2f5KdpXxQcg15SBzDwCz1yWLE4bAaqDv&returnTo=https://www.fullshinydomain.ml
+  docker:
+      #url: http://204.4821.56:8080  disturbe running the container of the app
+      internal-networking: true
+  specs:
+  - id: 01_hello
+    display-name: Hello Application
+    description: Application which demonstrates the basics of a Shiny app
+    container-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
+    container-image: openanalytics/shinyproxy-demo
+    access-groups: entreprise1
+    container-network: sp-example-net
+  - id: 06_tabsets
+    container-cmd: ["R", "-e", "shinyproxy::run_06_tabsets()"]
+    container-image: openanalytics/shinyproxy-demo
+    access-groups: entreprise2
+    container-network: sp-example-net
+
+logging:
+  file:
+    shinyproxy.log
