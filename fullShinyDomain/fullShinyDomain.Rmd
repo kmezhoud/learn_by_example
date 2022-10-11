@@ -1,5 +1,5 @@
 ---
-title: "Deploy a scalable Shiny App with a free and certfied domain, shinyproxy and multiple versions controled by logging, and Docker Compose"
+title: "Deploy a scalable Shiny App with a 'free (6$/Month)' and certified domain, shinyproxy and multiple versions controled by loging, and Docker Compose"
 author: "Karim Mezhoud"
 date: "`r Sys.Date()`"
 output:
@@ -28,7 +28,7 @@ output:
 </center>
 
 
-# Dockerize a shinyProxy with multiple Loggin/Shiny App
+# Dockerize a shinyProxy with multiple Login/Shiny App
 
 ## Setting docker with shinyproxy
 
@@ -156,7 +156,7 @@ docker run -d -v /var/run/docker.sock:/var/run/docker.sock --net sp-example-net 
 
 ### Auth0 web service Settings 
 
-For more secure loggin process, I will use [Auth0](https://auth0.com/) web service. ShinyProxy supports authentication and authorization using an IDP (Identity Provider) conforming to the [SAML 2.0](https://www.shinyproxy.io/documentation/configuration/#saml-20) specification.
+For more secure login process, I will use [Auth0](https://auth0.com/) web service. ShinyProxy supports authentication and authorization using an IDP (Identity Provider) conforming to the [SAML 2.0](https://www.shinyproxy.io/documentation/configuration/#saml-20) specification.
 
 First of all we need to signup to  [Auth0](https://auth0.com/).
 
@@ -165,7 +165,7 @@ First of all we need to signup to  [Auth0](https://auth0.com/).
 ![](img/createFullshinydomain.png)
 
 
-* Create a new data base to store users loggin specifications
+* Create a new data base to store users login specifications
 
 ![](img/createUserDB.png)
 
@@ -218,7 +218,7 @@ First of all we need to signup to  [Auth0](https://auth0.com/).
 
 ![](img/addConnectionParam.png)
 
-* Comeback to settings tab and go to Application URIs section. Paste loggin URI and set localhost in URLs.
+* Comeback to settings tab and go to Application URIs section. Paste login URI and set localhost in URLs.
 
 ![](img/ConnectionParam.png)
 
@@ -685,9 +685,9 @@ sudo chmod 666 /var/run/docker.sock
 docker-compose up -d
 ```
 
-* Browse to https://wwww.fullshinydomain.ml 
+* Browse to https://www.fullshinydomain.ml 
 
-* Login/password using user1@gmail.com/user1/gmail.com or user2@gmail.com/user2@gmail.com
+* Login/password using user1@gmail.com/user1@gmail.com or user2@gmail.com/user2@gmail.com
 
 
 ![](img/fullshinydomain.png)
