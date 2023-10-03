@@ -783,6 +783,9 @@ and R</a></li>
 <li><a href="#sellers" id="toc-sellers"><span class="toc-section-number">1.8</span> Sellers</a></li>
 <li><a href="#categories" id="toc-categories"><span class="toc-section-number">1.9</span> Categories</a></li>
 </ul></li>
+<li><a href="#explore-sellers-localisation" id="toc-explore-sellers-localisation"><span class="toc-section-number">2</span> Explore Sellers
+localisation</a></li>
+<li><a href="#explore-products-by-seller" id="toc-explore-products-by-seller"><span class="toc-section-number">3</span> Explore Products by seller</a></li>
 </ul>
 </div>
 
@@ -814,7 +817,7 @@ for Python and R</h2>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Load needed R packages</span></span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#library(leaflet)</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">library</span>(leaflet)</span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#require(maps)</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
@@ -975,9 +978,12 @@ SC
 </div>
 <div id="geolocation" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Geolocation</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geolocation <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>() <span class="sc">|&gt;</span>   <span class="fu">kable_styling</span>() <span class="sc">|&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">scroll_box</span>(<span class="at">width =</span> <span class="st">&quot;900px&quot;</span>, <span class="at">height =</span> <span class="st">&quot;300px&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geolocation <span class="ot">&lt;-</span> geolocation <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Longitude =</span> geolocation_lng) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Latitude =</span> geolocation_lat)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>geolocation <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>() <span class="sc">|&gt;</span>   <span class="fu">kable_styling</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="fu">scroll_box</span>(<span class="at">width =</span> <span class="st">&quot;900px&quot;</span>, <span class="at">height =</span> <span class="st">&quot;300px&quot;</span>)</span></code></pre></div>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:900px; ">
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -986,10 +992,10 @@ SC
 geolocation_zip_code_prefix
 </th>
 <th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
-geolocation_lat
+Latitude
 </th>
 <th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
-geolocation_lng
+Longitude
 </th>
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
 geolocation_city
@@ -2175,6 +2181,110 @@ sports_leisure
 </table>
 </div>
 </div>
+</div>
+<div id="explore-sellers-localisation" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Explore Sellers
+localisation</h1>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sellers_geolocation <span class="ot">&lt;-</span> geolocation <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="fu">filter</span>(geolocation_zip_code_prefix <span class="sc">%in%</span> sellers<span class="sc">$</span>seller_zip_code_prefix)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>lng1 <span class="ot">&lt;-</span> <span class="fu">min</span>(sellers_geolocation<span class="sc">$</span>Longitude)</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>lng2 <span class="ot">&lt;-</span> <span class="fu">max</span>(sellers_geolocation<span class="sc">$</span>Longitude)</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>lat1 <span class="ot">&lt;-</span> <span class="fu">min</span>(sellers_geolocation<span class="sc">$</span>Latitude)</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>lat2 <span class="ot">&lt;-</span> <span class="fu">max</span>(sellers_geolocation<span class="sc">$</span>Latitude)</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>  </span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="fu">leaflet</span>(sellers_geolocation) <span class="sc">%&gt;%</span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  <span class="fu">addTiles</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  <span class="fu">setView</span>(<span class="at">lng =</span> (lng1<span class="sc">+</span>lng2)<span class="sc">/</span><span class="dv">2</span>, <span class="at">lat =</span> (lat1<span class="sc">+</span>lat2)<span class="sc">/</span><span class="dv">2</span>, <span class="at">zoom =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>    <span class="fu">addRectangles</span>(</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>    <span class="at">lng1=</span> lng1, <span class="at">lat1=</span> lat1,</span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>    <span class="at">lng2=</span> lng2, <span class="at">lat2=</span>lat2,</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>    <span class="at">fillColor =</span> <span class="st">&quot;transparent&quot;</span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>    <span class="fu">addMarkers</span>(<span class="sc">~</span>Longitude, <span class="sc">~</span>Latitude,</span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>             <span class="at">popup =</span> <span class="sc">~</span>geolocation_zip_code_prefix, <span class="at">label =</span> <span class="sc">~</span>geolocation_zip_code_prefix,</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>             <span class="at">clusterOptions =</span> <span class="fu">markerClusterOptions</span>())</span></code></pre></div>
+</div>
+<div id="explore-products-by-seller" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Explore Products by
+seller</h1>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="do">## list categories</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>products <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="at">y =</span> category_translation, <span class="at">by =</span> <span class="st">&quot;product_category_name&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="fu">pull</span>(product_category_name_english) <span class="sc">%&gt;%</span> <span class="fu">unique</span>()</span></code></pre></div>
+<pre><code>##  [1] &quot;perfumery&quot;                              
+##  [2] &quot;art&quot;                                    
+##  [3] &quot;sports_leisure&quot;                         
+##  [4] &quot;baby&quot;                                   
+##  [5] &quot;housewares&quot;                             
+##  [6] &quot;musical_instruments&quot;                    
+##  [7] &quot;cool_stuff&quot;                             
+##  [8] &quot;furniture_decor&quot;                        
+##  [9] &quot;home_appliances&quot;                        
+## [10] &quot;toys&quot;                                   
+## [11] &quot;bed_bath_table&quot;                         
+## [12] &quot;construction_tools_safety&quot;              
+## [13] &quot;computers_accessories&quot;                  
+## [14] &quot;health_beauty&quot;                          
+## [15] &quot;luggage_accessories&quot;                    
+## [16] &quot;garden_tools&quot;                           
+## [17] &quot;office_furniture&quot;                       
+## [18] &quot;auto&quot;                                   
+## [19] &quot;electronics&quot;                            
+## [20] &quot;fashion_shoes&quot;                          
+## [21] &quot;telephony&quot;                              
+## [22] &quot;stationery&quot;                             
+## [23] &quot;fashion_bags_accessories&quot;               
+## [24] &quot;computers&quot;                              
+## [25] &quot;home_construction&quot;                      
+## [26] &quot;watches_gifts&quot;                          
+## [27] &quot;construction_tools_construction&quot;        
+## [28] &quot;pet_shop&quot;                               
+## [29] &quot;small_appliances&quot;                       
+## [30] &quot;agro_industry_and_commerce&quot;             
+## [31] NA                                       
+## [32] &quot;furniture_living_room&quot;                  
+## [33] &quot;signaling_and_security&quot;                 
+## [34] &quot;air_conditioning&quot;                       
+## [35] &quot;consoles_games&quot;                         
+## [36] &quot;books_general_interest&quot;                 
+## [37] &quot;costruction_tools_tools&quot;                
+## [38] &quot;fashion_underwear_beach&quot;                
+## [39] &quot;fashion_male_clothing&quot;                  
+## [40] &quot;kitchen_dining_laundry_garden_furniture&quot;
+## [41] &quot;industry_commerce_and_business&quot;         
+## [42] &quot;fixed_telephony&quot;                        
+## [43] &quot;construction_tools_lights&quot;              
+## [44] &quot;books_technical&quot;                        
+## [45] &quot;home_appliances_2&quot;                      
+## [46] &quot;party_supplies&quot;                         
+## [47] &quot;drinks&quot;                                 
+## [48] &quot;market_place&quot;                           
+## [49] &quot;la_cuisine&quot;                             
+## [50] &quot;costruction_tools_garden&quot;               
+## [51] &quot;fashio_female_clothing&quot;                 
+## [52] &quot;home_confort&quot;                           
+## [53] &quot;audio&quot;                                  
+## [54] &quot;food_drink&quot;                             
+## [55] &quot;music&quot;                                  
+## [56] &quot;food&quot;                                   
+## [57] &quot;tablets_printing_image&quot;                 
+## [58] &quot;books_imported&quot;                         
+## [59] &quot;small_appliances_home_oven_and_coffee&quot;  
+## [60] &quot;fashion_sport&quot;                          
+## [61] &quot;christmas_supplies&quot;                     
+## [62] &quot;fashion_childrens_clothes&quot;              
+## [63] &quot;dvds_blu_ray&quot;                           
+## [64] &quot;arts_and_craftmanship&quot;                  
+## [65] &quot;furniture_bedroom&quot;                      
+## [66] &quot;cine_photo&quot;                             
+## [67] &quot;diapers_and_hygiene&quot;                    
+## [68] &quot;flowers&quot;                                
+## [69] &quot;home_comfort_2&quot;                         
+## [70] &quot;security_and_services&quot;                  
+## [71] &quot;furniture_mattress_and_upholstery&quot;      
+## [72] &quot;cds_dvds_musicals&quot;</code></pre>
 </div>
 
 

@@ -37,7 +37,7 @@ reticulate::py_config()
 # Load needed R packages
 library(tidyverse)
 library(data.table)
-#library(leaflet)
+library(leaflet)
 library(stringr)
 #require(maps)
 library(ggplot2)
@@ -78,6 +78,9 @@ customers |> head() |>
 ## Geolocation
 
 ```{r}
+geolocation <- geolocation |> 
+  rename(Longitude = geolocation_lng) |>
+  rename(Latitude = geolocation_lat)
 geolocation |> head() |>
   knitr::kable() |>   kable_styling() |>
   scroll_box(width = "900px", height = "300px")
@@ -137,5 +140,44 @@ sellers |> head() |>
 category_translation |> head() |>
   knitr::kable() |>   kable_styling() |>
   scroll_box(width = "900px", height = "300px")
+```
+
+
+# Explore Sellers localisation 
+
+```{r, eval=FALSE}
+sellers_geolocation <- geolocation |> 
+  filter(geolocation_zip_code_prefix %in% sellers$seller_zip_code_prefix)
+
+lng1 <- min(sellers_geolocation$Longitude)
+lng2 <- max(sellers_geolocation$Longitude)
+
+lat1 <- min(sellers_geolocation$Latitude)
+lat2 <- max(sellers_geolocation$Latitude)
+  
+leaflet(sellers_geolocation) %>%
+  addTiles() %>%
+  setView(lng = (lng1+lng2)/2, lat = (lat1+lat2)/2, zoom = 3) %>%
+    addRectangles(
+    lng1= lng1, lat1= lat1,
+    lng2= lng2, lat2=lat2,
+    fillColor = "transparent"
+  ) %>%
+    addMarkers(~Longitude, ~Latitude,
+             popup = ~geolocation_zip_code_prefix, label = ~geolocation_zip_code_prefix,
+             clusterOptions = markerClusterOptions())
+```
+
+
+
+# Explore Products by seller
+
+```{r}
+## list categories
+products %>%
+  left_join(y = category_translation, by = "product_category_name") %>%
+  pull(product_category_name_english) %>% unique()
+
+
 ```
 
