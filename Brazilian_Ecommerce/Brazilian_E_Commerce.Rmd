@@ -1,0 +1,141 @@
+---
+title: "Brazilian E Commerce by Olist"
+author: "Karim Mezhoud"
+date: "`r Sys.Date()`"
+output: 
+ html_document:
+     urlcolor: blue
+     code_folding: show
+     fig_caption: yes
+     fig_height: 8
+     fig_width: 14
+     highlight: tango
+     number_sections: yes
+     theme: cosmo
+     toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Contexte
+
+This dataset was generously provided by Olist, the largest department store in Brazilian marketplaces. Olist connects small businesses from all over Brazil to channels without hassle and with a single contract. Those merchants are able to sell their products through the Olist Store and ship them directly to the customers using Olist logistics partners. See more on our website: www.olist.com.
+
+The data set comes from kaggle competition named [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
+
+## Set and load packages for Python and R
+
+```{r}
+# Set python environment and version in RStudio ;-)
+reticulate::use_python("/usr/bin/python3.10", required = TRUE)
+reticulate::py_config()
+```
+
+```{r message=FALSE, warning=FALSE, comment=FALSE, include=TRUE}
+# Load needed R packages
+library(tidyverse)
+library(data.table)
+#library(leaflet)
+library(stringr)
+#require(maps)
+library(ggplot2)
+#require(mapview)
+#require(scales)
+#require(RColorBrewer)
+require(lubridate)
+#library(plotly)
+#require(gganimate)
+#require(gifski)
+#library(caret)
+library(DT)
+library(kableExtra)
+```
+
+# Load Datasets {.tabset .tabset-fade .tabset-pills}
+
+```{r}
+customers <- fread("data/olist_customers_dataset.csv")
+geolocation <- fread("data/olist_geolocation_dataset.csv")
+order_items <- fread("data/olist_order_items_dataset.csv")
+order_payments <- fread("data/olist_order_payments_dataset.csv")
+order_reviews <- fread("data/olist_order_reviews_dataset.csv")
+orders <- fread("data/olist_orders_dataset.csv")
+products <- fread("data/olist_products_dataset.csv")
+sellers <- fread("data/olist_sellers_dataset.csv")
+category_translation <- fread("data/product_category_name_translation.csv")
+```
+
+## Customers
+
+```{r}
+customers |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px" , height = "300px") 
+```
+
+## Geolocation
+
+```{r}
+geolocation |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Items
+
+```{r}
+order_items |> head() |>
+  knitr::kable() |>   kable_styling() |>
+   scroll_box(width = "900px", height = "300px")
+```
+
+## Payments
+
+```{r}
+order_payments |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Reviews
+
+```{r}
+order_reviews |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Orders
+
+```{r}
+orders |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Products
+
+```{r}
+products |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Sellers
+
+```{r}
+sellers |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+## Categories
+
+```{r}
+category_translation |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+

@@ -13,7 +13,7 @@
 
 <title>Exploratory Data Analysis</title>
 
-<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
@@ -32,8 +32,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -54,6 +54,7 @@ if (window.hljs) {
   }
 }
 </script>
+
 
 
 
@@ -83,6 +84,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -140,11 +144,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -173,8 +181,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -182,16 +190,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -235,7 +236,7 @@ $(document).ready(function () {
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -275,37 +276,87 @@ $(document).ready(function () {
 
 <ul>
 <li><a href="RestaurantEDA/RestaurantEDA.html">Restaurant EDA</a></li>
-<li><a href="survival_plot_sparklyr/survival_plot_sparklyr.html">Survival plot model and sparklyr</a></li>
-<li><a href="shiny_ggplot_spark_transformation/shiny_ggplot_spark_transformation.html">Shiny - ggplot - spark - ml_linear_regression - iris</a></li>
-<li><a href="sc_multiple_nodes/sc_multiple_nodes.html">Connect multiple local spark nodes</a></li>
-<li><a href="dplyr_to_sql/dplyr_to_sql.html">How to convert dplyr code to sql code</a></li>
-<li><a href="sc_multiple_nodes/sc_multiple_nodes.html">Connect multiple spark nodes</a></li>
-<li><a href="instacart_market_basket_analysis/instacart_market_basket.html">Instacart Market Basket Analysis</a></li>
-<li><a href="White_blood_Cells/dataset-master/White_blood_cell.html">White Bllod Cells Classification</a></li>
-<li><a href="santander_customer_transaction_prediction/santandar_costumer_trans_pred.html">Santander Customer Transaction Prediction</a> _ <a href="Dashboard/Dashboard.html">Streaming - detect new csv file - Dashboard with Shiny</a></li>
-<li><a href="santander_customer_transaction_prediction/santander_costumer_trans_pred.html">Santander customer transaction prediction with rpart</a></li>
-<li><a href="santander_customer_transaction_prediction/santandar_costumer_trans_pred_keras.html">Santander customer transaction prediction with keras (MLP)</a></li>
-<li><a href="santander_customer_transaction_prediction/santander_trans_pred_xgboost.html">Santander customer transaction prediction with xgboost</a></li>
-<li><a href="santander_customer_transaction_prediction/Santander_trans_pred_xgboost_cleanup.html">Santander customer transaction prediction with xgb.cv &amp; xgb.train</a></li>
-<li><a href="Smile_kinships/parental_facial_recogn.html">Facial &amp; Smile recognisation</a></li>
-<li><a href="Smile_kinships/Smile_related_keras.html">Smile Kinships detection</a></li>
-<li><a href="FC_images_known_faces/images_known_faces.html">Face Recognition using face_recognition library</a></li>
-<li><a href="FC_dataset_generator_trained_model/dataset_generator_trained_model.html">Generate dataset from webcam - train model using openCV and detect faces</a></li>
-<li><a href="FC_name_Id_generator_image_sqlite_train_model/name_Id_dataset_generator_sqlite_train_model.html">Generate and save dataset to sqlite db, train model using openCV, detect and reconize faces from webcam</a></li>
-<li><a href="FC_weights_image_compare_speak/compare_images_speak.html">Face recognition by comapring distance (weigth) between image arrays</a></li>
-<li><a href="FC_eye_blink_detection/eye_blink_detector.html">Face recognition eyes blink destector</a></li>
-<li><a href="Fraud_detection/IEEE-CIS/IEEE-CIS.html">IEEE-CIS Fraud Detection</a></li>
-<li><a href="predict-future-sales/predict_future_sales.html">Predict Future Monthly Sales</a></li>
-<li><a href="bowl-2019/bowl_19_xgb.html">Predict the number of attempts by xgboost</a></li>
-<li><a href="unbalanced_multi_class/unbalanced_multiclass.html">Dealing with unbalanced multiclasses with caret</a></li>
-<li><a href="cern_particle/particle_class.html">Image particle classification after collision</a></li>
-<li><a href="cern_particle/cirtaChallenge.html">Particle specimen classification after collision</a></li>
-<li><a href="lung_cancer_survival_time/lung_cancer_survival_time.html">Lung Cancer Event (0,1) prediction</a></li>
-<li><a href="lung_cancer_survival_time/kmezhoud_LCST.html">Lung Cancer Survival Time (duration in days) prediction</a></li>
-<li><a href="Flood_prediction_Malawi/Flood_Prediction_Malawi.html">Flood Prediction in Malawi</a></li>
-<li><a href="QSAR_antiFungal/qsar_antifungal.html">QSAR Antifungal quantification (Binary and Regression Classification RF,XGB)</a></li>
-<li><a href="biodiversity_performance/biodiversity_performance.html">Performance and design Shiny App Improvement</a></li>
-<li><a href="fullShinyDomain/fullShinyDomain.html">Full Shiny App with Domain and HTTPS certificate</a></li>
+<li><a
+href="survival_plot_sparklyr/survival_plot_sparklyr.html">Survival plot
+model and sparklyr</a></li>
+<li><a
+href="shiny_ggplot_spark_transformation/shiny_ggplot_spark_transformation.html">Shiny
+- ggplot - spark - ml_linear_regression - iris</a></li>
+<li><a href="sc_multiple_nodes/sc_multiple_nodes.html">Connect multiple
+local spark nodes</a></li>
+<li><a href="dplyr_to_sql/dplyr_to_sql.html">How to convert dplyr code
+to sql code</a></li>
+<li><a href="sc_multiple_nodes/sc_multiple_nodes.html">Connect multiple
+spark nodes</a></li>
+<li><a
+href="instacart_market_basket_analysis/instacart_market_basket.html">Instacart
+Market Basket Analysis</a></li>
+<li><a
+href="White_blood_Cells/dataset-master/White_blood_cell.html">White
+Bllod Cells Classification</a></li>
+<li><a
+href="santander_customer_transaction_prediction/santandar_costumer_trans_pred.html">Santander
+Customer Transaction Prediction</a> _ <a
+href="Dashboard/Dashboard.html">Streaming - detect new csv file -
+Dashboard with Shiny</a></li>
+<li><a
+href="santander_customer_transaction_prediction/santander_costumer_trans_pred.html">Santander
+customer transaction prediction with rpart</a></li>
+<li><a
+href="santander_customer_transaction_prediction/santandar_costumer_trans_pred_keras.html">Santander
+customer transaction prediction with keras (MLP)</a></li>
+<li><a
+href="santander_customer_transaction_prediction/santander_trans_pred_xgboost.html">Santander
+customer transaction prediction with xgboost</a></li>
+<li><a
+href="santander_customer_transaction_prediction/Santander_trans_pred_xgboost_cleanup.html">Santander
+customer transaction prediction with xgb.cv &amp; xgb.train</a></li>
+<li><a href="Smile_kinships/parental_facial_recogn.html">Facial &amp;
+Smile recognisation</a></li>
+<li><a href="Smile_kinships/Smile_related_keras.html">Smile Kinships
+detection</a></li>
+<li><a href="FC_images_known_faces/images_known_faces.html">Face
+Recognition using face_recognition library</a></li>
+<li><a
+href="FC_dataset_generator_trained_model/dataset_generator_trained_model.html">Generate
+dataset from webcam - train model using openCV and detect faces</a></li>
+<li><a
+href="FC_name_Id_generator_image_sqlite_train_model/name_Id_dataset_generator_sqlite_train_model.html">Generate
+and save dataset to sqlite db, train model using openCV, detect and
+reconize faces from webcam</a></li>
+<li><a
+href="FC_weights_image_compare_speak/compare_images_speak.html">Face
+recognition by comapring distance (weigth) between image arrays</a></li>
+<li><a href="FC_eye_blink_detection/eye_blink_detector.html">Face
+recognition eyes blink destector</a></li>
+<li><a href="Fraud_detection/IEEE-CIS/IEEE-CIS.html">IEEE-CIS Fraud
+Detection</a></li>
+<li><a href="predict-future-sales/predict_future_sales.html">Predict
+Future Monthly Sales</a></li>
+<li><a href="bowl-2019/bowl_19_xgb.html">Predict the number of attempts
+by xgboost</a></li>
+<li><a href="unbalanced_multi_class/unbalanced_multiclass.html">Dealing
+with unbalanced multiclasses with caret</a></li>
+<li><a href="cern_particle/particle_class.html">Image particle
+classification after collision</a></li>
+<li><a href="cern_particle/cirtaChallenge.html">Particle specimen
+classification after collision</a></li>
+<li><a
+href="lung_cancer_survival_time/lung_cancer_survival_time.html">Lung
+Cancer Event (0,1) prediction</a></li>
+<li><a href="lung_cancer_survival_time/kmezhoud_LCST.html">Lung Cancer
+Survival Time (duration in days) prediction</a></li>
+<li><a href="Flood_prediction_Malawi/Flood_Prediction_Malawi.html">Flood
+Prediction in Malawi</a></li>
+<li><a href="QSAR_antiFungal/qsar_antifungal.html">QSAR Antifungal
+quantification (Binary and Regression Classification RF,XGB)</a></li>
+<li><a
+href="biodiversity_performance/biodiversity_performance.html">Performance
+and design Shiny App Improvement</a></li>
+<li><a href="fullShinyDomain/fullShinyDomain.html">Full Shiny App with
+Domain and HTTPS certificate</a></li>
+<li><a href="Brazilian_Ecommerce/Brazilian_E_Commerce.html">Brazilian
+E-Commerce by Olist</a></li>
 </ul>
 
 
