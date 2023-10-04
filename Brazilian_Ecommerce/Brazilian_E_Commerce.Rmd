@@ -118,22 +118,6 @@ orders |> head() |>
   scroll_box(width = "900px", height = "300px")
 ```
 
-## Products
-
-```{r}
-products |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
-```
-
-## Sellers
-
-```{r}
-sellers |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
-```
-
 ## Categories
 
 ```{r}
@@ -143,11 +127,90 @@ category_translation |> head() |>
 ```
 
 
+## Products
+
+
+```{r}
+## check for  missing value
+products |>
+select(product_id,product_category_name, product_weight_g, product_length_cm, product_height_cm, product_width_cm)|>
+ filter_all(any_vars(is.na(.))) |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+
+```{r}
+
+
+products <- products |>
+            left_join(y = category_translation, by = "product_category_name") |>
+            mutate(`volume dm³` = product_length_cm * product_height_cm * product_width_cm/1000) %>%
+           rename(weight = product_weight_g) %>%
+           mutate(`weight kg` = weight/1000) |>
+   # na.omit() |>
+  #drop_na(product_length_cm, product_height_cm, product_width_cm) |>
+  mutate(weight_range = if_else(`weight kg` <= 1,"0-1", 
+                                if_else(`weight kg`> 1 &  `weight kg` <= 5, "1-5 kg",
+                                        if_else(`weight kg` > 5 &`weight kg` <=10, "5-10 kg",
+                                                if_else(`weight kg` > 10 & `weight kg` <= 20, "10-20 kg",
+                                                        if_else(`weight kg` > 20 & `weight kg` <= 30, "20-30 kg",
+                                                                if_else(`weight kg` > 30 & `weight kg` <= 42, "30-42 kg", NA )))))))
+
+
+products |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+
+
+```
+
+```{r}
+## glimpse the density of products volumes
+products |>
+  drop_na(`volume dm³`, weight_range) |>
+  ggplot() +
+  aes(x=`volume dm³`, color= weight_range, fill= weight_range, na.rm = TRUE)+
+  geom_density(adjust= 10, alpha=0.1)
+```
+
+
+```{r}
+products <- products |>
+  mutate(volume_range = if_else(`volume dm³` <= 1,"0-1 dm³", 
+                                if_else(`volume dm³`> 1 &  `volume dm³` <= 5, "1-5 dm³",
+                                        if_else(`volume dm³` > 5 &`volume dm³` <=10, "5-10 dm³",
+                                                if_else(`volume dm³` > 10 & `volume dm³` <= 20, "10-20 dm³",
+                                                        if_else(`volume dm³` > 20 & `volume dm³` <= 30, "20-30 dm³",
+                                                             if_else(`volume dm³` > 30 , ">30 dm3", NA ))))))) 
+
+
+products |> head() |>
+  datatable()
+  #knitr::kable() |>   kable_styling() |>
+  #scroll_box(width = "900px", height = "300px")
+```
+
+## Sellers
+
+```{r}
+sellers <- sellers |>
+          rename(zip_code_prefix = seller_zip_code_prefix)
+
+sellers |> head() |>
+  knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+
+
 # Explore Sellers localisation 
 
 ```{r, eval=FALSE}
 sellers_geolocation <- geolocation |> 
-  filter(geolocation_zip_code_prefix %in% sellers$seller_zip_code_prefix)
+  rename(zip_code_prefix= geolocation_zip_code_prefix) |>
+  filter(zip_code_prefix %in% sellers$zip_code_prefix) %>%
+  left_join(y = sellers, by = "zip_code_prefix")
 
 lng1 <- min(sellers_geolocation$Longitude)
 lng2 <- max(sellers_geolocation$Longitude)
@@ -164,20 +227,70 @@ leaflet(sellers_geolocation) %>%
     fillColor = "transparent"
   ) %>%
     addMarkers(~Longitude, ~Latitude,
-             popup = ~geolocation_zip_code_prefix, label = ~geolocation_zip_code_prefix,
+             popup = ~seller_city, label = ~seller_state,
              clusterOptions = markerClusterOptions())
 ```
 
 
 
-# Explore Products by seller
+
+
+# Explore Products
+
+## list categories and count same description lenght
 
 ```{r}
 ## list categories
 products %>%
-  left_join(y = category_translation, by = "product_category_name") %>%
-  pull(product_category_name_english) %>% unique()
+  group_by(product_category_name_english) |>
+  summarise(Qt=n()) |>
+  pull(product_category_name_english) |> unique() |> as_tibble() |>
+  rownames_to_column(var = "index") |> 
+  knitr::kable() |>  kable_styling() |>
+  scroll_box(width = "300px", height = "500px")
 
 
+```
+
+
+```{r}
+products %>%
+  #filter(product_category_name== "cama_mesa_banho") |>
+  mutate(product_description_lenght= as.factor(product_description_lenght)) |>
+  group_by(product_category_name_english, product_description_lenght) |>
+  #mutate(Qt= n()) |>
+  summarise(Qt=n(), .groups='keep') |>
+  group_by(product_description_lenght) |>
+  #filter(product_description_lenght=="93") |>
+  mutate(categories_with_same_description_lenght= n()) |>
+  #arrange(desc(Qt)) |>
+  filter(product_category_name_english %in% c("baby", "housewares")) |>
+ arrange(product_description_lenght) |>
+  head(20) |>
+    knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px")
+```
+
+* There are 610 products without description
+
+
+## Display the ratio weight/volume of product
+
+```{r, fig.width=14, fig.height=14}
+products |>
+  drop_na(`weight kg`, `volume dm³`, `product_category_name_english`) |>
+  ggplot() + 
+  aes(y = `weight kg` , x = `product_category_name_english`, color= `volume dm³`) +#, size=`volume dm³` 
+  geom_point() +
+    theme(legend.position = "left", #axis.text.y = element_blank(),
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+        plot.title = element_text(size = 14)
+        ) +
+  #facet_wrap(~weight_range, nrow = 6, scales = "free_y")+
+  facet_wrap(~volume_range, nrow = 6, scales= "free_y")
+  #coord_flip() +
+  #scale_color_hue()
+
+#plotly::ggplotly(p1)
 ```
 
