@@ -67,12 +67,15 @@ sellers <- fread("data/olist_sellers_dataset.csv")
 category_translation <- fread("data/product_category_name_translation.csv")
 ```
 
-## Customers
+## Customers
+
 
 ```{r}
-customers |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px" , height = "300px") 
+customers <- customers |>  
+   rename(zip_code_prefix = customer_zip_code_prefix)
+
+customers |> head(1000) |>
+datatable()
 ```
 
 ## Geolocation
@@ -80,89 +83,167 @@ customers |> head() |>
 ```{r}
 geolocation <- geolocation |> 
   rename(Longitude = geolocation_lng) |>
-  rename(Latitude = geolocation_lat)
-geolocation |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+  rename(Latitude = geolocation_lat) |>
+  rename(zip_code_prefix= geolocation_zip_code_prefix)
+
+geolocation |> 
+  head(1000) |>
+  datatable()
 ```
 
 ## Items
 
 ```{r}
-order_items |> head() |>
-  knitr::kable() |>   kable_styling() |>
-   scroll_box(width = "900px", height = "300px")
+order_items |> 
+  head(1000) |>
+  datatable()
 ```
 
 ## Payments
 
 ```{r}
-order_payments |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+order_payments |>
+  head(1000) |>
+  datatable()
 ```
 
 ## Reviews
 
 ```{r}
-order_reviews |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+order_reviews |> 
+  head(1000) |>
+  datatable()
 ```
 
 ## Orders
 
 ```{r}
-orders |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+orders |> 
+  head(1000) |>
+  datatable()
 ```
 
 ## Categories
 
 ```{r}
-category_translation |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+category_translation |> 
+  head(1000) |>
+  datatable()
 ```
 
 
 ## Products
 
-
 ```{r}
-## check for  missing value
-products |>
-select(product_id,product_category_name, product_weight_g, product_length_cm, product_height_cm, product_width_cm)|>
- filter_all(any_vars(is.na(.))) |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+products |> 
+  head(100) |>
+  datatable()
 ```
 
 
+## Sellers
+
+```{r}
+sellers <- sellers |>
+          rename(zip_code_prefix = seller_zip_code_prefix)
+
+sellers |> 
+  head(1000) |>
+  datatable()
+```
+
+
+# Dataset Engineering 
+
+Compute:
+
+* Volume of products:
+
+$$Volume = product\_length\_cm * product\_height\_cm * product\_width\_cm / 1000$$
+
+* Mutate volume range
+
+* Mutate weight range 
+
+
+## check for missing value in dimensions used to compute Volumes
+
+```{r}
+## check for  missing value in specific columns
+product_id_with_missed_data <-
+products |>
+select(product_id,product_category_name, product_weight_g,
+       product_length_cm, product_height_cm, product_width_cm) |>
+ filter_all(any_vars(is.na(.)))
+
+product_id_with_missed_data |>
+   knitr::kable() |>   kable_styling() |>
+  scroll_box(width = "900px", height = "300px") 
+```
+
+## Which sellers have product_id with missing data?
+
+```{r}
+sellers_missing_data <-
+order_items |>
+  filter(product_id %in% product_id_with_missed_data$product_id) %>%
+  group_by(product_id, seller_id, shipping_limit_date, price, freight_value) %>%
+  count() %>%
+  arrange(shipping_limit_date)
+
+sellers_missing_data %>%
+  datatable()
+```
+
+### Trend of the price of products with missed informations
+
+```{r, fig.width=14, fig.height=4}
+sellers_missing_data %>%
+  #mutate(total= price+ freight_value) %>%
+  pivot_longer(-c(product_id, seller_id,n,shipping_limit_date)) %>%
+  ggplot(aes(x = shipping_limit_date, y= value, fill = name)) +
+  geom_area()+
+    facet_wrap(~product_id, scales = "free_y")
+
+```
+* Increase of the price during the period of study.
+
+
+### Compute the Volumes of Products
+
 ```{r}
 
+## add english name and weight range catagories
 
 products <- products |>
             left_join(y = category_translation, by = "product_category_name") |>
             mutate(`volume dm³` = product_length_cm * product_height_cm * product_width_cm/1000) %>%
            rename(weight = product_weight_g) %>%
-           mutate(`weight kg` = weight/1000) |>
-   # na.omit() |>
-  #drop_na(product_length_cm, product_height_cm, product_width_cm) |>
-  mutate(weight_range = if_else(`weight kg` <= 1,"0-1", 
+           mutate(`weight kg` = weight/1000)
+
+
+
+products |> 
+  head(1000)  |>
+  datatable()
+
+
+```
+
+### Mutate the Weight range of products
+
+```{r}
+products <- products |>
+    mutate(weight_range = if_else(`weight kg` <= 1,"0-1", 
                                 if_else(`weight kg`> 1 &  `weight kg` <= 5, "1-5 kg",
                                         if_else(`weight kg` > 5 &`weight kg` <=10, "5-10 kg",
                                                 if_else(`weight kg` > 10 & `weight kg` <= 20, "10-20 kg",
                                                         if_else(`weight kg` > 20 & `weight kg` <= 30, "20-30 kg",
                                                                 if_else(`weight kg` > 30 & `weight kg` <= 42, "30-42 kg", NA )))))))
 
-
-products |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
-
-
+products |> 
+  head(1000)  |>
+  datatable()
 ```
 
 ```{r}
@@ -174,8 +255,12 @@ products |>
   geom_density(adjust= 10, alpha=0.1)
 ```
 
+* The main volume of products are less than 5 dm³
+
+### Mutate Volume Range
 
 ```{r}
+## add volume range
 products <- products |>
   mutate(volume_range = if_else(`volume dm³` <= 1,"0-1 dm³", 
                                 if_else(`volume dm³`> 1 &  `volume dm³` <= 5, "1-5 dm³",
@@ -191,25 +276,338 @@ products |> head() |>
   #scroll_box(width = "900px", height = "300px")
 ```
 
-## Sellers
+
+
+
+
+
+# Explore Products
+
+## list categories and count same description lenght
 
 ```{r}
-sellers <- sellers |>
-          rename(zip_code_prefix = seller_zip_code_prefix)
+## list categories
+products %>%
+  #group_by(product_category_name_english, product_name_lenght) |>
+  #mutate(Qt=n()) |>
+  pull(product_category_name_english) |> 
+  unique() |> as.data.frame() |>
+  rownames_to_column(var = "index") |> 
+  knitr::kable() |>  kable_styling() |>
+  scroll_box(width = "300px", height = "500px")
 
-sellers |> head() |>
-  knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
+
 ```
 
+## List product_id by categories
+
+
+```{r}
+
+## count how many products by category and count how many products with the same description length
+products %>%
+  #filter(product_category_name== "cama_mesa_banho") |>
+  #mutate(product_description_lenght= as.factor(product_description_lenght)) |>
+  group_by(product_category_name_english, product_name_lenght, product_description_lenght) |>
+  #mutate(Qt= n()) |>
+  summarise(products_with_same_name_lenght = n(), .groups='keep') |>
+  group_by(product_description_lenght) |>
+  #filter(product_description_lenght=="93") |>
+  mutate(products_with_same_description_lenght = n()) |>
+    #head(1000) |>
+  #arrange(desc(Qt)) |>
+  #filter(product_category_name_english %in% c("baby", "housewares")) |>
+ arrange(desc(products_with_same_name_lenght)) |>
+  head(100) |>
+  datatable()
+```
+
+* There are 610 products without description
+
+* We assume that products from the same category and have different name lenght are different.
+
+* We assume that products with the same name lenght and different description lenght are same bu from different sellers.
+
+
+## Check if products with the same name lenght and different description lenght are same but from different seller
+
+
+```{r}
+
+group_pdt_sellers <- 
+  order_items |>
+  group_by(product_id, seller_id) |>
+  summarise(Freq= n(), .groups="keep") |>
+  arrange(desc(Freq))
+
+group_pdt_sellers |>
+  head(100) |>
+  datatable()
+```
+
+
+
+
+```{r}
+products |>
+  left_join(group_pdt_sellers[-3] , by = "product_id") |>
+  select( product_category_name_english,product_name_lenght, seller_id, product_id) |>
+  group_by(product_category_name_english, product_name_lenght, seller_id) |>
+  mutate(products_with_same_name_lenght = n()) |>
+  arrange(desc(products_with_same_name_lenght)) |>
+ head(500) |>
+  datatable()
+  
+```
+
+* We find which seller has missing product name: `e5a3438891c0bfdb9394643f95273d8e`. We can find his geolocation.
+
+* Several items with the same product length name exist for the same seller. It seems the same product but with different color or version or option.
+
+* It is possible that products belonging to different categories have the same name length and sold by different sellers.
+
+**CONCLUSION:**  The `product_name_lenght` is not specific to a specific product or seller.
+
+
+
+## Display the ratio weight/volume of product
+
+```{r, fig.width=14, fig.height=14}
+products |>
+  drop_na(`weight kg`, `volume dm³`, `product_category_name_english`) |>
+  ggplot() + 
+  aes(y = `weight kg` , x = `product_category_name_english`, color= weight_range) +#, size=`volume dm³` 
+  geom_point() +
+    theme(legend.position = "left", #axis.text.y = element_blank(),
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+        plot.title = element_text(size = 14)
+        ) +
+  #facet_wrap(~weight_range, nrow = 6, scales = "free_y")+
+  facet_wrap(~volume_range, nrow = 6, scales= "free_y")
+```
+* We can note some products with small volume but with high weigth and vis-versa.
+
+
+# Explore Orders
+
+
+```{r}
+## join items and orders and products
+detail_orders <- order_items |>
+  left_join(orders, by = "order_id") |>
+  left_join(products|> select(product_id, product_category_name_english), by = "product_id") |>
+  select(order_id, order_item_id, product_id, product_category_name_english,seller_id, customer_id, everything()) 
+
+
+detail_orders|>
+  head(1000) |>
+  datatable()
+```
+
+
+## How many orders by customer
+
+```{r}
+## group by order and check items
+orders_customer <- detail_orders |>
+  group_by( order_id, customer_id, product_category_name_english) |>
+  summarise(n_items= n(), .groups = "keep") |>
+  group_by( order_id, customer_id, product_category_name_english, n_items) |>
+  summarise(n_orders= n(), .groups = "keep") |>
+  arrange(desc(n_items)) 
+  #arrange(desc(n_orders))
+
+orders_customer |>
+  head(1000) |>
+  datatable()
+```
+
+* The maximum number of items per orders is 21.
+
+```{r}
+## check how many customers
+n_customers <- detail_orders |>
+  distinct(customer_id) |>
+  count() |>
+  pull()
+
+## check How many orders
+
+n_orders <- detail_orders |>
+  distinct(order_id) |>
+  count() |>
+  pull()
+
+print(paste0("there are ", n_customers, " Customers in this study"))
+print(paste0("there are ", n_orders, " Orders in this study"))
+```
+
+* This study shows only one orders per each customer
+
+
+```{r, fig.width=14, fig.height=8}
+
+## visualize  categories that were purchased by customers with more than 6 items per order
+orders_customer |>
+  filter(n_items > 6) |>
+  ggplot() +
+  aes(x = reorder(product_category_name_english, desc(n_items), sum), y = n_items, fill= customer_id) +
+  geom_col() +
+  theme(legend.position = "bottom", axis.title.x = element_blank(),
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+         
+        plot.title = element_text(size = 14)
+        )
+```
+
+
+```{r}
+
+orders_seller <- detail_orders |>
+  group_by( order_id, seller_id, product_category_name_english) |>
+  summarise(n_items= n(), .groups = "keep") |>
+  group_by( order_id,seller_id, product_category_name_english, n_items) |>
+  summarise(n_orders= n(), .groups = "keep") |>
+  arrange(desc(n_items)) 
+  #arrange(desc(n_orders))
+
+orders_seller |>
+  head(1000) |>
+  datatable()
+```
+
+
+```{r, fig.width=14, fig.height=8}
+orders_seller |>
+  filter(n_items > 6) |>
+  ggplot() +
+  aes(x = reorder(product_category_name_english, desc(n_items), sum), y = n_items, fill= seller_id) +
+  geom_col() +
+  theme(legend.position = "bottom", axis.title.x = element_blank(),
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+        plot.title = element_text(size = 14)
+        )
+```
+
+# Distinct geolocalisation of Sellers/Customers 
+
+## What is the difference between `customer_id` and `customer_unique_id`?
+
+```{r}
+## count customer_id
+paste0("there is ",
+customers |> 
+  distinct(customer_id) |>
+  nrow(),
+"  Customer_id in this data")
+```
+
+```{r}
+paste0("there is ",
+customers |> distinct(customer_unique_id) |> nrow(),
+  "  Customer_unique_id in this data")
+```
+
+
+```{r}
+paste0("There is about  ",
+   customers |> distinct(customer_id) |> nrow() - customers |> distinct(customer_unique_id) |> nrow(),    
+      " rows with duplicated id. But we have to think about one custmer_unique_id have multiple customer_id " )
+```
+
+## Group `Customer_unique_id` and list paires with `Custumer_id`
+```{r}
+## What is the difference between customer_id and customer_unique_id
+list_of_unique_id_with_multiple_customer_id <- customers |>
+                                        group_by(customer_unique_id) |>
+                                        ## filter only duplicated
+                                        filter(n()>1) |>
+                                        arrange(desc(customer_unique_id))
+paste0("Here is a sample of table with  ", 
+list_of_unique_id_with_multiple_customer_id |> nrow(),
+"  rows. ")
+
+list_of_unique_id_with_multiple_customer_id |>
+  head(1000) |>
+  datatable()
+```
+
+ * This table lists the `customer_unique_id` corresponding to  multiple `customer_id`.
+
+## Extract `Customer_unique_id` and their `zip_code_prefix`
+```{r}
+
+duplicated_customer_unique_id <-
+  list_of_unique_id_with_multiple_customer_id |>
+  distinct(customer_unique_id) |>
+  pull()
+  
+zip_code_prefix_of_duplicated_customer_unique_id <-
+  list_of_unique_id_with_multiple_customer_id |>
+  distinct(zip_code_prefix) |>
+  pull()
+```
+ 
+ 
+## What about the same Zip code prefix for multiple Latitude/Longiture
+ 
+```{r}
+geolocation |> 
+  filter(zip_code_prefix %in% zip_code_prefix_of_duplicated_customer_unique_id) |>
+  arrange(desc(zip_code_prefix)) |>
+    head(1000) |>
+    datatable()
+```
+ 
+ 
+## If duplicates in customers_id equal the duplicates in Lat/lon for the same Zip code?
+ 
+```{r}
+## Filter only Zip code for customer_unique_id
+  customers |>
+  filter(customer_unique_id %in% duplicated_customer_unique_id) |>
+  group_by(customer_id, customer_unique_id, zip_code_prefix) |>
+  #distinct(customer_unique_id) |>
+  arrange(desc(customer_unique_id)) |>
+  filter(zip_code_prefix == 99750) |>
+  datatable()
+```
+
+ **NO!**
+
+**Only zip_code_prefix is not enought to distinct between geolocations of customers and sellers**
+
+**For example there is only one customer with the zip_code equal to 99750.**
+
+**But in geolicalisation we have 14 Positions related to this zip_code**
+ 
+ 
+## What about Seller_id
+
+
+```{r}
+
+paste0("There are  ",
+sellers |>
+  group_by(seller_id) %>%
+  filter(n()>1),
+"Duplited seller_id.")
+```
+
+```{r}
+sellers %>%
+  group_by(zip_code_prefix) %>%
+  mutate(Freq= n()) %>%
+  arrange(desc(Freq)) %>%
+  datatable()
+```
 
 
 # Explore Sellers localisation 
 
 ```{r, eval=FALSE}
 sellers_geolocation <- geolocation |> 
-  rename(zip_code_prefix= geolocation_zip_code_prefix) |>
-  filter(zip_code_prefix %in% sellers$zip_code_prefix) %>%
+  filter(zip_code_prefix %in% sellers$zip_code_prefix) %>% ## IS NOT ENOUTH there are the same zip code for multiple sellers and customers.
   left_join(y = sellers, by = "zip_code_prefix")
 
 lng1 <- min(sellers_geolocation$Longitude)
@@ -231,66 +629,31 @@ leaflet(sellers_geolocation) %>%
              clusterOptions = markerClusterOptions())
 ```
 
+```{r, eval=FALSE}
+customers_geolocation <- geolocation |> 
+  #rename(zip_code_prefix= geolocation_zip_code_prefix) |>
+  filter(zip_code_prefix %in% unique(customers$zip_code_prefix)) |> 
+  left_join(y = customers, by = "zip_code_prefix")
 
+lng1 <- min(customers_geolocation$Longitude)
+lng2 <- max(customers_geolocation$Longitude)
 
-
-
-# Explore Products
-
-## list categories and count same description lenght
-
-```{r}
-## list categories
-products %>%
-  group_by(product_category_name_english) |>
-  summarise(Qt=n()) |>
-  pull(product_category_name_english) |> unique() |> as_tibble() |>
-  rownames_to_column(var = "index") |> 
-  knitr::kable() |>  kable_styling() |>
-  scroll_box(width = "300px", height = "500px")
-
+lat1 <- min(customers_geolocation$Latitude)
+lat2 <- max(customers_geolocation$Latitude)
+  
+# leaflet(customers_geolocation) %>%
+#   addTiles() %>%
+#   setView(lng = (lng1+lng2)/2, lat = (lat1+lat2)/2, zoom = 3) %>%
+#     addRectangles(
+#     lng1= lng1, lat1= lat1,
+#     lng2= lng2, lat2=lat2,
+#     fillColor = "transparent"
+#   ) %>%
+#     addMarkers(~Longitude, ~Latitude,
+#              popup = ~customer_city, label = ~customer_state,
+#              clusterOptions = markerClusterOptions())
 
 ```
 
 
-```{r}
-products %>%
-  #filter(product_category_name== "cama_mesa_banho") |>
-  mutate(product_description_lenght= as.factor(product_description_lenght)) |>
-  group_by(product_category_name_english, product_description_lenght) |>
-  #mutate(Qt= n()) |>
-  summarise(Qt=n(), .groups='keep') |>
-  group_by(product_description_lenght) |>
-  #filter(product_description_lenght=="93") |>
-  mutate(categories_with_same_description_lenght= n()) |>
-  #arrange(desc(Qt)) |>
-  filter(product_category_name_english %in% c("baby", "housewares")) |>
- arrange(product_description_lenght) |>
-  head(20) |>
-    knitr::kable() |>   kable_styling() |>
-  scroll_box(width = "900px", height = "300px")
-```
-
-* There are 610 products without description
-
-
-## Display the ratio weight/volume of product
-
-```{r, fig.width=14, fig.height=14}
-products |>
-  drop_na(`weight kg`, `volume dm³`, `product_category_name_english`) |>
-  ggplot() + 
-  aes(y = `weight kg` , x = `product_category_name_english`, color= `volume dm³`) +#, size=`volume dm³` 
-  geom_point() +
-    theme(legend.position = "left", #axis.text.y = element_blank(),
-          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
-        plot.title = element_text(size = 14)
-        ) +
-  #facet_wrap(~weight_range, nrow = 6, scales = "free_y")+
-  facet_wrap(~volume_range, nrow = 6, scales= "free_y")
-  #coord_flip() +
-  #scale_color_hue()
-
-#plotly::ggplotly(p1)
-```
 
