@@ -41,6 +41,7 @@ library(leaflet)
 library(stringr)
 #require(maps)
 library(ggplot2)
+library(lubridate)
 #require(mapview)
 #require(scales)
 #require(RColorBrewer)
@@ -203,7 +204,8 @@ sellers_missing_data %>%
   pivot_longer(-c(product_id, seller_id,n,shipping_limit_date)) %>%
   ggplot(aes(x = shipping_limit_date, y= value, fill = name)) +
   geom_area()+
-    facet_wrap(~product_id, scales = "free_y")
+    facet_wrap(~product_id, scales = "free_y")+
+geom_point(aes(x = shipping_limit_date, y= value, color = name))
 
 ```
 * Increase of the price during the period of study.
@@ -234,7 +236,7 @@ products |>
 
 ```{r}
 products <- products |>
-    mutate(weight_range = if_else(`weight kg` <= 1,"0-1", 
+    mutate(weight_range = if_else(`weight kg` <= 1,"0-1 kg", 
                                 if_else(`weight kg`> 1 &  `weight kg` <= 5, "1-5 kg",
                                         if_else(`weight kg` > 5 &`weight kg` <=10, "5-10 kg",
                                                 if_else(`weight kg` > 10 & `weight kg` <= 20, "10-20 kg",
@@ -246,7 +248,7 @@ products |>
   datatable()
 ```
 
-```{r}
+```{r, fig.width=8, fig.height=4}
 ## glimpse the density of products volumes
 products |>
   drop_na(`volume dm³`, weight_range) |>
@@ -278,17 +280,14 @@ products |> head() |>
 
 
 
-
-
-
 # Explore Products
 
-## list categories and count same description lenght
+## list categories and count same description length
 
 ```{r}
 ## list categories
 products %>%
-  #group_by(product_category_name_english, product_name_lenght) |>
+  #group_by(product_category_name_english, product_name_length) |>
   #mutate(Qt=n()) |>
   pull(product_category_name_english) |> 
   unique() |> as.data.frame() |>
@@ -326,17 +325,19 @@ products %>%
 
 * We assume that products from the same category and have different name lenght are different.
 
-* We assume that products with the same name lenght and different description lenght are same bu from different sellers.
+* We assume that products with the same name length and different description length are same bu from different sellers.
 
 
 ## Check if products with the same name lenght and different description lenght are same but from different seller
 
+### Group products by sellers {best_seller}
 
 ```{r}
 
 group_pdt_sellers <- 
   order_items |>
   group_by(product_id, seller_id) |>
+  #mutate(Freq = n()) |>
   summarise(Freq= n(), .groups="keep") |>
   arrange(desc(Freq))
 
@@ -345,22 +346,74 @@ group_pdt_sellers |>
   datatable()
 ```
 
+* This table lists the best-selling products and their sellers
 
 
+<!-- ### The best seller for each category -->
+
+<!-- ```{r, fig.width=10, fig.height=8} -->
+<!-- detail_orders |> -->
+<!--   group_by(product_category_name, seller_id) |> -->
+<!--   #mutate(Freq = n()) |> -->
+<!--   summarise(Freq= n(), .groups="keep") |> -->
+<!--   #arrange(desc(Freq)) |> -->
+<!--   filter(Freq>620) |> -->
+<!--   ggplot()+ -->
+<!--   aes(x = reorder(product_category_name, desc(Freq)), y = Freq, fill= seller_id)+ -->
+<!--   geom_col()+ -->
+<!--   geom_text(aes(label = Freq), position = position_stack(vjust = .5))+ -->
+<!--   theme(legend.position = "bottom",legend.title=element_text(size=7), legend.text=element_text(size=6), axis.title.x = element_blank(),  -->
+<!--           axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10), -->
+<!--         plot.title = element_text(size = 7) -->
+<!--         )+ -->
+<!--   ggtitle("The best seller for each category") -->
+<!-- ``` -->
+
+
+
+## Which caterogies are the best-selling by seller?
+
+```{r, fig.width=10, fig.height=8}
+best_selling <- products |>
+  left_join(order_items , by = "product_id") |>
+  group_by(product_category_name_english, seller_id) |>
+  mutate(n_sold = n()) |>
+  distinct(product_category_name_english, seller_id, n_sold, .keep_all = FALSE) |>
+  #select( product_category_name_english,product_name_lenght, seller_id, product_id, n_sold )|>
+  arrange(desc(n_sold))
+
+
+best_selling |>
+  filter(n_sold >620)|>
+  ggplot() +
+  aes(x = reorder(product_category_name_english, desc(n_sold), sum), y = n_sold, fill= seller_id) +
+  geom_col() +
+  geom_text(aes(label = n_sold), position = position_stack(vjust = .5))+
+  theme(legend.position = "bottom",legend.title=element_text(size=7), legend.text=element_text(size=6), axis.title.x = element_blank(), 
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+        plot.title = element_text(size = 7)
+        )+
+  ggtitle("Which caterogies are the best-selling by seller?")
+```
+
+## Name length parameter is not specific to product or seller
 
 ```{r}
-products |>
-  left_join(group_pdt_sellers[-3] , by = "product_id") |>
-  select( product_category_name_english,product_name_lenght, seller_id, product_id) |>
-  group_by(product_category_name_english, product_name_lenght, seller_id) |>
-  mutate(products_with_same_name_lenght = n()) |>
-  arrange(desc(products_with_same_name_lenght)) |>
+ products |>
+           left_join(order_items , by = "product_id") |>
+      group_by(  seller_id, product_category_name_english, product_name_lenght) |>
+  summarise(products_with_same_name_lenght= n(), .groups = "keep") |>
+  #mutate(products_with_same_name_lenght= n())|>
+     #select(product_id, product_category_name_english, product_name_lenght, seller_id, products_with_same_name_lenght) |>
+  unique() |>
+  arrange(!is.na(product_name_lenght)) |>
+      arrange(desc(products_with_same_name_lenght)) |>
  head(500) |>
   datatable()
   
 ```
 
-* We find which seller has missing product name: `e5a3438891c0bfdb9394643f95273d8e`. We can find his geolocation.
+* We find which seller has more missing product name: `c826c40d7b19f62a09e2d7c5e7295ee2`. We can find his geolocation.
 
 * Several items with the same product length name exist for the same seller. It seems the same product but with different color or version or option.
 
@@ -370,7 +423,7 @@ products |>
 
 
 
-## Display the ratio weight/volume of product
+## Display the ratio weight/volume of products
 
 ```{r, fig.width=14, fig.height=14}
 products |>
@@ -385,7 +438,10 @@ products |>
   #facet_wrap(~weight_range, nrow = 6, scales = "free_y")+
   facet_wrap(~volume_range, nrow = 6, scales= "free_y")
 ```
-* We can note some products with small volume but with high weigth and vis-versa.
+
+* We can note that some products with small volume but with high weight and vis-versa.
+
+* The must sold product have volume upper than 30 dm³.
 
 
 # Explore Orders
@@ -395,8 +451,8 @@ products |>
 ## join items and orders and products
 detail_orders <- order_items |>
   left_join(orders, by = "order_id") |>
-  left_join(products|> select(product_id, product_category_name_english), by = "product_id") |>
-  select(order_id, order_item_id, product_id, product_category_name_english,seller_id, customer_id, everything()) 
+  left_join(products, by = c("product_id")) |>
+  select(order_id, product_category_name_english, product_id,  seller_id, customer_id,   order_item_id, everything()) 
 
 
 detail_orders|>
@@ -405,89 +461,203 @@ detail_orders|>
 ```
 
 
-## How many orders by customer
+## How many orders by customer and How many items by order
 
 ```{r}
 ## group by order and check items
-orders_customer <- detail_orders |>
-  group_by( order_id, customer_id, product_category_name_english) |>
-  summarise(n_items= n(), .groups = "keep") |>
-  group_by( order_id, customer_id, product_category_name_english, n_items) |>
-  summarise(n_orders= n(), .groups = "keep") |>
-  arrange(desc(n_items)) 
-  #arrange(desc(n_orders))
+orders_customer <- 
+  detail_orders |>
+  select(order_id, customer_id, product_id, product_category_name_english) |>
+  group_by( order_id, customer_id) |>
+  mutate(n_orders= n()) |>
+  #summarise(n_items= n(), .groups = "keep") |>
+  group_by( order_id, customer_id, product_id) |>
+  mutate(n_items= n()) |>
+  ungroup() |>
+  arrange(desc(n_orders))
 
 orders_customer |>
   head(1000) |>
   datatable()
 ```
 
-* The maximum number of items per orders is 21.
+* The maximum number of orders per  customer is 21.
+
+* The maximum number of items per orders is 20.
+
+## How many Custumer_id / Unique_customer_id / Customer that purchased items?
 
 ```{r}
 ## check how many customers
-n_customers <- detail_orders |>
-  distinct(customer_id) |>
-  count() |>
-  pull()
+n_customer_id <-
+customers |>
+   select(customer_id) |>
+  unique() |>
+  nrow()
 
-## check How many orders
 
-n_orders <- detail_orders |>
-  distinct(order_id) |>
-  count() |>
-  pull()
+n_customer_id_with_order <-
+orders_customer |>
+ select(customer_id) |>
+  unique() |>
+  nrow()
 
-print(paste0("there are ", n_customers, " Customers in this study"))
-print(paste0("there are ", n_orders, " Orders in this study"))
+n_customer_unique_id <-
+customers |>
+  select(customer_unique_id) |>
+  unique() |>
+  nrow()
+
+print(paste0("there are ", n_customer_id, " Customers in this study"))
+print(paste0("there are ", n_customer_id_with_order, " Customers that purchased items in this study"))
+print(paste0("there are ", n_customer_unique_id, " UNIQUE customer in this study"))
+
 ```
 
-* This study shows only one orders per each customer
+## List all Customers without purchase
 
+```{r}
+customers_without_order <-
+customers |>
+  anti_join(orders_customer, by = "customer_id") |>
+  group_by(customer_unique_id) |>
+  mutate(Freq = n()) |>
+  arrange(desc(Freq))
+
+
+customers_without_order |>
+  head(100) |>
+  datatable()
+
+
+print(paste0("There are ",
+customers_without_order |>
+  distinct(customer_unique_id)|>
+  nrow(),
+" customers without orders"))
+```
+
+## Visualize the best-selling categories by customer
 
 ```{r, fig.width=14, fig.height=8}
 
 ## visualize  categories that were purchased by customers with more than 6 items per order
 orders_customer |>
-  filter(n_items > 6) |>
+  left_join(customers, by = "customer_id") |>
+  group_by(customer_unique_id, product_category_name_english) |>
+  summarise(n_purchased= n(), .groups = "keep") |>
+  #arrange(desc(n_purchased)) |>
+  filter(n_purchased > 10) |>
   ggplot() +
-  aes(x = reorder(product_category_name_english, desc(n_items), sum), y = n_items, fill= customer_id) +
+  aes(x = reorder(product_category_name_english, desc(n_purchased), sum), y = n_purchased, fill= customer_unique_id) +
   geom_col() +
+    geom_text(aes(label = n_purchased), position = position_stack(vjust = .5))+
   theme(legend.position = "bottom", axis.title.x = element_blank(),
           axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
          
         plot.title = element_text(size = 14)
-        )
+        )+
+  ggtitle("The best-selling categories using  unique customer id")
 ```
 
 
+
+```{r, fig.width=14, fig.height=8}
+orders_customer |>
+  #left_join(customers, by = "customer_id") |>
+  group_by(customer_id, product_category_name_english) |>
+  summarise(n_purchased= n(), .groups = "keep") |>
+  #arrange(desc(n_purchased)) |>
+  filter(n_purchased > 10) |>
+  ggplot() +
+  aes(x = reorder(product_category_name_english, desc(n_purchased), sum), y = n_purchased, fill= customer_id) +
+  geom_col() +
+  geom_text(aes(label=n_purchased), position= position_stack(vjust = .5)) +
+  theme(legend.position = "bottom", axis.title.x = element_blank(),
+          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+         
+        plot.title = element_text(size = 14)
+        )+
+    ggtitle("The best-selling categories using customer id")
+```
+
+* We set limit upper than 10 purchased for these two plots. 
+
+* `customer_unique_id`  sums purchased items for multiple `customer_id`. 
+
+* For this reason that appears more `customer_unique_id` than `customer_id` in the legend.
+
+
 ```{r}
-
-orders_seller <- detail_orders |>
-  group_by( order_id, seller_id, product_category_name_english) |>
-  summarise(n_items= n(), .groups = "keep") |>
-  group_by( order_id,seller_id, product_category_name_english, n_items) |>
-  summarise(n_orders= n(), .groups = "keep") |>
-  arrange(desc(n_items)) 
-  #arrange(desc(n_orders))
-
-orders_seller |>
-  head(1000) |>
-  datatable()
+# 
+# orders_seller <- detail_orders |>
+#   group_by( order_id, seller_id, product_category_name_english) |>
+#   summarise(n_items= n(), .groups = "keep") |>
+#   group_by( order_id,seller_id, product_category_name_english, n_items) |>
+#   summarise(n_orders= n(), .groups = "keep") |>
+#   #arrange(desc(n_items)) 
+#   arrange(desc(n_orders))
+# 
+# orders_seller |>
+#   head(1000) |>
+#   datatable()
 ```
 
 
 ```{r, fig.width=14, fig.height=8}
-orders_seller |>
-  filter(n_items > 6) |>
-  ggplot() +
-  aes(x = reorder(product_category_name_english, desc(n_items), sum), y = n_items, fill= seller_id) +
-  geom_col() +
-  theme(legend.position = "bottom", axis.title.x = element_blank(),
-          axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
-        plot.title = element_text(size = 14)
-        )
+# orders_seller |>
+#   filter(n_items > 6) |>
+#   ggplot() +
+#   aes(x = reorder(product_category_name_english, desc(n_items), sum), y = n_items, fill= seller_id) +
+#   geom_col() +
+#   theme(legend.position = "bottom", axis.title.x = element_blank(),
+#           axis.text.x = element_text(angle=45, hjust = 1, vjust= 0.9, size = 10),
+#         plot.title = element_text(size = 14)
+#         )
 ```
+
+
+## How much delay in each step for selected Sellers
+
+```{r, fig.width=14, fig.height=8}
+detail_orders |>
+    #filter(order_id== "088683f795a3d30bfd61152c4fabdfb2")
+  select(order_id, seller_id, order_purchase_timestamp, order_approved_at, order_delivered_carrier_date, 
+         order_delivered_customer_date, order_estimated_delivery_date, shipping_limit_date) |>
+  mutate(delay_approving = (order_approved_at - order_purchase_timestamp)) |>
+  mutate(delay_delivery_carrier= (order_delivered_carrier_date - order_approved_at)) |>
+  mutate(delay_delivery_customer= (order_delivered_customer_date - order_delivered_carrier_date)) |>
+  mutate(delta_estimation = (order_estimated_delivery_date - order_delivered_customer_date)) |>
+  mutate(shipping_days = ((order_delivered_customer_date - order_approved_at))) |>
+  mutate(shipping_days_limit = (shipping_limit_date - order_approved_at)) |>
+  gather("step", "Dates", 3:8) |>
+  filter(seller_id %in% c("5b51032eddd242adc84c38acab88f23d","48436dade18ac8b2bce089ec2a041202", "dd7ddc04e1b6c2c614352b383efe2d36", "c826c40d7b19f62a09e2d7c5e7295ee2", "955fee9216a65b617aa5c0531780ce60")) |> # "
+  pivot_longer(-c(order_id,seller_id, delta_estimation, shipping_days, shipping_days_limit, step, Dates)) |>
+  rename(Seconds= value, Delays = name) |>
+  pivot_longer(-c(order_id,seller_id,  shipping_days, step, Dates, Delays,Seconds)) |>
+  rename(Thresholds= name) |>
+  #mutate(Time = seconds_to_period(Seconds)) |>
+     ggplot(aes(x = Dates, y= Seconds, fill = Delays)) +
+  geom_area(na.rm=TRUE)+
+  #scale_x_datetime( breacks= date_breaks("12 hours") , labels= date_format("%H:%M %d-%b"))+
+  #scale_y_time(date_label= "%m")+
+  geom_line(aes(x=Dates, y =value, color=Thresholds), na.rm = TRUE)+
+  scale_color_manual(values=c('orange', 'red'))+
+       facet_wrap(~seller_id, nrow = 5, scales = "free_y") +
+  ggtitle("Delay for each step: from purchase to delivery")
+     
+```
+
+* If `delta_estimation` is negative means that the order is delivered after estimated date
+
+* The `shinpping_days_limits` is the limit date-time of the delivery. Higher date is considered not acceptble.
+
+* The main delay is shown during delivery from the carriers to customers (Blue area).
+
+* `c826c40d7b19f62a09e2d7c5e7295ee2` is the seller that has more unamed products.
+
+* `955fee9216a65b617aa5c0531780ce60` is the best seller of one specific product.
+
 
 # Distinct geolocalisation of Sellers/Customers 
 
@@ -560,7 +730,9 @@ geolocation |>
 ```
  
  
-## If duplicates in customers_id equal the duplicates in Lat/lon for the same Zip code?
+## If duplicates in `customers_id` equal the duplicates in Lat/lon for the same Zip code?
+
+Conpare with the last table.
  
 ```{r}
 ## Filter only Zip code for customer_unique_id
@@ -575,7 +747,7 @@ geolocation |>
 
  **NO!**
 
-**Only zip_code_prefix is not enought to distinct between geolocations of customers and sellers**
+**Only zip_code_prefix is not enough to distinct between geolocations of customers and sellers**
 
 **For example there is only one customer with the zip_code equal to 99750.**
 
@@ -584,26 +756,33 @@ geolocation |>
  
 ## What about Seller_id
 
+### Check for duplicated seller_id
 
 ```{r}
 
 paste0("There are  ",
 sellers |>
-  group_by(seller_id) %>%
+  group_by(seller_id) |>
+  #summarise(N= n()) |>
   filter(n()>1),
 "Duplited seller_id.")
 ```
+
+### Zip code sellers grouping
 
 ```{r}
 sellers %>%
   group_by(zip_code_prefix) %>%
   mutate(Freq= n()) %>%
   arrange(desc(Freq)) %>%
+  head(1000) %>%
   datatable()
 ```
 
 
-# Explore Sellers localisation 
+## Explore Sellers localisation 
+
+**Zip Code is not enough to filter only seller adresses. There is also customers with the same zip code**
 
 ```{r, eval=FALSE}
 sellers_geolocation <- geolocation |> 
