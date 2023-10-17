@@ -137,3 +137,7 @@
 <a href="https://kmezhoud.github.io/learn_by_example/Brazilian_Ecommerce/Brazilian_E_Commerce.html" target = "_blank">
 <img src="images/Brazilian_Ecommerce.png" align="left" height="150" width="250" title="Beazilian E-Commerce by Olist">
 </a>
+
+<a href="https://kmezhoud.github.io/learn_by_example/RestaurantEDA/Restaurant_visitor.html" target = "_blank">
+<img src="images/restaurantEDA.png" align="left" height="150" width="250" title="Japanese restaurant EDA">
+</a>

@@ -1,0 +1,394 @@
+---
+title: 'Japenese Restaurant Visitor Exploratory'
+subtitle: 'R & Python'
+author: 'Karim Mezhoud & Martin Henze'
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    number_sections: true
+    fig_caption: true
+    toc: true
+    fig_width: 8
+    fig_height: 4
+    theme: cosmo
+    highlight: tango
+    code_folding: show
+---
+
+
+
+# Introduction
+
+This is an extensive Exploratory Data Analysis for the [Recruit Restaurant Visitor Forecasting](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting) competition with the powers of [tidy R](http://tidyverse.org/) and [ggplot2](http://ggplot2.tidyverse.org/). Also We tried to translate the main R code to Python.
+
+The aim of this challenge is to predict the future numbers of restaurant visitors. This makes it a Time Series Forecasting problem. The data was collected from Japanese restaurants. As we will see, the data set is small and easily accessible without requiring much memory or computing power. Therefore, this competition is particularly suited for beginners.
+
+The [data](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting/data) comes in the shape of 8 relational files which are derived from two separate Japanese websites that collect user information: "Hot Pepper Gourmet (hpg): similar to Yelp" (search and reserve) and "AirREGI / Restaurant Board (air): similar to Square" (reservation control and cash register). The training data is based on the time range of Jan 2016 - most of Apr 2017, while the test set includes the last week of Apr plus May 2017. The test data "intentionally spans a holiday week in Japan called the 'Golden Week.' The [data description](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting/data) further notes that: "There are days in the test set where the restaurant were closed and had no visitors. These are ignored in scoring. The training set omits days where the restaurants were closed."
+
+Those are the individual files:
+
+- **air_visit_data.csv**: historical visit data for the *air* restaurants. This is essentially the main training data set.
+
+- **air_reserve.csv** / **hpg_reserve.csv**: reservations made through the *air* / *hpg* systems.
+
+- **air_store_info.csv** / **hpg_store_info.csv**: details about the *air* / *hpg* restaurants including genre and location.
+
+- **store_id_relation.csv**: connects the *air* and *hpg* ids
+
+- **date_info.csv**: essentially flags the Japanese holidays.
+
+- **sample_submission.csv**: serves as the *test* set. The *id* is formed by combining the *air* id with the visit date.
+
+*Thank you all for the upvotes, critical feedback, and continued support!*
+
+
+# Preparations {.tabset .tabset-fade .tabset-pills}
+
+## Set Python and R Envirments and load packages 
+
+### for R to use python3
+```{r}
+# Set python environment and version in RStudio ;-)
+reticulate::use_python("/usr/bin/python3.10", required = TRUE)
+reticulate::py_config()
+
+# check module availability
+#reticulate::py_module_available("numpy")
+#reticulate::py_module_available("matplotlib")
+#reticulate::py_module_available("seaborn")
+```
+### Check R libraries paths
+```{r}
+.libPaths()
+```
+
+### Check the path of R envirment used by python
+```{python}
+import os
+print(os.environ['R_HOME'])
+# os.environ['R_HOME'] = "/home/kirus/R/x86_64-pc-linux-gnu-library/4.3"
+# print(os.environ['R_HOME'])
+```
+
+* We need to set R libraries path when called by Python.
+
+* Two paths  will be used: 
+
+  + `/usr/lib/R/library` for packages installed with  root profile during installing R base,
+  
+  + `/home/kirus/R/x86_64-pc-linux-gnu-library/4.3` for packages installed by user without root profile.
+
+
+### Check which R version and libraries paths used by `rpy2``
+```{python, warning=TRUE}
+import rpy2.rinterface
+#rpy2.rinterface.set_initoptions((b'rpy2', b'--no-save', b'--no-restore', b'--quiet'))
+from rpy2.robjects.packages import importr
+base = importr('base', lib_loc= '/usr/lib/R/library/')
+print(base.version)
+print(base._libPaths())
+```
+
+## Load libraries
+
+We load a range of libraries for general data wrangling and general visualisation together with more specialised tools.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+
+::: {}
+
+```{r, message = FALSE}
+# general visualisation
+library('ggplot2') # visualisation
+library('scales') # visualisation
+library('grid') # visualisation
+library('gridExtra') # visualisation
+library('RColorBrewer') # visualisation
+library('corrplot') # visualisation
+
+# general data manipulation
+library('dplyr') # data manipulation
+library('readr') # input/output
+library('data.table') # data manipulation
+library('tibble') # data wrangling
+library('tidyr') # data wrangling
+library('stringr') # string manipulation
+library('forcats') # factor manipulation
+
+# specific visualisation
+library('ggrepel') # visualisation
+library('ggridges') # visualisation
+library('ggExtra') # visualisation
+library('ggforce') # visualisation
+library('viridis') # visualisation
+
+# specific data manipulation
+library('lazyeval') # data wrangling
+library('broom') # data wrangling
+library('purrr') # string manipulation
+
+# Date plus forecast
+library('lubridate') # date and time
+library('timeDate') # date and time
+library('tseries') # time series analysis
+library('forecast') # time series analysis
+#library('prophet') # time series analysis
+library('timetk') # time series analysis
+
+# Maps / geospatial
+library('geosphere') # geospatial locations
+library('leaflet') # maps
+library('leaflet.extras') # maps
+library('maps') # maps
+```
+
+:::
+
+::: {}
+
+```{python}
+#pip3 install matplotlib
+#pip3 install seaborn
+#pip3 install scikit-learn
+#pip3 install rpy2
+
+from rpy2 import robjects
+from rpy2.robjects.packages import importr, data
+import rpy2.robjects.packages as rpackages
+import rpy2.robjects as ro
+from rpy2.robjects import pandas2ri
+
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+#from sklearn.model_selection import train_test_split
+from collections import Counter
+
+
+```
+
+:::
+
+::::
+
+## plot iris datasets   
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+
+::: {}
+
+```{r, fig.width=8, fig.height=4}
+iris %>%
+ggplot()+
+aes(x=Petal.Length,y=Petal.Width,color=Species, alpha=0.8) +
+ geom_point()
+
+#datasets::iris
+```
+
+:::
+
+::: {}
+
+
+```{python}
+
+## Load iris from python
+#iris = sns.load_dataset('iris')
+
+# load iris from R
+datasets = rpackages.importr('datasets', 
+            lib_loc= '/usr/lib/R/library/')
+iris = data(datasets).fetch('iris')['iris']
+
+# convert R dataframe to pandas df 
+# (https://rpy2.github.io/doc/latest/html/generated_rst/pandas.html)
+with (ro.default_converter + pandas2ri.converter).context():
+  iris = ro.conversion.get_conversion().rpy2py(iris)
+  
+  
+#sns.set_style("darkgrid")
+plt.style.use('ggplot')
+#fi = sns.FacetGrid(iris, hue ="Species", 
+#              height = 6).map(plt.scatter, 
+#                              'Petal.Length', 
+#                              'Petal.Width').add_legend()
+
+fi=sns.relplot(x="Petal.Length", 
+               y="Petal.Width", 
+               data=iris, alpha=0.8, 
+               hue='Species') 
+fi.fig.set_figheight(4)
+fi.fig.set_figwidth(8)
+plt.show()
+```
+
+
+
+:::
+
+::::
+
+## Helper functions
+
+We use the *multiplot* function, courtesy of [R Cookbooks](http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/) to create multi-panel plots. We also make use of a brief helper function to compute binomial confidence intervals.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+
+::: {}
+
+```{r}
+# Define multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+:::
+
+::: {}
+
+We use matplotlib to create subplots. The function multiplot now works with `*args` to accept an arbitrary number of plots, and the cols argument determines the number of columns in the layout. If layout is not provided, it is calculated from cols and the number of plots.
+
+The example at the end demonstrates how to use the multiplot function with two plots (y1 and y2) arranged in two columns.
+
+```{python}
+
+
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+
+def multiplot(*args, plotlist=None, file=None, cols=1, layout=None):
+    plots = list(args) + (plotlist if plotlist else [])
+    num_plots = len(plots)
+    
+    if layout is None:
+        rows = (num_plots - 1) // cols + 1
+        layout = [(i // cols, i % cols) for i in range(num_plots)]
+
+    if num_plots == 1:
+        plt.subplot2grid((rows, cols), (0, 0))
+        plt.plot(plots[0])
+        
+    else:
+        fig = plt.figure()
+        gs = GridSpec(rows, cols)
+
+        for i, plot in enumerate(plots):
+            ax = fig.add_subplot(gs[layout[i]])
+            ax.plot(plot)
+
+    if file:
+        plt.savefig(file)
+    else:
+        plt.show()
+
+# Example usage
+#import numpy as np
+
+#x = np.linspace(0, 10, 100)
+#y1 = np.sin(x)
+#y2 = np.cos(x)
+
+#multiplot(y1, y2, cols=2)
+
+```
+
+:::
+
+::::
+```{r}
+
+```
+
+```{r echo=FALSE}
+# function to extract binomial confidence levels
+get_binCI <- function(x,n) as.list(setNames(binom.test(x,n)$conf.int, c("lwr", "upr")))
+```
+
+
+
+## Load Data
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+
+::: {}
+
+```{r}
+
+air_visit <- data.table::fread(str_c("data/air_visit_data.csv"))
+air_reserve <- data.table::fread(str_c('data/air_reserve.csv'))
+air_store_info <- data.table::fread(str_c('data/air_store_info.csv'))
+date_info <- data.table::fread(str_c('data/date_info.csv'))
+hpg_reserve <- data.table::fread(str_c('data/hpg_reserve.csv'))
+hpg_store_info <- data.table::fread(str_c('data/hpg_store_info.csv'))
+sample_submission <- data.table::fread(str_c('data/sample_submission.csv'))
+store_id_relation <- data.table::fread(str_c('data/store_id_relation.csv'))
+```
+
+:::
+
+::: {}
+
+In this Python code, we use the pandas library to read the CSV files. Each read_csv function call reads a CSV file into a DataFrame. The variable names (air_visit, air_reserve, etc.) will be DataFrames that you can use for data manipulation and analysis.
+
+```{python}
+air_visit = pd.read_csv("data/air_visit_data.csv")
+air_reserve = pd.read_csv("data/air_reserve.csv")
+air_store_info = pd.read_csv("data/air_store_info.csv")
+date_info = pd.read_csv("data/date_info.csv")
+hpg_reserve = pd.read_csv("data/hpg_reserve.csv")
+hpg_store_info = pd.read_csv("data/hpg_store_info.csv")
+sample_submission = pd.read_csv("data/sample_submission.csv")
+store_id_relation = pd.read_csv("data/store_id_relation.csv")
+
+```
+
+:::
+
+::::
