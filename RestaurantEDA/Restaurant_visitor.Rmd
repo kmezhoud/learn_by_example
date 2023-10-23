@@ -3,6 +3,7 @@ title: 'Japenese Restaurant Visitor Exploratory'
 subtitle: 'R & Python'
 author: 'Karim Mezhoud & Martin Henze'
 date: '`r Sys.Date()`'
+lang: 'en-us'
 output:
   html_document:
     number_sections: true
@@ -14,7 +15,9 @@ output:
     highlight: tango
     code_folding: show
 ---
-
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE, error=TRUE)
+```
 
 
 # Introduction
@@ -57,6 +60,19 @@ reticulate::py_config()
 #reticulate::py_module_available("matplotlib")
 #reticulate::py_module_available("seaborn")
 ```
+### Set Language
+
+```{r, message=FALSE, warning=FALSE}
+#Sys.setlocale("LC_ALL","English")
+Sys.setenv(LANG = "en_US.UTF-8")
+Sys.setenv("LANGUAGE"="En")
+```
+
+```{python}
+import locale
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
+```
+
 ### Check R libraries paths
 ```{r}
 .libPaths()
@@ -111,6 +127,7 @@ library('corrplot') # visualisation
 library('dplyr') # data manipulation
 library('readr') # input/output
 library('data.table') # data manipulation
+library('DT') # display table
 library('tibble') # data wrangling
 library('tidyr') # data wrangling
 library('stringr') # string manipulation
@@ -141,32 +158,47 @@ library('geosphere') # geospatial locations
 library('leaflet') # maps
 library('leaflet.extras') # maps
 library('maps') # maps
+
+library(reticulate) # interface to python
 ```
 
 :::
 
 ::: {}
 
-```{python}
+```{python,  warning=FALSE}
 #pip3 install matplotlib
 #pip3 install seaborn
 #pip3 install scikit-learn
 #pip3 install rpy2
+# pip install git+https://github.com/h2oai/datatable
+# pip install ipywidgets==7.0.1
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr, data
 import rpy2.robjects.packages as rpackages
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
-
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import locale
+from statsmodels.nonparametric.smoothers_lowess import lowess
+from matplotlib.gridspec import GridSpec
+import matplotlib.dates as mdates
+from matplotlib.ticker import FormatStrFormatter
+import folium
+from folium.plugins import MarkerCluster
+
+#from IPython.display import display, HTML # displays html tobale in Rmarkdown
+#import ipywidgets 
+#import qgrid  # display dataframe like DT::datatable in Rmarkdown document
+#import datatable as dt
 #from sklearn.model_selection import train_test_split
 from collections import Counter
-
+from datetime import datetime
 
 ```
 
@@ -337,23 +369,41 @@ def multiplot(*args, plotlist=None, file=None, cols=1, layout=None):
 
 ```
 
+An other version using  `add_gridspec` to create a layout for multiple plots:
+
+```{python}
+def multiplot(*args, plotlist=None, file=None, cols=1, layout=None):
+    plots = list(args) + (plotlist if plotlist else [])
+    num_plots = len(plots)
+    
+    if layout is None:
+        rows = (num_plots - 1) // cols + 1
+
+    fig = plt.figure()
+
+    if num_plots == 1:
+        plt.subplot2grid((rows, cols), (0, 0), colspan=cols)
+        plt.plot(plots[0])
+        
+    else:
+        gs = GridSpec(rows, cols)
+
+        for i, plot in enumerate(plots):
+            ax = fig.add_subplot(gs[i // cols, i % cols])
+            ax.plot(plot)
+
+    if file:
+        plt.savefig(file)
+    else:
+        plt.show()
+```
+
 :::
 
 ::::
-```{r}
-
-```
-
-```{r echo=FALSE}
-# function to extract binomial confidence levels
-get_binCI <- function(x,n) as.list(setNames(binom.test(x,n)$conf.int, c("lwr", "upr")))
-```
-
 
 
 ## Load Data
-
-
 
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
 
@@ -361,14 +411,14 @@ get_binCI <- function(x,n) as.list(setNames(binom.test(x,n)$conf.int, c("lwr", "
 
 ```{r}
 
-air_visit <- data.table::fread(str_c("data/air_visit_data.csv"))
+air_visits <- data.table::fread(str_c("data/air_visit_data.csv"))
 air_reserve <- data.table::fread(str_c('data/air_reserve.csv'))
-air_store_info <- data.table::fread(str_c('data/air_store_info.csv'))
-date_info <- data.table::fread(str_c('data/date_info.csv'))
+air_store <- data.table::fread(str_c('data/air_store_info.csv'))
+holidays <- data.table::fread(str_c('data/date_info.csv'))
 hpg_reserve <- data.table::fread(str_c('data/hpg_reserve.csv'))
-hpg_store_info <- data.table::fread(str_c('data/hpg_store_info.csv'))
-sample_submission <- data.table::fread(str_c('data/sample_submission.csv'))
-store_id_relation <- data.table::fread(str_c('data/store_id_relation.csv'))
+hpg_store <- data.table::fread(str_c('data/hpg_store_info.csv'))
+store_ids <- data.table::fread(str_c('data/store_id_relation.csv'))
+test <- data.table::fread(str_c('data/sample_submission.csv'))
 ```
 
 :::
@@ -378,17 +428,826 @@ store_id_relation <- data.table::fread(str_c('data/store_id_relation.csv'))
 In this Python code, we use the pandas library to read the CSV files. Each read_csv function call reads a CSV file into a DataFrame. The variable names (air_visit, air_reserve, etc.) will be DataFrames that you can use for data manipulation and analysis.
 
 ```{python}
-air_visit = pd.read_csv("data/air_visit_data.csv")
+air_visits = pd.read_csv("data/air_visit_data.csv")
 air_reserve = pd.read_csv("data/air_reserve.csv")
-air_store_info = pd.read_csv("data/air_store_info.csv")
-date_info = pd.read_csv("data/date_info.csv")
+air_store = pd.read_csv("data/air_store_info.csv")
+holidays = pd.read_csv("data/date_info.csv")
 hpg_reserve = pd.read_csv("data/hpg_reserve.csv")
-hpg_store_info = pd.read_csv("data/hpg_store_info.csv")
-sample_submission = pd.read_csv("data/sample_submission.csv")
-store_id_relation = pd.read_csv("data/store_id_relation.csv")
+hpg_store = pd.read_csv("data/hpg_store_info.csv")
+store_ids = pd.read_csv("data/store_id_relation.csv")
+test = pd.read_csv("data/sample_submission.csv")
 
 ```
 
 :::
 
+::::
+
+# Overview: File structure and content {.tabset .tabset-fade .tabset-pills}
+
+As a first step let's have an overview of the data sets.
+
+## Air visits
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_visits %>%
+  head(10) %>%
+  DT::datatable()
+```
+
+We find that this file contains the *visitors* numbers for each *visit\_date* and *air\_store\_id*. The date feature should be transformed into a time-series format. There are 829 different stores, which is a small data set:
+
+```{r,class.source = 'fold-hide'}
+air_visits %>%
+  distinct(air_store_id) %>%
+  nrow()
+```
+
+:::
+::: {}
+qgrid and ipywidgets verions are not compatible and have a issue to render html table like `DT::datatable()`.
+
+```{python}
+
+#air_visits = pd.DataFrame(air_visits)
+
+# Show the DataFrame using qgrid in Python
+#qgrid_widget = qgrid.show_grid(air_visits, show_toolbar=True)
+#qgrid_widget.head(10)
+
+#html = air_visits.head(10).to_html()
+#display(HTML(html))
+#print(html)
+air_visits.head(10)
+air_visits['air_store_id'].nunique()
+```
+
+:::
+::::
+
+
+## Air Reserve
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_reserve %>%
+  head(10) %>%
+  DT::datatable()
+```
+We find that the *air* reservations include the *date* and *time* of the reservation, as well as those of the visit. We have reservation numbers for 314 *air* stores:
+
+```{r, class.source = 'fold-hide'}
+air_reserve %>% distinct(air_store_id) %>% nrow()
+```
+
+:::
+::: {}
+
+```{python}
+air_reserve.head(10)
+air_reserve['air_store_id'].nunique()
+```
+
+:::
+::::
+
+
+## HPG Reserve
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+  hpg_reserve %>%
+  head(10) %>%
+  DT::datatable()
+```
+
+The *hpg* reservations file follows the same structure as the corresponding *air* file. We have reservation numbers for 13325 *hpg* stores:
+
+```{r,class.source = 'fold-hide'}
+hpg_reserve %>% distinct(hpg_store_id) %>% nrow()
+```
+:::
+::: {}
+
+```{python}
+
+hpg_reserve.head(10)
+hpg_reserve['hpg_store_id'].nunique()
+```
+:::
+::::
+
+
+## Air Store
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_store %>%
+  head(10) %>%
+  datatable()
+```
+We find that the *air\_store* info includes the name of the particular cuisine along with the name of the area.
+
+:::
+::: {}
+
+```{python}
+air_store.head(10)
+```
+:::
+::::
+
+
+## HPG Store
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+hpg_store %>%
+  head(10) %>%
+  datatable()
+```
+
+Again, the *hpg\_store* info follows the same structure as the *air* info. Here the *genre\_name* includes the word *style*. It's worth checking whether the same is true for the *air* data or whether it just refers to the specific "Japanese style". There are 4690 different *hpg\_store\_ids*, which are significantly fewer than we have reservation data for.
+
+:::
+::: {}
+
+```{python}
+hpg_store.head(10)
+```
+:::
+::::
+
+
+## Holidays
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+holidays %>%
+  head(10) %>%
+  datatable()
+```
+
+We called the *date\_info* file *holidays*, because that's essentially the information it contains. Holidays are encoded as binary flags in integer format. This should become a logical binary feature for exploration purposes.
+
+:::
+::: {}
+
+```{python}
+holidays.head(10)
+```
+:::
+::::
+
+
+## Store IDs
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+store_ids %>%
+  head(10) %>%
+  datatable()
+```
+This is a relational file that connects the *air* and *hpg* ids. There are only 150 pairs, which is less than 20% of all *air* stores.
+:::
+::: {}
+
+```{python}
+store_ids.head(10)
+```
+:::
+::::
+
+
+## Test data
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+test %>%
+  head(10) %>%
+  datatable()
+```
+
+As noted in the data description, the *id* of the final submission file is a concatenation of the *air\_id* and the *date*.
+:::
+::: {}
+
+```{python}
+test.head(10)
+```
+:::
+::::
+
+## Missing values
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+sum(is.na(air_visits))
+sum(is.na(air_reserve))
+sum(is.na(hpg_reserve))
+sum(is.na(air_store))
+sum(is.na(hpg_store))
+sum(is.na(holidays))
+sum(is.na(store_ids))
+sum(is.na(test))
+```
+
+There are no missing values in our data. Excellent.
+:::
+::: {}
+In Python, you can use the isna() method from the pandas library to check for missing values in a DataFrame, and then use sum() to count them. Here's the equivalent code:
+
+```{python}
+air_visits.isna().sum().sum()
+air_reserve.isna().sum().sum()
+hpg_reserve.isna().sum().sum()
+air_store.isna().sum().sum()
+hpg_store.isna().sum().sum()
+holidays.isna().sum().sum()
+test.isna().sum().sum()
+```
+* `test.isna()` returns a DataFrame of the same shape as test with True where the original DataFrame has missing values, and False otherwise.
+
+* `.sum()` is used twice. The first sum() computes the count of missing values for each column, and the second sum() adds up those counts to get the total number of missing values in the entire DataFrame.
+
+* The final result, missing_values_count, will be the equivalent of sum(is.na(test)) in R.
+:::
+::::
+
+
+## Reformating feature
+
+We change the formatting of the date/time features and also reformat a few features to logical and factor variables for exploration purposes.
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_visits <- air_visits %>%
+  mutate(visit_date = ymd(visit_date))
+
+air_reserve <- air_reserve %>%
+  mutate(visit_datetime = as.POSIXct(visit_datetime,format="%Y-%m-%dT%H:%MZ"), #ymd_hms(visit_datetime),
+         reserve_datetime = as.POSIXct(reserve_datetime,format="%Y-%m-%dT%H:%MZ")) #ymd_hms(reserve_datetime)
+
+hpg_reserve <- hpg_reserve %>%
+  mutate(visit_datetime = as.POSIXct(visit_datetime,format="%Y-%m-%dT%H:%MZ"),
+         reserve_datetime = as.POSIXct(reserve_datetime,format="%Y-%m-%dT%H:%MZ"))
+
+air_store <- air_store %>%
+  mutate(air_genre_name = as.factor(air_genre_name),
+         air_area_name = as.factor(air_area_name))
+
+hpg_store <- hpg_store %>%
+  mutate(hpg_genre_name = as.factor(hpg_genre_name),
+         hpg_area_name = as.factor(hpg_area_name))
+
+holidays <- holidays %>%
+  mutate(holiday_flg = as.logical(holiday_flg),
+         date = ymd(calendar_date),
+         calendar_date = as.character(calendar_date))
+```
+:::
+::: {}
+
+```{python}
+# Convert visit_date column to datetime format
+air_visits['visit_date'] = pd.to_datetime(air_visits['visit_date'])
+
+# Convert visit_datetime and reserve_datetime columns to datetime format
+air_reserve['visit_datetime'] = pd.to_datetime(air_reserve['visit_datetime'])
+air_reserve['reserve_datetime'] = pd.to_datetime(air_reserve['reserve_datetime'])
+
+hpg_reserve['visit_datetime'] = pd.to_datetime(hpg_reserve['visit_datetime'])
+hpg_reserve['reserve_datetime'] = pd.to_datetime(hpg_reserve['reserve_datetime'])
+
+# Convert categorical columns to factors (categorical variables in pandas)
+air_store['air_genre_name'] = air_store['air_genre_name'].astype('category')
+air_store['air_area_name'] = air_store['air_area_name'].astype('category')
+
+hpg_store['hpg_genre_name'] = hpg_store['hpg_genre_name'].astype('category')
+hpg_store['hpg_area_name'] = hpg_store['hpg_area_name'].astype('category')
+
+# Convert holiday_flg to boolean, date to datetime, and calendar_date to string
+holidays['holiday_flg'] = holidays['holiday_flg'].astype(bool)
+holidays['date'] = pd.to_datetime(holidays['calendar_date'])
+holidays['calendar_date'] = holidays['calendar_date'].astype(str)
+```
+:::
+::::
+
+
+# Individual feature
+
+
+Here we have a first look at the distributions of the feature in our individual data files before combining them for a more detailed analysis. This inital visualisation will be the foundation on which we build our analysis.
+
+
+## Air Visits
+We start with the number of visits to the *air* restaurants. Here we plot the total number of visitors per day over the full *training* time range together with the median visitors per day of the week and month of the year:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+Sys.setenv(LANG = "en_US.UTF-8")
+
+p1 <- air_visits %>%
+  group_by(visit_date) %>%
+  summarise(all_visitors = sum(visitors)) %>%
+  ggplot(aes(visit_date,all_visitors)) +
+  geom_line(col = "blue") +
+  labs(y = "All visitors", x = "Date")
+
+p2 <- air_visits %>%
+  ggplot(aes(visitors)) +
+  geom_vline(xintercept = 20, color = "orange") +
+  geom_histogram(fill = "blue", bins = 30) +
+  scale_x_log10()
+
+p3 <- air_visits %>%
+  mutate(wday = wday(visit_date, label = TRUE, week_start = 1)) %>%
+  group_by(wday) %>%
+  summarise(visits = median(visitors)) %>%
+  ggplot(aes(wday, visits, fill = wday)) +
+  geom_col() +
+  theme(legend.position = "none", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(x = "Day of the week", y = "Median visitors") +
+  scale_fill_hue()
+  
+p4 <- air_visits %>%
+  mutate(month = month(visit_date, label = TRUE)) %>%
+  group_by(month) %>%
+  summarise(visits = median(visitors)) %>%
+  ggplot(aes(month, visits, fill = month)) +
+  geom_col() +
+  theme(legend.position = "none", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  labs(x = "Month", y = "Median visitors")
+
+layout <- matrix(c(1,1,1,1,2,3,4,4),2,4,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+```
+
+We find:
+* There is an interesting long-term step structure in the overall time series. This might be related to new restaurants being added to the data base. In addition, we already see a periodic pattern that most likely corresponds to a weekly cycle.
+
+* The number of guests per visit per restaurant per day peaks at around 20 (the orange line). The distribution extends up to 100 and, in rare cases, beyond.
+
+* Friday and the weekend appear to be the most popular days; which is to be expected. `Monday` and `Tuesday` have the lowest numbers of average visitors.
+
+* Also during the year there is a certain amount of variation. `Dec` appears to be the most popular month for restaurant visits. The period of `Mar - May` is consistently busy.
+
+
+We will be forecasting for the last week of April plus May 2017, so let’s look at this time range in our 2016 training data:
+
+```{r}
+air_visits %>%
+  filter(visit_date > ymd("2016-04-15") & visit_date < ymd("2016-06-15")) %>%
+  group_by(visit_date) %>%
+  summarise(all_visitors = sum(visitors)) %>%
+  ggplot(aes(visit_date,all_visitors)) +
+  geom_line() +
+  geom_smooth(method = "loess", color = "blue", span = 1/7) +
+  labs(y = "All visitors", x = "Date")
+```
+
+
+Here, the black line is the date and the blue line corresponds to a smoothing fit with a corresponding grey confidence area. We see again the weekly period and also the impact of the aforementioned [Golden Week](https://en.wikipedia.org/wiki/Golden_Week_(Japan)), which in 2016 happened between Apr 29 and May 5.
+
+
+
+:::
+::: {}
+
+
+
+`Seaborn` doesn't have a direct equivalent to the `geom_smooth` function with the loess method. However, we can achieve a similar effect using the seaborn.lineplot function combined with a `lowess` smoother from the `statsmodels` library.
+
+```{python}
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
+# Set the language to English
+#plt.rcParams['axes.formatter.use_locale'] = False
+#plt.rcParams['pgf.rcfonts'] = False
+#plt.rcParams['pdf.fonttype'] = 42
+
+p1_data = air_visits.groupby('visit_date')['visitors'].sum().reset_index()
+
+p3_data = air_visits.assign(wday=air_visits['visit_date'].dt.day_name()).groupby('wday')['visitors'].median().reset_index()
+
+p4_data = air_visits.assign(month=air_visits['visit_date'].dt.strftime('%b')).groupby('month')['visitors'].median().reset_index()
+
+
+plt.style.use('ggplot')
+fig = plt.figure(figsize=(11, 6))
+gs = fig.add_gridspec(2, 3)
+
+# First row
+ax1 = fig.add_subplot(gs[0, :])
+sns.lineplot(data=p1_data, x='visit_date', y='visitors', color='blue', ax=ax1)
+ax1.set_xlabel('All visitors')
+ax1.set_ylabel('Date')
+
+# Second row
+ax2 = fig.add_subplot(gs[1, 0])
+plt.axvline(x=20, color='orange')
+plt.xscale('log')
+sns.histplot(data=air_visits, x='visitors', bins=30, color='blue', kde=True, ax=ax2)
+
+ax3 = fig.add_subplot(gs[1, 1])
+order = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+ax3.set_xticklabels( ('Mon', 'Tue','Wed', 'Thur', 'Fri', 'Sat', 'Sun') )
+p3 = sns.barplot(data=p3_data, x='wday', y='visitors', hue='wday', 
+                  legend=False, ax=ax3, order=order) #palette='viridis',
+p3 = plt.xticks(rotation=45)
+#ax3.set_xticklabels(ax3.get_xticklabels(), rotation=45)
+ax3.set_xlabel('Days')
+
+ax4 = fig.add_subplot(gs[1, 2])
+order = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+p4 = sns.barplot(data=p4_data, x='month', y='visitors', hue='month',
+         legend=False, ax=ax4, order=order, palette='viridis')
+p4 = plt.xticks(rotation=45)
+#ax4.set_xticklabels(ax4.get_xticklabels(), rotation=45)
+ax4.set_xlabel('Months')
+
+plt.tight_layout()
+plt.show()
+```
+
+* In this code, we use add_gridspec to create a 2x3 grid of subplots. 
+
+* Then, we manually add subplots to specific positions using add_subplot. 
+
+* This way, you have full control over the layout of the plots.
+
+
+
+```{python}
+from statsmodels.nonparametric.smoothers_lowess import lowess
+import matplotlib.dates as mdates
+#locale.setlocale(locale.LC_ALL,'en_US.utf8')
+
+plt.style.use('ggplot')
+
+# Assuming air_visits is your DataFrame
+subset_data = air_visits[(air_visits['visit_date'] > '2016-04-15') &
+                        (air_visits['visit_date'] < '2016-06-15')]
+# Calculate the total visitors for each visit_date
+agg_data = subset_data.groupby('visit_date')['visitors'].sum().reset_index()
+#agg_data.visit_date = agg_data.visit_date.dt.strftime('%d %b')
+
+# build the figure
+fig, ax = plt.subplots()
+
+# Scatter plot of the data
+p = sns.lineplot(data = agg_data, x='visit_date', y='visitors',
+                 color='black', label='Data')
+#p= sns.regplot(data=agg_data, x='visit_date', y='visitors',
+#                color='black', lowess=True, ax=plt.gca())
+
+# set dates format
+p = ax.set(xticklabels = agg_data['visit_date'].dt.strftime('%d %b'))
+
+p = plt.fill_between(agg_data.visit_date, agg_data.visitors*0.8,
+                        agg_data.visitors*1.2, 
+                        alpha=0.25, label='LOWESS uncertainty',
+                        color = "grey")
+
+
+# put the labels at 45deg since they tend to be too long
+#p = plt.xticks(rotation=45)
+fig.autofmt_xdate() 
+
+# # Ensure that the x.axis text is spacieux 
+p = ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+## Calculate the lowess smoothed line
+smoothed = lowess(agg_data['visitors'], 
+           agg_data['visit_date'].astype('datetime64[s]'),  frac=1/7)
+## Plot the smoothed line
+p = plt.plot(agg_data['visit_date'], smoothed[:, 1],
+    color='blue', label='Lowess Smoother')
+
+# Set labels and legend
+p = plt.xlabel('Date')
+p = plt.ylabel('All visitors')
+plt.legend("")
+
+# Show the plot
+plt.show(p)
+
+```
+
+
+:::
+::::
+
+
+## Air Reservations
+
+Let’s see how our reservations data compares to the actual visitor numbers. We start with the air restaurants and visualise their visitor volume through reservations for each day, alongside the hours of these visits and the time between making a reservation and visiting the restaurant:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+foo <- air_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         reserve_wday = wday(reserve_datetime, label = TRUE, week_start = 1),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         visit_wday = wday(visit_datetime, label = TRUE, week_start = 1),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")
+         )
+
+p1 <- foo %>%
+  group_by(visit_date) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(visit_date, all_visitors)) +
+  geom_line() +
+  labs(x = "Air visit date")
+
+p2 <- foo %>%
+  group_by(visit_hour) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(visit_hour, all_visitors)) +
+  geom_col(fill = "blue")
+
+p3 <- foo %>%
+  filter(diff_hour < 24*5) %>%
+  group_by(diff_hour) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(diff_hour, all_visitors)) +
+  geom_col(fill = "blue") +
+  labs(x = "Time from reservation to visit (hours)")
+
+layout <- matrix(c(1,1,2,3),2,2, byrow=TRUE)
+multiplot(p1, p2, p3, layout=layout)
+
+```
+:::
+::: {}
+
+```{python}
+# Assuming 'air_reserve' is your DataFrame
+foo = air_reserve.copy()
+foo['reserve_date'] = foo['reserve_datetime'].dt.date
+foo['reserve_hour'] = foo['reserve_datetime'].dt.hour
+foo['reserve_wday'] = foo['reserve_datetime'].dt.day_name()
+foo['visit_date'] = foo['visit_datetime'].dt.date
+foo['visit_hour'] = foo['visit_datetime'].dt.hour
+foo['visit_wday'] = foo['visit_datetime'].dt.day_name()
+foo['diff_hour'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.total_seconds() / 3600
+foo['diff_day'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.days
+
+p1 = foo.groupby('visit_date')['reserve_visitors'].sum().reset_index()
+p2 = foo.groupby('visit_hour')['reserve_visitors'].sum().reset_index()
+p3 = foo[foo['diff_hour'] < 24*5].groupby('diff_hour')['reserve_visitors'].sum().reset_index()
+
+# Multiplot layout
+fig = plt.figure(figsize=(9, 5))
+gs = GridSpec(2, 2, figure=fig)
+plt.style.use('ggplot')
+
+ax1 = fig.add_subplot(gs[0, :])
+ax2 = fig.add_subplot(gs[1, 0])
+ax3 = fig.add_subplot(gs[1, 1])
+
+p1.plot(x='visit_date', y='reserve_visitors', kind='line', ax=ax1, color = 'black')
+p1= ax1.set_xlabel('air visit date')
+p1= plt.legend("")
+
+p2.plot(x='visit_hour', y='reserve_visitors', kind='bar', color='blue', ax=ax2)
+p2= ax2.set_xticklabels(ax2.get_xticklabels(), rotation=0)
+p2= ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+p2= plt.legend("")
+
+p3.plot(x='diff_hour', y='reserve_visitors', kind='bar', color='blue', ax=ax3)
+p3= ax3.set_xlabel('Time from reservation to visit (hours)')
+p3= ax3.set_xticklabels(ax3.get_xticklabels(), rotation=0)
+p3= ax3.xaxis.set_major_locator(mdates.AutoDateLocator())
+p3= ax3.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+p3= plt.legend("")
+
+plt.tight_layout()
+plt.show()
+```
+:::
+::::
+
+
+
+## HPG Reservations
+
+In the same style as above, here are the hpg reservations:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+foo <- hpg_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day")
+         )
+
+p1 <- foo %>%
+  group_by(visit_date) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(visit_date, all_visitors)) +
+  geom_line() +
+  labs(x = "HPG visit date")
+
+p2 <- foo %>%
+  group_by(visit_hour) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(visit_hour, all_visitors)) +
+  geom_col(fill = "red")
+
+p3 <- foo %>%
+  filter(diff_hour < 24*5) %>%
+  group_by(diff_hour) %>%
+  summarise(all_visitors = sum(reserve_visitors)) %>%
+  ggplot(aes(diff_hour, all_visitors)) +
+  geom_col(fill = "red") +
+  labs(x = "Time from reservation to visit (hours)")
+
+layout <- matrix(c(1,1,2,3),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, layout=layout)
+```
+
+We find:
+
+* Here the visits after reservation follow a more orderly pattern, with a clear spike in Dec 2016. As above for the air data, we also see reservation visits dropping off as we get closer to the end of the time frame.
+
+* Again, most reservations are for dinner, and we see another nice 24-hour pattern for making these reservations. It’s worth noting that here the last few hours before the visit don’t see more volume than the 24 or 48 hours before. This is in stark constrast to the air data.
+
+
+:::
+::: {}
+
+```{python}
+foo = hpg_reserve.copy()
+foo['reserve_date'] = foo['reserve_datetime'].dt.date
+foo['reserve_hour'] = foo['reserve_datetime'].dt.hour
+foo['visit_date'] = foo['visit_datetime'].dt.date
+foo['visit_hour'] = foo['visit_datetime'].dt.hour
+foo['diff_hour'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.total_seconds() / 3600
+foo['diff_day'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.days
+
+p1 = foo.groupby('visit_date')['reserve_visitors'].sum().reset_index()
+p2 = foo.groupby('visit_hour')['reserve_visitors'].sum().reset_index()
+p3 = foo[foo['diff_hour'] < 24*5].groupby('diff_hour')['reserve_visitors'].sum().reset_index()
+
+# Multiplot layout
+fig = plt.figure(figsize=(9, 5))
+gs = GridSpec(2, 2, figure=fig)
+plt.style.use('ggplot')
+
+ax1 = fig.add_subplot(gs[0, :])
+ax2 = fig.add_subplot(gs[1, 0])
+ax3 = fig.add_subplot(gs[1, 1])
+
+p1.plot(x='visit_date', y='reserve_visitors', kind='line', color='black', ax=ax1)
+p1= ax1.set_xlabel('HPG visit date')
+#p1= ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45)
+p1= ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+p1= plt.legend("")
+
+p2.plot(x='visit_hour', y='reserve_visitors', kind='bar', color='red', ax=ax2)
+p2= ax2.set_xticklabels(ax2.get_xticklabels(), rotation=0)
+p2= ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+p2= plt.legend("")
+
+p3.plot(x='diff_hour', y='reserve_visitors', kind='bar', color='red', ax=ax3)
+p3= ax3.set_xlabel('Time from reservation to visit (hours)')
+p3= ax3.set_xticklabels(ax3.get_xticklabels(), rotation=0)
+p3= ax3.xaxis.set_major_locator(mdates.AutoDateLocator())
+p3= ax3.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+p3= plt.legend("")
+
+
+plt.tight_layout()
+plt.show()
+```
+:::
+::::
+
+## Air Store
+
+After visualising the temporal aspects, let’s now look at the spatial information. Note, that according to the [data description](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting/data) the “latitude and longitude are the latitude and longitude of the area to which the store belongs”. This is meant to discourage us from identifying specific restaurants. I would be surprised if nobody tried anyway, though.
+
+This is a fully interactive and zoomable map of all the air restaurants. Click on the clusters to break them up into smaller clusters and ultimately into the individual restaurants, which are labelled by their genre. The map nicely visualises the fact that many restaurants share common coordinates, since those coordinates refer to the area of the restaurant. Click on the single markers to see their air_store_id. The map is powered by the [leaflet](https://rstudio.github.io/leaflet/) package, which includes a variety of cool tools for interactive maps. Have fun exploring!
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+leaflet(air_store) %>%
+  addTiles() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addMarkers(~longitude, ~latitude,
+             popup = ~air_store_id, label = ~air_genre_name,
+             clusterOptions = markerClusterOptions())
+```
+:::
+::: {}
+
+In Python, you can achieve a similar map using the [folium](https://pypi.org/project/folium/) library.
+
+```{python, message=FALSE}
+import warnings
+warnings.filterwarnings('ignore')
+
+# Create a map centered at a specific location
+m = folium.Map(location=[35.6528, 139.8395], zoom_start=6)
+
+# Add tiles (you can choose different providers)
+folium.TileLayer(tiles='CartoDB positron').add_to(m)
+
+# Create a MarkerCluster object
+m=marker_cluster = MarkerCluster().add_to(m)
+
+## Add markers from the air_store dataset
+# for index, row in air_store.iterrows():
+#     folium.Marker(location=[row['latitude'], row['longitude']],
+#                   popup=row['air_store_id'],
+#                   icon=None,
+#                   tooltip=row['air_genre_name']).add_to(marker_cluster)
+
+
+# Define a function to add markers
+def add_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup=row['air_store_id'],
+                  icon=None,
+                  tooltip=row['air_genre_name']).add_to(marker_cluster)
+
+# Apply the function to each row of the DataFrame
+air_store.apply(add_marker, axis=1)
+
+# Display the map
+m
+```
+:::
+::::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+
+```
+:::
+::: {}
+
+```{python}
+
+```
+:::
 ::::
