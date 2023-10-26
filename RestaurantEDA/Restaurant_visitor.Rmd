@@ -19,7 +19,6 @@ output:
 knitr::opts_chunk$set(echo=TRUE, error=TRUE)
 ```
 
-
 # Introduction
 
 This is an extensive Exploratory Data Analysis for the [Recruit Restaurant Visitor Forecasting](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting) competition with the powers of [tidy R](http://tidyverse.org/) and [ggplot2](http://ggplot2.tidyverse.org/). Also We tried to translate the main R code to Python.
@@ -180,7 +179,8 @@ import rpy2.robjects.packages as rpackages
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
 import matplotlib
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt, dates
+#import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -191,6 +191,7 @@ import matplotlib.dates as mdates
 from matplotlib.ticker import FormatStrFormatter
 import folium
 from folium.plugins import MarkerCluster
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
 
 #from IPython.display import display, HTML # displays html tobale in Rmarkdown
 #import ipywidgets 
@@ -1164,7 +1165,7 @@ plt.show()
 
 ## Air Store
 
-After visualising the temporal aspects, let’s now look at the spatial information. Note, that according to the [data description](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting/data) the “latitude and longitude are the latitude and longitude of the area to which the store belongs”. This is meant to discourage us from identifying specific restaurants. I would be surprised if nobody tried anyway, though.
+After visualising the temporal aspects, let’s now look at the spatial information. Note, that according to the [data description](https://www.kaggle.com/c/recruit-restaurant-visitor-forecasting/data) the `latitude and longitude are the latitude and longitude of the area to which the store belongs`. This is meant to discourage us from identifying specific restaurants. I would be surprised if nobody tried anyway, though.
 
 This is a fully interactive and zoomable map of all the air restaurants. Click on the clusters to break them up into smaller clusters and ultimately into the individual restaurants, which are labelled by their genre. The map nicely visualises the fact that many restaurants share common coordinates, since those coordinates refer to the area of the restaurant. Click on the single markers to see their air_store_id. The map is powered by the [leaflet](https://rstudio.github.io/leaflet/) package, which includes a variety of cool tools for interactive maps. Have fun exploring!
 
@@ -1209,7 +1210,7 @@ multiplot(p1, p2, layout=layout)
 
 We find:
 
-* There are lots of Izakaya gastropubs in our data, followed by Cafe’s. We don’t have many Karaoke places in the air data set and also only a few that describe themselves as generically “International” or “Asian”. I have to admit, I’m kind of intrigued by “creative cuisine”.
+* There are lots of Izakaya gastropubs in our data, followed by Cafe’s. We don’t have many Karaoke places in the air data set and also only a few that describe themselves as generically `International` or `Asian`. I have to admit, I’m kind of intrigued by `creative cuisine`.
 
 * Fukuoka has the largest number of air restaurants per area, followed by many Tokyo areas.
 
@@ -1354,7 +1355,7 @@ Here we have truncated the hpg_area_name to 20 characters to make the plot more 
 
 We find:
 
-* The hpg description contains a larger variety of genres than in the air data. Here, “Japanese style” appears to contain many more places that are categorised more specifically in the air data. The same applies to “International cuisine”.
+* The hpg description contains a larger variety of genres than in the air data. Here, `Japanese style` appears to contain many more places that are categorised more specifically in the air data. The same applies to `International cuisine`.
 
 * In the top 15 area we find again Tokyo and Osaka to be prominently present.
 
@@ -1660,9 +1661,9 @@ foo %>%
 
 We find:
 
-* The mean values range between 10 and 100 visitors per genre per day. Within each category, the long-term trend looks reasonably stable. There is an upward trend for “Creative Cuisine” and “Okonomiyaki” et al., while the popularity of “Asian” food has been declining since late 2016.
+* The mean values range between 10 and 100 visitors per genre per day. Within each category, the long-term trend looks reasonably stable. There is an upward trend for `Creative Cuisine` and `Okonomiyaki` et al., while the popularity of `Asian` food has been declining since late 2016.
 
-* The low-count time series like “Karaoke” or “Asian” (see Fig. 6) are understandably more noisy than the genres with higher numbers of visitors. Still, “Asian” restaurants appear to be very popular despite (or because of?) their rarity.
+* The low-count time series like `Karaoke` or `Asian` (see Fig. 6) are understandably more noisy than the genres with higher numbers of visitors. Still, `Asian` restaurants appear to be very popular despite (or because of?) their rarity.
 
 In all of the curves we see the familiar weekly variation, so let’s look in more detail at the mean visitor numbers per week day and genre. We also add to this a series of ridgeline plots via the ggridges package. Ridgeline plots allow for a quick comparison of semi-overlapping (density) curves. Here we show the distribution of visitors per day for each genre. Through a little bit of ggplot magic, the y-axis labels in between those two plots refer to both of them:
 
@@ -1697,11 +1698,11 @@ Here each colour corresponds to a day of the week. Red-ish coulours are the week
 
 We find:
 
-* The biggest difference between weekend and weekdays exists for the “Karaoke” bars, which rule the weekend. A similar trend, although with a considerably smaller gap, can be seen for the “International” cuisine.
+* The biggest difference between weekend and weekdays exists for the `Karaoke` bars, which rule the weekend. A similar trend, although with a considerably smaller gap, can be seen for the `International` cuisine.
 
-* No genre really goes against the trend of busier weekends. The smallest variations are in the generic “Other” category, the “Japanese” food, and also the “Korean” cuisine which is the only category where Fridays are the busiest days. General “Bars/Cocktail” are notably unpopular overall.
+* No genre really goes against the trend of busier weekends. The smallest variations are in the generic `Other` category, the `Japanese` food, and also the `Korean` cuisine which is the only category where Fridays are the busiest days. General `Bars/Cocktail` are notably unpopular overall.
 
-* The density curves confirm the impression we got from the week-day distribution: the “Asian” restaurants have rarely less than 10 visitors per date and the “Karaoke” places show a very broad distribution due to the strong impact of the weekends. Note the logarithmic x-axis
+* The density curves confirm the impression we got from the week-day distribution: the `Asian` restaurants have rarely less than 10 visitors per date and the `Karaoke` places show a very broad distribution due to the strong impact of the weekends. Note the logarithmic x-axis
     
 :::
 ::: {}
@@ -1726,14 +1727,9 @@ g = sns.FacetGrid(summary_data, col="air_genre_name",
 p = g.map_dataframe(sns.lineplot, x='visit_date', 
                 y='visitors', hue='air_genre_name')
                 
-
-# Format the x-axis date labels
-#g.set(xticks=pd.to_datetime(['2016-01', '2016-03', '2016-05', '2016-07', '2016-09', '2016-11', '2017-01'])) 
-
-#fig.autofmt_xdate()
-
 # Resize facet titles
-p= g.set_titles(col_template="{col_name}", size = 8, backgroundcolor='#DDDDDD', pad=2
+p= g.set_titles(col_template="{col_name}", 
+               size = 8, backgroundcolor='#DDDDDD', pad=2
            # bbox={'facecolor': '#DDDDDD', 'alpha': 0, 'pad': 0}
             )
 p= g.tick_params(axis='x', pad=0, labelsize= 6)
@@ -1822,26 +1818,23 @@ plt.show(p)
 
 
 ```{python}
-
 # Data Processing for p2 (Assuming 'foo' DataFrame is available)
 p2_data = foo.copy()
 
-
-#fig = plt.figure(figsize=(4, 8))
+fig = plt.figure(figsize=(10, 8))
 
 # Plot 2 (Bottom)
-#pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
+pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
 g = sns.FacetGrid(p2_data, 
                  row="air_genre_name", 
-                 hue="air_genre_name",# palette=pal,
+                 hue="air_genre_name", #palette=pal,
                  aspect=15, height=.5
                  )
 p= g.map(sns.kdeplot, 'visitors',
       bw_adjust=.5, clip_on=False,
       fill=True, alpha=1, linewidth=.5)
       
-p= g.map(sns.kdeplot, 'visitors', clip_on=False, color="w", lw=2, bw_adjust=.5)
-
+p= g.map(sns.kdeplot, 'visitors', clip_on=False, color="black", lw=2, bw_adjust=.5)
 
 # Define and use a simple function to label the plot in axes coordinates
 def label(x, color, label):
@@ -1849,30 +1842,1488 @@ def label(x, color, label):
     ax.text(0, .2, label,  color=color, #fontweight="bold",
             ha="right", va="center", transform=ax.transAxes)
 
-
 p= g.map(label, "visitors")
 
-
-p= g.set(xlim=(-5, 80))
+p= g.set(xlim=(-50, 1000))
 p= g.set_titles("")
 p= g.set(yticks=[], ylabel="")
 p= g.despine(bottom=True, left=True)
 p= g.fig.subplots_adjust(hspace=-.25)
 
-
+# Adjust layout
+plt.tight_layout()
 # Show the plots
 plt.show(p)
+```
 
+:::
+::::
+
+## The impact of holidays
+
+We will study the influence of holidays on our visitor numbers by comparing the statistics for days with holidays vs those without holiday flag:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+foo <- air_visits %>%
+  mutate(calendar_date = as.character(visit_date)) %>%
+  left_join(holidays, by = "calendar_date")
+
+p1 <- foo %>%
+  ggplot(aes(holiday_flg, visitors, color = holiday_flg)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  theme(legend.position = "none")
+
+p2 <- foo %>%
+  mutate(wday = wday(date, label = TRUE, week_start = 1)) %>%
+  group_by(wday, holiday_flg) %>%
+  summarise(mean_visitors = mean(visitors)) %>%
+  ggplot(aes(wday, mean_visitors, color = holiday_flg)) +
+  geom_point(size = 4) +
+  theme(legend.position = "none") +
+  labs(y = "Average number of visitors")
+
+layout <- matrix(c(1,2),1,2,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
 ```
 
 
+We find:
 
+* Overall, holidays don’t have any impact on the average visitor numbers (left panel). As so often, more information is hidden in the details.
+
+* While a weekend holiday has little impact on the visitor numbers, and even decreases them slightly, there is a much more pronounced effect for the weekdays; especially Monday and Tuesday (right panel).
+
+:::
+::: {}
+
+
+```{python}
+from matplotlib import pyplot as plt, dates
+
+# Data Processing
+foo = air_visits.copy()
+#foo['calendar_date'] = foo['visit_date'].dt.strftime('%Y-%m-%d')
+foo['calendar_date'] = foo['visit_date'].astype(str)
+#foo = foo.merge(holidays, left_on='calendar_date', right_on='date', how='left')
+foo = pd.merge(foo, holidays, left_on='calendar_date', how='left', right_on = 'calendar_date')
+
+
+# Data Processing for p1
+p1_data = foo.copy()
+p1_data['holiday_flg'] = p1_data['holiday_flg'].astype(bool)  # Convert to boolean
+p1_data['wday'] = p1_data['visit_date'].dt.day_name()  # Extract weekday
+
+# Data Processing for p2
+
+# Data Processing for Plot 2
+p2_data = foo.copy()
+order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+p2_data['wday'] = pd.Categorical(p2_data['visit_date'].dt.day_name(), categories= order, ordered=True)
+p2_data['wdayn'] = p2_data['date'].dt.dayofweek  # Extract weekday as a number (0-6)  
+p2_data = p2_data.groupby(['wday', 'holiday_flg', 'wdayn'], observed=True).agg(mean_visitors=('visitors', 'mean')).reset_index()
+p2_data['wdayn'] = pd.Categorical(p2_data['wdayn'], categories=[0,1,2,3,4,5,6], ordered=True)  # Sort weekdays
+#p2_data['wdayn'] = p2_data['wdayn'].dt.day_name()
+
+# Create a 1x2 grid
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
+plt.style.use('ggplot')
+
+# Plot 1 (p1)
+flierprops = dict(marker='o', markerfacecolor='r', markersize=10,
+                  linestyle='none', markeredgecolor='b')
+sns.boxplot(data=p1_data, x='holiday_flg', y='visitors',
+              hue='holiday_flg', 
+              #flierprops=flierprops,
+              fill=False,
+              #dodge=False, 
+              showfliers = True,
+              ax=axes[0])
+axes[0].set_yscale('log')
+#axes[0].set_title('Boxplot of Visitors on Holidays')
+#axes[0].set_xlabel('Holiday')
+axes[0].set_ylabel('Visitors (log scale)')
+axes[0].legend('')
+
+# Plot 2 (p2)
+sns.scatterplot(data=p2_data, x='wday', y='mean_visitors', 
+                hue='holiday_flg', 
+                ax=axes[1], s=50)
+#axes[1].set_title('Average Visitors by Weekday')
+axes[1].set_xlabel('wday')
+axes[1].set_ylabel('Average Visitors')
+axes[1].xaxis.set_ticks(order)
+axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=45)
+#axes[1].xaxis.set_major_formatter(dates.DateFormatter('%a'))
+axes[1].legend('')
+
+
+# Adjust layout
+plt.tight_layout()
+
+# Show the plots
+plt.show()
+
+```
 :::
 ::::
 
 
 
+## Restaurants per area and the effect on visitor numbers
 
+Our next exploration follows from a simple thought: if gastropubs are popular and we own the only gastropub in the area then we can expect lots of customers. If there are twelve other gastropubs in our street then, try as we might, some of those customers will venture into other establishments. Economists tell us that we can ultimately expect a convergence towards an equilibrium between supply and demand. But for snapshots like our data set, and for relatively localised areas, there might still be merit in investigating restaurant clustering. Therefore, let’s study the number of restaurants of a certain genre per area and their impact on visitor numbers.
+
+We begin with an overview plot of the frequency of certain genres per area for the two data sets of air and hpg stores. This could have well been a part of the previous chapter, but I only just thought about it ;-) . The following count plots show which genres exist in which areas (names truncated). The size of the dots is proportional to the number of cases:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_store %>%
+  mutate(area = str_sub(air_area_name, 1, 12)) %>%
+  ggplot(aes(area, air_genre_name)) +
+  geom_count(colour = "blue") +
+  theme(legend.position = "bottom", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9))
+```
+
+We find:
+
+* Some areas have lots of restaurants and much variety, whereas others contain only a single air restaurant. Large parts of the parameter space are empty.
+
+* Similarly, some cuisines like `Izakaya` or `Cafe` are pretty ubiqutous, whereas others can only be found in a few areas. Note, that the only 2 Karaoke bars in the air sample are in `Hokkaido Sapporo-shi Minami 3 Jonishi`, whereas the only 2 `International cuisine` restaurants as well as the only two `Asian` places can be found in `Tokyo-to Shibuya-ku Shibuya`.
+
+
+The same kind of plot for the hpg data looks similar albeit more busy due to the larger number of genres:
+
+```{r}
+hpg_store %>%
+  mutate(area = str_sub(hpg_area_name, 1, 10)) %>%
+  ggplot(aes(area, hpg_genre_name)) +
+  geom_count(colour = "red") +
+  theme(legend.position = "bottom", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9))
+```
+
+We find:
+
+* Also here there are busy areas and those with only a few restaurants. Unsurprisingly, Tokyo features prominently in the areas with a lot of culinary diversity.
+
+* `Japanese style` and `International cuisine` are popular pretty much everywhere. `Amusement bars` and `Udon/Soba` places are rare, as are `Shanghai food` or `Dim Sum`.
+
+The count plots tell us that there is a distribution of how many restaurants of a certain genre can be found per area. Here we look at these distributions in detail via boxplots with overlayed jitter plots. The genres are ordered by decreasing mean cases per area, i.e. the mean of a horizontal sequence of dots in a count plot. The we overlay the indvidual data point and assign each dot a random jitter to visually separate otherwise overlapping data. Here, the y axis (i.e. `Occurences per area`) correspond to the size of the dots in the count plots above. We’re using single plots here, instead of panels, because these plots are quite detailed. Note the logarithmic y-axes.
+
+We start with the air data:
+
+```{r}
+air_store %>%
+  group_by(air_genre_name, air_area_name) %>%
+  count() %>%
+  ggplot(aes(reorder(air_genre_name, n, FUN = mean), n)) +
+  geom_boxplot() +
+  geom_jitter(color = "blue") +
+  scale_y_log10() +
+  coord_flip() +
+  labs(x = "Air genre", y = "Occurences per air area")
+```
+
+We find:
+
+* Only few genres have medians of more than 2 restaurants per area. Examples are `Italian/French` restaurants or `Bar/Cocktail` places, which are more likely to be found in groups of more than 2 per area.
+
+* For the majority of genres the distribution is firmly clustered around 2 cases per area with a bit of scatter towards higher numbers. `Cafes` have the highest number with 26 occurences in a single area (Fukuoka-ken Fukuoka-shi Daimyō).
+
+* Curiously, the minimum here is 2, not 1. This means that there is no air restaurant that is the only one of it’s genre in any area. You can see that also on the map in Fig. 5: whenever there is a group of 2 restaurants at the same area coordinates they have the same genre (but different air_store_ids). Similarly, there are no single occurrences of a genre in any larger group per area. (There exist odd numbers of occurences though, i.e. 3 or 5 of the same genre per area.) I’m not quite sure what to make of that, since it seems too perfectly matched to be true. Could it have something to do with the way the air data have been selected? Might it be a bug in assigning genre names? I checked a few examples of 2 restaurants in one spot and they have different visitor numbers on the same day, e.g. for this pair of `Dining Bars`, indicating that we don’t simply have a problem of single entries being duplicated here:
+
+```{r}
+air_store %>%
+  filter(air_store_id == "air_b5598d12d1b84890" | air_store_id == "air_bbe1c1a47e09f161")
+```
+
+
+```{r}
+air_visits %>%
+  filter(air_store_id == "air_b5598d12d1b84890" | air_store_id == "air_bbe1c1a47e09f161") %>%
+  arrange(visit_date) %>%
+  head(10)
+```
+
+Now we look at the same distribution for the HPG restaurants:
+
+```{r}
+foobar <- hpg_store %>%
+  group_by(hpg_genre_name, hpg_area_name) %>%
+  count()
+
+foobar %>%
+  ggplot(aes(reorder(hpg_genre_name, n, FUN = mean), n)) +
+  geom_boxplot() +
+  geom_jitter(color = "red") +
+  scale_y_log10() +
+  coord_flip() +
+  labs(x = "hpg genre", y = "Cases per hpg area")
+```
+
+We find:
+
+* Here we clearly have a minimum of 1 genre per area, and also much more variety in median cases due to the higher overall numbers.
+
+* The most extreme genre is `Japanese style` for which the median is just above 10 restaurants per area. Alongside of this, there a number of other genres for which the lower box hinge is not touching the minimum of 1 case per area.
+
+Using the information on the number of genres in each area we can now proceed to quantify the clustering, or `crowdedness`, of our data set and relate it to the visitor numbers. The next plot first shows the overall distribution of the air and hpg data points from the last two plots (i.e. cases of the same genre per area).
+
+In addition, we estimate the mean visitor numbers for each clustering case. For this, we first take the mean of the log1p-transformed visitor numbers (per genre and area) and then compute the mean and standard deviation of these numbers for each case, i.e. number of occurences of the same genre in an area. (log1p means log(x+1) and is intended to make the visitors number distribution more normal; see Fig. 1).
+
+
+
+```{r}
+foo <- air_visits %>%
+  left_join(air_store, by = "air_store_id")
+
+bar <- air_store %>%
+  group_by(air_genre_name, air_area_name) %>%
+  count()
+
+foobar <- hpg_store %>%
+  group_by(hpg_genre_name, hpg_area_name) %>%
+  count()
+
+p1 <- bar %>%
+  ggplot(aes(n)) +
+  geom_histogram(fill = "blue", binwidth = 1) +
+  labs(x = "Air genres per area")
+
+p2 <- foobar %>%
+  ggplot(aes(n)) +
+  geom_histogram(fill = "red", binwidth = 1) +
+  labs(x = "HPG genres per area")
+
+p3 <- foo %>%
+  group_by(air_genre_name, air_area_name) %>%
+  summarise(mean_log_visit = mean(log1p(visitors))) %>%
+  left_join(bar, by = c("air_genre_name","air_area_name")) %>%
+  group_by(n) %>%
+  summarise(mean_mlv = mean(mean_log_visit),
+            sd_mlv = sd(mean_log_visit)) %>%
+  replace_na(list(sd_mlv = 0)) %>%
+  ggplot(aes(n, mean_mlv)) +
+  geom_point(color = "blue", size = 4) +
+  geom_errorbar(aes(ymin = mean_mlv - sd_mlv, ymax = mean_mlv + sd_mlv), width = 0.5, size = 0.7, color = "blue") +
+  labs(x = "Cases of identical Air genres per area", y = "Mean +/- SD of\n mean log1p visitors")
+
+layout <- matrix(c(1,2,3,3),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, layout=layout)
+```
+
+We find:
+
+* Upper panels: The numbers of cases of identical genres in the same area drops quickly, possibly exponentially, from the maxima of `2` and `1` for air and hpg data sets, respectively. There is a longer tail towards larger case numbers, with a possible 2nd peak around `8` for air and about `13` for hpg.
+
+* Lower panel: The log1p means of visitor numbers show relatively large spread and are perfectly consistent in the range from `2` cases to `9`. From 10 cases upward we simply don’t have the numbers to measure a spread: there are two data points with 11 cases per area and otherwise it’s just a single measurement. However, it is noteworthy that the scatter among all the data points > 9 cases is pretty low, and that the lie notably higher than the means of the points <= 9. Now, that could simply mean that those high visitor numbers are not being `brought down` by small (less busy?) areas, but that in itself is an interesting result.
+
+* Note that the scatter plot in the lower panel mixes treats all the clustering/crowding cases regardless of genre. We can of course only draw this plot for the air data for which we have visitor numbers.
+
+:::
+::: {}
+
+
+```{python}
+# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
+air_store['area'] = air_store['air_area_name'].str[:12]
+#Count the frequency of each combination of 'area' and 'air_genre_name'
+counts = air_store.groupby(['area', 'air_genre_name'], observed=True).size().reset_index(name='count')
+# Plotting
+plt.figure(figsize=(8, 4))
+sns.scatterplot(data=counts, x='area', y='air_genre_name',
+                 size='count', color='blue', legend=True)
+# Rotate x-axis labels for better visibility
+plt.xticks(rotation=45, ha='right')
+# Set labels and title
+plt.xlabel('Area')
+plt.ylabel('Air Genre Name')
+plt.tick_params(axis='x', pad=0, labelsize=7)
+# Adjust legend position
+plt.legend(bbox_to_anchor = (1,1),loc='upper left')
+
+# Show the plot
+plt.show()
+```
+
+
+
+```{python}
+# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
+hpg_store['area'] = hpg_store['hpg_area_name'].str[:10]
+#Count the frequency of each combination of 'area' and 'air_genre_name'
+counts = hpg_store.groupby(['area', 'hpg_genre_name'], observed=True).size().reset_index(name='count')
+# Plotting
+plt.figure(figsize=(8, 4))
+sns.scatterplot(data=counts, x='area', y='hpg_genre_name',
+                 size='count', color='red', legend=True)
+# Rotate x-axis labels for better visibility
+plt.xticks(rotation=45, ha='right')
+# Set labels and title
+plt.xlabel('Area')
+plt.ylabel('HPG Genre Name')
+plt.tick_params(axis='x', pad=0, labelsize=7)
+plt.tick_params(axis='y', pad=0, labelsize=7)
+# Adjust legend position
+plt.legend(bbox_to_anchor = (1,1),loc='upper left')
+
+# Show the plot
+plt.show()
+```
+
+
+```{python}
+# Group by 'air_genre_name' and 'air_area_name', and count the frequency
+counts = air_store.groupby(['air_genre_name', 'air_area_name'], observed=True).size().reset_index(name='count')
+
+# Reorder 'air_genre_name' by count
+order = counts.groupby('air_genre_name', observed=True)['count'].mean().sort_values().index
+
+# Plotting
+plt.figure(figsize=(8, 6))
+sns.boxplot(data=counts, y='air_genre_name', x='count', order=order, hue='air_genre_name' ,palette='viridis')
+sns.stripplot(data=counts, y='air_genre_name', x='count', order=order, color='blue', size=3)
+
+# Set labels and title
+plt.xlabel('Occurences per air area')
+plt.ylabel('Air genre')
+plt.xscale('log')
+
+# Show the plot
+plt.show()
+```
+
+
+```{python}
+ air_store[air_store['air_store_id'].isin(["air_b5598d12d1b84890", "air_bbe1c1a47e09f161"])]
+```
+
+```{python}
+selected_visits = air_visits[air_visits['air_store_id'].isin(["air_b5598d12d1b84890", "air_bbe1c1a47e09f161"])]
+selected_visits.sort_values(by='visit_date').head(10)
+
+```
+
+
+```{python}
+
+foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], observed=True).size().reset_index(name='n')
+
+# Reorder 'hpg_genre_name' by count
+#order = counts.groupby('hpg_genre_name', observed=True)['n'].mean().sort_values().index
+order = foobar.groupby('hpg_genre_name', observed=True)['n'].mean().sort_values(ascending=False).index
+
+
+plt.figure(figsize=(8, 6))
+
+# Create the boxplot with jitter
+sns.boxplot(data=foobar, y='hpg_genre_name', x='n', order=order, color='lightgrey')
+sns.stripplot(data=foobar, y='hpg_genre_name', x='n', order=order, color='red', alpha=0.7)
+
+# Set y-axis to log scale
+#plt.yscale('log')
+
+# Set labels and title
+plt.xlabel('hpg genre')
+plt.ylabel('Cases per hpg area')
+plt.tick_params(axis='y', pad=0, labelsize=7)
+# Rotate x-axis labels
+#plt.xticks(rotation=45)
+
+# Show the plot
+plt.show()
+
+```
+
+
+```{python}
+# Compute 'foo'
+foo = air_visits.merge(air_store, on='air_store_id', how='left')
+
+# Compute 'bar'
+bar = air_store.groupby(['air_genre_name', 'air_area_name'], observed=True).size().reset_index(name='n')
+
+# Compute 'foobar' (Assuming 'hpg_store' DataFrame is available)
+foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], observed=True).size().reset_index(name='n')
+
+p3_data = (
+    foo.groupby(['air_genre_name', 'air_area_name'], observed=True)
+    .agg(mean_log_visit=('visitors', lambda x: x.apply(lambda x: np.log1p(x)).mean()))
+    .reset_index()
+    .merge(bar, left_on=['air_genre_name', 'air_area_name'], right_on=['air_genre_name', 'air_area_name'], how='left')
+    .groupby('n', observed=True)
+    .agg(
+        mean_mlv=('mean_log_visit', 'mean'),
+        sd_mlv=('mean_log_visit', 'std')
+    )
+    .fillna(0)
+    .reset_index()
+)
+# Multiplot layout
+fig = plt.figure(figsize=(10, 5))
+gs = GridSpec(2, 2, figure=fig)
+plt.style.use('ggplot')
+
+# Assign each plot to a specific position
+ax1 = fig.add_subplot(gs[0, 0])
+ax2 = fig.add_subplot(gs[0, 1])
+ax3 = fig.add_subplot(gs[1, :])
+
+# Plot p1 and p2 side by side
+sns.histplot(data=bar, x='n', color='blue', binwidth=1, ax=ax1)
+ax1.set(xlabel='Air Genres per area', ylabel='Count')
+sns.histplot(data=foobar, x='n', color='red', binwidth=1, ax=ax2)
+ax1.set(xlabel='HPG Genres per area', ylabel='Count')
+# Plot p3
+p3 = sns.scatterplot(data=p3_data, x='n', y='mean_mlv', color='blue', s=40, ax=ax3)
+p3.errorbar(p3_data['n'], p3_data['mean_mlv'], yerr=p3_data['sd_mlv'], fmt='o', color='blue')
+p3.set(xlabel='Cases of identical Air genres per area', ylabel='Mean +/- SD of\n mean log1p visitors')
+
+# Adjust layout
+plt.tight_layout()
+# Show the plots
+plt.show()
+
+```
+
+:::
+::::
+
+
+We will try another method of quantifying the `distinctiveness` of a restaurant by the distance to its neighbouring restaurants in the feature engineering section.
+
+## Reservations vs Visits
+
+Next we will turn our attention to the reservation numbers in the air_reserve and hpg_reserve data sets. We have seen their time series and distributions back in Sections 4.2 and 4.3; now we will compare the reservation numbers to the actual visitor numbers.
+
+For this, we compute the `sum` of `reserve_visitors` per day (i.e. the number of people reservations were made for) for each restaurant id and then join these summaries to the `air_visitors` file. In order to include the hpg reservations we need to use the store_ids data to join the `hpg_store_ids` from the hpg_reserve file to the corresponding `air_store_ids`:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+foo <- air_reserve %>%
+  mutate(visit_date = date(visit_datetime)) %>%
+  group_by(air_store_id,visit_date) %>%
+  summarise(reserve_visitors_air = sum(reserve_visitors))
+  
+bar <- hpg_reserve %>%
+  mutate(visit_date = date(visit_datetime)) %>%
+  group_by(hpg_store_id,visit_date) %>%
+  summarise(reserve_visitors_hpg = sum(reserve_visitors)) %>%
+  inner_join(store_ids, by = "hpg_store_id")
+
+all_reserve <- air_visits %>%
+  inner_join(foo, by = c("air_store_id", "visit_date")) %>%
+  inner_join(bar, by = c("air_store_id", "visit_date")) %>%
+  mutate(reserve_visitors = reserve_visitors_air + reserve_visitors_hpg)
+```
+
+Now we will plot the total `reserve_visitor` numbers against the actual visitor numbers for the air restaurants. We use a scatter plot to which we are adding marginal histograms via the `ggMarginal` function of the ggExtra [package](https://cran.r-project.org/web/packages/ggExtra/). The grey line shows $reserve_visitors == visitors$ and the blue line is a linear fit:
+
+```{r}
+p <- all_reserve %>%
+  filter(reserve_visitors < 120) %>%
+  ggplot(aes(reserve_visitors, visitors)) +
+  geom_point(color = "black", alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, color = "grey60") +
+  geom_smooth(method = "lm", color = "blue")
+ggMarginal(p, type="histogram", fill = "blue", bins=50)
+```
+
+We find:
+
+* The histograms show that the reserve_visitors and visitors numbers peak below ~20 and are largely confined to the range below 100.
+
+* The scatter points fall largely above the line of identity, indicating that there were more visitors that day than had reserved a table. This is not surprising, since a certain number of people will always be walk-in customers.
+
+* A notable fraction of the points is below the line, which probably indicates that some people made a reservation but changed their mind and didn’t go. That kind of effect is probably to be expected and taking it into account will be one of the challenges in this competition.
+
+* The linear fit suggests a trend in which larger numbers of reserve_visitors are more likely to underestimate the eventual visitor numbers. This is not surprising either, since I can imagine that it is more likely that (a) a large reservation is cancelled than (b) a large group of people walk in a restaurant without reservation.
+
+Now we will break down the discrepancy between visitors - reserve_visitors over time, look at the overall histograms, and visualise the air_reserve vs hpg_reserve numbers separately. Here, the time series for air (blue) and hpg (red) are offset vertically by 150 and -250 (see the solid black baselines):
+
+```{r}
+p1 <- all_reserve %>%
+  ggplot(aes(visitors - reserve_visitors)) +
+  geom_histogram(binwidth = 5, fill = "black") +
+  coord_flip() +
+  labs(x = "")
+
+p2 <- all_reserve %>%
+  ggplot(aes(visitors - reserve_visitors_air)) +
+  geom_histogram(binwidth = 5, fill = "blue") +
+  coord_flip() +
+  labs(x = "")
+
+p3 <- all_reserve %>%
+  ggplot(aes(visitors - reserve_visitors_hpg)) +
+  geom_histogram(binwidth = 5, fill = "red") +
+  coord_flip() +
+  labs(x = "")
+
+p4 <- all_reserve %>%
+  ggplot(aes(visit_date, visitors - reserve_visitors)) +
+  geom_hline(yintercept = c(150, 0, -250)) +
+  geom_line() +
+  geom_line(aes(visit_date, visitors - reserve_visitors_air + 150), color = "blue") +
+  geom_line(aes(visit_date, visitors - reserve_visitors_hpg - 250), color = "red") +
+  ggtitle("Visitors - Reserved: all (black), air (blue), hpg (red)")
+
+layout <- matrix(c(4,4,2,4,4,1,4,4,3),3,3,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+```
+
+We find:
+
+* The time series show significant scatter throughout the training time range. While the air (blue) and hpg (red) curves are predominantly above the baseline (i.e. more visitors than reservations), combining the two data sets brings the mean of the distribution closer to the zero line. This can also be seen in the corresponding histograms on the right side.
+
+* We see the gap where there are no air reservations (compare Sect. 4.2). We could only look at the hpg reservations here (for which this gap does not exist, Sect. 4.3) but it appears safe to assume that they would follow the same trend and can be used as a proxy for the air reservations. Feel free to check this assumption for the gap.
+
+* The (flipped) histograms in the 3 right panels are roughly aligned with the time series in the left panel for convenience of interpretation. They demonstrate how much the distributions are skewed towards larger visitor numbers than reserve_visitor numbers. We might see a mix here between two distributions: a (probably normal) spread due to cancellations plus a tail from walk-in visitors, which should follow a Poisson distribution.
+
+Finally, let’s have a quick look at the impact of holidays on the discrepancy between reservations and visitors. We’ll be using overlapping density plots:
+
+```{r}
+all_reserve %>%
+  mutate(date = visit_date) %>%
+  left_join(holidays, by = "date") %>%
+  ggplot(aes(visitors - reserve_visitors, fill = holiday_flg)) +
+  geom_density(alpha = 0.5)
+```
+
+We find:
+
+* There are somewhat higher numbers of visitors compared to reservations on a holiday. The peaks are almost identical, but we see small yet clear differences towards larger numbers.
+
+
+:::
+::: {}
+
+```{python}
+# Process 'air_reserve' data
+foo = (
+    air_reserve.assign(visit_date=air_reserve['visit_datetime'].dt.date)
+    .groupby(['air_store_id', 'visit_date'], observed=True)
+    .agg(reserve_visitors_air=('reserve_visitors', 'sum'))
+    .reset_index()
+)
+
+# Process 'hpg_reserve' data
+bar = (
+    hpg_reserve.assign(visit_date=hpg_reserve['visit_datetime'].dt.date)
+    .groupby(['hpg_store_id', 'visit_date'], observed=True)
+    .agg(reserve_visitors_hpg=('reserve_visitors', 'sum'))
+    .reset_index()
+    .merge(store_ids, left_on='hpg_store_id', right_on='hpg_store_id', how='inner')
+)
+
+air_visits['visit_date'] = air_visits['visit_date'].dt.date
+# Combine reservation data with 'air_visits'
+all_reserve = (
+    air_visits.merge(foo, left_on=['air_store_id', 'visit_date'], right_on=['air_store_id', 'visit_date'], how='inner')
+    .merge(bar, left_on=['air_store_id', 'visit_date'], right_on=['air_store_id', 'visit_date'], how='inner')
+    .assign(reserve_visitors=lambda x: x['reserve_visitors_air'] + x['reserve_visitors_hpg'])
+)
+```
+
+
+```{python}
+# Filter the data
+filtered_data = all_reserve[all_reserve['reserve_visitors'] < 120]
+
+fig = plt.figure(figsize=(10, 6))
+plt.style.use('ggplot')
+# Create the scatterplot with marginal histograms
+g = sns.jointplot(x='reserve_visitors', y='visitors', data=filtered_data, color='blue', alpha=0.2, kind='scatter', palette='black')
+g.plot_joint(sns.lineplot, color='grey')  # Add the diagonal line
+
+# Add a linear regression line
+sns.regplot(x='reserve_visitors', y='visitors', data=filtered_data, ax=g.ax_joint, line_kws={'color': 'blue'})
+
+# Add marginal histograms
+plt.subplots_adjust(top=0.9)
+g.fig.suptitle('Scatterplot with Marginal Histograms')
+
+plt.show()
+
+```
+
+
+```{python}
+
+# Sort DataFrame by visit_date
+all_reserve = all_reserve.sort_values(by='visit_date')
+
+# Plot 1
+plt.figure(figsize=(9, 6))
+gs = GridSpec(3, 3)
+plt.style.use('ggplot')
+
+
+ax1 = plt.subplot(gs[0, 2])
+ax1.hist(all_reserve['visitors'] - all_reserve['reserve_visitors'], 
+        bins=range(-50, 60, 5), color='black', orientation='horizontal')
+ax1.set_xlabel("")
+ax1.invert_yaxis()
+# Set size and rotation for x-axis tick labels
+ax1.tick_params(axis='x', labelsize=8, rotation=0) 
+ax1.tick_params(axis='y', labelsize=8, rotation=0)  
+
+# Plot 2
+ax2 = plt.subplot(gs[1, 2])
+ax2.hist(all_reserve['visitors'] - all_reserve['reserve_visitors_air'],
+         bins=range(-50, 60, 5), color='blue', orientation='horizontal')
+ax2.set_xlabel("")
+ax2.invert_yaxis()
+# Set size and rotation for x-axis tick labels
+ax2.tick_params(axis='x', labelsize=8, rotation=0)
+ax2.tick_params(axis='y', labelsize=8, rotation=0)  
+
+# Plot 3
+ax3 = plt.subplot(gs[2, 2])
+ax3.hist(all_reserve['visitors'] - all_reserve['reserve_visitors_hpg'],
+         bins=range(-50, 60, 5), color='red', orientation='horizontal')
+ax3.set_xlabel("")
+ax3.invert_yaxis()
+# Set size and rotation for x-axis tick labels
+ax3.tick_params(axis='x', labelsize=8, rotation=0)  
+ax3.tick_params(axis='y', labelsize=8, rotation=0)
+ax3.set(xlabel='count') # ylabel='Count'
+
+# Plot 4
+ax4 = plt.subplot(gs[0:3, 0:2])
+#ax4.axhline(y=[-300, 0, 300], color=['red', 'black', 'blue'], linestyle='--')
+ax4.plot(all_reserve['visit_date'], 
+        all_reserve['visitors'] - all_reserve['reserve_visitors'], color='black')
+ax4.plot(all_reserve['visit_date'], 
+        all_reserve['visitors'] - all_reserve['reserve_visitors_air'] + 150, color='blue')
+ax4.plot(all_reserve['visit_date'], 
+         all_reserve['visitors'] - all_reserve['reserve_visitors_hpg'] - 250, color='red')
+ax4.set_title("Visitors - Reserved: all (black), air (blue), hpg (red)", fontsize=10)
+# Format the x-axis date labels
+ax4.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+ax4.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+# Set size and rotation for x-axis tick labels
+ax4.tick_params(axis='x', labelsize=8, rotation=0)
+ax4.set(xlabel='visit_date', ylabel= "visitors - reserve_visitors")
+
+
+# Adjust layout
+plt.tight_layout()
+
+# Show the plot
+plt.show()
+
+```
+
+
+```{python}
+# Convert visit_date to datetime if needed
+ all_reserve['visit_date'] = pd.to_datetime(all_reserve['visit_date'])
+# Rename 'visit_date' column before merging
+all_reserve['date'] = all_reserve['visit_date']
+
+# Left join with holidays
+reserve_holy = all_reserve.merge(holidays, on='date', how='left')
+
+# Create the density plot
+#sns.set(style="whitegrid")
+plt.figure(figsize=(10, 6))
+plt.style.use('ggplot')
+
+sns.histplot(data=reserve_holy, x=(reserve_holy['visitors'] - reserve_holy['reserve_visitors']),
+             kde=True, #kde_kws={'bw_method': 1},
+             hue='holiday_flg', fill=True, alpha=0.5, palette='Set1')
+
+plt.title("Density Plot of Visitors - Reserve Visitors")
+plt.xlabel("Visitors - Reserve Visitors")
+plt.ylabel("Density")
+#plt.legend(loc='lower left')
+
+plt.show()
+```
+
+:::
+::::
+
+
+# Feature Engineering
+
+The next step is to derive new features from the existing ones and the purpose of these new features is to provide additional predictive power for our goal to forecast visitor numbers. Those new features can be as simple as deriving the day of the week or the month from a date column; something that we have already used in Fig. 1 of our visual exploration. Or they can take a more complex shape from the interplay of several related variables. This section collects and studies these new features.
+
+My personal preference is to collect all engineered features into a single code block, so that we don’t have to search for them in different places of the kernel. Often, this also makes the computation of these features easier as we can re-use certain intermediate transformations. As we expand our analysis, we will come back to this code block and it will grow as our feature space grows:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_visits <- air_visits %>%
+  mutate(wday = wday(visit_date, label=TRUE, week_start = 1),
+         wday = fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         month = month(visit_date, label=TRUE))
+
+air_reserve <- air_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         reserve_wday = wday(reserve_datetime, label = TRUE, week_start = 1),
+         reserve_wday = fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         visit_wday = wday(visit_datetime, label = TRUE, week_start = 1),
+         visit_wday = fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
+
+hpg_reserve <- hpg_reserve %>%
+  mutate(reserve_date = date(reserve_datetime),
+         reserve_hour = hour(reserve_datetime),
+         reserve_wday = wday(reserve_datetime, label = TRUE, week_start = 1),
+         reserve_wday = fct_relevel(reserve_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         visit_date = date(visit_datetime),
+         visit_hour = hour(visit_datetime),
+         visit_wday = wday(visit_datetime, label = TRUE, week_start = 1),
+         visit_wday = fct_relevel(visit_wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+         diff_hour = time_length(visit_datetime - reserve_datetime, unit = "hour"),
+         diff_day = time_length(visit_datetime - reserve_datetime, unit = "day"))
+
+# count stores in area
+air_count <- air_store %>%
+  group_by(air_area_name) %>%
+  summarise(air_count = n())
+
+hpg_count <- hpg_store %>%
+  group_by(hpg_area_name) %>%
+  summarise(hpg_count = n())
+
+# distances
+med_coord_air <- air_store %>%
+  summarise_at(vars(longitude:latitude), median)
+med_coord_hpg <- hpg_store %>%
+  summarise_at(vars(longitude:latitude), median)
+
+air_coords <- air_store %>%
+  select(longitude, latitude)
+hpg_coords <- hpg_store %>%
+  select(longitude, latitude)
+
+air_store$dist <- distCosine(air_coords, med_coord_air)/1e3
+hpg_store$dist <- distCosine(hpg_coords, med_coord_hpg)/1e3
+
+# apply counts, dist; add prefecture
+air_store <- air_store %>%
+  mutate(dist_group = as.integer(case_when(
+    dist < 80 ~ 1,
+    dist < 300 ~ 2,
+    dist < 500 ~ 3,
+    dist < 750 ~ 4,
+    TRUE ~ 5))) %>%
+  left_join(air_count, by = "air_area_name") %>%
+  separate(air_area_name, c("prefecture"), sep = " ", remove = FALSE)
+
+hpg_store <- hpg_store %>%
+  mutate(dist_group = as.integer(case_when(
+    dist < 80 ~ 1,
+    dist < 300 ~ 2,
+    dist < 500 ~ 3,
+    dist < 750 ~ 4,
+    TRUE ~ 5))) %>%
+  left_join(hpg_count, by = "hpg_area_name") %>%
+  separate(hpg_area_name, c("prefecture"), sep = " ", remove = FALSE)
+```
+
+:::
+::: {}
+
+```{python}
+from pandas.api.types import CategoricalDtype
+
+# Convert visit_date to datetime
+air_visits['visit_date'] = pd.to_datetime(air_visits['visit_date'])
+
+# Extract weekday
+air_visits['wday'] = air_visits['visit_date'].dt.day_name()
+
+# Reorder weekdays
+weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+air_visits['wday'] = air_visits['wday'].astype(CategoricalDtype(categories=weekday_order, ordered=True))
+
+# Extract month
+air_visits['month'] = air_visits['visit_date'].dt.month_name()
+
+# Convert visit_datetime to datetime
+air_reserve['reserve_datetime'] = pd.to_datetime(air_reserve['reserve_datetime'])
+air_reserve['visit_datetime'] = pd.to_datetime(air_reserve['visit_datetime'])
+
+# Extract various date and time components
+air_reserve['reserve_date'] = air_reserve['reserve_datetime'].dt.date
+air_reserve['reserve_hour'] = air_reserve['reserve_datetime'].dt.hour
+air_reserve['reserve_wday'] = air_reserve['reserve_datetime'].dt.day_name()
+air_reserve['reserve_wday'] = air_reserve['reserve_wday'].astype(CategoricalDtype(categories=weekday_order, ordered=True))
+
+air_reserve['visit_date'] = air_reserve['visit_datetime'].dt.date
+air_reserve['visit_hour'] = air_reserve['visit_datetime'].dt.hour
+air_reserve['visit_wday'] = air_reserve['visit_datetime'].dt.day_name()
+air_reserve['visit_wday'] = air_reserve['visit_wday'].astype(CategoricalDtype(categories=weekday_order, ordered=True))
+
+# Calculate time differences
+air_reserve['diff_hour'] = (air_reserve['visit_datetime'] - air_reserve['reserve_datetime']).dt.total_seconds() / 3600
+#air_reserve['diff_day'] = (air_reserve['visit_datetime'].dt.date - air_reserve['reserve_datetime'].dt.date)#.dt.days
+air_reserve['diff_day'] = (air_reserve['visit_datetime'] - air_reserve['reserve_datetime']).apply(lambda x: x.total_seconds() / 86400)
+# Count stores in area
+air_count = air_store.groupby('air_area_name', observed=True).size().reset_index(name='air_count')
+
+hpg_count = hpg_store.groupby('hpg_area_name', observed=True).size().reset_index(name='hpg_count')
+
+# Calculate distances
+med_coord_air = air_store[['longitude', 'latitude']].median()
+
+med_coord_hpg = hpg_store[['longitude', 'latitude']].median()
+
+air_coords = air_store[['longitude', 'latitude']]
+hpg_coords = hpg_store[['longitude', 'latitude']]
+
+air_store['dist'] = ((air_coords - med_coord_air)**2).sum(axis=1).pow(0.5) / 1000
+hpg_store['dist'] = ((hpg_coords - med_coord_hpg)**2).sum(axis=1).pow(0.5) / 1000
+
+# Apply counts, dist; add prefecture
+def dist_group(x):
+    if x < 80:
+        return 1
+    elif x < 300:
+        return 2
+    elif x < 500:
+        return 3
+    elif x < 750:
+        return 4
+    else:
+        return 5
+
+air_store['dist_group'] = air_store['dist'].apply(dist_group)
+air_store = pd.merge(air_store, air_count, left_on='air_area_name', right_on='air_area_name', how='left')
+# Split 'air_area_name' into 'prefecture' and 'area'
+split_data = air_store['air_area_name'].str.split(' ', n=1, expand=True)
+# Assign the first part to 'prefecture' and the rest to 'area'
+air_store['prefecture'] = split_data[0]
+air_store['area'] = split_data[1]
+# If there was only one part (no space), assign an empty string to 'area'
+air_store['area'].fillna("", inplace=True)
+
+
+
+hpg_store['dist_group'] = hpg_store['dist'].apply(dist_group)
+hpg_store = pd.merge(hpg_store, hpg_count, left_on='hpg_area_name', right_on='hpg_area_name', how='left')
+
+# Split 'air_area_name' into 'prefecture' and 'area'
+split_data = hpg_store['hpg_area_name'].str.split(' ', n=1, expand=True)
+# Assign the first part to 'prefecture' and the rest to 'area'
+hpg_store['prefecture'] = split_data[0]
+hpg_store['area'] = split_data[1]
+# If there was only one part (no space), assign an empty string to 'area'
+hpg_store['area'].fillna("", inplace=True)
+
+```
+:::
+::::
+
+## Days of the week & months of the year
+
+We start simple, with the week day (wday) and month features derived from the visit_date. We already looked at the total visitors per week day and month in Fig. 1. Now we will study the log1p transformed visitor numbers. We compute their mean and standard deviation and plot them alongside the (ridgeline) density distributions:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+p1 <- air_visits %>%
+  group_by(wday) %>%
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+            sd_log_visitors = sd(log1p(visitors))) %>%
+  ggplot(aes(wday, mean_log_visitors, color = wday)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors,
+                    color = wday), width = 0.5, size = 0.7) +
+  theme(legend.position = "none")
+
+p2 <- air_visits %>%
+  mutate(visitors = log1p(visitors)) %>%
+  ggplot(aes(visitors, wday, fill = wday)) +
+  geom_density_ridges(bandwidth = 0.1) +
+  scale_x_log10() +
+  theme(legend.position = "none") +
+  labs(x = "log1p(visitors)", y = "")
+
+p3 <- air_visits %>%
+  group_by(month) %>%
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+            sd_log_visitors = sd(log1p(visitors))) %>%
+  ggplot(aes(month, mean_log_visitors, color = month)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors,
+                    color = month), width = 0.5, size = 0.7) +
+  theme(legend.position = "none")
+
+p4 <- air_visits %>%
+  mutate(visitors = log1p(visitors)) %>%
+  ggplot(aes(visitors, month, fill = month)) +
+  geom_density_ridges(bandwidth = 0.1) +
+  scale_x_log10() +
+  theme(legend.position = "none") +
+  labs(x = "log1p(visitors)", y = "")
+
+layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+```
+
+We find:
+
+* The differences in mean log(visitor) numbers between the days of the week are much smaller than the corresponding uncertainties. This is confirmed by the density plots that show a strong overlap. Still, there is a trend toward higher visitor numbers on the weekend that might be useful.
+
+* The months are even more similar, including the sligthly increased numbers in December. Overall, there is not much difference.
+
+:::
+::: {}
+
+```{python}
+
+
+# Compute log1p of visitors
+air_visits['log1p_visitors'] = air_visits['visitors'].apply(lambda x: np.log1p(x))
+# Plot 1 data
+p1_data = air_visits.groupby('wday', observed=True).agg(mean_log_visitors=('log1p_visitors', 'mean'), 
+                                        sd_log_visitors=('log1p_visitors', 'std')).reset_index()
+
+p3_data = air_visits.groupby('month', observed=True).agg(mean_log_visitors=('log1p_visitors', 'mean'), 
+                                          sd_log_visitors=('log1p_visitors', 'std')).reset_index()
+
+
+# Create a 2x2 grid
+fig, axes = plt.subplots(1, 2, figsize=(10, 6))
+plt.style.use('ggplot')
+
+# Define custom order for weekdays and months
+custom_wday_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+custom_month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+# Plot 1
+p1 = sns.scatterplot(data=p1_data, x='wday', y='mean_log_visitors', 
+                     hue='wday', #palette='viridis', 
+                     ax=axes[0])
+p1.errorbar(p1_data['wday'], p1_data['mean_log_visitors'],
+            yerr=p1_data['sd_log_visitors'], fmt='o', 
+            color='black',
+            markersize=5,capsize=8)
+# Set custom order for x-axis labels
+#p1.xaxis.set_ticks(custom_wday_order)            
+p1.set_xticklabels(custom_wday_order)  
+p1.legend('')
+
+
+
+# Plot 3
+p3 = sns.scatterplot(data=p3_data, x='month', y='mean_log_visitors', 
+                      hue='month', #palette='viridis',
+                      ax=axes[1]) 
+p3.errorbar(p3_data['month'], p3_data['mean_log_visitors'], 
+            yerr=p3_data['sd_log_visitors'], 
+            fmt='o', 
+            color='black',
+            #palette='viridis',
+            markersize=5,capsize=8)
+# Set custom order for x-axis labels
+#p3.xaxis.set_ticks(custom_month_order)
+p3.set_xticklabels(custom_month_order, rotation=45)  
+p3.legend('')
+
+# Adjust layout
+plt.tight_layout()
+# Show the plots
+plt.show()
+
+```
+
+
+```{python}
+# Plot 2
+p2_data = air_visits.copy()
+p2_data['log1p_visitors'] = p2_data['visitors'].apply(lambda x: np.log1p(x))
+
+fig = plt.figure(figsize=(12, 12))
+
+g = sns.FacetGrid(p2_data, 
+                 row='wday', 
+                 hue="wday", palette='viridis',
+                 aspect=15, height=.5
+                 )
+p2= g.map(sns.kdeplot, 'log1p_visitors',
+      bw_adjust=.5, clip_on=False,
+      fill=True, alpha=1, linewidth=.5)
+      
+p2= g.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5)
+
+# Define and use a simple function to label the plot in axes coordinates
+def label(x, color, label):
+    ax = plt.gca()
+    ax.text(0, .2, label,  color=color, #fontweight="bold",
+            ha="right", va="center", transform=ax.transAxes)
+
+p2= g.map(label, 'log1p_visitors')
+
+p2= g.set(xlim=(0, 10))
+p2= g.set_titles("")
+p2= g.set(yticks=[], ylabel="")
+p2= g.despine(bottom=True, left=True)
+p2= g.fig.subplots_adjust(hspace=-.25)
+
+# Adjust layout
+plt.tight_layout()
+# Show the plots
+plt.show(p2)
+```
+
+
+```{python}
+# Plot 4
+p4_data = air_visits.copy()
+p4_data['log1p_visitors'] = p4_data['visitors'].apply(lambda x: np.log1p(x))
+
+fig = plt.figure(figsize=(20, 20))
+
+g = sns.FacetGrid(p2_data, 
+                 row='month', 
+                 hue="month", palette='viridis',
+                 aspect=15, height=.5
+                 )
+p4= g.map(sns.kdeplot, 'log1p_visitors',
+      bw_adjust=.5, clip_on=False,
+      fill=True, alpha=1, linewidth=.5)
+      
+p4= g.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5)
+
+# Define and use a simple function to label the plot in axes coordinates
+def label(x, color, label):
+    ax = plt.gca()
+    ax.text(0, .2, label,  color=color, #fontweight="bold",
+            ha="right", va="center", transform=ax.transAxes)
+
+p4= g.map(label, 'log1p_visitors')
+
+p4= g.set(xlim=(0, 10))
+p4= g.set_titles("")
+p4= g.set(yticks=[], ylabel="")
+p4= g.despine(bottom=True, left=True)
+p4= g.fig.subplots_adjust(hspace=-.25)
+
+# Adjust layout
+plt.tight_layout()
+# Show the plots
+plt.show(p4)
+```
+
+:::
+::::
+
+```{python}
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Define a function to compute log1p of visitors
+def compute_log1p_visitors(visitors):
+    return np.log1p(visitors)
+
+# Create subplots for p2 and p4
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 12))
+
+# Plot 2
+p2_data = air_visits.copy()
+p2_data['log1p_visitors'] = compute_log1p_visitors(p2_data['visitors'])
+
+p2 = sns.FacetGrid(p2_data, row='wday', hue="wday", palette='viridis',
+                 aspect=15, height=.5)
+p2.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=.5, ax=ax1)
+p2.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5, ax=ax1)
+p2.set(xlim=(0, 10))
+
+# Define and use a simple function to label the plot in axes coordinates
+def label(x, color, label):
+    ax = plt.gca()
+    ax.text(0, .2, label,  color=color, ha="right", va="center", transform=ax.transAxes)
+p2.map(label, 'log1p_visitors')
+
+p2.set_titles("")
+p2.set(yticks=[], ylabel="")
+p2.despine(bottom=True, left=True)
+p2.fig.subplots_adjust(hspace=-.25)
+
+# Plot 4
+p4_data = air_visits.copy()
+p4_data['log1p_visitors'] = compute_log1p_visitors(p4_data['visitors'])
+
+p4 = sns.FacetGrid(p4_data, row='month', hue="month", palette='viridis',
+                 aspect=15, height=.5)
+p4.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=.5, ax=ax2)
+p4.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5, ax=ax2)
+p4.set(xlim=(0, 10))
+
+p4.map(label, 'log1p_visitors')
+
+p4.set_titles("")
+p4.set(yticks=[], ylabel="")
+p4.despine(bottom=True, left=True)
+p4.fig.subplots_adjust(hspace=-.25)
+
+# Adjust layout
+plt.tight_layout()
+
+# Show the plots
+plt.show()
+
+```
+
+
+Here is a breakdown by air_genre_name:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+air_visits %>%
+  left_join(air_store, by = "air_store_id") %>%
+  group_by(wday, air_genre_name) %>%
+  summarise(mean_log_visitors = mean(log1p(visitors)),
+            sd_log_visitors = sd(log1p(visitors))) %>%
+  ggplot(aes(wday, mean_log_visitors, color = wday)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors,
+                    color = wday), width = 0.5, size = 0.7) +
+  theme(legend.position = "none", axis.text.x  = element_text(angle=45, hjust=1, vjust=0.9)) +
+  facet_wrap(~ air_genre_name)
+```
+
+We find:
+
+* There is a stronger impact of the weekend vs weekdays for genres such as “Karaoke” or “International Cuisine”, while others show very little change over the days of the week (e.g. “Japanese food”).
+
+* Overall, there is no significant effect for any of the genres on any day of the week.
+
+What about the statistics of visitors vs reservations? Does it depend on the day of the week? We use boxplots to find out:
+
+```{r}
+all_reserve %>%
+  mutate(wday = wday(visit_date, label=TRUE, week_start = 1),
+         wday = fct_relevel(wday, c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))) %>%
+  ggplot(aes(wday, visitors - reserve_visitors, fill = wday)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+We find that there is no significant difference, although we see a slight trend for more visitors compared to reservations on the weekend, especially Sunday.
+
+:::
+::: {}
+
+```{python}
+from matplotlib import pyplot as plt, dates
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
+# Compute log1p of visitors
+air_visits['log1p_visitors'] = np.log1p(air_visits['visitors'])
+
+# Merge air_visits and air_store
+merged_data = pd.merge(air_visits, air_store, on='air_store_id', how='left')
+
+# Group by wday and air_genre_name, compute mean and standard deviation
+summary_data = merged_data.groupby(['wday', 'air_genre_name'], observed=True).agg(
+    mean_log_visitors=('log1p_visitors', 'mean'),
+    sd_log_visitors=('log1p_visitors', 'std')
+).reset_index()
+
+
+fig = plt.figure(figsize = (12,8))
+plt.style.use('ggplot')
+
+g = sns.FacetGrid(summary_data, col="air_genre_name", col_wrap=4,
+                  sharex=True, sharey=True, height=5)
+g.map_dataframe(sns.scatterplot, x='wday', y='mean_log_visitors',
+                hue='wday', palette='viridis', s=50, alpha=0.7)
+
+# Add error bars
+for ax, (_, data) in zip(g.axes.flat, summary_data.groupby('air_genre_name')):
+    #sns.lineplot(data=data, x='wday', y='mean_log_visitors', ax=ax, color='black')
+    ax.errorbar(data['wday'], data['mean_log_visitors'], yerr=data['sd_log_visitors'], fmt='none', color='black', capsize=5)
+    ax.legend('')
+
+# Resize facet titles
+p= g.set_titles(col_template="{col_name}", 
+               size = 8, backgroundcolor='#DDDDDD', pad=2
+           # bbox={'facecolor': '#DDDDDD', 'alpha': 0, 'pad': 0}
+            )
+p= g.tick_params(axis='x', pad=0, labelsize= 6)
+p= g.set_xlabels(fontsize=6, label="Date")
+p= g.set_ylabels(fontsize=8 )#,label="Average number of visitors")
+
+for ax in g.axes.flat:
+    for label in ax.get_xticklabels():
+        label.set_rotation(45)
+        #ax.xaxis.set_major_formatter(dates.DateFormatter('%a'))
+
+# Apply logarithmic scale to y-axis
+#p= g.set(yscale="log")
+
+# Set x-axis labels
+p= g.set_axis_labels("Weekday", "Mean Log Visitors")
+#p= g.add_legend(title="weekday")
+
+# Adjust layout
+p= plt.tight_layout()
+# Show the plot
+plt.show(p)
+
+```
+
+```{python}
+# Convert visit_date to datetime and extract the weekday
+all_reserve['visit_date'] = pd.to_datetime(all_reserve['visit_date'])
+all_reserve['wday'] = all_reserve['visit_date'].dt.day_name()
+
+# Reorder the weekdays
+weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+all_reserve['wday'] = pd.Categorical(all_reserve['wday'], categories=weekday_order, ordered=True)
+
+#Create a new column for the difference between visitors and reserve_visitors
+all_reserve['visitors_minus_reserve'] = all_reserve['visitors'] - all_reserve['reserve_visitors']
+
+# Create the boxplot
+plt.figure(figsize=(10, 6))
+plt.style.use('ggplot')
+
+sns.boxplot(data=all_reserve, x='wday', y='visitors_minus_reserve', 
+             hue='wday', palette='viridis')
+plt.xlabel('Weekday')
+plt.ylabel('Visitors - Reserve Visitors')
+plt.tick_params(axis='x', pad=0, labelsize= 8)
+#plt.set_major_formatter(dates.DateFormatter('%a'))
+#plt.title('Difference between Visitors and Reserve Visitors by Weekday')
+
+# Remove legend
+#plt.legend().remove()
+# Show the plot
+plt.show()
+
+```
+
+:::
+::::
+
+
+## Restaurant per area - air/hpg_count
+
+This feature will address the question of how many restaurant can be found in a certain area and whether larger numbers of restaurants per area affect the average visitor numbers.
+
+In order to compute it, we simply count the number of air/hpg restaurants for the corresponding areas. We show the resulting distributions in the next plot at the top. The we estimate the mean log1p-transformed visitor count per restaurant, and then compute the mean and standard deviation of this number for each area count group:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+p1 <- air_count %>%
+  ggplot(aes(air_count)) +
+  geom_histogram(binwidth = 2, fill = "blue")
+
+p2 <- hpg_count %>%
+  ggplot(aes(hpg_count)) +
+  geom_histogram(binwidth = 5, fill = "red")
+
+p3 <- air_visits %>%
+  left_join(air_store, by = "air_store_id") %>%
+  group_by(air_store_id, air_count) %>%
+  summarise(mean_store_visit = mean(log1p(visitors))) %>%
+  group_by(air_count) %>%
+  summarise(mean_log_visitors = mean(mean_store_visit),
+            sd_log_visitors = sd(mean_store_visit)) %>%
+  ggplot(aes(air_count, mean_log_visitors)) +
+  geom_point(size = 4, color = "blue") +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors),
+                    color = "blue", width = 0.5, size = 0.7) +
+  geom_smooth(method = "lm", color = "black") +
+  labs(x = "Air restaurants per area")
+
+layout <- matrix(c(1,2,3,3),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, layout=layout)
+```
+
+We find:
+
+* Most areas in the air data set have only a few restaurants, with the distribution peaking at 2. This goes back to the earlier observation that no single air_genre can ever be found in an air_area. There are always at least 2 of the same type. Still odd. The air data also has a tentative 2nd peak around 16-20. The hpg data, with larger overall numbers, also peaks at low counts and has few other, smaller peaks through its decline.
+
+* The mean log1p visitor numbers per area have large uncertainties and are all consistent with each other. There is a slight trend, shown by the black linear regression, toward lower average numbers for larger areas but it is quite weak.
+
+
+
+:::
+::: {}
+
+```{python}
+
+# Multiplot layout
+fig = plt.figure(figsize=(9, 5))
+gs = GridSpec(2, 2, figure=fig)
+plt.style.use('ggplot')
+
+ax1 = fig.add_subplot(gs[0, 0])
+ax2 = fig.add_subplot(gs[0, 1])
+ax3 = fig.add_subplot(gs[1, :])
+
+# Plot 1
+p1 = sns.histplot(data=air_count, x='air_count', 
+                  bins=range(0, max(air_count['air_count'])+2, 2), 
+                  color='blue',
+                  ax=ax1
+                  )
+p1.set_xlabel('Air Count')
+p1.set_title('Air Count Histogram')
+
+# Plot 2
+p2 = sns.histplot(data=hpg_count, x='hpg_count', 
+                 bins=range(0, max(hpg_count['hpg_count'])+6, 5), 
+                 color='red',
+                 ax=ax2)
+p2.set_xlabel('HPG Count')
+p2.set_title('HPG Count Histogram')
+
+# Preprocessing for Plot 3
+air_visits_processed = air_visits.merge(air_store, on='air_store_id', how='left')
+
+store_visits = air_visits_processed.groupby(['air_store_id', 'air_count'], observed=True)['visitors'].apply(lambda x: x.mean()).reset_index()
+area_visits = store_visits.groupby('air_count', observed=True)['visitors'].agg(['mean', 'std']).reset_index()
+
+
+# Plot 3
+p3 = sns.scatterplot(data=area_visits, x='air_count', y='mean',
+                     color='blue',
+                     ax=ax3)
+p3.errorbar(x=area_visits['air_count'], y=area_visits['mean'], 
+            yerr=area_visits['std'], fmt='o',
+            color='blue', capsize=5)
+sns.regplot(data=area_visits, x='air_count', y='mean', scatter=False, color='black', ax=ax3)
+
+# Set labels and title for Plot 3
+p3.set_xlabel('Air Restaurants per Area')
+p3.set_ylabel('Mean Log Visitors')
+p3.set_title('Mean Log Visitors vs Air Restaurants per Area')
+
+# Adjust layout
+plt.tight_layout()
+# Show the plots
+plt.show()
+
+```
+:::
+::::
+
+
+## Distance from the busiest area
+
+Whenever we have spatial coordinates in our data we automatically also have the distances between these coordinates. As a first approximation we use the linear distance between two points (i.e. as the crow flies).
+
+To compute these distances we are using the distCosine function of the geosphere package for spherical trigonometry. This method gives us the shortest distance between two points on a spherical earth. For the purpose of this localised analysis we choose to ignore ellipsoidal distortion of the earth’s shape.
+
+As the single reference point for all distances we choose the median latitude and median longitude. Our analysis can be extended to investigate all the pairwise distances between two restaurants with the same methodology. We won’t perform this study in our kernel, but I encourage anyone who wants to try it to see whether additional insight can be gained this way.
+
+Here, we plot the histograms of the distances from the medians for all the restaurants in the air and hpg data. These distributions will suggest a grouping into 5 different bins with ranges of increasing distance. We then compute the mean log1p visitor numbers for the 5 groups and compare them:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+foo <- air_store %>% select(latitude, longitude, dist_group) %>% mutate(dset = "air")
+bar <- hpg_store %>% select(latitude, longitude, dist_group) %>% mutate(dset = "hpg")
+
+leaflet(foo) %>%
+  addTiles() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addScaleBar() %>%
+  addCircleMarkers(~longitude, ~latitude, group = "AIR",
+                   color = "blue", fillOpacity = 0.5, radius = 3*foo$dist_group) %>%
+  addCircleMarkers(lng = bar$longitude, lat = bar$latitude, group = "HPG",
+                   color = "red", fillOpacity = 0.5, radius = 3*bar$dist_group) %>%
+  addCircleMarkers(lng = med_coord_air$longitude, lat = med_coord_air$latitude, group = "Centre",
+                   color = "darkgreen", fillOpacity = 1) %>%
+  addLayersControl(
+    overlayGroups = c("AIR", "HPG", "Centre"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+:::
+::: {}
+
+```{python}
+
+foo = air_store[['latitude', 'longitude', 'dist_group']].assign(dset='air')
+bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
+
+# Create a base map
+m = folium.Map(location=[foo['latitude'].mean(), foo['longitude'].mean()], zoom_start=5)
+
+# Add tiles
+folium.TileLayer('CartoDB.Positron').add_to(m)
+folium.LayerControl().add_to(m)
+
+# # Define a function to add markers
+# def add_marker(row):
+#     folium.Marker(location=[row['latitude'], row['longitude']],
+#                   popup=row['hpg_store_id'],
+#                   icon=None,
+#                   tooltip=row['hpg_genre_name']).add_to(marker_cluster)
+                  
+# Define a function to add markers for hpg_store
+def add_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup=row['hpg_store_id'],
+                  icon=None,
+                  tooltip=row['hpg_genre_name']).add_to(m)
+
+# Add markers for hpg_store
+hpg_store.apply(add_marker, axis=1)
+
+# Define a function to add markers for air_store
+def add_air_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup=row['air_store_id'],
+                  icon=None,
+                  tooltip=row['air_genre_name']).add_to(m)
+
+# Add markers for air_store
+air_store.apply(add_air_marker, axis=1)
+
+# Define a function to add a marker for med_coord_air
+def add_center_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup="Center Point",
+                  icon=folium.Icon(color='green'),
+                  tooltip="Center Point").add_to(m)
+
+# Add a marker for med_coord_air
+med_coord_air.apply(add_center_marker)
+
+# Display the map
+m
+
+```
+:::
+::::
 
 
 
