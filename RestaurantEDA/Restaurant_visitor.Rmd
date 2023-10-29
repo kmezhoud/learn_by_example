@@ -1249,7 +1249,7 @@ def add_marker(row):
                   tooltip=row['air_genre_name']).add_to(marker_cluster)
 
 # Apply the function to each row of the DataFrame
-air_store.apply(add_marker, axis=1)
+m= air_store.apply(add_marker, axis=1)
 
 # Display the map
 m
@@ -1372,6 +1372,13 @@ folium.TileLayer(tiles='CartoDB positron').add_to(m)
 # Create a MarkerCluster object
 marker_cluster = MarkerCluster().add_to(m)
 
+## Also working
+# hpg_store.apply(lambda row:folium.Marker(
+#                   location=[row['latitude'], row['longitude']],                        
+#                   popup=row['hpg_store_id'],icon=None,
+#                   tooltip=row['hpg_genre_name']).add_to(marker_cluster), 
+#                   axis=1)
+
 # Define a function to add markers
 def add_marker(row):
     folium.Marker(location=[row['latitude'], row['longitude']],
@@ -1381,7 +1388,6 @@ def add_marker(row):
 
 # Apply the function to each row of the DataFrame
 hpg_store.apply(add_marker, axis=1)
-
 # Display the map
 m
 ```
@@ -3269,54 +3275,61 @@ leaflet(foo) %>%
 :::
 ::: {}
 
-```{python}
 
+
+```{python}
 foo = air_store[['latitude', 'longitude', 'dist_group']].assign(dset='air')
 bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
-
 # Create a base map
-m = folium.Map(location=[foo['latitude'].mean(), foo['longitude'].mean()], zoom_start=5)
+m = folium.Map(location=[foo['latitude'].mean(),
+               foo['longitude'].mean()], zoom_start=5,
+               tiles="CartoDB Positron",
+               attr="<a href=https://endless-sky.github.io/>Endless Sky</a>")
+
+# m = folium.Map(location=[35.647042153196615, 137.41531074957783], zoom_start=10,
+#                tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', 
+#                attr='CartoDB.Voyager', max_zoom=20)
 
 # Add tiles
-folium.TileLayer('CartoDB.Positron').add_to(m)
+folium.TileLayer('CartoDB positron').add_to(m)
 folium.LayerControl().add_to(m)
-
-# # Define a function to add markers
+                  
+# Define a function to add markers for hpg_store
 # def add_marker(row):
 #     folium.Marker(location=[row['latitude'], row['longitude']],
 #                   popup=row['hpg_store_id'],
 #                   icon=None,
-#                   tooltip=row['hpg_genre_name']).add_to(marker_cluster)
-                  
-# Define a function to add markers for hpg_store
-def add_marker(row):
-    folium.Marker(location=[row['latitude'], row['longitude']],
-                  popup=row['hpg_store_id'],
-                  icon=None,
-                  tooltip=row['hpg_genre_name']).add_to(m)
+#                   tooltip=row['hpg_genre_name']).add_to(m)
 
 # Add markers for hpg_store
-hpg_store.apply(add_marker, axis=1)
+hpg_store.apply(lambda row:folium.Marker(
+                  location=[row['latitude'], row['longitude']],                        
+                  popup=row['hpg_store_id'],icon=None,
+                  tooltip=row['hpg_genre_name']).add_to(m), 
+                  axis=1)
 
-# Define a function to add markers for air_store
-def add_air_marker(row):
-    folium.Marker(location=[row['latitude'], row['longitude']],
-                  popup=row['air_store_id'],
-                  icon=None,
-                  tooltip=row['air_genre_name']).add_to(m)
+# # Define a function to add markers for air_store
+# def add_air_marker(row):
+#     folium.Marker(location=[row['latitude'], row['longitude']],
+#                   popup=row['air_store_id'],
+#                   icon=None,
+#                   tooltip=row['air_genre_name']).add_to(m)
+                  
+                  
 
 # Add markers for air_store
-air_store.apply(add_air_marker, axis=1)
+air_store.apply(lambda row:folium.Marker(
+                  location=[row['latitude'], row['longitude']],
+                  popup=row['air_store_id'],
+                  icon=None,
+                  tooltip=row['air_genre_name']).add_to(m),
+                  axis=1)
 
-# Define a function to add a marker for med_coord_air
-def add_center_marker(row):
-    folium.Marker(location=[row['latitude'], row['longitude']],
-                  popup="Center Point",
-                  icon=folium.Icon(color='green'),
+# add a marker for med_coord_air
+folium.Marker(location=[35.658068, 139.685474],
+                   popup="Center Point",
+                   icon=folium.Icon(color='green'),
                   tooltip="Center Point").add_to(m)
-
-# Add a marker for med_coord_air
-med_coord_air.apply(add_center_marker)
 
 # Display the map
 m
