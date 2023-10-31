@@ -192,6 +192,11 @@ from matplotlib.ticker import FormatStrFormatter
 import folium
 from folium.plugins import MarkerCluster
 locale.setlocale(locale.LC_ALL,'en_US.utf8')
+from statsmodels.regression.linear_model import OLS
+from statsmodels.tools import add_constant
+from datetime import timedelta
+from pmdarima import auto_arima
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 #from IPython.display import display, HTML # displays html tobale in Rmarkdown
 #import ipywidgets 
@@ -1226,7 +1231,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Create a map centered at a specific location
-m = folium.Map(location=[35.6528, 139.8395], zoom_start=7, width=1500, height=800)
+m = folium.Map(location=[air_store['latitude'].median(),
+               air_store['longitude'].median()],
+               zoom_start=7, width=1500, height=800)
 
 # Add tiles (you can choose different providers)
 folium.TileLayer(tiles='CartoDB positron').add_to(m)
@@ -1249,7 +1256,7 @@ def add_marker(row):
                   tooltip=row['air_genre_name']).add_to(marker_cluster)
 
 # Apply the function to each row of the DataFrame
-m= air_store.apply(add_marker, axis=1)
+air_store.apply(add_marker, axis=1)
 
 # Display the map
 m
@@ -1364,7 +1371,10 @@ We find:
 
 ```{python}
 # Create a map centered at a specific location
-m = folium.Map(location=[35.6528, 139.8395], zoom_start=7, width=1500, height=800)
+m = folium.Map(location=[hpg_store['latitude'].median(), 
+                         hpg_store['longitude'].median()],
+                         zoom_start=7, 
+                         width=1500, height=800)
 
 # Add tiles (you can choose different providers)
 folium.TileLayer(tiles='CartoDB positron').add_to(m)
@@ -2288,7 +2298,7 @@ sns.histplot(data=foobar, x='n', color='red', binwidth=1, ax=ax2)
 ax1.set(xlabel='HPG Genres per area', ylabel='Count')
 # Plot p3
 p3 = sns.scatterplot(data=p3_data, x='n', y='mean_mlv', color='blue', s=40, ax=ax3)
-p3.errorbar(p3_data['n'], p3_data['mean_mlv'], yerr=p3_data['sd_mlv'], fmt='o', color='blue')
+p3.errorbar(p3_data['n'], p3_data['mean_mlv'], yerr=p3_data['sd_mlv'], fmt='o', color='blue', markersize=5, capsize=8)
 p3.set(xlabel='Cases of identical Air genres per area', ylabel='Mean +/- SD of\n mean log1p visitors')
 
 # Adjust layout
@@ -2533,7 +2543,7 @@ plt.show()
 
 ```{python}
 # Convert visit_date to datetime if needed
- all_reserve['visit_date'] = pd.to_datetime(all_reserve['visit_date'])
+all_reserve['visit_date'] = pd.to_datetime(all_reserve['visit_date'])
 # Rename 'visit_date' column before merging
 all_reserve['date'] = all_reserve['visit_date']
 
@@ -2713,7 +2723,9 @@ def dist_group(x):
         return 5
 
 air_store['dist_group'] = air_store['dist'].apply(dist_group)
-air_store = pd.merge(air_store, air_count, left_on='air_area_name', right_on='air_area_name', how='left')
+air_store = pd.merge(air_store, air_count, 
+           left_on='air_area_name', right_on='air_area_name',
+           how='left')
 # Split 'air_area_name' into 'prefecture' and 'area'
 split_data = air_store['air_area_name'].str.split(' ', n=1, expand=True)
 # Assign the first part to 'prefecture' and the rest to 'area'
@@ -2725,7 +2737,10 @@ air_store['area'].fillna("", inplace=True)
 
 
 hpg_store['dist_group'] = hpg_store['dist'].apply(dist_group)
-hpg_store = pd.merge(hpg_store, hpg_count, left_on='hpg_area_name', right_on='hpg_area_name', how='left')
+hpg_store = pd.merge(hpg_store, hpg_count, 
+                    left_on='hpg_area_name', 
+                    right_on='hpg_area_name', 
+                    how='left')
 
 # Split 'air_area_name' into 'prefecture' and 'area'
 split_data = hpg_store['hpg_area_name'].str.split(' ', n=1, expand=True)
@@ -2799,7 +2814,6 @@ We find:
 ::: {}
 
 ```{python}
-
 
 # Compute log1p of visitors
 air_visits['log1p_visitors'] = air_visits['visitors'].apply(lambda x: np.log1p(x))
@@ -2935,8 +2949,6 @@ plt.tight_layout()
 plt.show(p4)
 ```
 
-:::
-::::
 
 ```{python}
 import seaborn as sns
@@ -2949,6 +2961,10 @@ def compute_log1p_visitors(visitors):
 
 # Create subplots for p2 and p4
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 12))
+gs = GridSpec(3, 3)
+plt.style.use('ggplot')
+ax1 = plt.subplot(gs[0, 0])
+ax2 = plt.subplot(gs[0, 1])
 
 # Plot 2
 p2_data = air_visits.copy()
@@ -2956,20 +2972,21 @@ p2_data['log1p_visitors'] = compute_log1p_visitors(p2_data['visitors'])
 
 p2 = sns.FacetGrid(p2_data, row='wday', hue="wday", palette='viridis',
                  aspect=15, height=.5)
-p2.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=.5, ax=ax1)
-p2.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5, ax=ax1)
-p2.set(xlim=(0, 10))
+p2 =p2.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, 
+        clip_on=False, fill=True, alpha=1, linewidth=.5, ax=ax1)
+p2= p2.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5, ax=ax1)
+p2= p2.set(xlim=(0, 10))
 
 # Define and use a simple function to label the plot in axes coordinates
 def label(x, color, label):
     ax = plt.gca()
     ax.text(0, .2, label,  color=color, ha="right", va="center", transform=ax.transAxes)
-p2.map(label, 'log1p_visitors')
+p2= p2.map(label, 'log1p_visitors')
 
-p2.set_titles("")
-p2.set(yticks=[], ylabel="")
-p2.despine(bottom=True, left=True)
-p2.fig.subplots_adjust(hspace=-.25)
+p2= p2.set_titles("")
+p2= p2.set(yticks=[], ylabel="")
+p2= p2.despine(bottom=True, left=True)
+p2= p2.fig.subplots_adjust(hspace=-.25)
 
 # Plot 4
 p4_data = air_visits.copy()
@@ -2977,16 +2994,19 @@ p4_data['log1p_visitors'] = compute_log1p_visitors(p4_data['visitors'])
 
 p4 = sns.FacetGrid(p4_data, row='month', hue="month", palette='viridis',
                  aspect=15, height=.5)
-p4.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=.5, ax=ax2)
-p4.map(sns.kdeplot, 'log1p_visitors', clip_on=False, color="black", lw=2, bw_adjust=.5, ax=ax2)
-p4.set(xlim=(0, 10))
+p4= p4.map(sns.kdeplot, 'log1p_visitors', bw_adjust=.5, 
+       clip_on=False, fill=True, alpha=1,
+       linewidth=.5, ax=ax2)
+p4= p4.map(sns.kdeplot, 'log1p_visitors', clip_on=False, 
+       color="black", lw=2, bw_adjust=.5, ax=ax2)
+p4= p4.set(xlim=(0, 10))
 
-p4.map(label, 'log1p_visitors')
+p4= p4.map(label, 'log1p_visitors')
 
-p4.set_titles("")
-p4.set(yticks=[], ylabel="")
-p4.despine(bottom=True, left=True)
-p4.fig.subplots_adjust(hspace=-.25)
+p4= p4.set_titles("")
+p4= p4.set(yticks=[], ylabel="")
+p4= p4.despine(bottom=True, left=True)
+p4= p4.fig.subplots_adjust(hspace=-.25)
 
 # Adjust layout
 plt.tight_layout()
@@ -2995,7 +3015,8 @@ plt.tight_layout()
 plt.show()
 
 ```
-
+:::
+::::
 
 Here is a breakdown by air_genre_name:
 
@@ -3055,18 +3076,18 @@ summary_data = merged_data.groupby(['wday', 'air_genre_name'], observed=True).ag
 ).reset_index()
 
 
-fig = plt.figure(figsize = (12,8))
+fig = plt.figure(figsize = (10,6))
 plt.style.use('ggplot')
 
 g = sns.FacetGrid(summary_data, col="air_genre_name", col_wrap=4,
                   sharex=True, sharey=True, height=5)
-g.map_dataframe(sns.scatterplot, x='wday', y='mean_log_visitors',
+p = g.map_dataframe(sns.scatterplot, x='wday', y='mean_log_visitors',
                 hue='wday', palette='viridis', s=50, alpha=0.7)
 
 # Add error bars
 for ax, (_, data) in zip(g.axes.flat, summary_data.groupby('air_genre_name')):
     #sns.lineplot(data=data, x='wday', y='mean_log_visitors', ax=ax, color='black')
-    ax.errorbar(data['wday'], data['mean_log_visitors'], yerr=data['sd_log_visitors'], fmt='none', color='black', capsize=5)
+    p= ax.errorbar(data['wday'], data['mean_log_visitors'], yerr=data['sd_log_visitors'], fmt='none', color='black', capsize=5)
     ax.legend('')
 
 # Resize facet titles
@@ -3113,18 +3134,18 @@ all_reserve['visitors_minus_reserve'] = all_reserve['visitors'] - all_reserve['r
 plt.figure(figsize=(10, 6))
 plt.style.use('ggplot')
 
-sns.boxplot(data=all_reserve, x='wday', y='visitors_minus_reserve', 
+p= sns.boxplot(data=all_reserve, x='wday', y='visitors_minus_reserve', 
              hue='wday', palette='viridis')
-plt.xlabel('Weekday')
-plt.ylabel('Visitors - Reserve Visitors')
-plt.tick_params(axis='x', pad=0, labelsize= 8)
+p= plt.xlabel('Weekday')
+p= plt.ylabel('Visitors - Reserve Visitors')
+p= plt.tick_params(axis='x', pad=0, labelsize= 8)
 #plt.set_major_formatter(dates.DateFormatter('%a'))
 #plt.title('Difference between Visitors and Reserve Visitors by Weekday')
 
 # Remove legend
 #plt.legend().remove()
 # Show the plot
-plt.show()
+plt.show(p)
 
 ```
 
@@ -3211,18 +3232,20 @@ p2.set_title('HPG Count Histogram')
 # Preprocessing for Plot 3
 air_visits_processed = air_visits.merge(air_store, on='air_store_id', how='left')
 
-store_visits = air_visits_processed.groupby(['air_store_id', 'air_count'], observed=True)['visitors'].apply(lambda x: x.mean()).reset_index()
-area_visits = store_visits.groupby('air_count', observed=True)['visitors'].agg(['mean', 'std']).reset_index()
+store_visits = air_visits_processed.groupby(['air_store_id', 'air_count'],
+               observed=True)['visitors'].apply(lambda x: x.mean()).reset_index()
+area_visits = store_visits.groupby('air_count', 
+              observed=True)['visitors'].agg(['mean', 'std']).reset_index()
 
 
 # Plot 3
 p3 = sns.scatterplot(data=area_visits, x='air_count', y='mean',
                      color='blue',
                      ax=ax3)
-p3.errorbar(x=area_visits['air_count'], y=area_visits['mean'], 
+p3= p3.errorbar(x=area_visits['air_count'], y=area_visits['mean'], 
             yerr=area_visits['std'], fmt='o',
             color='blue', capsize=5)
-sns.regplot(data=area_visits, x='air_count', y='mean', scatter=False, color='black', ax=ax3)
+p3= sns.regplot(data=area_visits, x='air_count', y='mean', scatter=False, color='black', ax=ax3)
 
 # Set labels and title for Plot 3
 p3.set_xlabel('Air Restaurants per Area')
@@ -3237,7 +3260,6 @@ plt.show()
 ```
 :::
 ::::
-
 
 ## Distance from the busiest area
 
@@ -3281,10 +3303,12 @@ leaflet(foo) %>%
 foo = air_store[['latitude', 'longitude', 'dist_group']].assign(dset='air')
 bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
 # Create a base map
-m = folium.Map(location=[foo['latitude'].mean(),
-               foo['longitude'].mean()], zoom_start=5,
-               tiles="CartoDB Positron",
-               attr="<a href=https://endless-sky.github.io/>Endless Sky</a>")
+m = folium.Map(location=[bar['latitude'].median(),
+                         bar['longitude'].median()], 
+                         zoom_start=5#,
+                   #      tiles="CartoDB Positron",
+             # attr="<a href=https://endless-sky.github.io/>Endless Sky</a>"
+              )
 
 # m = folium.Map(location=[35.647042153196615, 137.41531074957783], zoom_start=10,
 #                tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', 
@@ -3292,21 +3316,27 @@ m = folium.Map(location=[foo['latitude'].mean(),
 
 # Add tiles
 folium.TileLayer('CartoDB positron').add_to(m)
-folium.LayerControl().add_to(m)
+
+# Create a MarkerCluster object
+marker_cluster = MarkerCluster().add_to(m)
+
+#folium.LayerControl().add_to(m)
                   
 # Define a function to add markers for hpg_store
-# def add_marker(row):
-#     folium.Marker(location=[row['latitude'], row['longitude']],
-#                   popup=row['hpg_store_id'],
-#                   icon=None,
-#                   tooltip=row['hpg_genre_name']).add_to(m)
+def add_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup=row['hpg_store_id'],
+                  icon=None,
+                  tooltip=row['hpg_genre_name']).add_to(marker_cluster)
 
 # Add markers for hpg_store
-hpg_store.apply(lambda row:folium.Marker(
-                  location=[row['latitude'], row['longitude']],                        
-                  popup=row['hpg_store_id'],icon=None,
-                  tooltip=row['hpg_genre_name']).add_to(m), 
-                  axis=1)
+bar.apply(add_marker, axis=1)
+
+# hpg_store.apply(lambda row:folium.Marker(
+#                   location=[row['latitude'], row['longitude']],                        
+#                   popup=row['hpg_store_id'],icon=None,
+#                   tooltip=row['hpg_genre_name']).add_to(m), 
+#                   axis=1)
 
 # # Define a function to add markers for air_store
 # def add_air_marker(row):
@@ -3317,19 +3347,19 @@ hpg_store.apply(lambda row:folium.Marker(
                   
                   
 
-# Add markers for air_store
-air_store.apply(lambda row:folium.Marker(
-                  location=[row['latitude'], row['longitude']],
-                  popup=row['air_store_id'],
-                  icon=None,
-                  tooltip=row['air_genre_name']).add_to(m),
-                  axis=1)
-
-# add a marker for med_coord_air
-folium.Marker(location=[35.658068, 139.685474],
-                   popup="Center Point",
-                   icon=folium.Icon(color='green'),
-                  tooltip="Center Point").add_to(m)
+# # Add markers for air_store
+# air_store.apply(lambda row:folium.Marker(
+#                   location=[row['latitude'], row['longitude']],
+#                   popup=row['air_store_id'],
+#                   icon=None,
+#                   tooltip=row['air_genre_name']).add_to(m),
+#                   axis=1)
+# 
+# # add a marker for med_coord_air
+# folium.Marker(location=[35.658068, 139.685474],
+#                    popup="Center Point",
+#                    icon=folium.Icon(color='green'),
+#                   tooltip="Center Point").add_to(m)
 
 # Display the map
 m
@@ -3338,7 +3368,117 @@ m
 :::
 ::::
 
+## Prefectures
 
+This is a straight-forward feature where we simply define the prefecture as the first part of the area_name. Here we make use of the (generally) consistent formatting of the area name. This gives us a relatively small number of distinct high-level areas:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+p1 <- air_store %>%
+  ggplot(aes(prefecture)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  ggtitle("air prefectures - # restaurants") +
+  labs(x = "")
+
+p2 <- hpg_store %>%
+  ggplot(aes(prefecture)) +
+  geom_bar(fill = "red") +
+  coord_flip() +
+  ggtitle("hpg prefectures - # restaurants") +
+  labs(x = "")
+
+p3 <- air_visits %>%
+  left_join(air_store, by = "air_store_id") %>%
+  group_by(air_store_id, prefecture) %>%
+  summarise(mean_store_visit = mean(log1p(visitors))) %>%
+  group_by(prefecture) %>%
+  summarise(mean_log_visitors = mean(mean_store_visit),
+            sd_log_visitors = sd(mean_store_visit)) %>%
+  ggplot(aes(prefecture, mean_log_visitors)) +
+  geom_point(size = 4, color = "blue") +
+  geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
+                    ymax = mean_log_visitors + sd_log_visitors),
+                    color = "blue", width = 0.5, size = 0.7) +
+  labs(x = "prefecture") +
+  theme(axis.text.x  = element_text(angle=15, hjust=1, vjust=0.9))
+
+layout <- matrix(c(1,2,1,2,1,2,3,3,3,3),5,2,byrow=TRUE)
+multiplot(p1, p2, p3, layout=layout)
+```
+
+We find:
+
+* There are 9 prefectures in the air data and 13 entries in the hpg data. In both data sets “Tokyo” is clearly the most frequent entry.
+
+* Once more, we don’t see signficant differences in the mean log1p visitor numbers for the 9 different air prefectures. Any possible variation is smaller than the size of the error bars.
+
+
+:::
+::: {}
+
+```{python}
+# Create a 2x2 grid
+fig = plt.figure(figsize=(8, 5))
+grid = GridSpec(2, 2, figure=fig)
+plt.style.use('ggplot')
+
+# Plot 1 (p1)
+p1_ax = fig.add_subplot(grid[0, 0])
+air_store['prefecture'].value_counts().plot(kind='barh', color='blue', ax=p1_ax)
+p1_ax.set_title('air prefectures - restaurants', fontsize= 10)
+p1_ax.set_xlabel('count')
+p1_ax.tick_params(axis='y', rotation=0, labelsize= 6)
+p1_ax.set_ylabel('')
+
+# Plot 2 (p2)
+p2_ax = fig.add_subplot(grid[0, 1])
+hpg_store['prefecture'].value_counts().plot(kind='barh', color='red', ax=p2_ax)
+p2_ax.set_title('hpg prefectures - restaurants', fontsize= 10)
+p2_ax.set_xlabel('count')
+p2_ax.tick_params(axis='y', rotation=0, labelsize= 6)
+p2_ax.set_ylabel('')
+
+# Plot 3 (p3)
+p3_data = (
+    air_visits
+    .merge(air_store, on='air_store_id')
+    .groupby(['air_store_id', 'prefecture'])['visitors']
+    .mean()
+    .groupby('prefecture')
+    .agg(mean_store_visit='mean', sd_log_visitors='std')
+    .reset_index()
+)
+
+p3_ax = fig.add_subplot(grid[1, :])
+p3_ax.errorbar(
+    p3_data['prefecture'], p3_data['mean_store_visit'], yerr=p3_data['sd_log_visitors'],
+    color='blue', marker='o', linestyle='-', capsize=5
+)
+p3_ax.set_title('Mean Store Visits by Prefecture', fontsize= 10)
+p3_ax.set_xlabel('Prefecture', fontlsize= 8)
+p3_ax.set_ylabel('Mean Store Visit', fontsize= 7)
+p3_ax.tick_params(axis='x', rotation=15, labelsize= 7)  # Customize x-axis ticks
+
+# Adjust layout
+fig.tight_layout()
+
+# Show the plots
+plt.show()
+
+```
+:::
+::::
+
+
+# Time series parameters
+
+After engineering new features based on the geographical or culinary properties of the different restaurants, we will now look directly at the time series of their visitor numbers. With only 829 time series, from 829 air restaurants, it is actually easily possible to look at each of them individually, and there are kernels that plot small or large fractions of them to get a feeling for the data.
+
+Here, we will take a different approach and look at the meta parameters of each time series. Those features are the mean, standard deviation, slope, and, slope error of the time series. Each parameter is computed for the log1p-transformed data. In the next code block, we define a extraction function and then run it for each restaurant. Due to the small size of the data set this takes almost no time:
 
 
 
@@ -3347,13 +3487,581 @@ m
 ::: {}
 
 ```{r}
+foo <- air_visits %>%
+  left_join(air_store, by = "air_store_id") %>%
+  group_by(air_store_id, air_genre_name) %>%
+  summarise(mean_log_visits = mean(log1p(visitors)),
+            mean_log_visits = mean(log1p(visitors)),
+            sd_log_visits = sd(log1p(visitors))) %>%
+  ungroup()
 
+params_ts1 <- function(rownr){
+  bar <- air_visits %>%
+    filter(air_store_id == foo$air_store_id[rownr])
+  slope <- summary(lm(visitors ~ visit_date, data = bar))$coef[2]
+  slope_err <- summary(lm(visitors ~ visit_date, data = bar))$coef[4]
+  
+  foobar <- tibble(
+    air_store_id = foo$air_store_id[rownr],
+    slope = slope,
+    slope_err = slope_err
+  )
+  
+  return(foobar)
+}
+
+params <- params_ts1(1)
+for (i in seq(2,nrow(foo))){
+  params <- bind_rows(params, params_ts1(i))
+}
+
+ts_params <- foo %>%
+  left_join(params, by = "air_store_id")
+```
+:::
+::: {}
+
+This Python code performs the same operations as the provided R code. It defines a function params_ts1 to calculate the slope and standard error for each air_store_id, then iterates through the foo DataFrame to compute these parameters. Finally, it merges the parameters with foo to obtain ts_params.
+
+```{python}
+import pandas as pd
+from statsmodels.regression.linear_model import OLS
+from statsmodels.tools import add_constant
+
+# Merge air_visits with air_store
+merged_df = pd.merge(air_visits, air_store, on='air_store_id')
+# Group by air_store_id and air_genre_name and compute the required statistics
+foo = merged_df.groupby(['air_store_id', 'air_genre_name'], observed=True).agg(mean_log_visits=('visitors', lambda x: np.mean(np.log1p(x))),
+        sd_log_visits=('visitors', lambda x: np.std(np.log1p(x)))).reset_index()
+
+
+# Define function to calculate slope and standard error
+def params_ts1(air_store_id):
+    bar = air_visits[air_visits['air_store_id'] == air_store_id]
+    X = add_constant(range(len(bar['visit_date'])))
+    model = OLS(bar['visitors'], X)
+    results = model.fit()
+    slope = results.params[1]
+    slope_err = results.bse[1]
+    
+    foobar = pd.DataFrame({
+        'air_store_id': [air_store_id],
+        'slope': [slope],
+        'slope_err': [slope_err]
+    })
+    
+    return foobar
+
+# Calculate parameters for all rows in foo
+params = params_ts1(foo['air_store_id'].iloc[0])
+for i in range(1, len(foo)):
+    params = pd.concat([params, params_ts1(foo['air_store_id'].iloc[i])], ignore_index=True)
+
+# Merge parameters with foo
+ts_params = foo.merge(params, on='air_store_id', how='left')
+
+```
+:::
+::::
+
+Now we will plot the parameters and their one-dimensional and two-dimensional distributions:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+p1 <- ts_params %>%
+  ggplot(aes(mean_log_visits)) +
+  geom_histogram(bins = 50, fill = "blue")
+
+p2 <- ts_params %>%
+  ggplot(aes(sd_log_visits)) +
+  geom_histogram(bins = 50, fill = "blue")
+
+p3 <- ts_params %>%
+  filter(slope < 0.5) %>%
+  ggplot(aes(slope)) +
+  geom_histogram(bins = 50, fill = "blue") +
+  labs(x = "Slope < 0.5")
+
+p4 <- ts_params %>%
+  ggplot((aes(mean_log_visits, sd_log_visits))) +
+  geom_point(size = 2, color = "blue")
+
+p5 <- ts_params %>%
+  ggplot((aes(slope, slope_err))) +
+  geom_point(size = 2, color = "blue")
+
+layout <- matrix(c(1,1,2,2,3,3,4,4,4,5,5,5),2,6,byrow=TRUE)
+multiplot(p1, p2, p3, p4, p5, layout=layout)
+```
+
+We find:
+
+* The distributions of the mean and standard deviation for the log1p-transformed visitor counts are relatively broad. I don’t think we can assume normality for either of them, although the distributions are relatively symmetric. The shape of the mean vs sd cloud in the lower left panel support the idea that there is a relation between the two features, with larger average visitor counts having a smaller variance.
+
+* The slope distribution is narrow; centred on zero slope. The slope vs slope error plot in the lower right panel showcases that there are a few outliers with large slope errors and mostly high absolute slope values:
+
+
+:::
+::: {}
+
+```{python}
+# Define plots
+def plot_p1(ax):
+    ax.hist(ts_params['mean_log_visits'], bins=50, color='blue')
+    ax.set_title('Mean Log Visits', fontsize=10)
+    ax.set_ylabel('Count', fontsize=10)
+
+def plot_p2(ax):
+    ax.hist(ts_params['sd_log_visits'], bins=50, color='blue')
+    ax.set_title('Standard Deviation Log Visits', fontsize=10)
+
+def plot_p3(ax):
+    filtered_data = ts_params[ts_params['slope'] < 0.5]
+    ax.hist(filtered_data['slope'], bins=50, color='blue')
+    ax.set_title('Slope < 0.5', fontsize= 10)
+
+def plot_p4(ax):
+    ax.scatter(ts_params['mean_log_visits'], 
+               ts_params['sd_log_visits'], color='blue', s=2)
+    ax.set_xlabel('Mean Log Visits', fontsize=6)
+    ax.set_ylabel('Sd_Log_Visits', fontsize=10)
+    ax.tick_params(axis='y', rotation=0, labelsize= 7) 
+
+def plot_p5(ax):
+    ax.scatter(ts_params['slope'], ts_params['slope_err'], color='blue', s=2)
+    ax.set_xlabel('Slope', fontsize=6)
+    ax.set_ylabel('Slope Error', fontsize=6)
+    ax.tick_params(axis='y', rotation=0, labelsize= 7) 
+
+# Create a 2x6 grid
+fig = plt.figure(figsize=(8, 4))
+gs = GridSpec(2, 6)
+
+# Plot each subplot
+plot_p1(fig.add_subplot(gs[0, :2]))
+plot_p2(fig.add_subplot(gs[0, 2:4]))
+plot_p3(fig.add_subplot(gs[0, 4:]))
+
+plot_p4(fig.add_subplot(gs[1, :3]))
+plot_p5(fig.add_subplot(gs[1, 3:]))
+
+# Adjust layout
+plt.tight_layout()
+
+# Show the plots
+plt.show()
+
+```
+:::
+::::
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+ts_params %>%
+  filter(abs(slope) > 0.25) %>%
+  select(air_store_id, air_genre_name, slope, slope_err)
+```
+:::
+::: {}
+
+```{python}
+ts_params[abs(ts_params['slope']) > 0.25][['air_store_id', 'air_genre_name', 'slope', 'slope_err']]
+
+```
+:::
+::::
+
+Finally, we will have a comprehensive view at the relation between mean log1p visitors and the time series slope using a facet zoom view, as implemented in the ggforce package. Here, we will see the full space on the right side and the zoomed-in version on the left side. The zoom region is indicated on the right side with a darker shading. This view is perfect for situations like this, where a few extreme points would make it difficult to focus on the properties of the majority data cluster. The mean_log_visits and slope are plotted coloured by genre and with associated errorbars in grey:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+```{r}
+ts_params %>%
+  ggplot(aes(mean_log_visits, slope, color = air_genre_name)) +
+  geom_errorbarh(aes(xmin = mean_log_visits - sd_log_visits,
+                    xmax = mean_log_visits + sd_log_visits),
+                    color = "grey70", size = 0.7) +
+  geom_errorbar(aes(ymin = slope - slope_err,
+                    ymax = slope + slope_err),
+                    color = "grey70", size = 0.7) +
+  geom_point() +
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(nrow = 3, override.aes = list(size = 4))) +
+  labs(color = "") +
+  facet_zoom(y = (slope < 0.05 & slope > -0.1))
+```
+
+We find:
+
+* There’s not a lot of genre clustering, although the three points with the lowest mean log1p visits are all dining bars, for what it’s worth. We find the slope outliers in the again in the overview plot and notice that all of them have large mean values.
+
+* Both panels show an overall trend for larger slopes to be associated to higher means. This may not be surprising, since we use he absolute slope value with has more range for high visitor counts than for low ones. Feel free to plot the slope normalised by mean to see whether the effect persists.
+
+The extreme values in this plot can now be studied in detail, and we will choose some of them as examples in our next section.
+
+
+:::
+::: {}
+
+```{python}
+
+# Filter data
+filtered_data = ts_params[(ts_params['slope'] < 0.05) & (ts_params['slope'] > -0.1)]
+
+# Create the scatter plot with error bars
+plt.figure(figsize=(8, 6))
+p1= sns.scatterplot(x='mean_log_visits', y='slope', hue='air_genre_name', data=filtered_data)
+p1.errorbar(x=filtered_data['mean_log_visits'], y=filtered_data['slope'], 
+             xerr=filtered_data['sd_log_visits'], yerr=filtered_data['slope_err'], 
+             fmt='none', color='grey', alpha=0.7, elinewidth=0.7)
+# Set legend properties
+p1=plt.legend('')
+#plt.legend(title='Air Genre Name', loc='upper left', bbox_to_anchor=(1, 1), ncol=1, fontsize='small')
+
+# Add facet zoom
+ax = plt.gca()
+axins = ax.inset_axes([0.6, 0.6, 0.35, 0.35])
+p2= sns.scatterplot(x='mean_log_visits', y='slope', hue='air_genre_name', data=filtered_data, ax=axins)
+p2=axins.set_xlim(-2, 2)
+p2=axins.set_ylim(-1, 1)
+
+# Set labels and title
+p2= plt.xlabel('Mean Log Visits')
+p2= plt.ylabel('Slope')
+p2= plt.title('Scatter Plot with Error Bars and Facet Zoom')
+p2= plt.legend('')
+
+plt.show()
+
+```
+:::
+::::
+
+
+
+# Forcasting methods and examples
+
+Finally, we will turn our focus to time-series forecasting methods. We have already learnt a lot about our data set and it’s features. The following sections will introduce basic forecasting methods.
+
+
+## ARIMA / auto.arima
+
+A popular method for forecasting is the autoregressive integrated moving average model; short ARIMA model. This kind of model consists of three building blocks which parametrised by the three indeces p, d, q as ARIMA(p, d, q):
+
+* auto-regressive / p: we are using past data to compute a regression model for future data. The parameter p indicates the range of lags; e.g. ARIMA(3,0,0) includes t-1, t-2, and t-3 values in the regression to compute the value at t.
+
+* integrated / d: this is a differencing parameter, which gives us the number of times we are subtracting the current and the previous values of a time series. Differencing removes the change in a time series in that it stabilises the mean and removes (seasonal) trends. This is necessary since computing the lags (e.g. difference between time t and time t-1) is most meaningful if large-scale trends are removed. A time series where the variance (or amount of variability) (and the autocovariance) are time-invariant (i.e. don’t change from day to day) is called stationary.
+
+* moving average / q: this parameter gives us the number of previous error terms to include in the regression error of the model.
+
+Here we will be using the auto.arima tool which estimates the necessary ARIMA parameters for each individual time series. In order to feed our data to auto.arima we need to turn them into a time-series object using the ts tool. We will also add a step for cleaning and outlier removal via the tsclean function of the forecast package. We have already seen that our data contain a strong weekly cycle, which will be one of the pre-set parameters of our model. We will include this knowledge when transforming our data. Let’s set everything up step by step, with comments and explanations, and then turn it into a function. Unhide the code to see how it is implemented.
+
+We use the first air_store_id (“air_ba937bf13d40fb24”) as an example.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+air_id = "air_ba937bf13d40fb24"
+
+pred_len <- test %>%
+  separate(id, c("air", "store_id", "date"), sep = "_") %>%
+  distinct(date) %>%
+  nrow()
+```
+:::
+::: {}
+
+```{python}
+air_id = "air_ba937bf13d40fb24"
+
+# Separate the 'id' column into three columns
+test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+
+# Get distinct dates and calculate the number of rows
+pred_len = test['date'].nunique()
+
+```
+:::
+::::
+
+We choose to predict for the last 39 days of our training sample. This might not be Here we compute the upper end of our training dates and subtract our “prediction length” from this value to define the start of our validation sample on Mar 14th. We also create a data set of all visit_dates in preparation for many time series having gaps.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+max_date <- max(air_visits$visit_date)
+split_date <- max_date - pred_len
+all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+```
+:::
+::: {}
+
+```{python}
+from datetime import timedelta
+# Find the maximum visit date
+max_date = air_visits['visit_date'].max()
+
+# Calculate the split date
+split_date = max_date - timedelta(days=pred_len)
+
+# Create a DataFrame with a sequence of dates
+all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']), end=max(air_visits['visit_date']))})
+
+```
+:::
+::::
+
+Next, we extract the time series for the specific air_store_id. We transform the visitors counts by log1p and join the data set of all visit_dates. This gives us a number of NA which we fill in with the overall median. The median might not be the best choice here, but it’s a sensible starting point. Most time series prediction tools require a sequential time series without gaps; which is what we create in this step.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+foo <- air_visits %>%
+  filter(air_store_id == air_id)
+
+visits <- foo %>%
+  right_join(all_visits, by = "visit_date") %>%
+  mutate(visitors = log1p(visitors)) %>%
+  replace_na(list(visitors = median(log1p(foo$visitors)))) %>%
+  rownames_to_column()
+```
+:::
+::: {}
+
+```{python}
+# Assuming you have DataFrames 'air_visits', 'all_visits' available
+
+# Filter air_visits for a specific air_store_id (assuming air_id is a variable)
+foo = air_visits[air_visits['air_store_id'] == air_id]
+
+# Right join with all_visits on visit_date
+visits = pd.merge(all_visits, foo, on='visit_date', how='right')
+
+# Apply log transformation to visitors column
+visits['visitors'] = np.log1p(visits['visitors'])
+
+# Replace NA values with the median of log-transformed visitors from 'foo'
+median_visitors = np.median(np.log1p(foo['visitors']))
+visits['visitors'].fillna(median_visitors, inplace=True)
+
+# Reset row indices
+visits = visits.reset_index(drop=True)
+
+```
+:::
+::::
+
+Using this new time series, we now split the data into training and validation sets.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+visits_train <- visits %>% filter(visit_date <= split_date)
+visits_valid <- visits %>% filter(visit_date > split_date)
 ```
 :::
 ::: {}
 
 ```{python}
 
+# Filter visits for training and validation sets based on visit_date
+visits_train = visits[visits['visit_date'] <= split_date]
+visits_valid = visits[visits['visit_date'] > split_date]
 ```
 :::
 ::::
+
+
+Now comes the fitting part. As said before, we use the ts function to create a time series object and the tsclean tool to remove outliers. We also add the weekly frequency. The stepwise and approximation parameter settings mean that the tool performs a more thorough and precise search over all model parameters. This increases the computing time, but for our small data set this doesn’t matter much.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+arima.fit <- auto.arima(tsclean(ts(visits_train$visitors, frequency = 7)),
+                        stepwise = FALSE, approximation = FALSE)
+```
+:::
+::: {}
+
+```{python}
+from pmdarima import auto_arima
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+# Assuming 'visits_train' DataFrame is available
+
+# Perform seasonal decomposition of time series
+result = seasonal_decompose(visits_train['visitors'], model='multiplicative', period=7)
+
+# Extract the trend component (you may need to adjust the index based on the result)
+trend = result.trend.dropna()
+
+visits_train.set_index('visit_date', inplace=True)
+# Fit ARIMA model
+arima_fit = auto_arima(trend, seasonal=True, m=7, stepwise=False, trace=True) #, alpha=[0.5, 0.95]
+
+```
+:::
+::::
+
+Using the fitted ARIMA model we will forecast for our “prediction length”. We include confidence intervals.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+arima_visits <- arima.fit %>% forecast(h = pred_len, level = c(50,95))
+```
+:::
+::: {}
+
+```{python}
+from pmdarima.arima import ARIMA
+
+# Assuming 'arima_model' is the fitted ARIMA model
+# pred_len is the length of the forecast horizon
+
+# Generate forecasts
+arima_forecast, conf_int = arima_fit.predict(n_periods=pred_len, return_conf_int=True)
+
+# 'arima_forecast' will contain the point forecasts
+# 'conf_int' will contain the confidence intervals
+
+# Convert the forecasts to a DataFrame with appropriate dates
+# Assuming 'split_date' is available
+forecast_dates = pd.date_range(start=split_date + pd.Timedelta(days=1), periods=pred_len)
+
+arima_forecast_df = pd.DataFrame({
+    'date': forecast_dates,
+    'forecast': arima_forecast
+})
+
+# Optionally, add confidence intervals
+arima_forecast_df['lower_conf_int'] = conf_int[:, 0]
+arima_forecast_df['upper_conf_int'] = conf_int[:, 1]
+```
+:::
+::::
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Assuming 'arima_forecast_df' contains the forecasted values and confidence intervals
+
+# Plot the ARIMA forecast
+plt.figure(figsize=(10, 6))
+plt.plot(arima_forecast_df.index, arima_forecast_df['forecast'], label='ARIMA Forecast', color='blue')
+
+# Plot confidence intervals
+plt.fill_between(arima_forecast_df.shape[0], arima_forecast_df['lower_conf_int'], arima_forecast_df['upper_conf_int'], color='lightblue')
+
+# Customize the plot
+plt.xlabel("Date")
+plt.ylabel("Forecasted Values")
+plt.title("ARIMA Forecast with Confidence Intervals")
+plt.legend()
+plt.show()
+
+```
+
+
+```{python}
+# Plot the ARIMA model predictions
+plt.figure(figsize=(10, 6))
+plt.plot(arima_forecast_df.index, arima_forecast_df['forecast'], label='ARIMA Predictions', color='blue')
+
+# Overlay the actual values from 'visits_valid'
+plt.plot(visits_valid.index, visits_valid['visitors'], label='Actual Values', color='grey', linestyle='--')
+
+# Customize the plot
+plt.xlabel("Time [weeks]")
+plt.ylabel("log1p visitors vs ARIMA predictions")
+plt.legend('')
+plt.show()
+
+```
+
+
+
+```{python}
+fig, axes = plt.subplots(2, 1, figsize=(12, 8))
+x_axis = np.arange(train.shape[0] + arima_forecast_df.shape[0])
+axes[0].plot(x_axis[:train.shape[0]], train, alpha=0.75)
+axes[0].scatter(x_axis[train.shape[0]:], arima_forecast_df, alpha=0.4, marker='o')
+axes[0].scatter(x_axis[test.shape[0]:], test, alpha=0.4, marker='x')
+axes[0].fill_between(x_axis[-conf_int.shape[0]:], conf_int[:, 0], conf_int[:, 1],
+                     alpha=0.1, color='b')
+plt.show()
+```
+
+
+
+
+```{python}
+import pmdarima as pm
+from pmdarima import model_selection
+import matplotlib.pyplot as plt
+import numpy as np
+
+# #############################################################################
+# Load the data and split it into separate pieces
+data = pm.datasets.load_lynx()
+train, test = model_selection.train_test_split(data, train_size=100)
+
+# #############################################################################
+# Fit with some validation (cv) samples
+arima = pm.auto_arima(train, start_p=1, start_q=1, d=0, max_p=5, max_q=5,
+                      out_of_sample_size=10, suppress_warnings=True, alpha=[0.5, 0.95],
+                      stepwise=True, error_action='ignore')
+
+# Now plot the results and the forecast for the test set
+preds, conf_int = arima.predict(n_periods=test.shape[0],
+                                return_conf_int=True)
+
+fig, axes = plt.subplots(2, 1, figsize=(12, 8))
+x_axis = np.arange(train.shape[0] + preds.shape[0])
+axes[0].plot(x_axis[:train.shape[0]], train, alpha=0.75)
+axes[0].scatter(x_axis[train.shape[0]:], preds, alpha=0.4, marker='o')
+axes[0].scatter(x_axis[train.shape[0]:], test, alpha=0.4, marker='x')
+axes[0].fill_between(x_axis[-preds.shape[0]:], conf_int[:, 0], conf_int[:, 1],
+                     alpha=0.1, color='b')
+
+# fill the section where we "held out" samples in our model fit
+
+axes[0].set_title("Train samples & forecasted test samples")
+
+# Now add the actual samples to the model and create NEW forecasts
+arima.update(test)
+new_preds, new_conf_int = arima.predict(n_periods=10, return_conf_int=True)
+new_x_axis = np.arange(data.shape[0] + 10)
+
+axes[1].plot(new_x_axis[:data.shape[0]], data, alpha=0.75)
+axes[1].scatter(new_x_axis[data.shape[0]:], new_preds, alpha=0.4, marker='o')
+axes[1].fill_between(new_x_axis[-new_preds.shape[0]:],
+                     new_conf_int[:, 0],
+                     new_conf_int[:, 1],
+                     alpha=0.1, color='g')
+axes[1].set_title("Added new observed values with new forecasts")
+plt.show()
+```
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+```
+:::
+::: {}
+
+```{python}
+```
+:::
+::::
+
