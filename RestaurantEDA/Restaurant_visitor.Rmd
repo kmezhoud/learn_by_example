@@ -859,7 +859,7 @@ locale.setlocale(locale.LC_ALL,'en_US.utf8')
 #plt.rcParams['pgf.rcfonts'] = False
 #plt.rcParams['pdf.fonttype'] = 42
 
-p1_data = air_visits.groupby('visit_date')['visitors'].sum().reset_index()
+p1_data = air_visits.groupby('visit_date', observed=True)['visitors'].sum().reset_index()
 
 p3_data = air_visits.assign(wday=air_visits['visit_date'].dt.day_name()).groupby('wday')['visitors'].median().reset_index()
 
@@ -3790,7 +3790,7 @@ pred_len = test['date'].nunique()
 :::
 ::::
 
-We choose to predict for the last 39 days of our training sample. This might not be Here we compute the upper end of our training dates and subtract our “prediction length” from this value to define the start of our validation sample on Mar 14th. We also create a data set of all visit_dates in preparation for many time series having gaps.
+We choose to predict for the last 39 days of our training sample. This might not be here we compute the upper end of our training dates and subtract our “prediction length” from this value to define the start of our validation sample on Mar 14th. We also create a data set of all visit_dates in preparation for many time series having gaps.
 
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
 ::: {}
@@ -3838,8 +3838,9 @@ visits <- foo %>%
 ```{python}
 # Assuming you have DataFrames 'air_visits', 'all_visits' available
 
+#air_id = "air_900d755ebd2f7bbd"
 # Filter air_visits for a specific air_store_id (assuming air_id is a variable)
-foo = air_visits[air_visits['air_store_id'] == air_id]
+foo = air_visits[air_visits['air_store_id'] == air_id] 
 
 # Right join with all_visits on visit_date
 visits = pd.merge(all_visits, foo, on='visit_date', how='right')
@@ -3853,7 +3854,6 @@ visits['visitors'].fillna(median_visitors, inplace=True)
 
 # Reset row indices
 visits = visits.reset_index(drop=True)
-
 ```
 :::
 ::::
@@ -3904,7 +3904,7 @@ trend = result.trend.dropna()
 
 visits_train.set_index('visit_date', inplace=True)
 # Fit ARIMA model
-arima_fit = auto_arima(trend, seasonal=True, m=7, stepwise=False, trace=True) #, alpha=[0.5, 0.95]
+arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=True) 
 
 ```
 :::
@@ -3917,23 +3917,27 @@ Using the fitted ARIMA model we will forecast for our “prediction length”. W
 ```{r}
 arima_visits <- arima.fit %>% forecast(h = pred_len, level = c(50,95))
 ```
+
+
+```{r}
+arima_visits %>%
+  autoplot +
+  geom_line(aes(as.integer(rowname)/7, visitors), data = visits_valid, color = "grey40") +
+  labs(x = "Time [weeks]", y = "log1p visitors vs auto.arima predictions")
+```
+
+We find that the first days of the forecast fit quite well, but then our prediction is not able to capture the larger spikes. Still, it’s a useful starting point to compare other methods to.
+
 :::
 ::: {}
 
 ```{python}
-from pmdarima.arima import ARIMA
-
-# Assuming 'arima_model' is the fitted ARIMA model
-# pred_len is the length of the forecast horizon
 
 # Generate forecasts
 arima_forecast, conf_int = arima_fit.predict(n_periods=pred_len, return_conf_int=True)
 
-# 'arima_forecast' will contain the point forecasts
-# 'conf_int' will contain the confidence intervals
-
 # Convert the forecasts to a DataFrame with appropriate dates
-# Assuming 'split_date' is available
+
 forecast_dates = pd.date_range(start=split_date + pd.Timedelta(days=1), periods=pred_len)
 
 arima_forecast_df = pd.DataFrame({
@@ -3945,111 +3949,239 @@ arima_forecast_df = pd.DataFrame({
 arima_forecast_df['lower_conf_int'] = conf_int[:, 0]
 arima_forecast_df['upper_conf_int'] = conf_int[:, 1]
 ```
+
+
+
+```{python}
+
+# Plot the points and the forecasts
+x_axis = np.arange(visits_train.shape[0] + arima_forecast.shape[0])
+x_dates = visits['visit_date']  # Year starts at 1821
+
+p= plt.plot(x_dates[x_axis[:visits_train.shape[0]]].to_numpy(), 
+            visits_train['visitors'].to_numpy(), 
+            alpha=0.75, color='black')
+p= plt.plot(arima_forecast_df['date'].to_numpy(), 
+            arima_forecast_df['forecast'].to_numpy(), 
+            alpha=0.75, color='blue')  # Forecasts
+p= plt.plot(visits_valid['visit_date'].to_numpy(), 
+               visits_valid['visitors'],
+               alpha=0.4, color='grey')  # valid data
+#p= plt.scatter(visits_valid['visit_date'].to_numpy(), 
+#               visits_valid['visitors'],
+#               alpha=0.4, color='grey', marker='x')
+p= plt.fill_between(arima_forecast_df['date'].to_numpy(),
+                 arima_forecast_df['lower_conf_int'], 
+                 arima_forecast_df['upper_conf_int'], 
+                 alpha=0.2, color='b')
+#p= plt.title("ARIMA forecasts")
+p= plt.xlabel("dates")
+p=plt.ylabel("log1p visitors vs auto.arima predictions")
+
+plt.show(p)
+```
+
 :::
 ::::
 
 
-```{python}
-import matplotlib.pyplot as plt
 
-# Assuming 'arima_forecast_df' contains the forecasted values and confidence intervals
 
-# Plot the ARIMA forecast
-plt.figure(figsize=(10, 6))
-plt.plot(arima_forecast_df.index, arima_forecast_df['forecast'], label='ARIMA Forecast', color='blue')
+Now we turn this procedure into a function, including the plotting part.
 
-# Plot confidence intervals
-plt.fill_between(arima_forecast_df.shape[0], arima_forecast_df['lower_conf_int'], arima_forecast_df['upper_conf_int'], color='lightblue')
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+plot_auto_arima_air_id <- function(air_id){
 
-# Customize the plot
-plt.xlabel("Date")
-plt.ylabel("Forecasted Values")
-plt.title("ARIMA Forecast with Confidence Intervals")
-plt.legend()
-plt.show()
+  pred_len <- test %>%
+    separate(id, c("air", "store_id", "date"), sep = "_") %>%
+    distinct(date) %>%
+    nrow()
 
+  max_date <- max(air_visits$visit_date)
+  split_date <- max_date - pred_len
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+  
+  foo <- air_visits %>%
+    filter(air_store_id == air_id)
+
+  visits <- foo %>%
+    right_join(all_visits, by = "visit_date") %>%
+    mutate(visitors = log1p(visitors)) %>%
+    replace_na(list(visitors = median(log1p(foo$visitors)))) %>%
+    rownames_to_column()
+  
+  visits_train <- visits %>% filter(visit_date <= split_date)
+  visits_valid <- visits %>% filter(visit_date > split_date)
+
+  arima.fit <- auto.arima(tsclean(ts(visits_train$visitors, frequency = 7)),
+                          stepwise = FALSE, approximation = FALSE)
+
+  arima_visits <- arima.fit %>% forecast(h = pred_len, level = c(50,95))
+
+  arima_visits %>%
+    autoplot +
+    geom_line(aes(as.integer(rowname)/7, visitors), data = visits_valid, color = "grey40") +
+    labs(x = "Time [weeks]", y = "log1p visitors vs forecast")
+}
 ```
-
-
-```{python}
-# Plot the ARIMA model predictions
-plt.figure(figsize=(10, 6))
-plt.plot(arima_forecast_df.index, arima_forecast_df['forecast'], label='ARIMA Predictions', color='blue')
-
-# Overlay the actual values from 'visits_valid'
-plt.plot(visits_valid.index, visits_valid['visitors'], label='Actual Values', color='grey', linestyle='--')
-
-# Customize the plot
-plt.xlabel("Time [weeks]")
-plt.ylabel("log1p visitors vs ARIMA predictions")
-plt.legend('')
-plt.show()
-
-```
-
-
-
-```{python}
-fig, axes = plt.subplots(2, 1, figsize=(12, 8))
-x_axis = np.arange(train.shape[0] + arima_forecast_df.shape[0])
-axes[0].plot(x_axis[:train.shape[0]], train, alpha=0.75)
-axes[0].scatter(x_axis[train.shape[0]:], arima_forecast_df, alpha=0.4, marker='o')
-axes[0].scatter(x_axis[test.shape[0]:], test, alpha=0.4, marker='x')
-axes[0].fill_between(x_axis[-conf_int.shape[0]:], conf_int[:, 0], conf_int[:, 1],
-                     alpha=0.1, color='b')
-plt.show()
-```
-
-
-
+:::
+::: {}
 
 ```{python}
-import pmdarima as pm
-from pmdarima import model_selection
-import matplotlib.pyplot as plt
-import numpy as np
 
-# #############################################################################
-# Load the data and split it into separate pieces
-data = pm.datasets.load_lynx()
-train, test = model_selection.train_test_split(data, train_size=100)
+def plot_auto_arima_air_id(air_id, ax):
+  
+    # Separate the 'id' column into three columns
+    test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+    # Get distinct dates and calculate the number of rows
+    pred_len = test['date'].nunique()
+    # Find the maximum visit date
+    max_date = air_visits['visit_date'].max()
+  
+    # Calculate the split date
+    split_date = max_date - timedelta(days=pred_len)
+  
+    # Create a DataFrame with a sequence of dates
+    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']), end=max(air_visits['visit_date']))})
+    
+    # Filter air_visits for a specific air_store_id (assuming air_id is a variable)
+    foo = air_visits[air_visits['air_store_id'] == air_id]
+  
+    # Right join with all_visits on visit_date
+    visits = pd.merge(all_visits, foo, on='visit_date', how='right')
+  
+    # Apply log transformation to visitors column
+    visits['visitors'] = np.log1p(visits['visitors'])
+  
+    # Replace NA values with the median of log-transformed visitors from 'foo'
+    median_visitors = np.median(np.log1p(foo['visitors']))
+    visits['visitors'].fillna(median_visitors, inplace=True)
+  
+    # Reset row indices
+    visits = visits.reset_index(drop=True)
+    # Filter visits for training and validation sets based on visit_date
+    visits_train = visits[visits['visit_date'] <= split_date]
+    visits_valid = visits[visits['visit_date'] > split_date]
+    
+    
+    # Perform seasonal decomposition of time series
+    result = seasonal_decompose(visits_train['visitors'], model='multiplicative', period=7)
+  
+    # Extract the trend component (you may need to adjust the index based on the result)
+    trend = result.trend.dropna()
+    visits_train.set_index('visit_date', inplace=True)
+    
+    # Fit ARIMA model
+    arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=True)
+    
+    # Generate forecasts
+    arima_forecast, conf_int = arima_fit.predict(n_periods=pred_len, return_conf_int=True)
+  
+    # Convert the forecasts to a DataFrame with appropriate dates
+    forecast_dates = pd.date_range(start=split_date + pd.Timedelta(days=1), periods=pred_len)
+  
+    arima_forecast_df = pd.DataFrame({
+      'date': forecast_dates,
+      'forecast': arima_forecast
+    })
+  
+    # Optionally, add confidence intervals
+    arima_forecast_df['lower_conf_int'] = conf_int[:, 0]
+    arima_forecast_df['upper_conf_int'] = conf_int[:, 1]
+    
+    # Plot the points and the forecasts
+    x_axis = np.arange(visits_train.shape[0] + arima_forecast.shape[0])
+    x_dates = visits['visit_date']
+    
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    ax.plot(x_dates[x_axis[:visits_train.shape[0]]].to_numpy(), 
+              visits_train['visitors'].to_numpy(), 
+              alpha=0.75, color='black')
+    ax.plot(arima_forecast_df['date'].to_numpy(), 
+              arima_forecast_df['forecast'].to_numpy(), 
+              alpha=0.75, color='blue')  # Forecasts
+    ax.plot(visits_valid['visit_date'].to_numpy(), 
+                 visits_valid['visitors'],
+                 alpha=0.4, color='grey')  # valid data
+    #ax.scatter(visits_valid['visit_date'].to_numpy(), 
+    #               visits_valid['visitors'],
+    #               alpha=0.4, color='grey', marker='x',
+    #               ax=["ax" + str(axe)])
+    ax.fill_between(arima_forecast_df['date'].to_numpy(),
+                   arima_forecast_df['lower_conf_int'], 
+                   arima_forecast_df['upper_conf_int'], 
+                   alpha=0.2, color='b')
+    #ax.plt.title("ARIMA forecasts")
+    ax.tick_params(axis='x', rotation=45, labelsize= 7) 
+    plt.xlabel("dates")
+    plt.ylabel("log1p visitors vs auto.arima predictions")
+    
+```
+:::
+::::
 
-# #############################################################################
-# Fit with some validation (cv) samples
-arima = pm.auto_arima(train, start_p=1, start_q=1, d=0, max_p=5, max_q=5,
-                      out_of_sample_size=10, suppress_warnings=True, alpha=[0.5, 0.95],
-                      stepwise=True, error_action='ignore')
+And we apply this function to a few time series’, including two of the slope outliers from the previous section:
 
-# Now plot the results and the forecast for the test set
-preds, conf_int = arima.predict(n_periods=test.shape[0],
-                                return_conf_int=True)
 
-fig, axes = plt.subplots(2, 1, figsize=(12, 8))
-x_axis = np.arange(train.shape[0] + preds.shape[0])
-axes[0].plot(x_axis[:train.shape[0]], train, alpha=0.75)
-axes[0].scatter(x_axis[train.shape[0]:], preds, alpha=0.4, marker='o')
-axes[0].scatter(x_axis[train.shape[0]:], test, alpha=0.4, marker='x')
-axes[0].fill_between(x_axis[-preds.shape[0]:], conf_int[:, 0], conf_int[:, 1],
-                     alpha=0.1, color='b')
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+ranked_store <- air_visits %>%
+                group_by('air_store_id') %>%
+                summarize(N = sum(visitors)) %>%
+                arrange(desc(N) )
+p1 <- plot_auto_arima_air_id("air_f3f9824b7d70c3cf")
+p2 <- plot_auto_arima_air_id("air_8e4360a64dbd4c50")
+#p3 <- plot_auto_arima_air_id("air_399904bdb7685ca0")
+#p4 <- plot_auto_arima_air_id("air_f26f36ec4dc5adb0")
 
-# fill the section where we "held out" samples in our model fit
+#layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+layout <- matrix(c(1,2),1,2,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+:::
+::: {}
 
-axes[0].set_title("Train samples & forecasted test samples")
+```{python}
+ranked_store = air_visits.groupby('air_store_id', 
+                observed=True)['visitors'].sum().sort_values(ascending=False)
+# Generate the plots
+#p1 = plot_auto_arima_air_id("air_f3f9824b7d70c3cf")
+#p2 = plot_auto_arima_air_id("air_8e4360a64dbd4c50")
+#p3 = plot_auto_arima_air_id("air_399904bdb7685ca0")
+#p4 = plot_auto_arima_air_id("air_f26f36ec4dc5adb0")
 
-# Now add the actual samples to the model and create NEW forecasts
-arima.update(test)
-new_preds, new_conf_int = arima.predict(n_periods=10, return_conf_int=True)
-new_x_axis = np.arange(data.shape[0] + 10)
+# Create a 2x2 grid
+fig = plt.figure(figsize=(8, 4))
+gs = GridSpec(1, 2)
 
-axes[1].plot(new_x_axis[:data.shape[0]], data, alpha=0.75)
-axes[1].scatter(new_x_axis[data.shape[0]:], new_preds, alpha=0.4, marker='o')
-axes[1].fill_between(new_x_axis[-new_preds.shape[0]:],
-                     new_conf_int[:, 0],
-                     new_conf_int[:, 1],
-                     alpha=0.1, color='g')
-axes[1].set_title("Added new observed values with new forecasts")
+# Assign plots to specific positions
+#ax1 = fig.add_subplot(gs[0, 0])
+#ax2 = fig.add_subplot(gs[0, 1])
+#ax3 = fig.add_subplot(gs[1, 0])
+#ax4 = fig.add_subplot(gs[1, 1])
+
+#Add plots to the grid
+plot_auto_arima_air_id("air_f3f9824b7d70c3cf",fig.add_subplot(gs[0, 0]))
+#ax1.set_title('Plot 1')
+
+plot_auto_arima_air_id("air_8e4360a64dbd4c50", fig.add_subplot(gs[0, 1]))
+#ax2.set_title('Plot 2')
+
+
+# Adjust layout
+plt.tight_layout()
+
+# Show the plots
 plt.show()
 ```
+:::
+::::
+
+
 
 
 
