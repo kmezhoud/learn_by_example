@@ -149,7 +149,7 @@ library('lubridate') # date and time
 library('timeDate') # date and time
 library('tseries') # time series analysis
 library('forecast') # time series analysis
-#library('prophet') # time series analysis
+library('prophet') # time series analysis
 library('timetk') # time series analysis
 
 # Maps / geospatial
@@ -205,7 +205,10 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 #from sklearn.model_selection import train_test_split
 from collections import Counter
 from datetime import datetime
-
+from datetime import date
+from prophet import Prophet
+from prophet.plot import plot
+import plotly
 ```
 
 :::
@@ -1310,8 +1313,6 @@ plt.show()
 
 :::
 ::::
-
-
 
 ## HPG Store
 
@@ -3531,8 +3532,10 @@ from statsmodels.tools import add_constant
 # Merge air_visits with air_store
 merged_df = pd.merge(air_visits, air_store, on='air_store_id')
 # Group by air_store_id and air_genre_name and compute the required statistics
-foo = merged_df.groupby(['air_store_id', 'air_genre_name'], observed=True).agg(mean_log_visits=('visitors', lambda x: np.mean(np.log1p(x))),
-        sd_log_visits=('visitors', lambda x: np.std(np.log1p(x)))).reset_index()
+foo = merged_df.groupby(['air_store_id', 'air_genre_name'],observed=True)
+               .agg(mean_log_visits=('visitors', lambda x: np.mean(np.log1p(x))),
+                    sd_log_visits=('visitors', lambda x: np.std(np.log1p(x))))
+               .reset_index()
 
 
 # Define function to calculate slope and standard error
@@ -3555,7 +3558,8 @@ def params_ts1(air_store_id):
 # Calculate parameters for all rows in foo
 params = params_ts1(foo['air_store_id'].iloc[0])
 for i in range(1, len(foo)):
-    params = pd.concat([params, params_ts1(foo['air_store_id'].iloc[i])], ignore_index=True)
+    params = pd.concat([params, params_ts1(foo['air_store_id'].iloc[i])], 
+                       ignore_index=True)
 
 # Merge parameters with foo
 ts_params = foo.merge(params, on='air_store_id', how='left')
@@ -3984,9 +3988,6 @@ plt.show(p)
 :::
 ::::
 
-
-
-
 Now we turn this procedure into a function, including the plotting part.
 
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
@@ -4074,7 +4075,7 @@ def plot_auto_arima_air_id(air_id, ax):
     visits_train.set_index('visit_date', inplace=True)
     
     # Fit ARIMA model
-    arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=True)
+    arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=False)
     
     # Generate forecasts
     arima_forecast, conf_int = arima_fit.predict(n_periods=pred_len, return_conf_int=True)
@@ -4142,47 +4143,734 @@ p2 <- plot_auto_arima_air_id("air_8e4360a64dbd4c50")
 layout <- matrix(c(1,2),1,2,byrow=TRUE)
 multiplot(p1, p2, layout=layout)
 ```
+
+We find:
+
+* The two time series’ in the upper panels are reasonable complete, but we see that the long gaps (and our median filling) lead to problems in the predictions in the upper left panel where we loose the weekly periodicity. The upper right panel retains this periodicity and the predictions for the first days are relatively decent, but then we quickly under-predict the amplitude of the variations.
+
+* The lower panels include two of the outliers from our time-series parameter space above; and here we see cases where things go really wrong. These kind of peculiar time series could lead to a bad performance for any otherwise decent forecasting algorithm if they contain a large enough fraction of visits in the test data set.
+
+Overall, the results are not great, but given that it’s a fully automatic forecast (assuming only weekly periodicities) the `auto.arima` tool gives us a first baseline to compare other methods to.
+
+For a more detailed exploration of ARIMA models take a look at this [Kernel](https://www.kaggle.com/code/timolee/feeling-hungry-a-beginner-s-guide-to-arima-models/notebook).
 :::
 ::: {}
 
 ```{python}
+## Rank store to select the must important ones
 ranked_store = air_visits.groupby('air_store_id', 
                 observed=True)['visitors'].sum().sort_values(ascending=False)
-# Generate the plots
-#p1 = plot_auto_arima_air_id("air_f3f9824b7d70c3cf")
-#p2 = plot_auto_arima_air_id("air_8e4360a64dbd4c50")
-#p3 = plot_auto_arima_air_id("air_399904bdb7685ca0")
-#p4 = plot_auto_arima_air_id("air_f26f36ec4dc5adb0")
-
+                
 # Create a 2x2 grid
 fig = plt.figure(figsize=(8, 4))
 gs = GridSpec(1, 2)
 
-# Assign plots to specific positions
-#ax1 = fig.add_subplot(gs[0, 0])
-#ax2 = fig.add_subplot(gs[0, 1])
-#ax3 = fig.add_subplot(gs[1, 0])
-#ax4 = fig.add_subplot(gs[1, 1])
-
 #Add plots to the grid
-plot_auto_arima_air_id("air_f3f9824b7d70c3cf",fig.add_subplot(gs[0, 0]))
-#ax1.set_title('Plot 1')
+p= plot_auto_arima_air_id(air_id = "air_f3f9824b7d70c3cf",
+                        ax = fig.add_subplot(gs[0, 0]))
 
-plot_auto_arima_air_id("air_8e4360a64dbd4c50", fig.add_subplot(gs[0, 1]))
-#ax2.set_title('Plot 2')
-
-
+p= plot_auto_arima_air_id(air_id = "air_8e4360a64dbd4c50",
+                         ax= fig.add_subplot(gs[0, 1]))
 # Adjust layout
 plt.tight_layout()
 
 # Show the plots
-plt.show()
+plt.show(p)
+```
+:::
+::::
+
+
+## Prophet
+
+The [prophet](https://facebook.github.io/prophet/) forecasting tool is an open-source software developed by Facebook. It is available for both R and Python.
+
+Prophet utilises an additive regression model which decomposes a time series into (i) a (piecewise) linear/logistic trend, (ii) a yearly seasonal component, (iii) a weekly seasonal component, and (iv) an optional list of important days (such as holidays, special events, …). It claims to be “robust to missing data, shifts in the trend, and large outliers”. Especially the missing data functionality could be useful in this competition
+
+Let's again explore the tool step by step. We will build on our work in the ARIMA section and won’t repeat any explanations that can be found there.
+
+We will again create a training and validation set for the same periods as above (i.e before/after Mar 14th). The only differences to our ARIMA approach are that:
+
+* We don’t need to replace NA values because prophet knows how to handle those.
+
+* Prophet expects a data frame with two columns: ds for the dates and y for the time series variable.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+air_id = "air_ba937bf13d40fb24"
+
+pred_len <- test %>%
+  separate(id, c("air", "store_id", "date"), sep = "_") %>%
+  distinct(date) %>%
+  nrow()
+
+max_date <- max(air_visits$visit_date)
+split_date <- max_date - pred_len
+all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), 
+                                      max(air_visits$visit_date), 1))
+
+foo <- air_visits %>%
+  filter(air_store_id == air_id)
+
+visits <- foo %>%
+  right_join(all_visits, by = "visit_date") %>%
+  mutate(visitors = log1p(visitors)) %>%
+  rownames_to_column() %>%
+  select(y = visitors,
+         ds = visit_date)
+
+visits_train <- visits %>% filter(ds <= split_date)
+visits_valid <- visits %>% filter(ds > split_date)
+```
+:::
+::: {}
+
+```{python}
+air_id = "air_ba937bf13d40fb24"
+
+# Calculate prediction length
+pred_len = test['id'].str.split('_', expand=True)[2].nunique()
+
+# Find max date
+max_date = air_visits['visit_date'].max()
+
+# Calculate split date
+split_date = max_date - timedelta(days=pred_len)
+
+# Create a DataFrame with all visit dates
+all_visits = pd.DataFrame({
+             'visit_date': pd.date_range(start=air_visits['visit_date'].min(),
+              end=max_date)})
+
+# Filter air_visits for the specified air_id
+foo = air_visits[air_visits['air_store_id'] == air_id]
+
+# Merge with all_visits to ensure all dates are included
+visits = all_visits.merge(foo, on='visit_date', how='left')
+
+# Apply log transformation
+visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
+
+# Split into train and validation sets
+visits_train = visits[visits['visit_date'] <= split_date]
+visits_valid = visits[visits['visit_date'] > split_date]
+
 ```
 :::
 ::::
 
 
 
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+Here we fit the prophet model and make the forecast:
+
+* the parameter changepoint.prior.scale adjusts the trend flexibility. Increasing this parameter makes the fit more flexible, but also increases the forecast uncertainties and makes it more likely to overfit to noise. The changepoints in the data are automatically detected unless being specified by hand using the changepoints argument (which we don’t do here).
+
+* the parameter yearly.seasonality has to be enabled/disabled explicitely and allows prophet to notice large-scale cycles. We have barely a year of data here, which is definitely insufficient to find yearly cycles and probably not enough to identify variations on the time scales of months. Feel free to test the performance of this parameter.
+
+```{r}
+proph <- prophet(visits_train, changepoint.prior.scale=0.5,
+                yearly.seasonality=FALSE, daily.seasonality = FALSE)
+
+future <- make_future_dataframe(proph, periods = pred_len)
+
+fcast <- predict(proph, future)
+
+plot(proph, fcast)
+```
+
+
+:::
+::: {}
+
+```{python}
+from prophet import Prophet
+from prophet.plot import plot
+
+# Create a Prophet instance
+proph = Prophet(changepoint_prior_scale=0.5,
+                yearly_seasonality=False,
+                daily_seasonality=False)
+
+# Prepare the DataFrame
+visits_train = visits_train.rename(columns={'visit_date': 'ds', 'visitors': 'y'})
+
+# Fit the model
+proph.fit(visits_train)
+
+# Create a DataFrame for future dates
+future = proph.make_future_dataframe(periods=pred_len)
+
+# Generate forecasts
+fcast = proph.predict(future)
+
+fcast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+```
+
+```{python}
+plt.style.use('ggplot')
+#fig = proph.plot(fcast)
+
+# Plot the value with line and scatter
+#plt.plot(fcast['ds'], fcast['yhat'], label='Value', color='red')
+p= plt.scatter(fcast['ds'], fcast['yhat'], color='black', alpha=0.5, s =3)
+
+# Plot the confidence intervals
+p= plt.fill_between(fcast['ds'], 
+                    fcast['yhat_lower'], fcast['yhat_upper'], 
+                    color='blue', alpha=0.05) #, label='Confidence Interval'
+
+# Add labels and legend
+p= plt.xlabel('Date')
+p= plt.ylabel('Value')
+#plt.legend()
+
+# Show the plot
+plt.show(p)
+```
+
+:::
+::::
+
+The observed data are plotted as black points and the fitted model, plus forecast, as a blue line. In light blue we see the corresponding uncertainties.
+
+Prophet offers a decomposition plot, where we can inspect the additive components of the model: trend, yearly seasonality (if included), and weekly cycles:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+prophet_plot_components(proph, fcast)
+```
+:::
+::: {}
+
+```{python}
+
+from prophet.plot import plot_components
+# Generate the components plot
+#fig = plot_components(proph, fcast)
+
+# Create a 2x2 grid
+fig = plt.figure(figsize=(6, 4))
+gs = GridSpec(2, 1)
+
+ax1 = fig.add_subplot(gs[0, 0])
+ax2 = fig.add_subplot(gs[1, 0])
+
+p= ax1.plot(fcast['ds'], fcast['trend'], color = 'blue')
+p= ax1.set_xlabel('date', fontsize=6)
+p= ax1.set_ylabel('Trend', fontsize=6)
+p= ax1.tick_params(axis='x', rotation=10, labelsize= 7) 
+
+fcast['ds'] = pd.to_datetime(fcast['ds'])
+fcast['weekday'] = fcast['ds'].dt.day_name()
+weekly = fcast.groupby(['weekday'])['weekly'].mean().reindex(['Sunday',
+         'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'])
+
+p= ax2.plot(weekly, color = 'blue')
+p= ax2.set_xlabel('date', fontsize=6)
+p= ax2.set_ylabel('Weekly', fontsize=6)
+p= ax2.tick_params(axis='x', rotation=10, labelsize= 7)
+
+# Adjust layout
+plt.tight_layout(p)
+plt.show(p)
+```
+:::
+::::
+
+We find:
+
+* Prophet detects a weekly variation pattern which is similar to what we had found before, in that Fri/Sat are more popular than the rest of the week. The difference, however, is that here Sun has a very low average visitor count. This might be be due to the properties of this particular restaurant, a “Dining Bar” in “Tokyo”. In Fig. 23 we see that “Dining Bars” in general are not as busy on Sundays; although not to such a large extent as we see in this graph. The difference in visitors on Sat vs Sun might be an interesting feature of an eventual model.
+
+* The long-term trend is different from the average behaviors displayed in Fig. 11, which were more likely to rise toward the end of 2016. Here we see a peak in mid 2016. 
+
+* Note, that this is one specific time series. I’ve checked other time series as well and many of them showed the expected Fri/Sat/Sun vs Mon-Thu variations along with a long-term peak around Dec 2017. Feel free to fork this Kernel and check for yourself.
+
+
+So: This is a good start, but we will of course use our trusted ggplot2 to give us more control over the plotting parameters:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+fcast %>%
+  as.tibble() %>%
+  mutate(ds = date(ds)) %>%
+  ggplot(aes(ds, yhat)) + 
+  geom_ribbon(aes(x = ds, ymin = yhat_lower, ymax = yhat_upper), fill = "light blue") +
+  geom_line(colour = "blue") +
+  geom_line(data = visits_train, aes(ds, y), colour = "black") +
+  geom_line(data = visits_valid, aes(ds, y), colour = "grey50")
+```
+
+That doesn't look too bad. We plot our training visitor counts in black, the validation set in grey, and the forecast plus uncertainties in blue and light blue, again.
+
+:::
+::: {}
+
+```{python}
+# Convert 'ds' column to datetime
+fcast['ds'] = pd.to_datetime(fcast['ds'])
+
+# Plotting
+p= plt.figure(figsize=(10, 6))
+
+# Forecast line
+p= plt.plot(fcast['ds'], fcast['yhat'], color='blue', label='Forecast')
+
+# Confidence interval ribbon
+p= plt.fill_between(fcast['ds'], fcast['yhat_lower'], fcast['yhat_upper'], 
+                    color='lightblue', alpha=0.5)
+
+# Training data
+p= plt.plot(visits_train['ds'], visits_train['y'], 
+            color='black', label='Training Data')
+
+# Validation data
+p= plt.plot(visits_valid['visit_date'], visits_valid['visitors'],
+            color='grey', label='Validation Data')
+
+# Add labels and title
+p= plt.xlabel('Date')
+p= plt.ylabel('yhat')
+p= plt.title('Prophet Forecast with Confidence Intervals')
+
+# Add legend
+p= plt.legend()
+
+# Show the plot
+plt.show(p)
+
+```
+:::
+::::
+
+
+Let’s turn this into another function:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+
+plot_prophet_air_id <- function(air_id){
+  
+  pred_len <- test %>%
+    separate(id, c("air", "store_id", "date"), sep = "_") %>%
+    distinct(date) %>%
+    nrow()
+
+  max_date <- max(air_visits$visit_date)
+  split_date <- max_date - pred_len
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), 
+                                        max(air_visits$visit_date), 1))
+
+  foo <- air_visits %>%
+    filter(air_store_id == air_id)
+
+  visits <- foo %>%
+    right_join(all_visits, by = "visit_date") %>%
+    mutate(visitors = log1p(visitors)) %>%
+    rownames_to_column() %>%
+    select(y = visitors,
+          ds = visit_date)
+
+  visits_train <- visits %>% filter(ds <= split_date)
+  visits_valid <- visits %>% filter(ds > split_date)
+  
+  proph <- prophet(visits_train, changepoint.prior.scale=0.5,
+                   yearly.seasonality=FALSE, 
+                   daily.seasonality = FALSE)
+  future <- make_future_dataframe(proph, periods = pred_len)
+  fcast <- predict(proph, future)
+  
+  p <- fcast %>%
+    as.tibble() %>%
+    mutate(ds = date(ds)) %>%
+    ggplot(aes(ds, yhat)) +
+    geom_ribbon(aes(x = ds, ymin = yhat_lower, 
+                    ymax = yhat_upper), fill = "light blue") +
+    geom_line(colour = "blue") +
+    geom_line(data = visits_train, aes(ds, y), colour = "black") +
+    geom_line(data = visits_valid, aes(ds, y), colour = "grey50") +
+    labs(title = str_c("Prophet for ", air_id))
+  
+  return(p)
+}  
+```
+:::
+::: {}
+
+```{python}
+
+def plot_prophet_air_id(air_id, ax):
+  
+  # Separate the 'id' column into three columns
+    test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+  # Get distinct dates and calculate the number of rows
+    pred_len = test['date'].nunique()
+    # Find the maximum visit date
+    max_date = pd.to_datetime(air_visits['visit_date'].max())
+
+    # Calculate the split date
+    split_date = max_date - timedelta(days=pred_len)
+
+    # Create a DataFrame with a sequence of dates
+    all_visits = pd.DataFrame(
+      {'visit_date': pd.date_range(start=min(air_visits['visit_date']),
+                                  end=max(air_visits['visit_date']))}
+    )
+    
+    # Filter air_visits for the specified air_id
+    foo = air_visits[air_visits['air_store_id'] == air_id]
+
+    foo['visit_date'] = pd.to_datetime(foo['visit_date'])
+     
+    # Merge with all_visits to ensure all dates are included
+    visits = all_visits.merge(foo, on='visit_date', how='left')
+
+    # Apply log transformation
+    visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
+    visits['y'] = visits['visitors']
+    visits['ds'] = visits['visit_date']
+    #visits = visits[["ds", "y"]]
+
+    # Split into train and validation sets
+    visits_train = visits[visits['ds'] <= split_date]
+    visits_valid = visits[visits['ds'] > split_date]
+    
+    # Create a Prophet instance
+    proph = Prophet(changepoint_prior_scale=0.5,
+                yearly_seasonality=False,
+                daily_seasonality=False)
+    # Fit the model
+    proph.fit(visits_train)
+
+    # Create a DataFrame for future dates
+    future = proph.make_future_dataframe(periods=pred_len)
+
+    # Generate forecasts
+    fcast = proph.predict(future)
+    
+    # Convert 'ds' column to datetime
+    fcast['ds'] = pd.to_datetime(fcast['ds'])
+
+    # set plot
+    fig, ax = plt.subplots(figsize=(8, 4))
+    plt.style.use('ggplot')
+
+    # Confidence interval ribbon
+    ax.fill_between(fcast['ds'], fcast['yhat_lower'], 
+                    fcast['yhat_upper'], color='lightblue',
+                    alpha=0.5)
+
+    # Forecast line
+    ax.plot(fcast['ds'], fcast['yhat'], 
+            color='blue', label='Forecast')
+
+    # Training data
+    ax.plot(visits_train['ds'], visits_train['y'], 
+           color='black', label='Training Data')
+
+    # Validation data
+    ax.plot(visits_valid['visit_date'], visits_valid['visitors'],
+            color='grey', label='Validation Data')
+
+    # Add labels and title
+    ax.tick_params(axis='x', rotation=10, labelsize= 7)
+    plt.xlabel('Date')
+    plt.ylabel('yhat')
+    
+```
+
+:::
+::::
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+p1 <- plot_prophet_air_id("air_f3f9824b7d70c3cf")
+p2 <- plot_prophet_air_id("air_8e4360a64dbd4c50")
+p3 <- plot_prophet_air_id("air_1c0b150f9e696a5f")
+p4 <- plot_prophet_air_id("air_820d1919cbecaa0a")
+
+layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+```
+
+That looks not bad either. Looks like we’re overestimating the trend component, which could probably use less flexibility, for at least three of these. The forth time series has too little data for prophet to be able to do much. Here we could discard the trend component completely or simply take the median.
+
+:::
+::: {}
+
+```{python}
+
+# Create a 2x2 grid
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(4, 1)
+
+#Add plots to the grid
+p= plot_prophet_air_id(air_id = "air_f3f9824b7d70c3cf", 
+                        ax = fig.add_subplot(gs[0]))
+
+p= plot_prophet_air_id(air_id = "air_8e4360a64dbd4c50", 
+                         ax= fig.add_subplot(gs[1]))
+                         
+p= plot_prophet_air_id(air_id = "air_1c0b150f9e696a5f",
+                         ax= fig.add_subplot(gs[2]))
+                         
+p= plot_prophet_air_id(air_id = "air_820d1919cbecaa0a",
+                         ax= fig.add_subplot(gs[3]))                         
+                         
+plt.show(p)
+
+
+```
+:::
+::::
+
+
+Remember that prophet also gives us the possibility to include holidays and other special events in our forecast. For our task, this could be very useful in taking the Golden Week into account. For more insights from a tailored analysis of the Golden Week’s impact have a look at this [kernel](https://www.kaggle.com/code/breakfastpirate/weeks-before-after-golden-week-2016/report).
+
+
+Since the holiday data is readily available in this competition we only need to rename it according to prophet’s liking to include it in our forecast function. Let’s modify that function see whether holidays make a difference when predicting for the 2016 Golden Week. The only thing we need to do is to truncate our air_visits data on May 31 2016 in an intermediate step:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+plot_prophet_air_id_holiday <- function(air_id, use_hday){
+  
+  air_visits_cut <- air_visits %>%
+    filter(visit_date <= ymd("20160531"))
+  
+  hday <- holidays %>%
+    filter(holiday_flg == TRUE) %>%
+    mutate(holiday = "holiday") %>%
+    select(ds = date, holiday)
+  
+  pred_len <- test %>%
+    separate(id, c("air", "store_id", "date"), sep = "_") %>%
+    distinct(date) %>%
+    nrow()
+
+  max_date <- max(air_visits_cut$visit_date)
+  split_date <- max_date - pred_len
+  all_visits <- tibble(
+               visit_date = seq(min(air_visits_cut$visit_date),
+                                max(air_visits_cut$visit_date), 1)
+               )
+
+  foo <- air_visits_cut %>%
+    filter(air_store_id == air_id)
+
+  visits <- foo %>%
+    right_join(all_visits, by = "visit_date") %>%
+    mutate(visitors = log1p(visitors)) %>%
+    rownames_to_column() %>%
+    select(y = visitors,
+          ds = visit_date)
+
+  visits_train <- visits %>% filter(ds <= split_date)
+  visits_valid <- visits %>% filter(ds > split_date)
+  
+  if (use_hday == TRUE){
+    proph <- prophet(visits_train,
+                     changepoint.prior.scale=0.5,
+                     yearly.seasonality=FALSE,
+                     daily.seasonality=FALSE,
+                     holidays = hday)
+    ptitle = "Prophet (w/ holidays) for "
+  } else {
+     proph <- prophet(visits_train,
+                     changepoint.prior.scale=0.5,
+                     yearly.seasonality=FALSE,
+                     daily.seasonality = FALSE)
+    ptitle = "Prophet for "
+  }
+  
+  future <- make_future_dataframe(proph, periods = pred_len)
+  fcast <- predict(proph, future)
+  
+  p <- fcast %>%
+    as.tibble() %>%
+    mutate(ds = date(ds)) %>%
+    ggplot(aes(ds, yhat)) +
+    geom_ribbon(aes(x = ds, ymin = yhat_lower, ymax = yhat_upper), fill = "light blue") +
+    geom_line(colour = "blue") +
+    geom_line(data = visits_train, aes(ds, y), colour = "black") +
+    geom_line(data = visits_valid, aes(ds, y), colour = "grey50") +
+    labs(title = str_c(ptitle, air_id))
+  
+  return(p)
+}  
+```
+
+And then we take a well behaved time series and compare the predictions with and without holidays:
+
+```{r}
+p1 <- plot_prophet_air_id_holiday("air_5c817ef28f236bdf", TRUE)
+p2 <- plot_prophet_air_id_holiday("air_5c817ef28f236bdf", FALSE)
+
+layout <- matrix(c(1,2),2,1,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+
+We find:
+
+* There is a subtle improvement in fitting the Golden Week visitors when including holidays. The performance of this component might improve if there are more holidays included in the training set; but I think it’s difficult to validate this.
+
+:::
+::: {}
+
+```{python}
+
+def plot_prophet_air_id_holida(air_id, use_hday ,ax):
+  
+  # Separate the 'id' column into three columns
+    test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+  # Get distinct dates and calculate the number of rows
+    pred_len = test['date'].nunique()
+    # Find the maximum visit date
+    max_date = pd.to_datetime(air_visits['visit_date'].max())
+
+    # Calculate the split date
+    split_date = max_date - timedelta(days=pred_len)
+
+    # Create a DataFrame with a sequence of dates
+    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']),
+    end=max(air_visits['visit_date']))})
+    
+    # Filter air_visits for the specified air_id
+    foo = air_visits[air_visits['air_store_id'] == air_id]
+
+    # Merge with all_visits to ensure all dates are included
+    visits = all_visits.merge(foo, on='visit_date', how='left')
+
+    # Apply log transformation
+    visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
+    visits['y'] = visits['visitors']
+    visits['ds'] = visits['visit_date']
+    #visits = visits[["ds", "y"]]
+
+    # Split into train and validation sets
+    visits_train = visits[visits['ds'] <= split_date]
+    visits_valid = visits[visits['ds'] > split_date]
+    
+    if use_hday == True:
+      # Create a Prophet instance
+      proph = Prophet(changepoint_prior_scale=0.5,
+                yearly_seasonality=False,
+                daily_seasonality=False)      
+      # Add holidays
+      proph.add_country_holidays(country_name='JP')
+      ptitle = "Prophet (w/ holidays) for "
+
+    else:
+        # Create a Prophet instance
+      proph = Prophet(changepoint_prior_scale=0.5,
+                yearly_seasonality=False,
+                daily_seasonality=False)
+      ptitle = "Prophet for"
+      
+    # Fit the model
+    proph.fit(visits_train)
+
+    # Create a DataFrame for future dates
+    future = proph.make_future_dataframe(periods=pred_len)
+
+    # Generate forecasts
+    fcast = proph.predict(future)
+    
+    # Convert 'ds' column to datetime
+    fcast['ds'] = pd.to_datetime(fcast['ds'])
+
+    # set plot
+    fig, ax = plt.subplots(figsize=(8, 4))
+    plt.style.use('ggplot')
+
+    # Confidence interval ribbon
+    ax.fill_between(fcast['ds'], fcast['yhat_lower'], 
+                    fcast['yhat_upper'], color='lightblue',
+                    alpha=0.5)
+
+    # Forecast line
+    ax.plot(fcast['ds'], fcast['yhat'], 
+            color='blue', label='Forecast')
+
+    # Training data
+    ax.plot(visits_train['ds'], visits_train['y'], 
+           color='black', label='Training Data')
+
+    # Validation data
+    ax.plot(visits_valid['visit_date'], visits_valid['visitors'],
+            color='grey', label='Validation Data')
+
+    # Add labels and title
+    ax.tick_params(axis='x', rotation=10, labelsize= 7)
+    plt.xlabel('Date')
+    plt.ylabel('yhat')
+    plt.title('use_hday: '+ str(use_hday))
+ 
+```
+
+
+```{python}
+
+# Create a 2x2 grid
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(2, 1)
+
+#Add plots to the grid
+p= plot_prophet_air_id_holida(air_id = "air_f3f9824b7d70c3cf", use_hday=True,
+                        ax = fig.add_subplot(gs[0]))
+
+p= plot_prophet_air_id_holida(air_id = "air_f3f9824b7d70c3cf", use_hday=False,
+                         ax= fig.add_subplot(gs[1]))
+                         
+plt.show(p)
+
+```
+
+:::
+::::
+
+
+
+
+
+```{python}
+# 
+# playoffs = pd.DataFrame({
+#   'holiday': 'playoff',
+#   'ds': pd.to_datetime(['2008-01-13', '2009-01-03', '2010-01-16',
+#                         '2010-01-24', '2010-02-07', '2011-01-08',
+#                         '2013-01-12', '2014-01-12', '2014-01-19',
+#                         '2014-02-02', '2015-01-11', '2016-01-17',
+#                         '2016-01-24', '2016-02-07']),
+#   'lower_window': 0,
+#   'upper_window': 1,
+# })
+# superbowls = pd.DataFrame({
+#   'holiday': 'superbowl',
+#   'ds': pd.to_datetime(['2010-02-07', '2014-02-02', '2016-02-07']),
+#   'lower_window': 0,
+#   'upper_window': 1,
+# })
+# holidays_example = pd.concat((playoffs, superbowls))
+# 
+# holidays_example.tail
+```
+
+
+```{python}
+# m = Prophet(changepoint_prior_scale=0.5, yearly_seasonality=False, daily_seasonality=False)
+# 
+# # Add holidays
+# m.add_country_holidays(country_name='US')
+```
 
 
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
@@ -4196,4 +4884,3 @@ plt.show()
 ```
 :::
 ::::
-
