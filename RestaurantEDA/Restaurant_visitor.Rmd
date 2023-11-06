@@ -3460,7 +3460,7 @@ p3_ax.errorbar(
     color='blue', marker='o', linestyle='-', capsize=5
 )
 p3_ax.set_title('Mean Store Visits by Prefecture', fontsize= 10)
-p3_ax.set_xlabel('Prefecture', fontlsize= 8)
+p3_ax.set_xlabel('Prefecture', fontsize= 8)
 p3_ax.set_ylabel('Mean Store Visit', fontsize= 7)
 p3_ax.tick_params(axis='x', rotation=15, labelsize= 7)  # Customize x-axis ticks
 
@@ -3532,10 +3532,9 @@ from statsmodels.tools import add_constant
 # Merge air_visits with air_store
 merged_df = pd.merge(air_visits, air_store, on='air_store_id')
 # Group by air_store_id and air_genre_name and compute the required statistics
-foo = merged_df.groupby(['air_store_id', 'air_genre_name'],observed=True)
-               .agg(mean_log_visits=('visitors', lambda x: np.mean(np.log1p(x))),
-                    sd_log_visits=('visitors', lambda x: np.std(np.log1p(x))))
-               .reset_index()
+foo = merged_df.groupby(['air_store_id', 'air_genre_name'],observed=True).agg(mean_log_visits=('visitors',
+                    lambda x: np.mean(np.log1p(x))),
+                    sd_log_visits=('visitors', lambda x: np.std(np.log1p(x)))).reset_index()
 
 
 # Define function to calculate slope and standard error
@@ -3563,7 +3562,6 @@ for i in range(1, len(foo)):
 
 # Merge parameters with foo
 ts_params = foo.merge(params, on='air_store_id', how='left')
-
 ```
 :::
 ::::
@@ -3801,7 +3799,8 @@ We choose to predict for the last 39 days of our training sample. This might not
 ```{r}
 max_date <- max(air_visits$visit_date)
 split_date <- max_date - pred_len
-all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+all_visits <- tibble(visit_date = seq(min(air_visits$visit_date),
+                                      max(air_visits$visit_date), 1))
 ```
 :::
 ::: {}
@@ -3815,7 +3814,8 @@ max_date = air_visits['visit_date'].max()
 split_date = max_date - timedelta(days=pred_len)
 
 # Create a DataFrame with a sequence of dates
-all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']), end=max(air_visits['visit_date']))})
+all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']),
+                                                       end=max(air_visits['visit_date']))})
 
 ```
 :::
@@ -3908,7 +3908,7 @@ trend = result.trend.dropna()
 
 visits_train.set_index('visit_date', inplace=True)
 # Fit ARIMA model
-arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=True) 
+arima_fit = auto_arima(trend.to_numpy(), seasonal=True, m=7, stepwise=False, trace=False) 
 
 ```
 :::
@@ -4002,7 +4002,8 @@ plot_auto_arima_air_id <- function(air_id){
 
   max_date <- max(air_visits$visit_date)
   split_date <- max_date - pred_len
-  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), 
+                                        max(air_visits$visit_date), 1))
   
   foo <- air_visits %>%
     filter(air_store_id == air_id)
@@ -4045,7 +4046,8 @@ def plot_auto_arima_air_id(air_id, ax):
     split_date = max_date - timedelta(days=pred_len)
   
     # Create a DataFrame with a sequence of dates
-    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']), end=max(air_visits['visit_date']))})
+    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']),
+                                                            end=max(air_visits['visit_date']))})
     
     # Filter air_visits for a specific air_store_id (assuming air_id is a variable)
     foo = air_visits[air_visits['air_store_id'] == air_id]
@@ -4163,13 +4165,14 @@ For a more detailed exploration of ARIMA models take a look at this [Kernel](htt
 ranked_store = air_visits.groupby('air_store_id', 
                 observed=True)['visitors'].sum().sort_values(ascending=False)
 
-fig = plt.figure(figsize=(12, 4))
+fig = plt.figure(figsize=(8, 4))
 gs = GridSpec(2, 1)
-Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50"]#,"air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
+Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50"]
+#,"air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
 j=0
 for g in gs:
   #print(g)
-  plot_prophet_air_id(air_id= Air_id[j], ax= g)
+  plot_auto_arima_air_id(air_id= Air_id[j], ax= g)
   j = j+1
   
   
@@ -4389,7 +4392,7 @@ p= ax2.set_ylabel('Weekly', fontsize=6)
 p= ax2.tick_params(axis='x', rotation=10, labelsize= 7)
 
 # Adjust layout
-plt.tight_layout(p)
+plt.tight_layout()
 plt.show(p)
 ```
 :::
@@ -4410,7 +4413,7 @@ So: This is a good start, but we will of course use our trusted ggplot2 to give 
 ::: {}
 ```{r}
 fcast %>%
-  as.tibble() %>%
+  as_tibble() %>%
   mutate(ds = date(ds)) %>%
   ggplot(aes(ds, yhat)) + 
   geom_ribbon(aes(x = ds, ymin = yhat_lower, ymax = yhat_upper), fill = "light blue") +
@@ -4496,19 +4499,20 @@ plot_prophet_air_id <- function(air_id){
   
   proph <- prophet(visits_train, changepoint.prior.scale=0.5,
                    yearly.seasonality=FALSE, 
-                   daily.seasonality = FALSE)
+                   daily.seasonality = FALSE,
+                   weekly.seasonality=TRUE)
   future <- make_future_dataframe(proph, periods = pred_len)
   fcast <- predict(proph, future)
   
   p <- fcast %>%
-    as.tibble() %>%
+    as_tibble() %>%
     mutate(ds = date(ds)) %>%
     ggplot(aes(ds, yhat)) +
     geom_ribbon(aes(x = ds, ymin = yhat_lower, 
                     ymax = yhat_upper), fill = "light blue") +
-    geom_line(colour = "blue") +
-    geom_line(data = visits_train, aes(ds, y), colour = "black") +
-    geom_line(data = visits_valid, aes(ds, y), colour = "grey50") +
+    geom_line(colour = "blue", na.rm = TRUE) +
+    geom_line(data = visits_train, aes(ds, y), colour = "black", na.rm = TRUE) +
+    geom_line(data = visits_valid, aes(ds, y), colour = "grey50", na.rm=TRUE) +
     labs(title = str_c("Prophet for ", air_id))
   
   return(p)
@@ -4543,7 +4547,7 @@ def plot_prophet_air_id(air_id, ax):
     #foo['visit_date'] = pd.to_datetime(foo['visit_date'])
      
     # Merge with all_visits to ensure all dates are included
-    visits = all_visits.merge(foo, on='visit_date', how='right')
+    visits = foo.merge(all_visits, on='visit_date', how='right')
 
     # Apply log transformation
     visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
@@ -4597,7 +4601,8 @@ def plot_prophet_air_id(air_id, ax):
     ax.tick_params(axis='x', rotation=10, labelsize= 7)
     ax.set_xlabel('Date')
     ax.set_ylabel('yhat')
-    return(ax)
+    #return(ax)
+    plt.show()
 
 ```
 
@@ -4626,9 +4631,10 @@ That looks not bad either. Looks like we’re overestimating the trend component
 
 ## WAY 1
 # Create a 4x1 grid
-fig = plt.figure(figsize=(12, 4))
+fig = plt.figure(figsize=(6, 3))
 gs = GridSpec(4, 1)
-Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50","air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
+Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50",
+          "air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
 j=0
 for g in gs:
   #print(g)
@@ -4651,22 +4657,22 @@ for g in gs:
 #   
 # #WAY 3
 # fig = plt.figure(figsize=(12, 4))
-# gs = GridSpec(4, 1)
+# gs = GridSpec(2, 2)
 # 
 # p=plot_prophet_air_id(air_id = "air_ba937bf13d40fb24",   #air_f3f9824b7d70c3cf
-#                         ax = fig.add_subplot(gs[0]))
+#                         ax = fig.add_subplot(gs[0, 0]))
 # 
-# p=plot_prophet_air_id(air_id = "air_8e4360a64dbd4c50", 
-#                           ax= fig.add_subplot(gs[1]))
-#                           
+# p=plot_prophet_air_id(air_id = "air_8e4360a64dbd4c50",
+#                           ax= fig.add_subplot(gs[0,1]))
+# 
 # p= plot_prophet_air_id(air_id = "air_1c0b150f9e696a5f",
-#                         ax= fig.add_subplot(gs[2]))
-#                           
-# p= plot_prophet_air_id(air_id = "air_820d1919cbecaa0a",
-#                           ax= fig.add_subplot(gs[3]))                         
+#                         ax= fig.add_subplot(gs[1,0]))
 # 
-plt.tight_layout()                         
-plt.show()
+# p= plot_prophet_air_id(air_id = "air_820d1919cbecaa0a",
+#                           ax= fig.add_subplot(gs[1,1]))
+# 
+# plt.tight_layout()
+# plt.show(p)
 
 
 ```
@@ -4737,7 +4743,7 @@ plot_prophet_air_id_holiday <- function(air_id, use_hday){
   fcast <- predict(proph, future)
   
   p <- fcast %>%
-    as.tibble() %>%
+    as_tibble() %>%
     mutate(ds = date(ds)) %>%
     ggplot(aes(ds, yhat)) +
     geom_ribbon(aes(x = ds, ymin = yhat_lower, ymax = yhat_upper), fill = "light blue") +
@@ -4783,13 +4789,14 @@ def plot_prophet_air_id_holida(air_id, use_hday ,ax):
 
     # Create a DataFrame with a sequence of dates
     all_visits = pd.DataFrame({'visit_date': pd.date_range(start=min(air_visits['visit_date']),
-    end=max(air_visits['visit_date']))})
+                                                            end=max(air_visits['visit_date']))})
     
     # Filter air_visits for the specified air_id
     foo = air_visits[air_visits['air_store_id'] == air_id]
 
     # Merge with all_visits to ensure all dates are included
-    visits = all_visits.merge(foo, on='visit_date', how='left')
+    visits = foo.merge(all_visits, on='visit_date', how='right')
+    #visits = foo.merge(all_visits, on='visit_date', how='right')
 
     # Apply log transformation
     visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
@@ -4852,9 +4859,9 @@ def plot_prophet_air_id_holida(air_id, use_hday ,ax):
 
     # Add labels and title
     ax.tick_params(axis='x', rotation=10, labelsize= 7)
-    plt.xlabel('Date')
-    plt.ylabel('yhat')
-    plt.title('use_hday: '+ str(use_hday))
+    ax.set_xlabel('Date')
+    ax.set_ylabel('yhat')
+    ax.set_title('use_hday: '+ str(use_hday))
     return(ax)
  
 ```
@@ -4876,11 +4883,8 @@ p= plot_prophet_air_id_holida(air_id = "air_f3f9824b7d70c3cf", use_hday=False,
 plt.show(p)
 
 ```
-
 :::
 ::::
-
-
 
 ## Holt-Winters
 
@@ -4898,7 +4902,8 @@ plot_hw_air_id <- function(air_id){
 
   max_date <- max(air_visits$visit_date)
   split_date <- max_date - pred_len
-  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date),
+                                        max(air_visits$visit_date), 1))
 
   foo <- air_visits %>%
     filter(air_store_id == air_id)
@@ -4914,14 +4919,17 @@ plot_hw_air_id <- function(air_id){
 
   hw.fit <- HoltWinters(tsclean(ts(visits_train$visitors, frequency = 7)))
 
-  hw_visits <- predict(hw.fit, n.ahead = pred_len, prediction.interval = T, level = 0.95) %>%
-    as.tibble() %>%
+  hw_visits <- predict(hw.fit, n.ahead = pred_len,
+                       prediction.interval = T, level = 0.95) %>%
+    as_tibble() %>%
     bind_cols(visits_valid)
 
   visits_train %>%
     ggplot(aes(visit_date, visitors)) +
     geom_line() +
-    geom_ribbon(data = hw_visits, aes(x = visit_date, ymin = lwr, ymax = upr), fill = "light blue") +
+    geom_ribbon(data = hw_visits, 
+                aes(x = visit_date, ymin = lwr, 
+                    ymax = upr), fill = "light blue") +
     geom_line(data = hw_visits, aes(visit_date, visitors), color = "grey60") +
     geom_line(data = hw_visits, aes(visit_date, fit), color = "blue") +
     geom_line(data = hw_visits, aes(visit_date, fit), color = "blue") +
@@ -4929,13 +4937,21 @@ plot_hw_air_id <- function(air_id){
     ggtitle("HoltWinters")
 }
 ```
+
+We then apply this function to our example time series:
+
+```{r}
+plot_hw_air_id("air_ba937bf13d40fb24")
+```
+
+
 :::
 ::: {}
 
 ```{python}
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-def plot_hw_air_id(air_id):
+def plot_hw_air_id(air_id, ax):
     
     # Separate the 'id' column into three columns
     test[['air','store_id','date']] = test['id'].str.split('_', expand=True)
@@ -4951,7 +4967,9 @@ def plot_hw_air_id(air_id):
     
     foo = air_visits[air_visits['air_store_id'] == air_id].copy()
 
-    visits = pd.merge(all_visits, foo, on='visit_date', how='right')
+    #visits = pd.merge(foo, all_visits, on='visit_date', how='right')
+    visits = foo.merge(all_visits, on='visit_date', how='right')
+    
     visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
     visits['visitors'].fillna(visits['visitors'].median(), inplace=True)
     
@@ -4968,44 +4986,87 @@ def plot_hw_air_id(air_id):
     
     hw_visits = hw_fit.predict(len(visits_valid['visit_date']))
     
-    plt.figure(figsize=(10, 6))
+    #plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(8, 4))
     plt.style.use('ggplot')
     
-    plt.plot(visits_train['visit_date'], 
-              visits_train['visitors'], label='Training Data')
+    ax.plot(visits_train['visit_date'], 
+              visits_train['visitors'], label='Training Data', 
+              color= 'black')
               
-    plt.plot(visits_valid['visit_date'], 
+    ax.plot(visits_valid['visit_date'], 
              visits_valid['visitors'], 
              label='Validation Data', color='grey')
              
-    plt.plot(visits_valid['visit_date'], hw_forecast, 
+    ax.plot(visits_valid['visit_date'], hw_forecast, 
              label='Holt-Winters Forecast', color='blue')
     
 #    plt.plot(visits_valid['visit_date'], hw_visits, 
 #             label='Holt-Winters Forecast', color='red')
              
-    #plt.fill_between(visits_valid['visit_date'],
-    #                  hw_forecast - hw_fit.bse,
-    #                  hw_forecast + hw_fit.bse, 
-    #                  color='lightblue')
+    ax.fill_between(visits_valid['visit_date'],
+                    hw_forecast - hw_forecast * 0.05, #hw_fit.bse,
+                    hw_forecast + hw_forecast * 0.05, #hw_fit.bse, 
+                    color='lightblue')
     
-    plt.xlabel('Time [weeks]')
-    plt.ylabel('log1p visitors vs predictions')
-    plt.title('Holt-Winters Forecasting')
+    ax.tick_params(axis='x', rotation=10, labelsize= 7)
+    ax.set_xlabel('Time [weeks]')
+    ax.set_ylabel('log1p visitors vs predictions')
+    ax.set_title('Holt-Winters Forecasting')
     plt.legend()
-    plt.show()
+    return(ax)
 
-```
 
-```{python}
-# Usage example
-plot_hw_air_id("air_ba937bf13d40fb24")
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(1, 1)
+
+p = plot_hw_air_id("air_ba937bf13d40fb24", ax = fig.add_subplot(gs[0]))
+plt.show(p)
 ```
 
 :::
 ::::
 
+And also plot the same predictions as for prophet above:
 
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+p1 <- plot_hw_air_id("air_f3f9824b7d70c3cf")
+p2 <- plot_hw_air_id("air_8e4360a64dbd4c50")
+p3 <- plot_hw_air_id("air_1c0b150f9e696a5f")
+p4 <- plot_hw_air_id("air_820d1919cbecaa0a")
+
+layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+
+```
+:::
+::: {}
+
+```{python}
+
+# Create a 2x2 grid
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(4, 1)
+
+#Add plots to the grid
+p= plot_hw_air_id(air_id = "air_820d1919cbecaa0a", 
+                        ax = fig.add_subplot(gs[0]))
+
+p= plot_hw_air_id(air_id = "air_8e4360a64dbd4c50",
+                         ax= fig.add_subplot(gs[1]))
+                         
+p= plot_hw_air_id(air_id = "air_f3f9824b7d70c3cf",
+                         ax= fig.add_subplot(gs[2]))
+
+p= plot_hw_air_id(air_id = "air_1c0b150f9e696a5f",
+                         ax= fig.add_subplot(gs[3]))
+                         
+plt.show(p)
+```
+:::
+::::
 
 
 
