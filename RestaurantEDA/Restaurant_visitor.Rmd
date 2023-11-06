@@ -4119,6 +4119,7 @@ def plot_auto_arima_air_id(air_id, ax):
     ax.tick_params(axis='x', rotation=45, labelsize= 7) 
     plt.xlabel("dates")
     plt.ylabel("log1p visitors vs auto.arima predictions")
+    plt.show()
     
 ```
 :::
@@ -4134,6 +4135,7 @@ ranked_store <- air_visits %>%
                 group_by('air_store_id') %>%
                 summarize(N = sum(visitors)) %>%
                 arrange(desc(N) )
+
 p1 <- plot_auto_arima_air_id("air_f3f9824b7d70c3cf")
 p2 <- plot_auto_arima_air_id("air_8e4360a64dbd4c50")
 #p3 <- plot_auto_arima_air_id("air_399904bdb7685ca0")
@@ -4160,22 +4162,32 @@ For a more detailed exploration of ARIMA models take a look at this [Kernel](htt
 ## Rank store to select the must important ones
 ranked_store = air_visits.groupby('air_store_id', 
                 observed=True)['visitors'].sum().sort_values(ascending=False)
-                
-# Create a 2x2 grid
-fig = plt.figure(figsize=(8, 4))
-gs = GridSpec(1, 2)
 
-#Add plots to the grid
-p= plot_auto_arima_air_id(air_id = "air_f3f9824b7d70c3cf",
-                        ax = fig.add_subplot(gs[0, 0]))
-
-p= plot_auto_arima_air_id(air_id = "air_8e4360a64dbd4c50",
-                         ax= fig.add_subplot(gs[0, 1]))
-# Adjust layout
-plt.tight_layout()
-
-# Show the plots
-plt.show(p)
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(2, 1)
+Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50"]#,"air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
+j=0
+for g in gs:
+  #print(g)
+  plot_prophet_air_id(air_id= Air_id[j], ax= g)
+  j = j+1
+  
+  
+# # Create a 2x2 grid
+# fig = plt.figure(figsize=(8, 4))
+# gs = GridSpec(1, 2)
+# 
+# #Add plots to the grid
+# p= plot_auto_arima_air_id(air_id = "air_f3f9824b7d70c3cf",
+#                         ax = fig.add_subplot(gs[0, 0]))
+# 
+# p= plot_auto_arima_air_id(air_id = "air_8e4360a64dbd4c50",
+#                          ax= fig.add_subplot(gs[0, 1]))
+# # Adjust layout
+# plt.tight_layout()
+# 
+# # Show the plots
+# plt.show(p)
 ```
 :::
 ::::
@@ -4316,7 +4328,7 @@ plt.style.use('ggplot')
 
 # Plot the value with line and scatter
 #plt.plot(fcast['ds'], fcast['yhat'], label='Value', color='red')
-p= plt.scatter(fcast['ds'], fcast['yhat'], color='black', alpha=0.5, s =3)
+p= plt.scatter(fcast['ds'], fcast['yhat'], color='black', alpha=0.5, s =4)
 
 # Plot the confidence intervals
 p= plt.fill_between(fcast['ds'], 
@@ -4325,7 +4337,8 @@ p= plt.fill_between(fcast['ds'],
 
 # Add labels and legend
 p= plt.xlabel('Date')
-p= plt.ylabel('Value')
+p= plt.ylabel('yhat')
+p= plt.tick_params(axis='x', rotation=10, labelsize= 7)
 #plt.legend()
 
 # Show the plot
@@ -4433,6 +4446,7 @@ p= plt.plot(visits_train['ds'], visits_train['y'],
 p= plt.plot(visits_valid['visit_date'], visits_valid['visitors'],
             color='grey', label='Validation Data')
 
+p= plt.tick_params(axis='x', rotation=10, labelsize= 7)
 # Add labels and title
 p= plt.xlabel('Date')
 p= plt.ylabel('yhat')
@@ -4526,10 +4540,10 @@ def plot_prophet_air_id(air_id, ax):
     # Filter air_visits for the specified air_id
     foo = air_visits[air_visits['air_store_id'] == air_id]
 
-    foo['visit_date'] = pd.to_datetime(foo['visit_date'])
+    #foo['visit_date'] = pd.to_datetime(foo['visit_date'])
      
     # Merge with all_visits to ensure all dates are included
-    visits = all_visits.merge(foo, on='visit_date', how='left')
+    visits = all_visits.merge(foo, on='visit_date', how='right')
 
     # Apply log transformation
     visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
@@ -4560,29 +4574,31 @@ def plot_prophet_air_id(air_id, ax):
     # set plot
     fig, ax = plt.subplots(figsize=(8, 4))
     plt.style.use('ggplot')
-
-    # Confidence interval ribbon
-    ax.fill_between(fcast['ds'], fcast['yhat_lower'], 
-                    fcast['yhat_upper'], color='lightblue',
-                    alpha=0.5)
+    ax = plt.gca()
 
     # Forecast line
     ax.plot(fcast['ds'], fcast['yhat'], 
             color='blue', label='Forecast')
 
     # Training data
-    ax.plot(visits_train['ds'], visits_train['y'], 
+    ax.plot(visits_train['ds'], visits_train['y'],
            color='black', label='Training Data')
 
     # Validation data
     ax.plot(visits_valid['visit_date'], visits_valid['visitors'],
             color='grey', label='Validation Data')
 
+    # Confidence interval ribbon
+    ax.fill_between(fcast['ds'], fcast['yhat_lower'],
+                    fcast['yhat_upper'], color='lightblue',
+                    alpha=0.5)
+                    
     # Add labels and title
     ax.tick_params(axis='x', rotation=10, labelsize= 7)
-    plt.xlabel('Date')
-    plt.ylabel('yhat')
-    
+    ax.set_xlabel('Date')
+    ax.set_ylabel('yhat')
+    return(ax)
+
 ```
 
 :::
@@ -4607,24 +4623,50 @@ That looks not bad either. Looks like we’re overestimating the trend component
 
 ```{python}
 
-# Create a 2x2 grid
+
+## WAY 1
+# Create a 4x1 grid
 fig = plt.figure(figsize=(12, 4))
 gs = GridSpec(4, 1)
+Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50","air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
+j=0
+for g in gs:
+  #print(g)
+  plot_prophet_air_id(air_id= Air_id[j], ax= g)
+  j = j+1
+  #print(j)
 
-#Add plots to the grid
-p= plot_prophet_air_id(air_id = "air_f3f9824b7d70c3cf", 
-                        ax = fig.add_subplot(gs[0]))
 
-p= plot_prophet_air_id(air_id = "air_8e4360a64dbd4c50", 
-                         ax= fig.add_subplot(gs[1]))
-                         
-p= plot_prophet_air_id(air_id = "air_1c0b150f9e696a5f",
-                         ax= fig.add_subplot(gs[2]))
-                         
-p= plot_prophet_air_id(air_id = "air_820d1919cbecaa0a",
-                         ax= fig.add_subplot(gs[3]))                         
-                         
-plt.show(p)
+# ## WAY 2
+# fig, axes = plt.subplots(4, 1, figsize=(12, 4))
+# Air_id = ["air_f3f9824b7d70c3cf","air_8e4360a64dbd4c50","air_1c0b150f9e696a5f", "air_820d1919cbecaa0a"]
+# j=0
+# for x in axes:
+#   print(x)
+#   plot_prophet_air_id(air_id= Air_id[j], ax= x)
+#   j = j+1
+#   print(j)
+# plt.tight_layout()                         
+# plt.show()
+#   
+# #WAY 3
+# fig = plt.figure(figsize=(12, 4))
+# gs = GridSpec(4, 1)
+# 
+# p=plot_prophet_air_id(air_id = "air_ba937bf13d40fb24",   #air_f3f9824b7d70c3cf
+#                         ax = fig.add_subplot(gs[0]))
+# 
+# p=plot_prophet_air_id(air_id = "air_8e4360a64dbd4c50", 
+#                           ax= fig.add_subplot(gs[1]))
+#                           
+# p= plot_prophet_air_id(air_id = "air_1c0b150f9e696a5f",
+#                         ax= fig.add_subplot(gs[2]))
+#                           
+# p= plot_prophet_air_id(air_id = "air_820d1919cbecaa0a",
+#                           ax= fig.add_subplot(gs[3]))                         
+# 
+plt.tight_layout()                         
+plt.show()
 
 
 ```
@@ -4813,6 +4855,7 @@ def plot_prophet_air_id_holida(air_id, use_hday ,ax):
     plt.xlabel('Date')
     plt.ylabel('yhat')
     plt.title('use_hday: '+ str(use_hday))
+    return(ax)
  
 ```
 
@@ -4839,38 +4882,132 @@ plt.show(p)
 
 
 
+## Holt-Winters
 
+A more traditional time series filtering and forecasting is the Holt-Winters algorithm, as implemented in the [stats](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/HoltWinters.html) package. This is an exponential smoothing method which uses moving averages to take into account the presence of a trend in the data. Here we define a default seasonal model in a fitting and plotting function:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+plot_hw_air_id <- function(air_id){
+
+  pred_len <- test %>%
+    separate(id, c("air", "store_id", "date"), sep = "_") %>%
+    distinct(date) %>%
+    nrow()
+
+  max_date <- max(air_visits$visit_date)
+  split_date <- max_date - pred_len
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+
+  foo <- air_visits %>%
+    filter(air_store_id == air_id)
+
+  visits <- foo %>%
+    right_join(all_visits, by = "visit_date") %>%
+    mutate(visitors = log1p(visitors)) %>%
+    replace_na(list(visitors = median(log1p(foo$visitors)))) %>%
+    rownames_to_column()
+
+  visits_train <- visits %>% filter(visit_date <= split_date)
+  visits_valid <- visits %>% filter(visit_date > split_date)
+
+  hw.fit <- HoltWinters(tsclean(ts(visits_train$visitors, frequency = 7)))
+
+  hw_visits <- predict(hw.fit, n.ahead = pred_len, prediction.interval = T, level = 0.95) %>%
+    as.tibble() %>%
+    bind_cols(visits_valid)
+
+  visits_train %>%
+    ggplot(aes(visit_date, visitors)) +
+    geom_line() +
+    geom_ribbon(data = hw_visits, aes(x = visit_date, ymin = lwr, ymax = upr), fill = "light blue") +
+    geom_line(data = hw_visits, aes(visit_date, visitors), color = "grey60") +
+    geom_line(data = hw_visits, aes(visit_date, fit), color = "blue") +
+    geom_line(data = hw_visits, aes(visit_date, fit), color = "blue") +
+    labs(x = "Time [weeks]", y = "log1p visitors vs predictions") +
+    ggtitle("HoltWinters")
+}
+```
+:::
+::: {}
 
 ```{python}
-# 
-# playoffs = pd.DataFrame({
-#   'holiday': 'playoff',
-#   'ds': pd.to_datetime(['2008-01-13', '2009-01-03', '2010-01-16',
-#                         '2010-01-24', '2010-02-07', '2011-01-08',
-#                         '2013-01-12', '2014-01-12', '2014-01-19',
-#                         '2014-02-02', '2015-01-11', '2016-01-17',
-#                         '2016-01-24', '2016-02-07']),
-#   'lower_window': 0,
-#   'upper_window': 1,
-# })
-# superbowls = pd.DataFrame({
-#   'holiday': 'superbowl',
-#   'ds': pd.to_datetime(['2010-02-07', '2014-02-02', '2016-02-07']),
-#   'lower_window': 0,
-#   'upper_window': 1,
-# })
-# holidays_example = pd.concat((playoffs, superbowls))
-# 
-# holidays_example.tail
-```
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
+def plot_hw_air_id(air_id):
+    
+    # Separate the 'id' column into three columns
+    test[['air','store_id','date']] = test['id'].str.split('_', expand=True)
+    # Get distinct dates and calculate the number of rows
+    pred_len = test['date'].nunique()
+    
+    max_date = air_visits['visit_date'].max()
+    split_date = max_date - pd.DateOffset(days=pred_len)
+    
+    all_visits = pd.DataFrame(
+      {'visit_date': pd.date_range(start=air_visits['visit_date'].min(), 
+      end=max_date)})
+    
+    foo = air_visits[air_visits['air_store_id'] == air_id].copy()
+
+    visits = pd.merge(all_visits, foo, on='visit_date', how='right')
+    visits['visitors'] = visits['visitors'].apply(lambda x: np.log1p(x))
+    visits['visitors'].fillna(visits['visitors'].median(), inplace=True)
+    
+    visits_train = visits[visits['visit_date'] <= split_date]
+    visits_valid = visits[visits['visit_date'] > split_date]
+    
+    hw_model = ExponentialSmoothing(visits_train['visitors'],
+               trend='add', seasonal='add', seasonal_periods=7)
+               
+    hw_fit = hw_model.fit()
+    
+    
+    hw_forecast = hw_fit.forecast(len(visits_valid['visit_date']))
+    
+    hw_visits = hw_fit.predict(len(visits_valid['visit_date']))
+    
+    plt.figure(figsize=(10, 6))
+    plt.style.use('ggplot')
+    
+    plt.plot(visits_train['visit_date'], 
+              visits_train['visitors'], label='Training Data')
+              
+    plt.plot(visits_valid['visit_date'], 
+             visits_valid['visitors'], 
+             label='Validation Data', color='grey')
+             
+    plt.plot(visits_valid['visit_date'], hw_forecast, 
+             label='Holt-Winters Forecast', color='blue')
+    
+#    plt.plot(visits_valid['visit_date'], hw_visits, 
+#             label='Holt-Winters Forecast', color='red')
+             
+    #plt.fill_between(visits_valid['visit_date'],
+    #                  hw_forecast - hw_fit.bse,
+    #                  hw_forecast + hw_fit.bse, 
+    #                  color='lightblue')
+    
+    plt.xlabel('Time [weeks]')
+    plt.ylabel('log1p visitors vs predictions')
+    plt.title('Holt-Winters Forecasting')
+    plt.legend()
+    plt.show()
+
+```
 
 ```{python}
-# m = Prophet(changepoint_prior_scale=0.5, yearly_seasonality=False, daily_seasonality=False)
-# 
-# # Add holidays
-# m.add_country_holidays(country_name='US')
+# Usage example
+plot_hw_air_id("air_ba937bf13d40fb24")
 ```
+
+:::
+::::
+
+
+
+
 
 
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
