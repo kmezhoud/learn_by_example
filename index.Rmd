@@ -36,4 +36,4 @@ _ [Streaming - detect new csv file - Dashboard with Shiny](Dashboard/Dashboard.h
 - [Performance and design Shiny App Improvement](biodiversity_performance/biodiversity_performance.html)
 - [Full Shiny App with Domain and HTTPS certificate](fullShinyDomain/fullShinyDomain.html)
 - [Brazilian E-Commerce by Olist](Brazilian_Ecommerce/Brazilian_E_Commerce.html)
-- [Japanese restaurant EDA](RestaurantEDA/Restarant_visitor.html)
+- [Japanese restaurant EDA](RestaurantEDA/Restaurant_visitor.html)
