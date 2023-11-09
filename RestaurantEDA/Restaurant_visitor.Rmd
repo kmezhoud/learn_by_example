@@ -209,6 +209,8 @@ from datetime import date
 from prophet import Prophet
 from prophet.plot import plot
 import plotly
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import pytimetk as tk
 ```
 
 :::
@@ -5041,6 +5043,14 @@ layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
 multiplot(p1, p2, p3, p4, layout=layout)
 
 ```
+
+We find:
+
+* While the algorithm performs reasonably well with sufficient data given, similar to auto.arima it breaks down for special cases of missing data. We might get a better performance by discarding the missing values instead of replacing them with the median. However, the first impression looks less promising than the prophet approach.
+    
+* Feel free to fork this kernel and experiment with modified additive and exponential models to tweak the performance of the Holt-Winters method.
+
+
 :::
 ::: {}
 
@@ -5067,6 +5077,395 @@ plt.show(p)
 ```
 :::
 ::::
+
+
+## timetk
+
+The timetk package ([R](https://business-science.github.io/timetk/), [Python](https://business-science.github.io/pytimetk/) ) is a recently released tool kit for time series analysis. It integrates well into the tidyverse ecosystem and is specifically designed to work with the tidy “tibble” data frames. Here we briefly describe the timetk approach and how we can apply it to our data.
+
+First, we will create the train and validation data frames in the same way as for the other prediction tools:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+air_id = "air_ba937bf13d40fb24"
+
+pred_len <- test %>%
+  separate(id, c("air", "store_id", "date"), sep = "_") %>%
+  distinct(date) %>%
+  nrow()
+
+max_date <- max(air_visits$visit_date)
+split_date <- max_date - pred_len
+all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+
+foo <- air_visits %>%
+  filter(air_store_id == air_id)
+
+visits <- foo %>%
+  right_join(all_visits, by = "visit_date") %>%
+  mutate(visitors = log1p(visitors)) %>%
+  rownames_to_column() %>%
+  select(y = visitors,
+         ds = visit_date)
+
+visits_train <- visits %>% filter(ds <= split_date)
+visits_valid <- visits %>% filter(ds > split_date)
+```
+:::
+::: {}
+
+```{python}
+air_id = "air_ba937bf13d40fb24"
+
+# Separate id column into "air", "store_id", "date"
+test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+
+# Get distinct dates
+distinct_dates = test['date'].drop_duplicates()
+
+# Calculate prediction length
+pred_len = len(distinct_dates)
+
+# Get max date from air_visits
+max_date = air_visits['visit_date'].max()
+
+# Calculate split date
+split_date = max_date - pd.DateOffset(days=pred_len)
+
+# Generate a sequence of dates
+all_visits = pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(), end=max_date)})
+
+# Filter air_visits for the specific air_id
+foo = air_visits[air_visits['air_store_id'] == air_id].copy()
+
+# Right join with all_visits
+visits = all_visits.merge(foo, on='visit_date', how='right')
+
+# Apply log transformation to visitors
+visits['visitors'] = np.log1p(visits['visitors'])
+
+# Set 'visit_date' as index
+visits.set_index('visit_date', inplace=True)
+
+# Reset rownames to a new column 'ds'
+visits = visits.rename_axis('ds').reset_index()
+
+# Filter visits for training and validation sets
+visits_train = visits[visits['ds'] <= split_date]
+visits_valid = visits[visits['ds'] > split_date]
+
+```
+:::
+::::
+
+
+Then, we use the `tk_augment_timeseries_signature` tool to augment our data frames with time series characteristics. This means that we will add comprehensive time series properties that have been extracted from the date. Those new features include for instance the month, day and week of the year, half and quarter of the year; down to minutes and seconds for date-time data. Here we show a glimpse of the augmented training data:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+visits_train_aug <- visits_train %>%
+  tk_augment_timeseries_signature()
+
+visits_valid_aug <- visits_valid %>%
+  .$ds %>%
+  tk_get_timeseries_signature()
+
+glimpse(visits_train_aug)
+```
+:::
+::: {}
+
+```{python}
+
+from pytimetk import augment_timeseries_signature, get_timeseries_signature
+
+# Augment visits_train
+visits_train_aug = augment_timeseries_signature(data= visits_train, date_column = 'ds')
+
+# Get timeseries signature for visits_valid
+visits_valid_ds = visits_valid['ds']
+visits_valid_aug = get_timeseries_signature(visits_valid_ds)
+
+# Display information about visits_train_aug
+print(visits_train_aug.info())
+```
+:::
+::::
+
+Now, the idea behind `timetk` is to use these new features to make predictions based on a regression or classification approach; with standard tools such as linear/logistic regression or (boosted/ensembled) trees. For this example, we will use a simple linear model. This approach can easily be extended to more sophisticated methods.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+fit_lm <- lm(y ~ ., data = select(visits_train_aug, -c(ds, diff, wday.xts, wday.lbl, year.iso)))
+
+fit_lm
+```
+:::
+::: {}
+
+```{python}
+import statsmodels.api as sm
+from sklearn import linear_model
+
+# Assuming 'y' is the dependent variable and 'X' contains the independent variables
+## non numeric column
+# visits_train_aug[['air_store_id', 'wday', 'month', 'ds_quarteryear', 'ds_month_lbl', ' ds_wday_lbl', 'ds_am_pm']]
+X = visits_train_aug.select_dtypes(['number'])
+X = X.drop(columns=['visitors', 'ds_index_num']) #, , 'ds_year', 'ds_year_iso'
+X = X.astype('int')
+y = visits_train_aug['visitors']
+
+# Add a constant (intercept) term to the independent variables
+X = sm.add_constant(X, prepend=True)#.to_numpy()
+
+# Fit the linear model
+model = sm.OLS(y, X)
+fit_lm = model.fit()
+
+# Print the summary of the linear regression model
+#fit_lm.params
+print(fit_lm.summary())
+
+```
+:::
+::::
+
+Then we use the standard predict tool to apply the model to our prediction range. Make sure to include the same features as in the training data frame.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+pred <- predict(fit_lm, newdata = select(visits_valid_aug, 
+                                         -c(index, diff, wday.xts, wday.lbl, year.iso)))
+
+pred_tk <- tibble(
+    date  = visits_valid$ds,
+    value = pred
+    )
+```
+:::
+::: {}
+
+```{python}
+V = visits_valid_aug.select_dtypes(['number'])
+V = V.drop(columns=['ds_index_num']) #, 'ds_year', 'ds_year_iso'
+V = V.astype('int')
+
+## add intercept
+#V = sm.add_constant(V, prepend=True)
+V.insert(0,'const', 1.0)
+
+pred = fit_lm.predict(V)
+
+pred_tk = pd.DataFrame({
+    'date': visits_valid['ds'],
+    'value': pred
+})
+pred_tk.head()
+```
+:::
+::::
+
+As before, we combine the prediction with a plotting method in a helper function:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+plot_tk_lm_air_id <- function(air_id){
+  
+  pred_len <- test %>%
+    separate(id, c("air", "store_id", "date"), sep = "_") %>%
+    distinct(date) %>%
+    nrow()
+
+  max_date <- max(air_visits$visit_date)
+  split_date <- max_date - pred_len
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+
+  foo <- air_visits %>%
+    filter(air_store_id == air_id)
+
+  visits <- foo %>%
+    right_join(all_visits, by = "visit_date") %>%
+    mutate(visitors = log1p(visitors)) %>%
+    rownames_to_column() %>%
+    select(y = visitors,
+          ds = visit_date)
+
+  visits_train <- visits %>% filter(ds <= split_date)
+  visits_valid <- visits %>% filter(ds > split_date)
+  
+  # augment train with ts info
+  visits_train_aug <- visits_train %>%
+    tk_augment_timeseries_signature()
+  
+  # fit lm
+  fit_lm <- lm(y ~ ., data = select(visits_train_aug, -c(ds, diff, wday.xts, wday.lbl, year.iso)))
+  
+  # augment valid with ts info
+  visits_valid_aug <- visits_valid %>%
+    .$ds %>%
+    tk_get_timeseries_signature()
+  
+  # predict from lm
+  pred <- predict(fit_lm, newdata = select(visits_valid_aug, -c(index, diff, wday.xts, wday.lbl, year.iso)))
+
+  pred_tk <- tibble(
+      date  = visits_valid$ds,
+      y_pred = pred
+      )
+  
+  # plot
+  p <- pred_tk %>%
+    ggplot(aes(date, y_pred)) +
+    geom_line(data = visits_train, aes(ds, y), colour = "black") +
+    geom_line(data = visits_valid, aes(ds, y), colour = "grey50") +
+    geom_line(colour = "blue") +
+    labs(title = str_c("timetk for ", air_id))
+    
+  return(p)
+}
+```
+
+```{r}
+plot_tk_lm_air_id("air_ba937bf13d40fb24")
+```
+
+:::
+::: {}
+
+```{python}
+
+def plot_tk_lm_air_id(air_id, ax):
+    # Separate id column into "air", "store_id", "date"
+    test[['air', 'store_id', 'date']] = test['id'].str.split('_', expand=True)
+    
+    # Get distinct dates
+    distinct_dates = test['date'].drop_duplicates()
+    
+    # Calculate prediction length
+    pred_len = len(distinct_dates)
+    
+    # Get max date from air_visits
+    max_date = air_visits['visit_date'].max()
+    
+    # Calculate split date
+    split_date = max_date - pd.DateOffset(days=pred_len)
+    
+    # Generate a sequence of dates
+    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(),
+    end=max_date)})
+    
+    # Filter air_visits for the specific air_id
+    foo = air_visits[air_visits['air_store_id'] == air_id].copy()
+    
+    # Right join with all_visits
+    visits = all_visits.merge(foo, on='visit_date', how='right')
+    
+    # Apply log transformation to visitors
+    visits['visitors'] = np.log1p(visits['visitors'])
+    
+    # Set 'visit_date' as index
+    visits.set_index('visit_date', inplace=True)
+    
+    # Reset rownames to a new column 'ds'
+    visits = visits.rename_axis('ds').reset_index()
+    
+    # Filter visits for training and validation sets
+    visits_train = visits[visits['ds'] <= split_date]
+    visits_valid = visits[visits['ds'] > split_date]
+    
+    # Augment visits_train
+    visits_train_aug = augment_timeseries_signature(data= visits_train, date_column = 'ds')
+  
+    # Get timeseries signature for visits_valid
+    visits_valid_ds = visits_valid['ds']
+    visits_valid_aug = get_timeseries_signature(visits_valid_ds)
+    
+    X = visits_train_aug.select_dtypes(['number'])
+    X = X.drop(columns=['visitors', 'ds_index_num']) #, , 'ds_year', 'ds_year_iso'
+    X = X.astype('int')
+    y = visits_train_aug['visitors']
+    
+    # Add a constant (intercept) term to the independent variables
+    X = sm.add_constant(X, prepend=True)#.to_numpy()
+    # Fit the linear model
+    model = sm.OLS(y, X)
+    fit_lm = model.fit()
+    
+    V = visits_valid_aug.select_dtypes(['number'])
+    V = V.drop(columns=['ds_index_num']) #, 'ds_year', 'ds_year_iso'
+    V = V.astype('int')
+    #V = sm.add_constant(V, prepend=True)
+    V.insert(0,'const', 1.0)
+
+    pred = fit_lm.predict(V)
+    
+    pred_tk = pd.DataFrame({
+        'date': visits_valid['ds'],
+        'value': pred
+    })
+    
+    fig, ax = plt.subplots(figsize=(8, 4))
+    plt.style.use('ggplot')
+      
+    ax.plot(pred_tk['date'], 
+                pred_tk['value'] , label='Predicted Data', 
+                color= 'blue')
+                
+    ax.plot(visits_train['ds'], 
+               visits_train['visitors'], 
+               label='training Data', color='black')
+               
+    ax.plot(visits_valid['ds'], 
+              visits_valid['visitors'],  
+               label='validate Data', color='grey')
+  
+  #    ax.fill_between(visits_valid['visit_date'],
+  #                    hw_forecast - hw_forecast * 0.05, #hw_fit.bse,
+  #                    hw_forecast + hw_forecast * 0.05, #hw_fit.bse, 
+  #                    color='lightblue')
+      
+    ax.tick_params(axis='x', rotation=10, labelsize= 7)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Visitors')
+    ax.set_title('timetk for air_'+ str(air_id))
+    plt.legend()
+    return(ax)
+    
+```
+
+
+```{python}
+
+# Create a 2x2 grid
+fig = plt.figure(figsize=(12, 4))
+gs = GridSpec(4, 1)
+
+#Add plots to the grid
+p= plot_tk_lm_air_id(air_id = "air_ba937bf13d40fb24", 
+                     ax = fig.add_subplot(gs[0]))
+                        
+plt.show(p)
+```
+
+:::
+::::
+
+We find:
+
+* The result looks quite decent; especially considering that we only used a simply linear model for our prediction. More elaborate methods are likely to give a better result.
+
+* Be aware that this is not technically a time-series method. Instead we use the timetk functionality to extract time series characteristics of our data and use them as extra features in a regression-style approach. Thus, this methodology could be considered primarily as (automated) feature engineering. I suggest to experiment with different feature selections.
+
+
+# Weather data
 
 
 
