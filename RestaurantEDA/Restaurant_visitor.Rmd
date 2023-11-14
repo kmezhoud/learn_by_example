@@ -211,6 +211,8 @@ from prophet.plot import plot
 import plotly
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import pytimetk as tk
+from pytimetk import augment_timeseries_signature, get_timeseries_signature
+import joypy
 ```
 
 :::
@@ -823,6 +825,7 @@ multiplot(p1, p2, p3, p4, layout=layout)
 ```
 
 We find:
+
 * There is an interesting long-term step structure in the overall time series. This might be related to new restaurants being added to the data base. In addition, we already see a periodic pattern that most likely corresponds to a weekly cycle.
 
 * The number of guests per visit per restaurant per day peaks at around 20 (the orange line). The distribution extends up to 100 and, in rare cases, beyond.
@@ -832,30 +835,9 @@ We find:
 * Also during the year there is a certain amount of variation. `Dec` appears to be the most popular month for restaurant visits. The period of `Mar - May` is consistently busy.
 
 
-We will be forecasting for the last week of April plus May 2017, so let’s look at this time range in our 2016 training data:
-
-```{r}
-air_visits %>%
-  filter(visit_date > ymd("2016-04-15") & visit_date < ymd("2016-06-15")) %>%
-  group_by(visit_date) %>%
-  summarise(all_visitors = sum(visitors)) %>%
-  ggplot(aes(visit_date,all_visitors)) +
-  geom_line() +
-  geom_smooth(method = "loess", color = "blue", span = 1/7) +
-  labs(y = "All visitors", x = "Date")
-```
-
-
-Here, the black line is the date and the blue line corresponds to a smoothing fit with a corresponding grey confidence area. We see again the weekly period and also the impact of the aforementioned [Golden Week](https://en.wikipedia.org/wiki/Golden_Week_(Japan)), which in 2016 happened between Apr 29 and May 5.
-
-
-
 :::
 ::: {}
 
-
-
-`Seaborn` doesn't have a direct equivalent to the `geom_smooth` function with the loess method. However, we can achieve a similar effect using the seaborn.lineplot function combined with a `lowess` smoother from the `statsmodels` library.
 
 ```{python}
 locale.setlocale(locale.LC_ALL,'en_US.utf8')
@@ -866,9 +848,11 @@ locale.setlocale(locale.LC_ALL,'en_US.utf8')
 
 p1_data = air_visits.groupby('visit_date', observed=True)['visitors'].sum().reset_index()
 
-p3_data = air_visits.assign(wday=air_visits['visit_date'].dt.day_name()).groupby('wday')['visitors'].median().reset_index()
+p3_data = air_visits.assign(wday=air_visits['visit_date'].dt.day_name())\
+.groupby('wday')['visitors'].median().reset_index()
 
-p4_data = air_visits.assign(month=air_visits['visit_date'].dt.strftime('%b')).groupby('month')['visitors'].median().reset_index()
+p4_data = air_visits.assign(month=air_visits['visit_date'].dt.strftime('%b'))\
+.groupby('month')['visitors'].median().reset_index()
 
 
 plt.style.use('ggplot')
@@ -888,7 +872,8 @@ plt.xscale('log')
 sns.histplot(data=air_visits, x='visitors', bins=30, color='blue', kde=True, ax=ax2)
 
 ax3 = fig.add_subplot(gs[1, 1])
-order = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+order = [ "Monday", "Tuesday", "Wednesday", "Thursday",
+          "Friday", "Saturday", "Sunday"]
 ax3.set_xticklabels( ('Mon', 'Tue','Wed', 'Thur', 'Fri', 'Sat', 'Sun') )
 p3 = sns.barplot(data=p3_data, x='wday', y='visitors', hue='wday', 
                   legend=False, ax=ax3, order=order) #palette='viridis',
@@ -897,7 +882,8 @@ p3 = plt.xticks(rotation=45)
 ax3.set_xlabel('Days')
 
 ax4 = fig.add_subplot(gs[1, 2])
-order = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+order = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul",
+"Aug", "Sep", "Oct", "Nov", "Dec"]
 p4 = sns.barplot(data=p4_data, x='month', y='visitors', hue='month',
          legend=False, ax=ax4, order=order, palette='viridis')
 p4 = plt.xticks(rotation=45)
@@ -914,7 +900,35 @@ plt.show()
 
 * This way, you have full control over the layout of the plots.
 
+:::
+::::
 
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+
+We will be forecasting for the last week of April plus May 2017, so let’s look at this time range in our 2016 training data:
+
+```{r}
+air_visits %>%
+  filter(visit_date > ymd("2016-04-15") & visit_date < ymd("2016-06-15")) %>%
+  group_by(visit_date) %>%
+  summarise(all_visitors = sum(visitors)) %>%
+  ggplot(aes(visit_date,all_visitors)) +
+  geom_line() +
+  geom_smooth(method = "loess", color = "blue", span = 1/7) +
+  labs(y = "All visitors", x = "Date")
+```
+
+
+Here, the black line is the date and the blue line corresponds to a smoothing fit with a corresponding grey confidence area. We see again the weekly period and also the impact of the aforementioned [Golden Week](https://en.wikipedia.org/wiki/Golden_Week_(Japan)), which in 2016 happened between Apr 29 and May 5.
+
+
+:::
+::: {}
+
+`Seaborn` doesn't have a direct equivalent to the `geom_smooth` function with the loess method. However, we can achieve a similar effect using the seaborn.lineplot function combined with a `lowess` smoother from the `statsmodels` library.
 
 ```{python}
 from statsmodels.nonparametric.smoothers_lowess import lowess
@@ -1034,12 +1048,15 @@ foo['reserve_wday'] = foo['reserve_datetime'].dt.day_name()
 foo['visit_date'] = foo['visit_datetime'].dt.date
 foo['visit_hour'] = foo['visit_datetime'].dt.hour
 foo['visit_wday'] = foo['visit_datetime'].dt.day_name()
-foo['diff_hour'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.total_seconds() / 3600
-foo['diff_day'] = (foo['visit_datetime'] - foo['reserve_datetime']).dt.days
+foo['diff_hour'] = (foo['visit_datetime'] - \
+                   foo['reserve_datetime']).dt.total_seconds() / 3600
+foo['diff_day'] = (foo['visit_datetime'] - \
+                   foo['reserve_datetime']).dt.days
 
 p1 = foo.groupby('visit_date')['reserve_visitors'].sum().reset_index()
 p2 = foo.groupby('visit_hour')['reserve_visitors'].sum().reset_index()
-p3 = foo[foo['diff_hour'] < 24*5].groupby('diff_hour')['reserve_visitors'].sum().reset_index()
+p3 = foo[foo['diff_hour'] < 24*5]\
+    .groupby('diff_hour')['reserve_visitors'].sum().reset_index()
 
 # Multiplot layout
 fig = plt.figure(figsize=(9, 5))
@@ -1191,40 +1208,6 @@ leaflet(air_store) %>%
              clusterOptions = markerClusterOptions())
 ```
 
-Next, we plot the numbers of different types of cuisine (or air_genre_names) alongside the areas with the most air restaurants:
-
-```{r}
-p1 <- air_store %>%
-  group_by(air_genre_name) %>%
-  count() %>%
-  ggplot(aes(reorder(air_genre_name, n, FUN = min), n, fill = air_genre_name)) +
-  geom_col() +
-  coord_flip() +
-  theme(legend.position = "none") +
-  labs(x = "Type of cuisine (air_genre_name)", y = "Number of air restaurants")
-  
-p2 <- air_store %>%
-  group_by(air_area_name) %>%
-  count() %>%
-  ungroup() %>%
-  top_n(15,n) %>%
-  ggplot(aes(reorder(air_area_name, n, FUN = min) ,n, fill = air_area_name)) +
-  geom_col() +
-  theme(legend.position = "none") +
-  coord_flip() +
-  labs(x = "Top 15 areas (air_area_name)", y = "Number of air restaurants")
-
-layout <- matrix(c(1,2),2,1,byrow=TRUE)
-multiplot(p1, p2, layout=layout)
-```
-
-We find:
-
-* There are lots of Izakaya gastropubs in our data, followed by Cafe’s. We don’t have many Karaoke places in the air data set and also only a few that describe themselves as generically `International` or `Asian`. I have to admit, I’m kind of intrigued by `creative cuisine`.
-
-* Fukuoka has the largest number of air restaurants per area, followed by many Tokyo areas.
-
-
 
 :::
 ::: {}
@@ -1269,6 +1252,53 @@ m
 
 
 
+
+
+
+:::
+::::
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+Next, we plot the numbers of different types of cuisine (or air_genre_names) alongside the areas with the most air restaurants:
+
+```{r}
+p1 <- air_store %>%
+  group_by(air_genre_name) %>%
+  count() %>%
+  ggplot(aes(reorder(air_genre_name, n, FUN = min), n, fill = air_genre_name)) +
+  geom_col() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "Type of cuisine (air_genre_name)", y = "Number of air restaurants")
+  
+p2 <- air_store %>%
+  group_by(air_area_name) %>%
+  count() %>%
+  ungroup() %>%
+  top_n(15,n) %>%
+  ggplot(aes(reorder(air_area_name, n, FUN = min) ,n, fill = air_area_name)) +
+  geom_col() +
+  theme(legend.position = "none") +
+  coord_flip() +
+  labs(x = "Top 15 areas (air_area_name)", y = "Number of air restaurants")
+
+layout <- matrix(c(1,2),2,1,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+
+We find:
+
+* There are lots of Izakaya gastropubs in our data, followed by Cafe’s. We don’t have many Karaoke places in the air data set and also only a few that describe themselves as generically `International` or `Asian`. I have to admit, I’m kind of intrigued by `creative cuisine`.
+
+* Fukuoka has the largest number of air restaurants per area, followed by many Tokyo areas.
+
+
+:::
+::: {}
+
 ```{python}
 
 p1_data = air_store['air_genre_name'].value_counts().reset_index()
@@ -1289,8 +1319,10 @@ ax1 = fig.add_subplot(gs[0, :])
 ax2 = fig.add_subplot(gs[1, :])
 
 # Plot 1
-p1= sns.barplot(data=p1_data, x='count', y='air_genre_name', order=p1_data['air_genre_name'],
-                palette='dark', ax=ax1, legend=False)
+p1= sns.barplot(data=p1_data, x='count', y='air_genre_name', 
+                 order=p1_data['air_genre_name'],
+                 palette='dark', ax=ax1, legend=False)
+
 p1= ax1.set_xlabel('Number of air restaurants')
 p1= ax1.set_ylabel("Type of cuisine")
 #p1= ax1.set_title("Number of air restaurants by cuisine type")
@@ -1299,8 +1331,9 @@ p1= ax1.set_ylabel("Type of cuisine")
 #p1= plt.legend("")
 
 # Plot 2
-p2= sns.barplot(data=p2_data, x='count', y='air_area_name', order=p2_data['air_area_name'],
-                palette='bright', ax=ax2, legend=False, width=0.8)
+p2= sns.barplot(data=p2_data, x='count', y='air_area_name', 
+                order=p2_data['air_area_name'],palette='bright',
+                ax=ax2, legend=False, width=0.8)
 p2= ax2.set_xlabel("Number of air restaurants")
 p2= ax2.set_ylabel("Top 15 areas")
 #p2= ax2.set_title("Top 15 areas with most air restaurants")
@@ -1311,10 +1344,10 @@ plt.tight_layout()
 plt.show()
 
 ```
-
-
 :::
 ::::
+
+
 
 ## HPG Store
 
@@ -1332,42 +1365,6 @@ leaflet(hpg_store) %>%
              popup = ~hpg_store_id, label = ~hpg_genre_name,
               clusterOptions = markerClusterOptions())
 ```
-
-Here is the breakdown of genre and area for the hpg restaurants
-
-```{r}
-p1 <- hpg_store %>%
-  group_by(hpg_genre_name) %>%
-  count() %>%
-  ggplot(aes(reorder(hpg_genre_name, n, FUN = min), n, fill = hpg_genre_name)) +
-  geom_col() +
-  coord_flip() +
-  theme(legend.position = "none") +
-  labs(x = "Type of cuisine (hpg_genre_name)", y = "Number of hpg restaurants")
-  
-p2 <- hpg_store %>%
-  mutate(area = str_sub(hpg_area_name, 1, 20)) %>%
-  group_by(area) %>%
-  count() %>%
-  ungroup() %>%
-  top_n(15,n) %>%
-  ggplot(aes(reorder(area, n, FUN = min) ,n, fill = area)) +
-  geom_col() +
-  theme(legend.position = "none") +
-  coord_flip() +
-  labs(x = "Top 15 areas (hpg_area_name)", y = "Number of hpg restaurants")
-
-layout <- matrix(c(1,2),1,2,byrow=TRUE)
-multiplot(p1, p2, layout=layout)
-```
-
-Here we have truncated the hpg_area_name to 20 characters to make the plot more readable.
-
-We find:
-
-* The hpg description contains a larger variety of genres than in the air data. Here, `Japanese style` appears to contain many more places that are categorised more specifically in the air data. The same applies to `International cuisine`.
-
-* In the top 15 area we find again Tokyo and Osaka to be prominently present.
 
 :::
 ::: {}
@@ -1406,6 +1403,53 @@ m
 ```
 
 
+
+
+:::
+::::
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+ 
+ Here is the breakdown of genre and area for the hpg restaurants
+
+```{r}
+p1 <- hpg_store %>%
+  group_by(hpg_genre_name) %>%
+  count() %>%
+  ggplot(aes(reorder(hpg_genre_name, n, FUN = min), n, fill = hpg_genre_name)) +
+  geom_col() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "Type of cuisine (hpg_genre_name)", y = "Number of hpg restaurants")
+  
+p2 <- hpg_store %>%
+  mutate(area = str_sub(hpg_area_name, 1, 20)) %>%
+  group_by(area) %>%
+  count() %>%
+  ungroup() %>%
+  top_n(15,n) %>%
+  ggplot(aes(reorder(area, n, FUN = min) ,n, fill = area)) +
+  geom_col() +
+  theme(legend.position = "none") +
+  coord_flip() +
+  labs(x = "Top 15 areas (hpg_area_name)", y = "Number of hpg restaurants")
+
+layout <- matrix(c(1,2),1,2,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+
+Here we have truncated the hpg_area_name to 20 characters to make the plot more readable.
+
+We find:
+
+* The hpg description contains a larger variety of genres than in the air data. Here, `Japanese style` appears to contain many more places that are categorised more specifically in the air data. The same applies to `International cuisine`.
+
+* In the top 15 area we find again Tokyo and Osaka to be prominently present.
+
+:::
+::: {}
 
 ```{python}
 p1_data = hpg_store['hpg_genre_name'].value_counts().reset_index()
@@ -1448,9 +1492,9 @@ plt.tight_layout()
 plt.show()
 
 ```
+
 :::
 ::::
-
 
 ## Holidays
 
@@ -1684,44 +1728,6 @@ We find:
 
 * The low-count time series like `Karaoke` or `Asian` (see Fig. 6) are understandably more noisy than the genres with higher numbers of visitors. Still, `Asian` restaurants appear to be very popular despite (or because of?) their rarity.
 
-In all of the curves we see the familiar weekly variation, so let’s look in more detail at the mean visitor numbers per week day and genre. We also add to this a series of ridgeline plots via the ggridges package. Ridgeline plots allow for a quick comparison of semi-overlapping (density) curves. Here we show the distribution of visitors per day for each genre. Through a little bit of ggplot magic, the y-axis labels in between those two plots refer to both of them:
-
-```{r}
-p1 <- foo %>%
-  mutate(wday = wday(visit_date, label = TRUE, week_start = 1)) %>%
-  group_by(wday, air_genre_name) %>%
-  summarise(mean_visitors = mean(visitors)) %>%
-  ggplot(aes(air_genre_name, mean_visitors, color = wday)) +
-  geom_point(size = 4) +
-  theme(legend.position = "left", axis.text.y = element_blank(),
-        plot.title = element_text(size = 14)) +
-  coord_flip() +
-  labs(x = "") +
-  scale_x_discrete(position = "top") +
-  ggtitle("air_genre_name") +
-  scale_color_hue()
-
-p2 <- foo %>%
-  ggplot(aes(visitors, air_genre_name, fill = air_genre_name)) +
-  geom_density_ridges(bandwidth = 0.1) +
-  scale_x_log10() +
-  theme(legend.position = "none") +
-  labs(y = "") +
-  scale_fill_cyclical(values = c("blue", "red"))
-
-layout <- matrix(c(1,1,2,2,2),1,5,byrow=TRUE)
-multiplot(p1, p2, layout=layout)
-```
-
-Here each colour corresponds to a day of the week. Red-ish coulours are the weekend, while the cooler colours are the middle of the week. Monday is a dark orange.
-
-We find:
-
-* The biggest difference between weekend and weekdays exists for the `Karaoke` bars, which rule the weekend. A similar trend, although with a considerably smaller gap, can be seen for the `International` cuisine.
-
-* No genre really goes against the trend of busier weekends. The smallest variations are in the generic `Other` category, the `Japanese` food, and also the `Korean` cuisine which is the only category where Fridays are the busiest days. General `Bars/Cocktail` are notably unpopular overall.
-
-* The density curves confirm the impression we got from the week-day distribution: the `Asian` restaurants have rarely less than 10 visitors per date and the `Karaoke` places show a very broad distribution due to the strong impact of the weekends. Note the logarithmic x-axis
     
 :::
 ::: {}
@@ -1772,12 +1778,88 @@ plt.show(p)
 
 ```
 
+
+
+:::
+::::
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
+In all of the curves we see the familiar weekly variation, so let’s look in more detail at the mean visitor numbers per week day and genre. We also add to this a series of ridgeline plots via the ggridges package. Ridgeline plots allow for a quick comparison of semi-overlapping (density) curves. Here we show the distribution of visitors per day for each genre. Through a little bit of ggplot magic, the y-axis labels in between those two plots refer to both of them:
+
+```{r}
+p1 <- foo %>%
+  mutate(wday = wday(visit_date, label = TRUE, week_start = 1)) %>%
+  group_by(wday, air_genre_name) %>%
+  summarise(mean_visitors = mean(visitors)) %>%
+  ggplot(aes(air_genre_name, mean_visitors, color = wday)) +
+  geom_point(size = 4) +
+  theme(legend.position = "left", axis.text.y = element_blank(),
+        plot.title = element_text(size = 14)) +
+  coord_flip() +
+  labs(x = "") +
+  scale_x_discrete(position = "top") +
+  ggtitle("air_genre_name") +
+  scale_color_hue()
+
+p2 <- foo %>%
+  ggplot(aes(visitors, air_genre_name, fill = air_genre_name)) +
+  geom_density_ridges(bandwidth = 0.1) +
+  scale_x_log10() +
+  theme(legend.position = "none") +
+  labs(y = "") +
+  scale_fill_cyclical(values = c("blue", "red"))
+
+layout <- matrix(c(1,1,2,2,2),1,5,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+
+Here each colour corresponds to a day of the week. Red-ish coulours are the weekend, while the cooler colours are the middle of the week. Monday is a dark orange.
+
+We find:
+
+* The biggest difference between weekend and weekdays exists for the `Karaoke` bars, which rule the weekend. A similar trend, although with a considerably smaller gap, can be seen for the `International` cuisine.
+
+* No genre really goes against the trend of busier weekends. The smallest variations are in the generic `Other` category, the `Japanese` food, and also the `Korean` cuisine which is the only category where Fridays are the busiest days. General `Bars/Cocktail` are notably unpopular overall.
+
+* The density curves confirm the impression we got from the week-day distribution: the `Asian` restaurants have rarely less than 10 visitors per date and the `Karaoke` places show a very broad distribution due to the strong impact of the weekends. Note the logarithmic x-axis
+
+
 ```{python}
+import joypy
+
+fig, axes = plt.subplots(1, 1, figsize=(10, 4))
+
+fig, axes = joypy.joyplot(
+    p2_data,
+    by='air_genre_name',
+    column='visitors',
+    linewidth=1,
+    colormap=plt.cm.viridis,
+    grid="both", #'x', 'y'
+    xlabels=True,
+    legend=False,
+    fade=True
+)
+axes[-1].set_xlim(0, 500)
+# Show the plot
+plt.show()
+```
+
+:::
+::: {}
+
+```{python}
+from joypy import joyplot
+
 # Extracting weekday
 foo['wday'] = foo['visit_date'].dt.day_name()
 
 # Data Processing for p1
-p1_data = foo.groupby(['wday', 'air_genre_name'], observed=True).agg(mean_visitors=('visitors', 'mean')).reset_index()
+p1_data = foo.groupby(['wday', 'air_genre_name'], observed=True)\
+           .agg(mean_visitors=('visitors', 'mean')).reset_index()
 
 # Data Processing for p2 (Assuming 'foo' DataFrame is available)
 p2_data = foo.copy()
@@ -1785,11 +1867,11 @@ p2_data = foo.copy()
 
 # Create a 2x2 grid
 fig = plt.figure(figsize=(12, 8))
-gs = GridSpec(2, 2, figure=fig)
+gs = GridSpec(1,2 , figure=fig)
+ax1 = fig.add_subplot(gs[0])
+ax2 = fig.add_subplot(gs[1])
 
-# Plot 1 (Top Left)
-ax1 = fig.add_subplot(gs[:, 0])
-sns.scatterplot(data=p1_data,
+p1= sns.scatterplot(data=p1_data,
                 y='air_genre_name',
                 x='mean_visitors',
                 hue='wday',
@@ -1797,44 +1879,32 @@ sns.scatterplot(data=p1_data,
                 #palette='viridis', 
                 ax=ax1)
 # Set the figure size using rcParams
-ax1.set_title('air_genre_name', fontsize=8)
-ax1.set_xlabel('')
-ax1.set_ylabel('')
-ax1.legend(title='wday', loc='center right')
-#ax1.legend("")
-
-
-
-ax2 = fig.add_subplot(gs[:, 1],sharex=True)
+p1= ax1.set_title('air_genre_name', fontsize=8)
+p1= ax1.set_xlabel('')
+p1= ax1.set_ylabel('')
+p1= ax1.legend(title='wday', loc='center right')
 
 ## Plot 2 (Top Right)
-ax2 = fig.add_subplot(gs[:, 1])
-for genre in p2_data['air_genre_name'].unique():
-    sns.kdeplot(data=p2_data, #p2_data[p2_data['air_genre_name'] == genre]
-                x='visitors',
-                hue='air_genre_name',
-                fill=True,
-                common_norm=False,
-                levels=30,
-                label=genre,
-                ax=ax2)
-ax2.set_xlabel('')
-ax2.set_ylabel('')
-ax2.set_title('')
+p2= sns.kdeplot(
+            data=p2_data,
+            x='visitors',
+            hue='air_genre_name',
+            fill=True,
+            common_norm=False,
+            levels=30,
+            #label="genre",
+            ax=ax2)
+p2= ax2.set_xlabel('')
+p2= ax2.set_ylabel('')
+p2= ax2.set_title('')
 #ax2.legend("",loc=2)
-p= ax2.set_xlim(-50, 200)
-
+p2= ax2.set_xlim(-50, 200)
 
 # Adjust layout
-p= plt.tight_layout()
-
+plt.tight_layout()
 # Show the plots
-plt.show(p)
-
-
+plt.show()
 ```
-
-
 
 ```{python}
 # Data Processing for p2 (Assuming 'foo' DataFrame is available)
@@ -1874,9 +1944,10 @@ plt.tight_layout()
 # Show the plots
 plt.show(p)
 ```
-
 :::
 ::::
+
+
 
 ## The impact of holidays
 
@@ -1899,7 +1970,7 @@ p1 <- foo %>%
 p2 <- foo %>%
   mutate(wday = wday(date, label = TRUE, week_start = 1)) %>%
   group_by(wday, holiday_flg) %>%
-  summarise(mean_visitors = mean(visitors)) %>%
+  summarise(mean_visitors = mean(visitors), .groups = "keep") %>%
   ggplot(aes(wday, mean_visitors, color = holiday_flg)) +
   geom_point(size = 4) +
   theme(legend.position = "none") +
@@ -1928,23 +1999,26 @@ foo = air_visits.copy()
 #foo['calendar_date'] = foo['visit_date'].dt.strftime('%Y-%m-%d')
 foo['calendar_date'] = foo['visit_date'].astype(str)
 #foo = foo.merge(holidays, left_on='calendar_date', right_on='date', how='left')
-foo = pd.merge(foo, holidays, left_on='calendar_date', how='left', right_on = 'calendar_date')
-
+foo = pd.merge(foo, holidays, left_on='calendar_date', 
+                how='left', right_on = 'calendar_date')
 
 # Data Processing for p1
 p1_data = foo.copy()
 p1_data['holiday_flg'] = p1_data['holiday_flg'].astype(bool)  # Convert to boolean
 p1_data['wday'] = p1_data['visit_date'].dt.day_name()  # Extract weekday
 
-# Data Processing for p2
-
 # Data Processing for Plot 2
 p2_data = foo.copy()
-order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-p2_data['wday'] = pd.Categorical(p2_data['visit_date'].dt.day_name(), categories= order, ordered=True)
-p2_data['wdayn'] = p2_data['date'].dt.dayofweek  # Extract weekday as a number (0-6)  
-p2_data = p2_data.groupby(['wday', 'holiday_flg', 'wdayn'], observed=True).agg(mean_visitors=('visitors', 'mean')).reset_index()
-p2_data['wdayn'] = pd.Categorical(p2_data['wdayn'], categories=[0,1,2,3,4,5,6], ordered=True)  # Sort weekdays
+order = ["Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday", "Sunday"]
+p2_data['wday'] = pd.Categorical(p2_data['visit_date'].dt.day_name(),
+                                 categories= order, ordered=True)
+# Extract weekday as a number (0-6)
+p2_data['wdayn'] = p2_data['date'].dt.dayofweek    
+p2_data = p2_data.groupby(['wday', 'holiday_flg', 'wdayn'], 
+          observed=True).agg(mean_visitors=('visitors', 'mean')).reset_index()
+p2_data['wdayn'] = pd.Categorical(p2_data['wdayn'], 
+                  categories=[0,1,2,3,4,5,6], ordered=True)#Sort weekdays
 #p2_data['wdayn'] = p2_data['wdayn'].dt.day_name()
 
 # Create a 1x2 grid
@@ -1980,18 +2054,13 @@ axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=45)
 #axes[1].xaxis.set_major_formatter(dates.DateFormatter('%a'))
 axes[1].legend('')
 
-
 # Adjust layout
 plt.tight_layout()
-
 # Show the plots
 plt.show()
-
 ```
 :::
 ::::
-
-
 
 ## Restaurants per area and the effect on visitor numbers
 
@@ -2033,6 +2102,68 @@ We find:
 
 * `Japanese style` and `International cuisine` are popular pretty much everywhere. `Amusement bars` and `Udon/Soba` places are rare, as are `Shanghai food` or `Dim Sum`.
 
+:::
+::: {}
+
+
+```{python}
+# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
+air_store['area'] = air_store['air_area_name'].str[:12]
+#Count the frequency of each combination of 'area' and 'air_genre_name'
+counts = air_store.groupby(['area', 'air_genre_name'], 
+                    observed=True).size().reset_index(name='count')
+# Plotting
+plt.figure(figsize=(8, 4))
+p= sns.scatterplot(data=counts, x='area', y='air_genre_name',
+                 size='count', color='blue', legend=True)
+# Rotate x-axis labels for better visibility
+p= plt.xticks(rotation=45, ha='right')
+# Set labels and title
+p= plt.xlabel('Area')
+p= plt.ylabel('Air Genre Name')
+p= plt.tick_params(axis='x', pad=0, labelsize=7)
+# Adjust legend position
+p= plt.legend(bbox_to_anchor = (1,1),loc='upper left')
+
+# Show the plot
+plt.show(p)
+```
+
+
+
+```{python}
+# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
+hpg_store['area'] = hpg_store['hpg_area_name'].str[:10]
+#Count the frequency of each combination of 'area' and 'air_genre_name'
+counts = hpg_store.groupby(['area', 'hpg_genre_name'], observed=True).size().reset_index(name='count')
+# Plotting
+plt.figure(figsize=(8, 4))
+p= sns.scatterplot(data=counts, x='area', y='hpg_genre_name',
+                 size='count', color='red', legend=True)
+# Rotate x-axis labels for better visibility
+p= plt.xticks(rotation=45, ha='right')
+# Set labels and title
+p= plt.xlabel('Area')
+p= plt.ylabel('HPG Genre Name')
+p= plt.tick_params(axis='x', pad=0, labelsize=7)
+p= plt.tick_params(axis='y', pad=0, labelsize=7)
+# Adjust legend position
+p= plt.legend(bbox_to_anchor = (1,1),loc='upper left')
+
+# Show the plot
+plt.show(p)
+```
+
+
+
+:::
+::::
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
 The count plots tell us that there is a distribution of how many restaurants of a certain genre can be found per area. Here we look at these distributions in detail via boxplots with overlayed jitter plots. The genres are ordered by decreasing mean cases per area, i.e. the mean of a horizontal sequence of dots in a count plot. The we overlay the indvidual data point and assign each dot a random jitter to visually separate otherwise overlapping data. Here, the y axis (i.e. `Occurences per area`) correspond to the size of the dots in the count plots above. We’re using single plots here, instead of panels, because these plots are quite detailed. Note the logarithmic y-axes.
 
 We start with the air data:
@@ -2070,6 +2201,55 @@ air_visits %>%
   head(10)
 ```
 
+
+:::
+::: {}
+
+```{python}
+# Group by 'air_genre_name' and 'air_area_name', and count the frequency
+counts = air_store.groupby(['air_genre_name', 'air_area_name'], 
+          observed=True).size().reset_index(name='count')
+
+# Reorder 'air_genre_name' by count
+order = counts.groupby('air_genre_name', 
+        observed=True)['count'].mean().sort_values().index
+
+# Plotting
+plt.figure(figsize=(8, 6))
+p= sns.boxplot(data=counts, y='air_genre_name', x='count', 
+   order=order, hue='air_genre_name' ,palette='viridis')
+p= sns.stripplot(data=counts, y='air_genre_name', x='count',
+    order=order, color='blue', size=3)
+# Set labels and title
+p= plt.xlabel('Occurences per air area')
+p= plt.ylabel('Air genre')
+p= plt.xscale('log')
+
+# Show the plot
+plt.show(p)
+```
+
+
+```{python}
+air_store[air_store['air_store_id'].isin(["air_b5598d12d1b84890", 
+                                      "air_bbe1c1a47e09f161"])]
+```
+
+```{python}
+selected_visits = air_visits[air_visits['air_store_id'].isin(["air_b5598d12d1b84890", 
+                                                            "air_bbe1c1a47e09f161"])]
+selected_visits.sort_values(by='visit_date').head(10)
+
+```
+
+:::
+::::
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+
 Now we look at the same distribution for the HPG restaurants:
 
 ```{r}
@@ -2091,6 +2271,52 @@ We find:
 * Here we clearly have a minimum of 1 genre per area, and also much more variety in median cases due to the higher overall numbers.
 
 * The most extreme genre is `Japanese style` for which the median is just above 10 restaurants per area. Alongside of this, there a number of other genres for which the lower box hinge is not touching the minimum of 1 case per area.
+
+
+
+:::
+::: {}
+
+```{python}
+
+foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], 
+                      observed=True).size().reset_index(name='n')
+
+# Reorder 'hpg_genre_name' by count
+#order = counts.groupby('hpg_genre_name', 
+#observed=True)['n'].mean().sort_values().index
+order = foobar.groupby('hpg_genre_name', 
+        observed=True)['n'].mean().sort_values(ascending=False).index
+
+
+plt.figure(figsize=(8, 6))
+
+# Create the boxplot with jitter
+sns.boxplot(data=foobar, y='hpg_genre_name', x='n', 
+                       order=order, color='lightgrey')
+sns.stripplot(data=foobar, y='hpg_genre_name', x='n',
+                    order=order, color='red', alpha=0.7)
+
+# Set y-axis to log scale
+#plt.yscale('log')
+
+# Set labels and title
+plt.xlabel('hpg genre')
+plt.ylabel('Cases per hpg area')
+plt.tick_params(axis='y', pad=0, labelsize=7)
+# Rotate x-axis labels
+#plt.xticks(rotation=45)
+
+# Show the plot
+plt.show()
+
+```
+:::
+::::
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
 
 Using the information on the number of genres in each area we can now proceed to quantify the clustering, or `crowdedness`, of our data set and relate it to the visitor numbers. The next plot first shows the overall distribution of the air and hpg data points from the last two plots (i.e. cases of the same genre per area).
 
@@ -2122,7 +2348,7 @@ p2 <- foobar %>%
 
 p3 <- foo %>%
   group_by(air_genre_name, air_area_name) %>%
-  summarise(mean_log_visit = mean(log1p(visitors))) %>%
+  summarise(mean_log_visit = mean(log1p(visitors)), .groups = "keep") %>%
   left_join(bar, by = c("air_genre_name","air_area_name")) %>%
   group_by(n) %>%
   summarise(mean_mlv = mean(mean_log_visit),
@@ -2130,8 +2356,10 @@ p3 <- foo %>%
   replace_na(list(sd_mlv = 0)) %>%
   ggplot(aes(n, mean_mlv)) +
   geom_point(color = "blue", size = 4) +
-  geom_errorbar(aes(ymin = mean_mlv - sd_mlv, ymax = mean_mlv + sd_mlv), width = 0.5, size = 0.7, color = "blue") +
-  labs(x = "Cases of identical Air genres per area", y = "Mean +/- SD of\n mean log1p visitors")
+  geom_errorbar(aes(ymin = mean_mlv - sd_mlv, ymax = mean_mlv + sd_mlv), 
+                width = 0.5, linewidth = 0.7, color = "blue") +
+  labs(x = "Cases of identical Air genres per area", 
+       y = "Mean +/- SD of\n mean log1p visitors")
 
 layout <- matrix(c(1,2,3,3),2,2,byrow=TRUE)
 multiplot(p1, p2, p3, layout=layout)
@@ -2148,134 +2376,24 @@ We find:
 :::
 ::: {}
 
-
-```{python}
-# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
-air_store['area'] = air_store['air_area_name'].str[:12]
-#Count the frequency of each combination of 'area' and 'air_genre_name'
-counts = air_store.groupby(['area', 'air_genre_name'], observed=True).size().reset_index(name='count')
-# Plotting
-plt.figure(figsize=(8, 4))
-sns.scatterplot(data=counts, x='area', y='air_genre_name',
-                 size='count', color='blue', legend=True)
-# Rotate x-axis labels for better visibility
-plt.xticks(rotation=45, ha='right')
-# Set labels and title
-plt.xlabel('Area')
-plt.ylabel('Air Genre Name')
-plt.tick_params(axis='x', pad=0, labelsize=7)
-# Adjust legend position
-plt.legend(bbox_to_anchor = (1,1),loc='upper left')
-
-# Show the plot
-plt.show()
-```
-
-
-
-```{python}
-# Create a new column 'area' by extracting the first 12 characters from 'air_area_name'
-hpg_store['area'] = hpg_store['hpg_area_name'].str[:10]
-#Count the frequency of each combination of 'area' and 'air_genre_name'
-counts = hpg_store.groupby(['area', 'hpg_genre_name'], observed=True).size().reset_index(name='count')
-# Plotting
-plt.figure(figsize=(8, 4))
-sns.scatterplot(data=counts, x='area', y='hpg_genre_name',
-                 size='count', color='red', legend=True)
-# Rotate x-axis labels for better visibility
-plt.xticks(rotation=45, ha='right')
-# Set labels and title
-plt.xlabel('Area')
-plt.ylabel('HPG Genre Name')
-plt.tick_params(axis='x', pad=0, labelsize=7)
-plt.tick_params(axis='y', pad=0, labelsize=7)
-# Adjust legend position
-plt.legend(bbox_to_anchor = (1,1),loc='upper left')
-
-# Show the plot
-plt.show()
-```
-
-
-```{python}
-# Group by 'air_genre_name' and 'air_area_name', and count the frequency
-counts = air_store.groupby(['air_genre_name', 'air_area_name'], observed=True).size().reset_index(name='count')
-
-# Reorder 'air_genre_name' by count
-order = counts.groupby('air_genre_name', observed=True)['count'].mean().sort_values().index
-
-# Plotting
-plt.figure(figsize=(8, 6))
-sns.boxplot(data=counts, y='air_genre_name', x='count', order=order, hue='air_genre_name' ,palette='viridis')
-sns.stripplot(data=counts, y='air_genre_name', x='count', order=order, color='blue', size=3)
-
-# Set labels and title
-plt.xlabel('Occurences per air area')
-plt.ylabel('Air genre')
-plt.xscale('log')
-
-# Show the plot
-plt.show()
-```
-
-
-```{python}
- air_store[air_store['air_store_id'].isin(["air_b5598d12d1b84890", "air_bbe1c1a47e09f161"])]
-```
-
-```{python}
-selected_visits = air_visits[air_visits['air_store_id'].isin(["air_b5598d12d1b84890", "air_bbe1c1a47e09f161"])]
-selected_visits.sort_values(by='visit_date').head(10)
-
-```
-
-
-```{python}
-
-foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], observed=True).size().reset_index(name='n')
-
-# Reorder 'hpg_genre_name' by count
-#order = counts.groupby('hpg_genre_name', observed=True)['n'].mean().sort_values().index
-order = foobar.groupby('hpg_genre_name', observed=True)['n'].mean().sort_values(ascending=False).index
-
-
-plt.figure(figsize=(8, 6))
-
-# Create the boxplot with jitter
-sns.boxplot(data=foobar, y='hpg_genre_name', x='n', order=order, color='lightgrey')
-sns.stripplot(data=foobar, y='hpg_genre_name', x='n', order=order, color='red', alpha=0.7)
-
-# Set y-axis to log scale
-#plt.yscale('log')
-
-# Set labels and title
-plt.xlabel('hpg genre')
-plt.ylabel('Cases per hpg area')
-plt.tick_params(axis='y', pad=0, labelsize=7)
-# Rotate x-axis labels
-#plt.xticks(rotation=45)
-
-# Show the plot
-plt.show()
-
-```
-
-
 ```{python}
 # Compute 'foo'
 foo = air_visits.merge(air_store, on='air_store_id', how='left')
 
 # Compute 'bar'
-bar = air_store.groupby(['air_genre_name', 'air_area_name'], observed=True).size().reset_index(name='n')
+bar = air_store.groupby(['air_genre_name', 'air_area_name'], 
+                            observed=True).size().reset_index(name='n')
 
 # Compute 'foobar' (Assuming 'hpg_store' DataFrame is available)
-foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], observed=True).size().reset_index(name='n')
+foobar = hpg_store.groupby(['hpg_genre_name', 'hpg_area_name'], 
+                              observed=True).size().reset_index(name='n')
 
 p3_data = (
     foo.groupby(['air_genre_name', 'air_area_name'], observed=True)
     .agg(mean_log_visit=('visitors', lambda x: x.apply(lambda x: np.log1p(x)).mean()))
     .reset_index()
-    .merge(bar, left_on=['air_genre_name', 'air_area_name'], right_on=['air_genre_name', 'air_area_name'], how='left')
+    .merge(bar, left_on=['air_genre_name', 'air_area_name'], 
+                right_on=['air_genre_name', 'air_area_name'], how='left')
     .groupby('n', observed=True)
     .agg(
         mean_mlv=('mean_log_visit', 'mean'),
@@ -2300,9 +2418,12 @@ ax1.set(xlabel='Air Genres per area', ylabel='Count')
 sns.histplot(data=foobar, x='n', color='red', binwidth=1, ax=ax2)
 ax1.set(xlabel='HPG Genres per area', ylabel='Count')
 # Plot p3
-p3 = sns.scatterplot(data=p3_data, x='n', y='mean_mlv', color='blue', s=40, ax=ax3)
-p3.errorbar(p3_data['n'], p3_data['mean_mlv'], yerr=p3_data['sd_mlv'], fmt='o', color='blue', markersize=5, capsize=8)
-p3.set(xlabel='Cases of identical Air genres per area', ylabel='Mean +/- SD of\n mean log1p visitors')
+p3 = sns.scatterplot(data=p3_data, x='n', y='mean_mlv', color='blue',
+      s=40, ax=ax3)
+p3.errorbar(p3_data['n'], p3_data['mean_mlv'], yerr=p3_data['sd_mlv'],
+              fmt='o', color='blue', markersize=5, capsize=8)
+p3.set(xlabel='Cases of identical Air genres per area', 
+       ylabel='Mean +/- SD of\n mean log1p visitors')
 
 # Adjust layout
 plt.tight_layout()
@@ -2314,8 +2435,8 @@ plt.show()
 :::
 ::::
 
-
 We will try another method of quantifying the `distinctiveness` of a restaurant by the distance to its neighbouring restaurants in the feature engineering section.
+
 
 ## Reservations vs Visits
 
@@ -2392,8 +2513,10 @@ p4 <- all_reserve %>%
   ggplot(aes(visit_date, visitors - reserve_visitors)) +
   geom_hline(yintercept = c(150, 0, -250)) +
   geom_line() +
-  geom_line(aes(visit_date, visitors - reserve_visitors_air + 150), color = "blue") +
-  geom_line(aes(visit_date, visitors - reserve_visitors_hpg - 250), color = "red") +
+  geom_line(aes(visit_date, visitors - reserve_visitors_air + 150),
+            color = "blue") +
+  geom_line(aes(visit_date, visitors - reserve_visitors_hpg - 250),
+            color = "red") +
   ggtitle("Visitors - Reserved: all (black), air (blue), hpg (red)")
 
 layout <- matrix(c(4,4,2,4,4,1,4,4,3),3,3,byrow=TRUE)
@@ -2441,14 +2564,17 @@ bar = (
     .groupby(['hpg_store_id', 'visit_date'], observed=True)
     .agg(reserve_visitors_hpg=('reserve_visitors', 'sum'))
     .reset_index()
-    .merge(store_ids, left_on='hpg_store_id', right_on='hpg_store_id', how='inner')
+    .merge(store_ids, left_on='hpg_store_id', 
+    right_on='hpg_store_id', how='inner')
 )
 
 air_visits['visit_date'] = air_visits['visit_date'].dt.date
 # Combine reservation data with 'air_visits'
 all_reserve = (
-    air_visits.merge(foo, left_on=['air_store_id', 'visit_date'], right_on=['air_store_id', 'visit_date'], how='inner')
-    .merge(bar, left_on=['air_store_id', 'visit_date'], right_on=['air_store_id', 'visit_date'], how='inner')
+    air_visits.merge(foo, left_on=['air_store_id', 'visit_date'],
+    right_on=['air_store_id', 'visit_date'], how='inner')
+    .merge(bar, left_on=['air_store_id', 'visit_date'], 
+     right_on=['air_store_id', 'visit_date'], how='inner')
     .assign(reserve_visitors=lambda x: x['reserve_visitors_air'] + x['reserve_visitors_hpg'])
 )
 ```
@@ -2461,11 +2587,14 @@ filtered_data = all_reserve[all_reserve['reserve_visitors'] < 120]
 fig = plt.figure(figsize=(10, 6))
 plt.style.use('ggplot')
 # Create the scatterplot with marginal histograms
-g = sns.jointplot(x='reserve_visitors', y='visitors', data=filtered_data, color='blue', alpha=0.2, kind='scatter', palette='black')
+g = sns.jointplot(x='reserve_visitors', y='visitors',
+    data=filtered_data, color='blue', alpha=0.2, kind='scatter',
+     palette='black')
 g.plot_joint(sns.lineplot, color='grey')  # Add the diagonal line
 
 # Add a linear regression line
-sns.regplot(x='reserve_visitors', y='visitors', data=filtered_data, ax=g.ax_joint, line_kws={'color': 'blue'})
+sns.regplot(x='reserve_visitors', y='visitors', 
+            data=filtered_data, ax=g.ax_joint, line_kws={'color': 'blue'})
 
 # Add marginal histograms
 plt.subplots_adjust(top=0.9)
@@ -5097,7 +5226,8 @@ pred_len <- test %>%
 
 max_date <- max(air_visits$visit_date)
 split_date <- max_date - pred_len
-all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+all_visits <- tibble(visit_date = seq(min(air_visits$visit_date),
+                                      max(air_visits$visit_date), 1))
 
 foo <- air_visits %>%
   filter(air_store_id == air_id)
@@ -5134,7 +5264,9 @@ max_date = air_visits['visit_date'].max()
 split_date = max_date - pd.DateOffset(days=pred_len)
 
 # Generate a sequence of dates
-all_visits = pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(), end=max_date)})
+all_visits = \
+pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(),
+                                                       end=max_date)})
 
 # Filter air_visits for the specific air_id
 foo = air_visits[air_visits['air_store_id'] == air_id].copy()
@@ -5183,7 +5315,8 @@ glimpse(visits_train_aug)
 from pytimetk import augment_timeseries_signature, get_timeseries_signature
 
 # Augment visits_train
-visits_train_aug = augment_timeseries_signature(data= visits_train, date_column = 'ds')
+visits_train_aug = augment_timeseries_signature(data= visits_train,
+                                                date_column = 'ds')
 
 # Get timeseries signature for visits_valid
 visits_valid_ds = visits_valid['ds']
@@ -5201,7 +5334,8 @@ Now, the idea behind `timetk` is to use these new features to make predictions b
 :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
 ::: {}
 ```{r}
-fit_lm <- lm(y ~ ., data = select(visits_train_aug, -c(ds, diff, wday.xts, wday.lbl, year.iso)))
+fit_lm <- lm(y ~ ., data = select(visits_train_aug, 
+                                  -c(ds, diff, wday.xts, wday.lbl, year.iso)))
 
 fit_lm
 ```
@@ -5242,7 +5376,8 @@ Then we use the standard predict tool to apply the model to our prediction range
 ::: {}
 ```{r}
 pred <- predict(fit_lm, newdata = select(visits_valid_aug, 
-                                         -c(index, diff, wday.xts, wday.lbl, year.iso)))
+                                         -c(index, diff, wday.xts,
+                                            wday.lbl, year.iso)))
 
 pred_tk <- tibble(
     date  = visits_valid$ds,
@@ -5260,6 +5395,7 @@ V = V.astype('int')
 ## add intercept
 #V = sm.add_constant(V, prepend=True)
 V.insert(0,'const', 1.0)
+V.info()
 
 pred = fit_lm.predict(V)
 
@@ -5269,6 +5405,10 @@ pred_tk = pd.DataFrame({
 })
 pred_tk.head()
 ```
+```{python}
+X.info()
+```
+
 :::
 ::::
 
@@ -5286,7 +5426,8 @@ plot_tk_lm_air_id <- function(air_id){
 
   max_date <- max(air_visits$visit_date)
   split_date <- max_date - pred_len
-  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date), max(air_visits$visit_date), 1))
+  all_visits <- tibble(visit_date = seq(min(air_visits$visit_date),
+                                        max(air_visits$visit_date), 1))
 
   foo <- air_visits %>%
     filter(air_store_id == air_id)
@@ -5306,7 +5447,9 @@ plot_tk_lm_air_id <- function(air_id){
     tk_augment_timeseries_signature()
   
   # fit lm
-  fit_lm <- lm(y ~ ., data = select(visits_train_aug, -c(ds, diff, wday.xts, wday.lbl, year.iso)))
+  fit_lm <- lm(y ~ ., data = select(visits_train_aug, 
+                                    -c(ds, diff, wday.xts,
+                                       wday.lbl, year.iso)))
   
   # augment valid with ts info
   visits_valid_aug <- visits_valid %>%
@@ -5314,7 +5457,9 @@ plot_tk_lm_air_id <- function(air_id){
     tk_get_timeseries_signature()
   
   # predict from lm
-  pred <- predict(fit_lm, newdata = select(visits_valid_aug, -c(index, diff, wday.xts, wday.lbl, year.iso)))
+  pred <- predict(fit_lm, newdata = select(visits_valid_aug,
+                                           -c(index, diff, wday.xts,
+                                              wday.lbl, year.iso)))
 
   pred_tk <- tibble(
       date  = visits_valid$ds,
@@ -5359,7 +5504,8 @@ def plot_tk_lm_air_id(air_id, ax):
     split_date = max_date - pd.DateOffset(days=pred_len)
     
     # Generate a sequence of dates
-    all_visits = pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(),
+    all_visits = \
+    pd.DataFrame({'visit_date': pd.date_range(start=air_visits['visit_date'].min(),
     end=max_date)})
     
     # Filter air_visits for the specific air_id
@@ -5382,14 +5528,15 @@ def plot_tk_lm_air_id(air_id, ax):
     visits_valid = visits[visits['ds'] > split_date]
     
     # Augment visits_train
-    visits_train_aug = augment_timeseries_signature(data= visits_train, date_column = 'ds')
+    visits_train_aug = augment_timeseries_signature(data= visits_train,
+                                                    date_column = 'ds')
   
     # Get timeseries signature for visits_valid
     visits_valid_ds = visits_valid['ds']
     visits_valid_aug = get_timeseries_signature(visits_valid_ds)
     
     X = visits_train_aug.select_dtypes(['number'])
-    X = X.drop(columns=['visitors', 'ds_index_num']) #, , 'ds_year', 'ds_year_iso'
+    X = X.drop(columns=['visitors', 'ds_index_num']) #'ds_year','ds_year_iso'
     X = X.astype('int')
     y = visits_train_aug['visitors']
     
@@ -5400,10 +5547,10 @@ def plot_tk_lm_air_id(air_id, ax):
     fit_lm = model.fit()
     
     V = visits_valid_aug.select_dtypes(['number'])
-    V = V.drop(columns=['ds_index_num']) #, 'ds_year', 'ds_year_iso'
+    V = V.drop(columns=['ds_index_num']) #'ds_year','ds_year_iso'
     V = V.astype('int')
     #V = sm.add_constant(V, prepend=True)
-    V.insert(0,'const', 1.0)
+    V = V.insert(0,'const', 1.0)
 
     pred = fit_lm.predict(V)
     
@@ -5444,9 +5591,9 @@ def plot_tk_lm_air_id(air_id, ax):
 
 ```{python}
 
-# Create a 2x2 grid
+# Create a 1x1 grid
 fig = plt.figure(figsize=(12, 4))
-gs = GridSpec(4, 1)
+gs = GridSpec(1, 1)
 
 #Add plots to the grid
 p= plot_tk_lm_air_id(air_id = "air_ba937bf13d40fb24", 
@@ -5467,6 +5614,439 @@ We find:
 
 # Weather data
 
+Detailed weather data, from the [official website](http://www.jma.go.jp/jma/indexe.html) of the Japanese Meteorological Agency, has been extracted and provided as a [dataset](https://www.kaggle.com/datasets/huntermcgushion/rrv-weather-data) by Hunter McGushion. Many thanks!
+
+The data comes in the shape of a `weather_stations.csv` file with the meta data and location of all the weather stations as well as individual files with detailed time series of meteorological data in a _1-1-16_5-31-17_Weather_Translated.zip_ folder. Part of his extensive work is that he has already identified the nearest (active) weather stations for each store (region) location and added this information to the modified files `air/hpg_store_info_with_nearest_active_station.csv`.
+
+Here We will give a brief overview of the weather stations and the parameters they provide. For more information see Hunter’s exploration kernel here and most likely others that will appear shortly.
+
+
+## Weather Stations
+
+Let’s look at the weather_stations.csv overview data first. When reading the data in the Kernels environment remember to use the more detailed directory paths.
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+weather_stations <- as.tibble(fread(str_c("data/weather_stations.csv")))
+summary(weather_stations)
+glimpse(weather_stations)
+```
+:::
+::: {}
+
+```{python}
+weather_stations = pd.read_csv("data/weather_stations.csv")
+
+weather_stations.info()
+weather_stations.describe()
+```
+
+```{python}
+weather_stations.describe()
+```
+
+:::
+::::
+
+
+We find:
+
+* There are about 1700 weather stations. Each station has a 3-part id consisting of `prefecture`, `first_name`, and `second_name`; very similar to our restaurant data. There is also altitude data, which might be useful for removing stations at significant elevation.
+
+* The most important information are the `longitude` and `latitude` coordinates of the stations as well the `date` at which the station was terminated. Needless to say we would only want to use stations for which we have weather data during our training and prediction date range.
+
+Those are the termination dates:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+weather_stations %>%
+  filter(date_terminated != "") %>%
+  mutate(date_terminated = ymd(date_terminated)) %>%
+  ggplot(aes(date_terminated)) +
+  geom_histogram(bins = 30, fill = "blue") +
+  ggtitle("Weather station termination date")
+```
+:::
+::: {}
+
+```{python}
+# Remove rows where date_terminated is empty
+weather_stations = weather_stations[weather_stations['date_terminated'] != ""]
+
+# Convert date_terminated to datetime
+weather_stations['date_terminated'] = pd.to_datetime(weather_stations['date_terminated'])
+
+# Plot histogram
+p= plt.figure(figsize=(10, 6))
+plt.style.use('ggplot')
+p= plt.hist(weather_stations['date_terminated'], bins=30, color='blue',
+                            edgecolor='black')
+p= plt.title("Weather station termination date")
+p= plt.xlabel("Date")
+p= plt.ylabel("Frequency")
+plt.show(p)
+```
+:::
+::::
+
+We see that a significant number of stations will only have historical data. Nevertheless, I agree that including all of them in the overview table is useful for getting a feeling for the wider context of the data set.
+
+Here is another interactive leaflet map with all the currently active stations indicated as blue markers. In addition, the air and hpg locations are shown as purple (air) and red (hpg) circles. Each marker/circle is labeled with their respective id. This map illustrates which stations are close to restaurants and allows us to verify the identification of “nearest stations” that has already been included in the larger data set:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+foobar <- weather_stations %>%
+  filter(date_terminated != "")
+
+foo <- air_store %>% select(air_store_id, latitude, longitude) %>%
+        mutate(dset = "air")
+bar <- hpg_store %>% select(hpg_store_id, latitude, longitude) %>% 
+        mutate(dset = "hpg")
+
+leaflet(foobar) %>%
+  addTiles() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addMarkers(~longitude, ~latitude, popup = ~id, label = ~id, group = "Weather") %>%
+  addCircleMarkers(~foo$longitude, ~foo$latitude, group = "AIR",
+                   color = "purple", fillOpacity = 0.5, label = ~foo$air_store_id) %>%
+  addCircleMarkers(lng = bar$longitude, lat = bar$latitude, group = "HPG",
+                   color = "red", fillOpacity = 0.5, label = ~bar$hpg_store_id)
+```
+:::
+::: {}
+
+```{python}
+
+foobar = weather_stations[weather_stations['date_terminated'] != ""]
+foo = air_store[["air_store_id", "latitude", "longitude"]]
+foo["dset"] = "air"
+bar = hpg_store[["hpg_store_id", "latitude", "longitude"]]
+bar["dset"] = "hpg"
+
+# Create a folium map
+m = folium.Map(location=[foobar['latitude'].mean(), 
+               foobar['longitude'].mean()],zoom_start=5)
+
+# Create marker clusters
+marker_cluster = MarkerCluster(name='Weather').add_to(m)
+air_cluster = MarkerCluster(name='AIR').add_to(m)
+hpg_cluster = MarkerCluster(name='HPG').add_to(m)
+
+# Add markers to clusters
+# for _, row in foobar.iterrows():
+#     folium.Marker(location=[row['latitude'], row['longitude']],
+#                   popup=row['id'],
+#                   icon=None,
+#                   tooltip=row['id']).add_to(marker_cluster)
+
+# Define a function to add markers
+def add_marker(row):
+    folium.Marker(location=[row['latitude'], row['longitude']],
+                  popup=row['id'],
+                  icon=None,
+                  tooltip=row['id']).add_to(marker_cluster)
+
+# Apply the function to each row of the DataFrame
+foobar.apply(add_marker, axis=1)
+
+
+# for _, row in foo.iterrows():
+#     folium.CircleMarker(location=[row['latitude'], row['longitude']],
+#                         radius=10,
+#                         color='purple',
+#                         fill=True,
+#                         fill_color='purple',
+#                         fill_opacity=0.5,
+#                         popup=row['air_store_id']).add_to(air_cluster)
+
+# Define a function to add markers
+def add_CircleMarker(row, name_id):
+    folium.CircleMarker(location=[row['latitude'], row['longitude']],
+                        radius=10,
+                        color='purple',
+                        fill=True,
+                        fill_color='purple',
+                        fill_opacity=0.5,
+                        popup=row[name_id]).add_to(air_cluster)
+
+# Apply the function to each row of the DataFrame
+foo.apply(add_CircleMarker, name_id= 'air_store_id' , axis=1)
+
+
+# for _, row in bar.iterrows():
+#     folium.CircleMarker(location=[row['latitude'], row['longitude']],
+#                         radius=10,
+#                         color='red',
+#                         fill=True,
+#                         fill_color='red',
+#                         fill_opacity=0.5,
+#                         popup=row['hpg_store_id']).add_to(hpg_cluster)
+
+bar.apply(add_CircleMarker, name_id= 'hpg_store_id' , axis=1)
+
+# Add layer control
+folium.LayerControl().add_to(m)
+
+# Show the map
+m
+```
+:::
+::::
+
+
+## Weather time series
+
+After getting a spatial overview of all the stations, we will now look at an example of the weather data they provide. We’ll pick the station `tokyo__tokyo-kana__tonokyo.csv` because is has data for most features but not all (see below). Remember that the individual weather data files are in the folder `1-1-16_5-31-17_Weather`.
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+weather_data <- as.tibble(fread(str_c("data/tokyo__tokyo-kana__tonokyo.csv")))
+
+summary(weather_data)
+```
+:::
+::: {}
+
+```{python}
+
+weather_data = pd.read_csv("data/tokyo__tokyo-kana__tonokyo.csv")
+weather_data.info()
+#weather_data.describe()
+```
+:::
+::::
+
+We find:
+
+* There is daily data for the 517 days that cover our train and test sets. This data includes information such as temperature, rain, snow, air pressure, and even sunlight hours or cloud cover.
+
+* We see that some features include mostly NA. In fact, this specific weather station data set is one of the more complete ones and you will find many more missing values in other stations (e.g. miyagi__shiogama-kana__shioogama.csv). Some stations appear to have essentially complete feature data (e.g. hokkaido_ishikari__sapporo-katakana__satporo.csv). This heterogeneity might make it necessary to focus on the overall common features in a first modelling approach.
+
+
+We will do a little bit of formatting to add some date features like month or day of the week:
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+weather_data <- weather_data %>%
+  mutate(date = ymd(calendar_date),
+         wday = wday(date, label = TRUE, abbr = TRUE, week_start = 1),
+         month = month(date, label = TRUE, abbr = TRUE),
+         week = week(date)) %>%
+  select(-calendar_date)
+```
+:::
+::: {}
+
+```{python}
+# Convert 'calendar_date' to datetime and create additional columns
+weather_data['date'] = pd.to_datetime(weather_data['calendar_date'])
+weather_data['wday'] = weather_data['date'].dt.day_name().str[:3]
+weather_data['month'] = weather_data['date'].dt.strftime('%b')
+weather_data['week'] = weather_data['date'].dt.isocalendar().week
+
+# Drop the original 'calendar_date' column
+weather_data = weather_data.drop(columns=['calendar_date'])
+
+# Display the modified DataFrame
+weather_data.head()
+#weather_data.info()
+```
+:::
+::::
+
+
+Then we plot the monthly statistics for high temperature and average humidity. This is a perfect job for ridgeline plots and we add a bit of styling following the great CRAN vignette of the ggridges package (which was partly inspired by this blogpost by Austin Wehrwein):
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+#library('viridis')
+p1 <- weather_data %>%
+  ggplot(aes(x = high_temperature, y = fct_rev(month), fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, 
+                               rel_min_height = 0.01, 
+                               gradient_lwd = 1., bandwidth = 1.4) +
+  scale_fill_viridis(name = "T_max [°C]", option = "C") +
+  ggtitle("Maximum temperature at station \ntokyo tokyo-kana tonokyo in 2016/17") +
+  labs(x = "High temperature", y = "") +
+  theme_ridges(font_size = 13, grid = TRUE) +
+  theme(legend.position = "none") +
+  theme(axis.title.y = element_blank())
+
+p2 <- weather_data %>%
+  ggplot(aes(x = avg_humidity, y = fct_rev(month), fill = stat(x))) +
+  geom_density_ridges_gradient(scale = 3, 
+                               rel_min_height = 0.01,
+                               gradient_lwd = 1., bandwidth = 4) +
+  ggtitle("Average humidity at station \ntokyo tokyo-kana tonokyo in 2016/17") +
+  labs(x = "Humidity", y = "", fill = "Humidity") +
+  theme_ridges(font_size = 13, grid = TRUE) +
+  theme(legend.position = "none") +
+  theme(axis.title.y = element_blank())
+
+layout <- matrix(c(1,2),1,2,byrow=TRUE)
+multiplot(p1, p2, layout=layout)
+```
+:::
+::: {}
+
+```{python}
+import joypy
+from pandas.api.types import CategoricalDtype
+
+# Assuming weather_data is a DataFrame
+
+# Define the order of months
+month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+# Convert 'month' to a categorical variable with the specified order
+weather_data['month']= \
+weather_data['month'].astype(CategoricalDtype(categories=month_order,
+ordered=True))
+
+# Plotting joyplot for maximum temperature and average humidity side by side
+fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+plt.style.use('ggplot')
+
+# Joyplot for Maximum Temperature
+p1= joypy.joyplot(
+    weather_data,
+    by='month',
+    column='high_temperature',
+    colormap=plt.cm.viridis,
+    grid="both", #'x', 'y'
+    linewidth=1,
+    legend=False,
+    fade=True,
+    ax=axes[0]
+)
+p1= axes[0].set_title('Joyplot of Maximum Temperature by Month')
+
+# Joyplot for Average Humidity
+p2= joypy.joyplot(
+    weather_data,
+    by='month',
+    column='avg_humidity',
+    colormap=plt.cm.viridis,
+    grid= "both",
+    linewidth=1,
+    xlabels=True,
+    legend=False,
+    fade=True,
+    linecolor = "white",
+    ax=axes[1]
+)
+p2= axes[1].set_title('Joyplot of Average Humidity by Month')
+
+# Adjust layout
+plt.tight_layout()
+
+plt.show()
+
+```
+
+:::
+::::
+
+We find that summers in Tokyo are quite a bit hotter but also more humid. There is a range of about 20 degrees celsius between winter and summer, and a spread of what looks like around 10 degrees within a typical month. The humidity has more variance per month but the difference between winter and summer is still significant.
+
+Other weather information include the precipitation, total and deepest snowfall (all three mostly missing for this station), hours of sunlight, average wind speed, various pressures, cloud cover, and solar radiation. Here we plot some of those features over the months of the year:
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px; "}
+::: {}
+```{r}
+p1 <- weather_data %>%
+  ggplot(aes(fct_rev(month), hours_sunlight, fill = fct_rev(month))) +
+  geom_boxplot() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "Month")
+
+p2 <- weather_data %>%
+  ggplot(aes(fct_rev(month), cloud_cover, fill = fct_rev(month))) +
+  geom_boxplot() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "Month")
+
+p3 <- weather_data %>%
+  ggplot(aes(fct_rev(month), precipitation, fill = fct_rev(month))) +
+  geom_boxplot() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  scale_y_log10() +
+  labs(x = "Month")
+
+p4 <- weather_data %>%
+  ggplot(aes(fct_rev(month), avg_local_pressure, fill = fct_rev(month))) +
+  geom_boxplot() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  scale_y_log10() +
+  labs(x = "Month")
+
+layout <- matrix(c(1,2,3,4),2,2,byrow=TRUE)
+multiplot(p1, p2, p3, p4, layout=layout)
+```
+:::
+::: {}
+
+```{python}
+from plotnine import ggplot, aes, geom_boxplot, coord_flip, theme, labs, scale_y_log10, facet_wrap
+
+
+# Plotting boxplots for various weather features
+p1 = ggplot(weather_data, aes(x='month', y='hours_sunlight', fill='month')) + \
+     geom_boxplot(na_rm=True) + \
+     coord_flip() + \
+     theme(legend_position="none") + \
+     labs(x="Month")
+
+p2 = ggplot(weather_data, aes(x='month', y='cloud_cover', fill='month')) + \
+     geom_boxplot(na_rm=True) + \
+     coord_flip() + \
+     theme(legend_position="none") + \
+     labs(x="Month")
+
+p3 = ggplot(weather_data, aes(x='month', y='precipitation', fill='month')) + \
+     geom_boxplot(na_rm=True) + \
+     coord_flip() + \
+     theme(legend_position="none") + \
+     scale_y_log10() + \
+     labs(x="Month")
+
+p4 = ggplot(weather_data, aes(x='month', y='avg_local_pressure', fill='month')) + \
+     geom_boxplot(na_rm=True) + \
+     coord_flip() + \
+     theme(legend_position="none") + \
+     scale_y_log10() + \
+     labs(x="Month")
+
+# Combine the plots using facet_wrap
+combined_plot = (p1 | p2 | p3 | p4) + facet_wrap('~month')
+
+# Display the combined plot
+print(combined_plot)
+
+```
+:::
+::::
+
+We find:
+
+* Interestingly, there are fewer sunlight hours in Sep than in Dec, despite the significantly shorter days (upper left). This is explained by the cloud cover plot (upper right), which shows that winter is considerably less cloudy than the rest of the year. The cloud cover appears to be measured on a relative scale between 0 and 10.
+
+* The overall precipitation seems lowest in Feb; although there is a large variance within a month and all boxes are consistent. Remember that the precipitation feature has many missing values.
+
+* The average local pressure clearly drops during the summer, with Aug having the lowest pressure values. This is consistent with the tendency for higher precipitation during that month.
 
 
 
