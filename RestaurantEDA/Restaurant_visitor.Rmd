@@ -159,6 +159,7 @@ library('leaflet.extras') # maps
 library('maps') # maps
 
 library(reticulate) # interface to python
+library(kableExtra) # rendering table with scrollX
 ```
 
 :::
@@ -933,8 +934,7 @@ Here, the black line is the date and the blue line corresponds to a smoothing fi
 ```{python}
 from statsmodels.nonparametric.smoothers_lowess import lowess
 import matplotlib.dates as mdates
-#locale.setlocale(locale.LC_ALL,'en_US.utf8')
-
+locale.setlocale(locale.LC_ALL,'en_US.utf8')
 plt.style.use('ggplot')
 
 # Assuming air_visits is your DataFrame
@@ -1219,8 +1219,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Create a map centered at a specific location
-m = folium.Map(location=[air_store['latitude'].mean(),
-               air_store['longitude'].mean()],
+m = folium.Map(location=[air_store['latitude'].median(),
+               air_store['longitude'].median()],
                zoom_start=6, width=1500, height=800)
 
 # Add tiles (you can choose different providers)
@@ -1671,7 +1671,7 @@ p= sns.scatterplot(data=foo, x='Months', y= 'year' , hue='dset', color= 'dset',
                    s=250)
 # Format the tick labels to display the month name
 #p.invert_yaxis()
-p= plt.xticks(rotation=35)
+p= plt.xticks(rotation=15)
 p= plt.tick_params(axis='x', pad=-5, labelsize=8)
 plt.margins(y=1)
 plt.legend(bbox_to_anchor=(0.99, 0.01), loc='lower right', borderaxespad=0)
@@ -1744,8 +1744,8 @@ p= g.set_titles(col_template="{col_name}",
                size = 8, backgroundcolor='#DDDDDD', pad=2
            # bbox={'facecolor': '#DDDDDD', 'alpha': 0, 'pad': 0}
             )
-p= g.tick_params(axis='x', pad=0, labelsize= 6)
-p= g.set_xlabels(fontsize=6, label="Date")
+p= g.tick_params(axis='x', pad=0, labelsize= 7)
+p= g.set_xlabels(fontsize=7, label="Date")
 p= g.set_ylabels(fontsize=8 )#,label="Average number of visitors")
 # Set labels and title
 #g.set_axis_labels(x_var="Date",y_var= "Average number of visitors")
@@ -1859,8 +1859,9 @@ p2= sns.kdeplot(
 p2= ax2.set_xlabel('')
 p2= ax2.set_ylabel('')
 p2= ax2.set_title('')
-#ax2.legend("",loc=2)
+p2= ax2.legend(loc='bottom right')
 p2= ax2.set_xlim(-50, 200)
+#p2= ax2.get_legend().remove()
 
 # Adjust layout
 plt.tight_layout()
@@ -2030,7 +2031,7 @@ sns.scatterplot(data=p2_data, x='wday', y='mean_visitors',
 axes[1].set_xlabel('wday')
 axes[1].set_ylabel('Average Visitors')
 axes[1].xaxis.set_ticks(order)
-axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=45)
+axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=25)
 #axes[1].xaxis.set_major_formatter(dates.DateFormatter('%a'))
 axes[1].legend('')
 
@@ -2175,7 +2176,7 @@ air_visits %>%
   filter(air_store_id == "air_b5598d12d1b84890" | air_store_id == "air_bbe1c1a47e09f161") %>%
   arrange(visit_date) %>%
   head(10) %>%
-  DT::datatable(options = list(scrollX = TRUE))
+  DT::datatable()
 ```
 
 
@@ -2678,8 +2679,6 @@ plt.ylabel("Density")
 
 plt.show()
 ```
-
-
 :::
 ::::
 
@@ -2966,8 +2965,8 @@ p1= p1.errorbar(p1_data['wday'], p1_data['mean_log_visitors'],
             markersize=5,capsize=8)
 # Set custom order for x-axis labels
 #p1.xaxis.set_ticks(custom_wday_order)            
-p1= p1.set_xticklabels(custom_wday_order)  
-p1= p1.legend('')
+p1= axes[0].set_xticklabels(custom_wday_order)  
+p1= axes[0].legend('')
 
 
 
@@ -2983,8 +2982,8 @@ p3= p3.errorbar(p3_data['month'], p3_data['mean_log_visitors'],
             markersize=5,capsize=8)
 # Set custom order for x-axis labels
 #p3= p3.xaxis.set_ticks(custom_month_order)
-p3= p3.set_xticklabels(custom_month_order, rotation=45)  
-p3= p3.legend('')
+p3= axes[1].set_xticklabels(custom_month_order, rotation=45)  
+p3= axes[1].legend('')
 
 # Adjust layout
 plt.tight_layout()
@@ -3070,7 +3069,8 @@ air_visits %>%
   left_join(air_store, by = "air_store_id") %>%
   group_by(wday, air_genre_name) %>%
   summarise(mean_log_visitors = mean(log1p(visitors)),
-            sd_log_visitors = sd(log1p(visitors))) %>%
+            sd_log_visitors = sd(log1p(visitors)),
+            .groups = "keep") %>%
   ggplot(aes(wday, mean_log_visitors, color = wday)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = mean_log_visitors - sd_log_visitors,
@@ -3143,7 +3143,7 @@ p= g.set_ylabels(fontsize=8 )#,label="Average number of visitors")
 
 for ax in g.axes.flat:
     for label in ax.get_xticklabels():
-        label.set_rotation(45)
+        label.set_rotation(25)
         #ax.xaxis.set_major_formatter(dates.DateFormatter('%a'))
 
 # Apply logarithmic scale to y-axis
@@ -3346,14 +3346,8 @@ bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
 # Create a base map
 m = folium.Map(location=[bar['latitude'].median(),
                          bar['longitude'].median()], 
-                         zoom_start=5#,
-                   #      tiles="CartoDB Positron",
-             # attr="<a href=https://endless-sky.github.io/>Endless Sky</a>"
+                         zoom_start=5
               )
-
-# m = folium.Map(location=[35.647042153196615, 137.41531074957783], zoom_start=10,
-#                tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', 
-#                attr='CartoDB.Voyager', max_zoom=20)
 
 # Add tiles
 folium.TileLayer('CartoDB positron').add_to(m)
@@ -3379,59 +3373,56 @@ m
 ```
 
 ```{python}
-foo = air_store[['latitude', 'longitude', 'dist_group']].assign(dset='air')
-bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
+
+Foo = air_store[['latitude', 'longitude', 'dist_group']].assign(dset='air')
+Bar = hpg_store[['latitude', 'longitude', 'dist_group']].assign(dset='hpg')
+
+FooBar = pd.concat([Foo, Bar])
+
 # Create a base map
-m = folium.Map(location=[bar['latitude'].median(),
-                         bar['longitude'].median()], 
-                         zoom_start=5#,
-                   #      tiles="CartoDB Positron",
-             # attr="<a href=https://endless-sky.github.io/>Endless Sky</a>"
+m = folium.Map(location=[FooBar['latitude'].median(),
+                         FooBar['longitude'].median()], 
+                         zoom_start=5
               )
+              
+FooBar = FooBar.to_records(index=False)
+FooBar = list(FooBar)
 
-# m = folium.Map(location=[35.647042153196615, 137.41531074957783], zoom_start=10,
-#                tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', 
-#                attr='CartoDB.Voyager', max_zoom=20)
+# point_layer name list
+all_gp = []
+for x in range(len(FooBar)):
+    pg = FooBar[x][3]
+    all_gp.append(pg)
 
-# Add tiles
-folium.TileLayer('CartoDB positron').add_to(m)
+# Create point_layer object
+unique_gp = list(set(all_gp))
+vlist = []
+for i,k in enumerate(unique_gp):
+    locals()[f'point_layer{i}'] = folium.FeatureGroup(name=k)
+    vlist.append(locals()[f'point_layer{i}'])
 
-# Create a MarkerCluster object
-marker_cluster = MarkerCluster().add_to(m)
+# Creating list for point_layer
+pl_group = []
+for n in all_gp:
+    for v in vlist: 
+        if n == vars(v)['layer_name']:
+            pl_group.append(v)
 
-hpg_store.apply(lambda row:folium.Marker(
-                  location=[row['latitude'], row['longitude']],
-                  #popup=row['hpg_store_id'],
-                  icon=None#,
-                  #tooltip=row['hpg_genre_name']
-                  ).add_to(m),axis=1)
+for (latitude,longitude,dist_group, dset),pg in zip(FooBar[0:5], pl_group[0:5]):
+    folium.CircleMarker(location=[latitude, longitude], radius=10,
+        popup=str(dset) + " Lat: " + str(latitude) + " , Long: " + str(longitude),
+        tooltip=str(dset) + " Lat: " + str(latitude) + " , Long: " + str(longitude),
+        fill=True,  # Set fill to True
+        color='red',
+        fill_opacity=1.0).add_to(pg)
 
-# Define a function to add markers for air_store
-def add_air_marker(row):
-    folium.Marker(location=[row['latitude'], row['longitude']],
-                  #popup=row['air_store_id'],
-                  icon=None,
-                  #tooltip=row['air_genre_name']
-                  ).add_to(m)
-                  
-                  
+pg.add_to(m)
 
-# Add markers for air_store
-air_store.apply(lambda row:folium.Marker(
-                  location=[row['latitude'], row['longitude']],
-                  #popup=row['air_store_id'],
-                  icon=None#,
-                  #tooltip=row['air_genre_name']
-                  ).add_to(m),axis=1)
-
-# add a marker for med_coord_air
-folium.Marker(location=[35.658068, 139.685474],
-                   popup="Center Point",
-                   icon=folium.Icon(color='green'),
-                  tooltip="Center Point").add_to(m)
-# Display the map
+m.add_child(folium.LayerControl(collapsed=False))  
+#m.save("Map1.html")
 m
 ```
+
 
 :::
 ::::
@@ -3598,9 +3589,11 @@ from statsmodels.tools import add_constant
 # Merge air_visits with air_store
 merged_df = pd.merge(air_visits, air_store, on='air_store_id')
 # Group by air_store_id and air_genre_name and compute the required statistics
-foo = merged_df.groupby(['air_store_id', 'air_genre_name'],observed=True).agg(mean_log_visits=('visitors',
+foo = merged_df.groupby(['air_store_id', 'air_genre_name'],
+                    observed=True).agg(mean_log_visits=('visitors',
                     lambda x: np.mean(np.log1p(x))),
-                    sd_log_visits=('visitors', lambda x: np.std(np.log1p(x)))).reset_index()
+                    sd_log_visits=('visitors',
+                    lambda x: np.std(np.log1p(x)))).reset_index()
 
 
 # Define function to calculate slope and standard error
@@ -3702,6 +3695,7 @@ def plot_p5(ax):
     ax.set_xlabel('Slope', fontsize=6)
     ax.set_ylabel('Slope Error', fontsize=6)
     ax.tick_params(axis='y', rotation=0, labelsize= 7) 
+    ax.set_ylim(0, 1)
 
 # Create a 2x6 grid
 fig = plt.figure(figsize=(8, 4))
@@ -3731,7 +3725,8 @@ plt.show()
 ```{r}
 ts_params %>%
   filter(abs(slope) > 0.25) %>%
-  select(air_store_id, air_genre_name, slope, slope_err)
+  select(air_store_id, air_genre_name, slope, slope_err) %>%
+  DT::datatable(options = list(scrollX=TRUE))
 ```
 :::
 ::: {}
@@ -3788,7 +3783,7 @@ fig, axes = plt.subplots(1, 2, figsize=(10, 6))
 p1= sns.scatterplot(x='mean_log_visits', y='slope', hue='air_genre_name', data=filtered_data, ax=axes[0])
 p1= p1.errorbar(x=filtered_data['mean_log_visits'], y=filtered_data['slope'], 
              xerr=filtered_data['sd_log_visits'], yerr=filtered_data['slope_err'], 
-             fmt='none', color='grey', alpha=0.7, elinewidth=0.7)
+             fmt='none', color='grey', alpha=0.7, elinewidth=0.5)
 # Set legend properties
 p1= plt.title('Scatter Plot with Error Bars')
 p1=axes[0].get_legend().remove()
@@ -3798,8 +3793,8 @@ p1=axes[0].get_legend().remove()
 #ax = plt.gca()
 #axins = ax.inset_axes([0.6, 0.6, 0.35, 0.35])
 p2= sns.scatterplot(x='mean_log_visits', y='slope', hue='air_genre_name', data=filtered_data, ax=axes[1])
-p2=axins.set_xlim(-2, 2)
-p2=axins.set_ylim(-1, 1)
+p2=axes[1].set_xlim(-0, 4)
+p2=axes[1].set_ylim(-0.1, 0.05)
 
 # Set labels and title
 p2= plt.xlabel('Mean Log Visits')
@@ -4505,7 +4500,7 @@ p= plt.ylabel('yhat')
 p= plt.title('Prophet Forecast with Confidence Intervals')
 
 # Add legend
-p= plt.legend()
+#p= plt.legend()
 
 # Show the plot
 plt.show(p)
@@ -5105,22 +5100,22 @@ We find:
 
 # Create a 2x2 grid
 fig = plt.figure(figsize=(12, 4))
-gs = GridSpec(4, 1)
+gs = GridSpec(2, 2)
 
 #Add plots to the grid
-p= plot_hw_air_id(air_id = "air_820d1919cbecaa0a", 
-                        ax = fig.add_subplot(gs[0]))
+p1= plot_hw_air_id(air_id = "air_820d1919cbecaa0a", 
+                        ax = fig.add_subplot(gs[0,0]))
 
-p= plot_hw_air_id(air_id = "air_8e4360a64dbd4c50",
-                         ax= fig.add_subplot(gs[1]))
+p2= plot_hw_air_id(air_id = "air_8e4360a64dbd4c50",
+                         ax= fig.add_subplot(gs[0,1]))
                          
-p= plot_hw_air_id(air_id = "air_f3f9824b7d70c3cf",
-                         ax= fig.add_subplot(gs[2]))
+p3= plot_hw_air_id(air_id = "air_f3f9824b7d70c3cf",
+                         ax= fig.add_subplot(gs[1,0]))
 
-p= plot_hw_air_id(air_id = "air_1c0b150f9e696a5f",
-                         ax= fig.add_subplot(gs[3]))
+p4= plot_hw_air_id(air_id = "air_1c0b150f9e696a5f",
+                         ax= fig.add_subplot(gs[1,1]))
                          
-plt.show(p)
+plt.show()
 ```
 :::
 ::::
@@ -5225,7 +5220,8 @@ visits_valid_aug <- visits_valid %>%
 
 visits_train_aug %>%
   head(100) %>%
-  DT::datatable(options = list(scrollX = TRUE))
+   knitr::kable() %>%   kableExtra::kable_styling() %>%
+  kableExtra::scroll_box(width = "600px", height = "600px")
 ```
 :::
 ::: {}
@@ -5266,16 +5262,13 @@ summary(fit_lm)
 import statsmodels.api as sm
 from sklearn import linear_model
 
-# Assuming 'y' is the dependent variable and 'X' contains the independent variables
-## non numeric column
-# visits_train_aug[['air_store_id', 'wday', 'month', 'ds_quarteryear', 'ds_month_lbl', ' ds_wday_lbl', 'ds_am_pm']]
 X = visits_train_aug.select_dtypes(['number'])
-X = X.drop(columns=['visitors', 'ds_index_num', 'log1p_visitors']) #, , 'ds_year', 'ds_year_iso'
+X = X.drop(columns=['visitors', 'ds_index_num', 'log1p_visitors']) 
 X = X.astype('int')
 y = visits_train_aug['visitors']
 
 # Add a constant (intercept) term to the independent variables
-X = sm.add_constant(X, prepend=True)#.to_numpy()
+X = sm.add_constant(X, prepend=True)
 
 # Fit the linear model
 model = sm.OLS(y, X)
@@ -5309,7 +5302,7 @@ pred_tk <- tibble(
 
 ```{python}
 V = visits_valid_aug.select_dtypes(['number'])
-V = V.drop(columns=['ds_index_num']) #, 'ds_year', 'ds_year_iso'
+V = V.drop(columns=['ds_index_num']) 
 V = V.astype('int')
 
 ## add intercept
@@ -5450,13 +5443,14 @@ def plot_tk_lm_air_id(air_id, ax):
     # Augment visits_train
     visits_train_aug = augment_timeseries_signature(data= visits_train,
                                                     date_column = 'ds')
+    
   
     # Get timeseries signature for visits_valid
     visits_valid_ds = visits_valid['ds']
     visits_valid_aug = get_timeseries_signature(visits_valid_ds)
     
     X = visits_train_aug.select_dtypes(['number'])
-    X = X.drop(columns=['visitors', 'log1p_visitors' ,'ds_index_num']) #'ds_year','ds_year_iso'
+    X = X.drop(columns=['visitors' ,'log1p_visitors','ds_index_num']) #'ds_year','ds_year_iso'
     X = X.astype('int')
     y = visits_train_aug['visitors']
     
@@ -5465,20 +5459,23 @@ def plot_tk_lm_air_id(air_id, ax):
     # Fit the linear model
     model = sm.OLS(y, X)
     fit_lm = model.fit()
-    
+ 
     V = visits_valid_aug.select_dtypes(['number'])
     V = V.drop(columns=['ds_index_num']) #'ds_year','ds_year_iso'
     V = V.astype('int')
+    V= V.reset_index(drop=True)
     #V = sm.add_constant(V, prepend=True)
-    V = V.insert(0,'const', 1.0)
+    V.insert(0,'const', 1.0)
 
     pred = fit_lm.predict(V)
-    
+   
     pred_tk = pd.DataFrame({
         'date': visits_valid['ds'],
         'value': pred
     })
     
+    #pred_tk = pred_tk.reset_index(drop=True)
+
     fig, ax = plt.subplots(figsize=(8, 4))
     plt.style.use('ggplot')
       
@@ -5502,10 +5499,10 @@ def plot_tk_lm_air_id(air_id, ax):
     ax.tick_params(axis='x', rotation=10, labelsize= 7)
     ax.set_xlabel('Date')
     ax.set_ylabel('Visitors')
-    ax.set_title('timetk for air_'+ str(air_id))
+    ax.set_title('timetk for '+ str(air_id))
     plt.legend()
     return(ax)
-    
+
 ```
 
 
@@ -5551,7 +5548,8 @@ Let’s look at the weather_stations.csv overview data first. When reading the d
 weather_stations <- as_tibble(fread(str_c("data/weather_stations.csv")))
 weather_stations %>%
   head(100) %>%
-  DT::datatable(options = list(scrollX = TRUE))
+   knitr::kable() %>%   kableExtra::kable_styling() %>%
+  kableExtra::scroll_box(width = "600px", height = "600px") 
 
 ```
 :::
@@ -5651,6 +5649,9 @@ bar["dset"] = "hpg"
 # Create a folium map
 m = folium.Map(location=[foobar['latitude'].mean(), 
                foobar['longitude'].mean()],zoom_start=5)
+
+# Add tiles
+folium.TileLayer('CartoDB positron').add_to(m)
 
 # Create marker clusters
 marker_cluster = MarkerCluster(name='Weather').add_to(m)
@@ -5830,13 +5831,13 @@ weather_data['month']= \
 weather_data['month'].astype(CategoricalDtype(categories=month_order,
 ordered=True))
 
-# Plotting joyplot for maximum temperature and average humidity side by side
+# Plotting joyplot for maximum temperature and average humidity
 #fig, axes = plt.subplots(1, 1, figsize=(8, 4))
-fig = plt.figure(figsize=(12, 8))
+fig = plt.figure(figsize=(10, 4))
 plt.style.use('ggplot')
-gs = GridSpec(1,2 , figure=fig)
-ax1 = fig.add_subplot(gs[0])
-ax2 = fig.add_subplot(gs[1])
+# gs = GridSpec(2,1 , figure=fig)
+# axes1 = fig.add_subplot(gs[0,0])
+# axes2 = fig.add_subplot(gs[1,0])
 
 # Joyplot for Maximum Temperature
 p1= joypy.joyplot(
@@ -5848,33 +5849,18 @@ p1= joypy.joyplot(
     linewidth=1,
     legend=False,
     fade=True,
-    ax=ax1
+    linecolor ="white"#,
+#    ax=axes1
 )
-p1= p1.set_title('Joyplot of Maximum Temperature by Month')
+p1= plt.title('Maximum Temperature at station\n Tokyo Tokyo-Kana Tonokyo in 2016/17', size= 8)
 
-# Joyplot for Average Humidity
-p2 =joypy.joyplot(
-    weather_data,
-    by='month',
-    column='avg_humidity',
-    colormap=plt.cm.viridis,
-    grid= "both",
-    linewidth=1,
-    xlabels=True,
-    legend=False,
-    fade=True,
-    linecolor = "white",
-    ax=ax2
-)
-p2= p2.set_title('Joyplot of Average Humidity by Month')
-
-# Adjust layout
-plt.tight_layout()
 plt.show()
 ```
 
 ```{python}
-plt.style.use('ggplot')
+
+fig = plt.figure(figsize=(10, 4))
+#plt.style.use('ggplot')
 
 # Joyplot for Average Humidity
 p2= joypy.joyplot(
@@ -5887,12 +5873,12 @@ p2= joypy.joyplot(
     xlabels=True,
     legend=False,
     fade=True,
-    linecolor = "white",
-    ax=axes[1]
+    linecolor = "white"#,
+#    ax=ax2
 )
-p2.set_title('Joyplot of Average Humidity by Month')
+p2= plt.title('Average Humidity at station\n Tokyo Tokyo-Kana Tonokyo in 2016/17', size= 8)
 
-plt.show(p2)
+plt.show()
 ```
 
 
@@ -5947,6 +5933,14 @@ multiplot(p1, p2, p3, p4, layout=layout)
 from plotnine import ggplot, aes, geom_boxplot, coord_flip, theme, labs, scale_y_log10, facet_wrap
 
 
+fig = plt.figure(figsize=(12, 8))
+plt.style.use('ggplot')
+gs = GridSpec(2,2 , figure=fig)
+ax1 = fig.add_subplot(gs[0,0])
+ax2 = fig.add_subplot(gs[0,1])
+ax3 = fig.add_subplot(gs[1,0])
+ax4 = fig.add_subplot(gs[1,1])
+
 # Plotting boxplots for various weather features
 p1 = ggplot(weather_data, aes(x='month', y='hours_sunlight', fill='month')) + \
      geom_boxplot(na_rm=True) + \
@@ -5977,13 +5971,14 @@ p4 = ggplot(weather_data, aes(x='month', y='avg_local_pressure', fill='month')) 
 # Combine the plots using facet_wrap
 #combined_plot = (p1 , p2 , p3 , p4) + facet_wrap('~month')
 
-# Display the combined plot
+# Display the plots
 p1
 p2
 p3
 p4
-
 ```
+
+
 :::
 ::::
 
